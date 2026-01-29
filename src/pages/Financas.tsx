@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -43,6 +44,21 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 // Types
 interface Transaction {
@@ -163,6 +179,21 @@ const mockBankAccounts: BankAccount[] = [
   },
 ];
 
+const chartData = [
+  { month: "Set", receitas: 42000, despesas: 28000 },
+  { month: "Out", receitas: 38000, despesas: 25000 },
+  { month: "Nov", receitas: 55000, despesas: 32000 },
+  { month: "Dez", receitas: 48000, despesas: 30000 },
+  { month: "Jan", receitas: 48500, despesas: 7500 },
+];
+
+const categoryData = [
+  { name: "Serviços", value: 48500, color: "hsl(var(--primary))" },
+  { name: "Infraestrutura", value: 3500, color: "hsl(var(--destructive))" },
+  { name: "Tecnologia", value: 1200, color: "hsl(var(--warning))" },
+  { name: "Marketing", value: 2800, color: "hsl(var(--success))" },
+];
+
 const categories = [
   "Serviços",
   "Produtos",
@@ -225,6 +256,101 @@ function FinanceOverview({ transactions }: { transactions: Transaction[] }) {
         value={`R$ ${totalCaixa.toLocaleString("pt-BR")}`}
         variant="default"
       />
+    </div>
+  );
+}
+
+function FinanceCharts() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Evolução Financeira */}
+      <div className="lg:col-span-2 bg-card rounded-xl border border-border/50 shadow-premium p-6">
+        <h3 className="font-semibold text-foreground mb-4">Evolução Financeira</h3>
+        <ResponsiveContainer width="100%" height={280}>
+          <AreaChart data={chartData}>
+            <defs>
+              <linearGradient id="colorReceitas" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorDespesas" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `${v / 1000}k`} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px",
+              }}
+              labelStyle={{ color: "hsl(var(--foreground))" }}
+              formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]}
+            />
+            <Legend />
+            <Area
+              type="monotone"
+              dataKey="receitas"
+              stroke="hsl(var(--success))"
+              fillOpacity={1}
+              fill="url(#colorReceitas)"
+              name="Receitas"
+            />
+            <Area
+              type="monotone"
+              dataKey="despesas"
+              stroke="hsl(var(--destructive))"
+              fillOpacity={1}
+              fill="url(#colorDespesas)"
+              name="Despesas"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Distribuição por Categoria */}
+      <div className="bg-card rounded-xl border border-border/50 shadow-premium p-6">
+        <h3 className="font-semibold text-foreground mb-4">Por Categoria</h3>
+        <ResponsiveContainer width="100%" height={280}>
+          <PieChart>
+            <Pie
+              data={categoryData}
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={90}
+              paddingAngle={5}
+              dataKey="value"
+            >
+              {categoryData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px",
+              }}
+              formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="mt-4 space-y-2">
+          {categoryData.map((cat) => (
+            <div key={cat.name} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
+                <span className="text-muted-foreground">{cat.name}</span>
+              </div>
+              <span className="text-foreground font-medium">R$ {cat.value.toLocaleString("pt-BR")}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -340,9 +466,46 @@ function BankAccountsSection({ accounts }: { accounts: BankAccount[] }) {
   );
 }
 
-function AddTransactionDialog({ type }: { type: "receita" | "despesa" }) {
+function AddTransactionDialog({ 
+  type, 
+  onAdd 
+}: { 
+  type: "receita" | "despesa";
+  onAdd: (transaction: Transaction) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    description: "",
+    value: "",
+    date: "",
+    category: "",
+    paymentMethod: "",
+    entity: "",
+    receipt: "",
+  });
+
+  const handleSubmit = () => {
+    if (!formData.description || !formData.value || !formData.date) return;
+    
+    const transaction: Transaction = {
+      id: Date.now().toString(),
+      description: formData.description,
+      value: parseFloat(formData.value),
+      date: formData.date,
+      category: formData.category || "Outros",
+      type,
+      status: "pendente",
+      paymentMethod: formData.paymentMethod,
+      ...(type === "receita" ? { client: formData.entity } : { provider: formData.entity }),
+    };
+    
+    onAdd(transaction);
+    setFormData({ description: "", value: "", date: "", category: "", paymentMethod: "", entity: "", receipt: "" });
+    setOpen(false);
+  };
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />
@@ -358,22 +521,44 @@ function AddTransactionDialog({ type }: { type: "receita" | "despesa" }) {
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
-            <Input id="description" placeholder="Ex: Projeto Website" className="bg-muted border-border" />
+            <Input 
+              id="description" 
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Ex: Projeto Website" 
+              className="bg-muted border-border" 
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="value">Valor</Label>
-              <Input id="value" type="number" placeholder="0,00" className="bg-muted border-border" />
+              <Input 
+                id="value" 
+                type="number" 
+                value={formData.value}
+                onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                placeholder="0,00" 
+                className="bg-muted border-border" 
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="date">Data</Label>
-              <Input id="date" type="date" className="bg-muted border-border" />
+              <Input 
+                id="date" 
+                type="date" 
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                className="bg-muted border-border" 
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Categoria</Label>
-              <Select>
+              <Select 
+                value={formData.category} 
+                onValueChange={(v) => setFormData({ ...formData, category: v })}
+              >
                 <SelectTrigger className="bg-muted border-border">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -388,7 +573,10 @@ function AddTransactionDialog({ type }: { type: "receita" | "despesa" }) {
             </div>
             <div className="space-y-2">
               <Label>Forma de Pagamento</Label>
-              <Select>
+              <Select
+                value={formData.paymentMethod}
+                onValueChange={(v) => setFormData({ ...formData, paymentMethod: v })}
+              >
                 <SelectTrigger className="bg-muted border-border">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -408,18 +596,18 @@ function AddTransactionDialog({ type }: { type: "receita" | "despesa" }) {
             </Label>
             <Input
               id="entity"
+              value={formData.entity}
+              onChange={(e) => setFormData({ ...formData, entity: e.target.value })}
               placeholder={type === "receita" ? "Nome do cliente" : "Nome do fornecedor"}
               className="bg-muted border-border"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="receipt">Link do Comprovante</Label>
-            <Input id="receipt" placeholder="https://" className="bg-muted border-border" />
-          </div>
         </div>
         <div className="flex justify-end gap-3">
-          <Button variant="outline">Cancelar</Button>
-          <Button>Salvar</Button>
+          <DialogClose asChild>
+            <Button variant="outline">Cancelar</Button>
+          </DialogClose>
+          <Button onClick={handleSubmit}>Salvar</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -429,6 +617,11 @@ function AddTransactionDialog({ type }: { type: "receita" | "despesa" }) {
 export default function Financas() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
+
+  const handleAddTransaction = (transaction: Transaction) => {
+    setTransactions([transaction, ...transactions]);
+  };
 
   return (
     <MainLayout>
@@ -460,7 +653,10 @@ export default function Financas() {
         </div>
 
         {/* Overview */}
-        <FinanceOverview transactions={mockTransactions} />
+        <FinanceOverview transactions={transactions} />
+
+        {/* Charts */}
+        <FinanceCharts />
 
         {/* Tabs */}
         <Tabs defaultValue="receitas" className="space-y-6">
@@ -488,25 +684,19 @@ export default function Financas() {
 
           <TabsContent value="receitas" className="space-y-4">
             <div className="flex justify-end">
-              <AddTransactionDialog type="receita" />
+              <AddTransactionDialog type="receita" onAdd={handleAddTransaction} />
             </div>
-            <TransactionTable transactions={mockTransactions} type="receita" />
+            <TransactionTable transactions={transactions} type="receita" />
           </TabsContent>
 
           <TabsContent value="despesas" className="space-y-4">
             <div className="flex justify-end">
-              <AddTransactionDialog type="despesa" />
+              <AddTransactionDialog type="despesa" onAdd={handleAddTransaction} />
             </div>
-            <TransactionTable transactions={mockTransactions} type="despesa" />
+            <TransactionTable transactions={transactions} type="despesa" />
           </TabsContent>
 
           <TabsContent value="contas" className="space-y-4">
-            <div className="flex justify-end">
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Nova Conta
-              </Button>
-            </div>
             <BankAccountsSection accounts={mockBankAccounts} />
           </TabsContent>
         </Tabs>

@@ -1,11 +1,8 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { UpgradeBanner } from "@/components/ui/upgrade-banner";
 import { ModuleCard } from "@/components/ui/module-card";
-import { StatCard } from "@/components/ui/stat-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
 import { FAQSection } from "@/components/dashboard/FAQSection";
-import { HelpSection } from "@/components/dashboard/HelpSection";
 import { useNavigate } from "react-router-dom";
 import {
   DollarSign,
@@ -16,10 +13,6 @@ import {
   ListTodo,
   GitBranch,
   BookOpen,
-  TrendingUp,
-  Wallet,
-  Target,
-  Briefcase,
 } from "lucide-react";
 
 const modules = [
@@ -87,9 +80,6 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Upgrade Banner */}
-        <UpgradeBanner />
-
         {/* Module Grid */}
         <section>
           <h2 className="text-lg font-semibold text-foreground mb-4">Módulos</h2>
@@ -112,46 +102,8 @@ const Index = () => {
           <BulletinBoard />
         </div>
 
-        {/* Stats Overview */}
-        <section>
-          <h2 className="text-lg font-semibold text-foreground mb-4">
-            Resumos Essenciais
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              icon={Wallet}
-              label="Lucro Líquido"
-              value="R$ 24.580"
-              trend={{ value: 12.5, isPositive: true }}
-              variant="success"
-            />
-            <StatCard
-              icon={Users}
-              label="Colaboradores"
-              value="8"
-              variant="default"
-            />
-            <StatCard
-              icon={Target}
-              label="Campanhas Ativas"
-              value="3"
-              variant="default"
-            />
-            <StatCard
-              icon={Briefcase}
-              label="Projetos em Andamento"
-              value="5"
-              trend={{ value: 2, isPositive: true }}
-              variant="default"
-            />
-          </div>
-        </section>
-
-        {/* FAQ and Help */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <FAQSection />
-          <HelpSection />
-        </div>
+        {/* FAQ Section */}
+        <FAQSection />
       </div>
     </MainLayout>
   );

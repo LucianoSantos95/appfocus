@@ -8,7 +8,6 @@ import Financas from "./pages/Financas";
 import RH from "./pages/RH";
 import Marketing from "./pages/Marketing";
 import Projetos from "./pages/Projetos";
-import Compromissos from "./pages/Compromissos";
 import Clientes from "./pages/Clientes";
 import Atividades from "./pages/Atividades";
 import Processos from "./pages/Processos";
@@ -29,7 +28,6 @@ const App = () => (
           <Route path="/rh" element={<RH />} />
           <Route path="/marketing" element={<Marketing />} />
           <Route path="/projetos" element={<Projetos />} />
-          <Route path="/compromissos" element={<Compromissos />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/atividades" element={<Atividades />} />
           <Route path="/processos" element={<Processos />} />
