@@ -168,7 +168,6 @@ export default function Clientes() {
               </p>
             </div>
           </div>
-          <AddClienteDialog onAdd={(c) => setClientes([c, ...clientes])} />
         </div>
 
         {/* Overview */}
@@ -260,14 +259,17 @@ export default function Clientes() {
         </div>
 
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar clientes..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 w-80 bg-muted border-border"
-          />
+        <div className="flex items-center justify-between">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar clientes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 w-80 bg-muted border-border"
+            />
+          </div>
+          <AddClienteDialog onAdd={(c) => setClientes([c, ...clientes])} />
         </div>
 
         {/* Clients Cards */}

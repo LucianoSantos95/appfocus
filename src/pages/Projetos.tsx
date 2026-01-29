@@ -194,7 +194,6 @@ export default function Projetos() {
               </p>
             </div>
           </div>
-          <AddProjetoDialog onAdd={(p) => setProjetos([p, ...projetos])} />
         </div>
 
         {/* Overview */}
@@ -297,6 +296,7 @@ export default function Projetos() {
               className="pl-9 w-80 bg-muted border-border"
             />
           </div>
+          <AddProjetoDialog onAdd={(p) => setProjetos([p, ...projetos])} />
         </div>
 
         {/* Projects Cards */}
