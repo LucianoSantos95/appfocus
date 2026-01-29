@@ -11,7 +11,6 @@ import {
   ListTodo,
   GitBranch,
   BookOpen,
-  Calendar,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -25,7 +24,6 @@ const modules = [
   { name: "Clientes", path: "/clientes", icon: UserCheck },
   { name: "Atividades", path: "/atividades", icon: ListTodo },
   { name: "Processos", path: "/processos", icon: GitBranch },
-  { name: "Compromissos", path: "/compromissos", icon: Calendar },
   { name: "Guia de Uso", path: "/guia", icon: BookOpen },
 ];
 

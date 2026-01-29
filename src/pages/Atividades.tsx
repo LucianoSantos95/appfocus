@@ -1,19 +1,50 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ListTodo,
   Plus,
   Search,
   ArrowLeft,
-  MoreHorizontal,
   Target,
   CheckCircle2,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from "recharts";
 
 interface Atividade {
   id: string;
@@ -25,7 +56,7 @@ interface Atividade {
   category: "tarefa" | "meta";
 }
 
-const mockAtividades: Atividade[] = [
+const initialAtividades: Atividade[] = [
   {
     id: "1",
     title: "Revisar proposta comercial",
@@ -73,6 +104,17 @@ const mockAtividades: Atividade[] = [
   },
 ];
 
+const statusData = [
+  { name: "Pendentes", value: 4, color: "hsl(var(--warning))" },
+  { name: "Concluídas", value: 1, color: "hsl(var(--success))" },
+];
+
+const priorityData = [
+  { name: "Alta", count: 2 },
+  { name: "Média", count: 2 },
+  { name: "Baixa", count: 1 },
+];
+
 const priorityStyles = {
   alta: "text-destructive",
   media: "text-warning",
@@ -83,12 +125,24 @@ export default function Atividades() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"todas" | "pendentes" | "concluidas">("todas");
+  const [atividades, setAtividades] = useState<Atividade[]>(initialAtividades);
 
-  const filteredAtividades = mockAtividades.filter((a) => {
+  const filteredAtividades = atividades.filter((a) => {
     if (filter === "pendentes") return a.status === "pendente";
     if (filter === "concluidas") return a.status === "concluida";
     return true;
   });
+
+  const pendentes = atividades.filter((a) => a.status === "pendente").length;
+  const concluidas = atividades.filter((a) => a.status === "concluida").length;
+  const metas = atividades.filter((a) => a.category === "meta").length;
+  const urgentes = atividades.filter((a) => a.priority === "alta" && a.status === "pendente").length;
+
+  const toggleStatus = (id: string) => {
+    setAtividades(atividades.map((a) =>
+      a.id === id ? { ...a, status: a.status === "pendente" ? "concluida" : "pendente" } : a
+    ));
+  };
 
   return (
     <MainLayout>
@@ -111,10 +165,93 @@ export default function Atividades() {
               </p>
             </div>
           </div>
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" />
-            Nova Atividade
-          </Button>
+          <AddAtividadeDialog onAdd={(a) => setAtividades([a, ...atividades])} />
+        </div>
+
+        {/* Overview */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            icon={Clock}
+            label="Pendentes"
+            value={pendentes.toString()}
+            variant="warning"
+          />
+          <StatCard
+            icon={CheckCircle2}
+            label="Concluídas"
+            value={concluidas.toString()}
+            variant="success"
+          />
+          <StatCard
+            icon={Target}
+            label="Metas"
+            value={metas.toString()}
+            variant="default"
+          />
+          <StatCard
+            icon={AlertTriangle}
+            label="Urgentes"
+            value={urgentes.toString()}
+            variant="destructive"
+          />
+        </div>
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-card rounded-xl border border-border/50 shadow-premium p-6">
+            <h3 className="font-semibold text-foreground mb-4">Status das Atividades</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={statusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={75}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {statusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex justify-center gap-6 mt-2">
+              {statusData.map((d) => (
+                <div key={d.name} className="flex items-center gap-2 text-sm">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
+                  <span className="text-muted-foreground">{d.name}: {d.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-card rounded-xl border border-border/50 shadow-premium p-6">
+            <h3 className="font-semibold text-foreground mb-4">Por Prioridade</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={priorityData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Filters */}
@@ -165,6 +302,7 @@ export default function Atividades() {
             >
               <Checkbox
                 checked={a.status === "concluida"}
+                onCheckedChange={() => toggleStatus(a.id)}
                 className="mt-1"
               />
               <div className="flex-1 min-w-0">
@@ -195,13 +333,117 @@ export default function Atividades() {
                   </span>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
             </div>
           ))}
         </div>
       </div>
     </MainLayout>
+  );
+}
+
+function AddAtividadeDialog({ onAdd }: { onAdd: (a: Atividade) => void }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    dueDate: "",
+    priority: "media" as "alta" | "media" | "baixa",
+    category: "tarefa" as "tarefa" | "meta",
+  });
+
+  const handleSubmit = () => {
+    if (!form.title) return;
+    
+    const atividade: Atividade = {
+      id: Date.now().toString(),
+      title: form.title,
+      description: form.description,
+      dueDate: form.dueDate,
+      priority: form.priority,
+      status: "pendente",
+      category: form.category,
+    };
+    
+    onAdd(atividade);
+    setForm({ title: "", description: "", dueDate: "", priority: "media", category: "tarefa" });
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Plus className="w-4 h-4" />
+          Nova Atividade
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px] bg-card border-border">
+        <DialogHeader>
+          <DialogTitle className="text-foreground">Nova Atividade</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="space-y-2">
+            <Label>Título</Label>
+            <Input
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="Ex: Revisar proposta comercial"
+              className="bg-muted border-border"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Descrição</Label>
+            <Textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Detalhes da atividade..."
+              className="bg-muted border-border"
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Prazo</Label>
+              <Input
+                type="date"
+                value={form.dueDate}
+                onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+                className="bg-muted border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Prioridade</Label>
+              <Select value={form.priority} onValueChange={(v: "alta" | "media" | "baixa") => setForm({ ...form, priority: v })}>
+                <SelectTrigger className="bg-muted border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="alta">Alta</SelectItem>
+                  <SelectItem value="media">Média</SelectItem>
+                  <SelectItem value="baixa">Baixa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <Select value={form.category} onValueChange={(v: "tarefa" | "meta") => setForm({ ...form, category: v })}>
+                <SelectTrigger className="bg-muted border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="tarefa">Tarefa</SelectItem>
+                  <SelectItem value="meta">Meta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3">
+          <DialogClose asChild>
+            <Button variant="outline">Cancelar</Button>
+          </DialogClose>
+          <Button onClick={handleSubmit}>Salvar</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

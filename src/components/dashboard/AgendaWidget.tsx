@@ -1,5 +1,23 @@
-import { Calendar, Clock, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { Calendar, Clock, AlertCircle, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Appointment {
   id: string;
@@ -10,7 +28,7 @@ interface Appointment {
   priority?: "high" | "medium" | "low";
 }
 
-const mockAppointments: Appointment[] = [
+const initialAppointments: Appointment[] = [
   {
     id: "1",
     title: "Reunião com investidores",
@@ -50,14 +68,140 @@ const priorityStyles = {
 };
 
 export function AgendaWidget() {
+  const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
+  const [open, setOpen] = useState(false);
+  const [newAppointment, setNewAppointment] = useState<{
+    title: string;
+    date: string;
+    time: string;
+    type: "meeting" | "deadline" | "event";
+    priority: "high" | "medium" | "low";
+  }>({
+    title: "",
+    date: "",
+    time: "",
+    type: "meeting",
+    priority: "medium",
+  });
+
+  const handleAddAppointment = () => {
+    if (!newAppointment.title || !newAppointment.date || !newAppointment.time) return;
+    
+    const appointment: Appointment = {
+      id: Date.now().toString(),
+      title: newAppointment.title,
+      date: new Date(newAppointment.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+      time: newAppointment.time,
+      type: newAppointment.type,
+      priority: newAppointment.priority,
+    };
+    
+    setAppointments([appointment, ...appointments]);
+    setNewAppointment({ title: "", date: "", time: "", type: "meeting", priority: "medium" });
+    setOpen(false);
+  };
+
   return (
     <div className="bg-card rounded-xl border border-border/50 shadow-premium">
-      <div className="flex items-center gap-3 p-4 border-b border-border/50">
-        <Calendar className="w-5 h-5 text-primary" />
-        <h3 className="font-semibold text-foreground">Agenda</h3>
+      <div className="flex items-center justify-between p-4 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          <Calendar className="w-5 h-5 text-primary" />
+          <h3 className="font-semibold text-foreground">Agenda</h3>
+        </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="gap-2">
+              <Plus className="w-4 h-4" />
+              Novo Compromisso
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px] bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Novo Compromisso</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Título</Label>
+                <Input
+                  id="title"
+                  value={newAppointment.title}
+                  onChange={(e) => setNewAppointment({ ...newAppointment, title: e.target.value })}
+                  placeholder="Ex: Reunião com cliente"
+                  className="bg-muted border-border"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">Data</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={newAppointment.date}
+                    onChange={(e) => setNewAppointment({ ...newAppointment, date: e.target.value })}
+                    className="bg-muted border-border"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="time">Horário</Label>
+                  <Input
+                    id="time"
+                    type="time"
+                    value={newAppointment.time}
+                    onChange={(e) => setNewAppointment({ ...newAppointment, time: e.target.value })}
+                    className="bg-muted border-border"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Tipo</Label>
+                  <Select
+                    value={newAppointment.type}
+                    onValueChange={(value: "meeting" | "deadline" | "event") =>
+                      setNewAppointment({ ...newAppointment, type: value })
+                    }
+                  >
+                    <SelectTrigger className="bg-muted border-border">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border">
+                      <SelectItem value="meeting">Reunião</SelectItem>
+                      <SelectItem value="deadline">Prazo</SelectItem>
+                      <SelectItem value="event">Evento</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Prioridade</Label>
+                  <Select
+                    value={newAppointment.priority}
+                    onValueChange={(value: "high" | "medium" | "low") =>
+                      setNewAppointment({ ...newAppointment, priority: value })
+                    }
+                  >
+                    <SelectTrigger className="bg-muted border-border">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border">
+                      <SelectItem value="high">Alta</SelectItem>
+                      <SelectItem value="medium">Média</SelectItem>
+                      <SelectItem value="low">Baixa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddAppointment}>Salvar</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-      <div className="p-4 space-y-3">
-        {mockAppointments.map((apt) => (
+      <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
+        {appointments.map((apt) => (
           <div
             key={apt.id}
             className={cn(
@@ -81,11 +225,6 @@ export function AgendaWidget() {
             </div>
           </div>
         ))}
-      </div>
-      <div className="p-4 border-t border-border/50">
-        <button className="text-sm text-primary hover:text-primary/80 font-medium transition-colors">
-          Ver agenda completa →
-        </button>
       </div>
     </div>
   );
