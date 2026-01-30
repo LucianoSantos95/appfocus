@@ -27,9 +27,11 @@ import {
   ClipboardList,
   TrendingUp,
   Megaphone,
+  RotateCcw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { GuidedTour, useTour } from "@/components/guide/GuidedTour";
 
 const journeySteps = [
   {
@@ -218,32 +220,53 @@ const faqItems = [
 export default function Guia() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const { shouldRunTour, resetTour, onComplete } = useTour();
 
   const progressPercentage = (currentStep / journeySteps.length) * 100;
 
+  const handleRestartTour = useCallback(() => {
+    resetTour();
+  }, [resetTour]);
+
   return (
     <MainLayout>
+      <GuidedTour forceRun={shouldRunTour} onTourComplete={onComplete} />
+      
       <div className="space-y-10 animate-fade-in pb-10">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="h-9 w-9"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Guia de Uso</h1>
-            <p className="text-muted-foreground mt-1">
-              Aprenda a usar o Hub Empresarial em poucos minutos
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/")}
+              className="h-9 w-9"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Guia de Uso</h1>
+              <p className="text-muted-foreground mt-1">
+                Aprenda a usar o Hub Empresarial em poucos minutos
+              </p>
+            </div>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRestartTour}
+            className="gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Refazer Tour
+          </Button>
         </div>
 
         {/* Hero Section */}
-        <div className="bg-gradient-to-br from-primary/10 via-card to-secondary/10 rounded-2xl border border-primary/20 shadow-glow p-8">
+        <div 
+          data-tour="hero"
+          className="bg-gradient-to-br from-primary/10 via-card to-secondary/10 rounded-2xl border border-primary/20 shadow-glow p-8"
+        >
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center animate-float">
               <BookOpen className="w-10 h-10 text-primary" />
@@ -267,24 +290,32 @@ export default function Guia() {
 
         {/* Journey Timeline */}
         <section className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <Target className="w-5 h-5 text-primary" />
-              Sua Jornada de Configuração
-            </h3>
-            <span className="text-sm text-muted-foreground">
-              Etapa {currentStep} de {journeySteps.length}
-            </span>
+          <div 
+            data-tour="progress"
+            className="space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <Target className="w-5 h-5 text-primary" />
+                Sua Jornada de Configuração
+              </h3>
+              <span className="text-sm text-muted-foreground">
+                Etapa {currentStep} de {journeySteps.length}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <Progress value={progressPercentage} className="h-2" />
+              <p className="text-xs text-muted-foreground text-right">
+                {Math.round(progressPercentage)}% concluído
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Progress value={progressPercentage} className="h-2" />
-            <p className="text-xs text-muted-foreground text-right">
-              {Math.round(progressPercentage)}% concluído
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div 
+            data-tour="journey"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          >
             {journeySteps.map((step) => (
               <button
                 key={step.id}
@@ -331,7 +362,10 @@ export default function Guia() {
         </section>
 
         {/* Module Cards */}
-        <section className="space-y-6">
+        <section 
+          data-tour="modules"
+          className="space-y-6"
+        >
           <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <FolderKanban className="w-5 h-5 text-primary" />
             Conheça os Módulos
@@ -380,7 +414,10 @@ export default function Guia() {
         </section>
 
         {/* Productivity Tips */}
-        <section className="space-y-6">
+        <section 
+          data-tour="tips"
+          className="space-y-6"
+        >
           <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Lightbulb className="w-5 h-5 text-warning" />
             Dicas de Produtividade
@@ -403,7 +440,10 @@ export default function Guia() {
         </section>
 
         {/* FAQ Section */}
-        <section className="space-y-6">
+        <section 
+          data-tour="faq"
+          className="space-y-6"
+        >
           <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
             Perguntas Frequentes
@@ -426,7 +466,10 @@ export default function Guia() {
         </section>
 
         {/* CTA Section */}
-        <section className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl border border-primary/20 p-8 text-center">
+        <section 
+          data-tour="cta"
+          className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl border border-primary/20 p-8 text-center"
+        >
           <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
             <Rocket className="w-8 h-8 text-primary" />
           </div>
@@ -448,7 +491,10 @@ export default function Guia() {
         </section>
 
         {/* Pro Features */}
-        <div className="bg-card rounded-xl border border-border/50 shadow-premium p-6">
+        <div 
+          data-tour="pro"
+          className="bg-card rounded-xl border border-border/50 shadow-premium p-6"
+        >
           <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
             <Zap className="w-5 h-5 text-primary" />
             Funcionalidades Pro
