@@ -186,10 +186,28 @@ export default function Marketing() {
     setSelectedCampanha(null);
   };
 
+  const handleDeleteCampanha = (id: string) => {
+    setCampanhas(campanhas.filter((c) => c.id !== id));
+    setSelectedCampanha(null);
+  };
+
   const handleUpdateConteudo = () => {
     if (!selectedConteudo) return;
     setConteudos(conteudos.map((c) => c.id === selectedConteudo.id ? selectedConteudo : c));
     setSelectedConteudo(null);
+  };
+
+  const handleDeleteConteudo = (id: string) => {
+    setConteudos(conteudos.filter((c) => c.id !== id));
+    setSelectedConteudo(null);
+  };
+
+  const handleDeleteFunnelItem = (id: string) => {
+    setFunnelItems(funnelItems.filter((f) => f.id !== id));
+  };
+
+  const handleUpdateFunnelItem = (id: string, name: string, description: string) => {
+    setFunnelItems(funnelItems.map((f) => f.id === id ? { ...f, name, description } : f));
   };
 
   const getConteudosByPriority = (priority: "alta" | "media" | "baixa") => 
@@ -376,10 +394,13 @@ export default function Marketing() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {funnelItems.filter((f) => f.level === "topo").map((item) => (
-                      <div key={item.id} className="bg-background rounded-lg px-3 py-2 border border-primary/30">
-                        <p className="text-sm font-medium text-foreground">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
-                      </div>
+                      <FunnelItemCard 
+                        key={item.id} 
+                        item={item} 
+                        onDelete={handleDeleteFunnelItem}
+                        onUpdate={handleUpdateFunnelItem}
+                        borderColor="border-primary/30"
+                      />
                     ))}
                   </div>
                 </div>
@@ -396,10 +417,13 @@ export default function Marketing() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {funnelItems.filter((f) => f.level === "meio").map((item) => (
-                      <div key={item.id} className="bg-background rounded-lg px-3 py-2 border border-warning/30">
-                        <p className="text-sm font-medium text-foreground">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
-                      </div>
+                      <FunnelItemCard 
+                        key={item.id} 
+                        item={item} 
+                        onDelete={handleDeleteFunnelItem}
+                        onUpdate={handleUpdateFunnelItem}
+                        borderColor="border-warning/30"
+                      />
                     ))}
                   </div>
                 </div>
@@ -416,10 +440,13 @@ export default function Marketing() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {funnelItems.filter((f) => f.level === "fundo").map((item) => (
-                      <div key={item.id} className="bg-background rounded-lg px-3 py-2 border border-success/30">
-                        <p className="text-sm font-medium text-foreground">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
-                      </div>
+                      <FunnelItemCard 
+                        key={item.id} 
+                        item={item} 
+                        onDelete={handleDeleteFunnelItem}
+                        onUpdate={handleUpdateFunnelItem}
+                        borderColor="border-success/30"
+                      />
                     ))}
                   </div>
                 </div>
@@ -478,9 +505,15 @@ export default function Marketing() {
                 </div>
               </div>
             )}
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setSelectedCampanha(null)}>Cancelar</Button>
-              <Button onClick={handleUpdateCampanha}>Salvar</Button>
+            <div className="flex justify-between pt-4 border-t border-border/50">
+              <Button variant="destructive" onClick={() => selectedCampanha && handleDeleteCampanha(selectedCampanha.id)}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir
+              </Button>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setSelectedCampanha(null)}>Cancelar</Button>
+                <Button onClick={handleUpdateCampanha}>Salvar</Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
@@ -528,9 +561,15 @@ export default function Marketing() {
                 </div>
               </div>
             )}
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setSelectedConteudo(null)}>Cancelar</Button>
-              <Button onClick={handleUpdateConteudo}>Salvar</Button>
+            <div className="flex justify-between pt-4 border-t border-border/50">
+              <Button variant="destructive" onClick={() => selectedConteudo && handleDeleteConteudo(selectedConteudo.id)}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir
+              </Button>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setSelectedConteudo(null)}>Cancelar</Button>
+                <Button onClick={handleUpdateConteudo}>Salvar</Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
@@ -704,5 +743,79 @@ function AddFunnelItemDialog({ open, onOpenChange, level, onAdd }: { open: boole
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function FunnelItemCard({ 
+  item, 
+  onDelete, 
+  onUpdate,
+  borderColor 
+}: { 
+  item: FunnelItem; 
+  onDelete: (id: string) => void;
+  onUpdate: (id: string, name: string, description: string) => void;
+  borderColor: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [editedName, setEditedName] = useState(item.name);
+  const [editedDescription, setEditedDescription] = useState(item.description);
+
+  const handleSave = () => {
+    onUpdate(item.id, editedName, editedDescription);
+    setOpen(false);
+  };
+
+  const handleDelete = () => {
+    onDelete(item.id);
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <div 
+        onClick={() => setOpen(true)}
+        className={`bg-background rounded-lg px-3 py-2 border ${borderColor} cursor-pointer hover:shadow-md transition-shadow`}
+      >
+        <p className="text-sm font-medium text-foreground">{item.name}</p>
+        <p className="text-xs text-muted-foreground">{item.description}</p>
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-[400px] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Editar Item do Funil</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input 
+                value={editedName} 
+                onChange={(e) => setEditedName(e.target.value)} 
+                className="bg-muted border-border" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Textarea 
+                value={editedDescription} 
+                onChange={(e) => setEditedDescription(e.target.value)} 
+                className="bg-muted border-border" 
+              />
+            </div>
+          </div>
+          <div className="flex justify-between pt-4 border-t border-border/50">
+            <Button variant="destructive" onClick={handleDelete}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Excluir
+            </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSave}>Salvar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

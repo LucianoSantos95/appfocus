@@ -253,6 +253,11 @@ export default function Projetos() {
     setSelectedProjeto(updated);
   };
 
+  const handleDeleteProjeto = (id: string) => {
+    setProjetos(projetos.filter((p) => p.id !== id));
+    setSelectedProjeto(null);
+  };
+
   return (
     <MainLayout>
       <div className="space-y-8 animate-fade-in">
@@ -472,6 +477,7 @@ export default function Projetos() {
           open={!!selectedProjeto}
           onOpenChange={(open) => !open && setSelectedProjeto(null)}
           onUpdate={handleUpdateProjeto}
+          onDelete={handleDeleteProjeto}
         />
       )}
     </MainLayout>
@@ -483,11 +489,13 @@ function ProjectDetailDialog({
   open,
   onOpenChange,
   onUpdate,
+  onDelete,
 }: {
   projeto: Projeto;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate: (p: Projeto) => void;
+  onDelete: (id: string) => void;
 }) {
   const [editedProjeto, setEditedProjeto] = useState(projeto);
   const [newMember, setNewMember] = useState("");
@@ -814,11 +822,17 @@ function ProjectDetailDialog({
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
+        <div className="flex justify-between pt-4 border-t border-border/50">
+          <Button variant="destructive" onClick={() => onDelete(projeto.id)}>
+            <Trash2 className="w-4 h-4 mr-2" />
+            Excluir Projeto
           </Button>
-          <Button onClick={handleSave}>Salvar Alterações</Button>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave}>Salvar Alterações</Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

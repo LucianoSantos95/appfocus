@@ -178,6 +178,11 @@ export default function Processos() {
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
   const [editingStep, setEditingStep] = useState<{ processoId: string; step: ProcessoStep } | null>(null);
 
+  const handleDeleteProcesso = (id: string) => {
+    setProcessos(processos.filter((p) => p.id !== id));
+    setExpandedProcesso(null);
+  };
+
   const handleUpdateStep = (processoId: string, updatedStep: ProcessoStep) => {
     setProcessos(processos.map((p) => {
       if (p.id !== processoId) return p;
@@ -392,6 +397,14 @@ export default function Processos() {
                         >
                           <FileDown className="w-4 h-4" />
                           Exportar PDF
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="gap-2"
+                          onClick={() => handleDeleteProcesso(p.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Excluir
                         </Button>
                       </div>
                     </div>
