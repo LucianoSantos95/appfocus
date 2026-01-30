@@ -31,6 +31,11 @@ import {
   FolderKanban,
   Megaphone,
   ShoppingCart,
+  Trash2,
+  Edit,
+  Image,
+  Video,
+  FileDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -39,6 +44,18 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+interface ProcessoStep {
+  id: string;
+  title: string;
+  description: string;
+  responsible?: string;
+  duration?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+}
 
 interface Processo {
   id: string;
@@ -47,17 +64,9 @@ interface Processo {
   department: string;
   owner: string;
   lastUpdated: string;
-  status: "ativo" | "em_revisao" | "arquivado";
+  status: "ativo" | "em_revisao" | "arquivado" | "cancelado";
   icon: React.ElementType;
   steps: ProcessoStep[];
-}
-
-interface ProcessoStep {
-  id: string;
-  title: string;
-  description: string;
-  responsible?: string;
-  duration?: string;
 }
 
 const initialProcessos: Processo[] = [
@@ -157,6 +166,7 @@ const statusProcesso = {
   ativo: { label: "Ativo", class: "bg-success/10 text-success" },
   em_revisao: { label: "Em Revisão", class: "bg-warning/10 text-warning" },
   arquivado: { label: "Arquivado", class: "bg-muted text-muted-foreground" },
+  cancelado: { label: "Cancelado", class: "bg-destructive/10 text-destructive" },
 };
 
 const departments = ["Comercial", "Financeiro", "RH", "Marketing", "Projetos", "Tecnologia", "Operações"];
@@ -166,6 +176,64 @@ export default function Processos() {
   const [searchTerm, setSearchTerm] = useState("");
   const [processos, setProcessos] = useState<Processo[]>(initialProcessos);
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
+  const [editingStep, setEditingStep] = useState<{ processoId: string; step: ProcessoStep } | null>(null);
+
+  const handleUpdateStep = (processoId: string, updatedStep: ProcessoStep) => {
+    setProcessos(processos.map((p) => {
+      if (p.id !== processoId) return p;
+      return {
+        ...p,
+        steps: p.steps.map((s) => (s.id === updatedStep.id ? updatedStep : s)),
+        lastUpdated: new Date().toISOString().split("T")[0],
+      };
+    }));
+    setEditingStep(null);
+  };
+
+  const handleExportPDF = (processo: Processo) => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text(processo.name, 14, 22);
+
+    doc.setFontSize(12);
+    doc.text(`Departamento: ${processo.department}`, 14, 32);
+    doc.text(`Responsável: ${processo.owner}`, 14, 40);
+    doc.text(`Status: ${statusProcesso[processo.status].label}`, 14, 48);
+    doc.text(`Última atualização: ${new Date(processo.lastUpdated).toLocaleDateString("pt-BR")}`, 14, 56);
+
+    doc.setFontSize(10);
+    doc.text(processo.description, 14, 66, { maxWidth: 180 });
+
+    const tableData = processo.steps.map((step, index) => [
+      (index + 1).toString(),
+      step.title,
+      step.description,
+      step.responsible || "-",
+      step.duration || "-",
+    ]);
+
+    autoTable(doc, {
+      startY: 78,
+      head: [["#", "Etapa", "Descrição", "Responsável", "Duração"]],
+      body: tableData,
+      headStyles: { fillColor: [59, 130, 246] },
+      styles: { fontSize: 9 },
+      columnStyles: {
+        0: { cellWidth: 10 },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 80 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 25 },
+      },
+    });
+
+    doc.save(`${processo.name.replace(/\s+/g, "_")}.pdf`);
+  };
+
+  const handleUpdateProcesso = (updated: Processo) => {
+    setProcessos(processos.map((p) => (p.id === updated.id ? updated : p)));
+  };
 
   return (
     <MainLayout>
@@ -188,18 +256,20 @@ export default function Processos() {
               </p>
             </div>
           </div>
-          <AddProcessoDialog onAdd={(p) => setProcessos([p, ...processos])} />
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar processos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 w-80 bg-muted border-border"
-          />
+        {/* Search + New Button */}
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar processos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 bg-muted border-border"
+            />
+          </div>
+          <AddProcessoDialog onAdd={(p) => setProcessos([p, ...processos])} />
         </div>
 
         {/* Processos List */}
@@ -253,9 +323,12 @@ export default function Processos() {
                     <div className="pt-4 space-y-4">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Responsável: <span className="text-foreground">{p.owner}</span></span>
-                        <span className="text-muted-foreground">Atualizado: {new Date(p.lastUpdated).toLocaleDateString("pt-BR")}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Atualizado: {new Date(p.lastUpdated).toLocaleDateString("pt-BR")}</span>
+                          <EditProcessoDialog processo={p} onUpdate={handleUpdateProcesso} />
+                        </div>
                       </div>
-                      
+
                       {/* Timeline Steps */}
                       <div className="relative">
                         <div className="absolute left-[19px] top-6 bottom-6 w-0.5 bg-border" />
@@ -268,11 +341,21 @@ export default function Processos() {
                               <div className="flex-1 bg-muted/30 rounded-lg p-4">
                                 <div className="flex items-start justify-between mb-2">
                                   <p className="font-medium text-foreground">{step.title}</p>
-                                  {step.duration && (
-                                    <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">
-                                      {step.duration}
-                                    </span>
-                                  )}
+                                  <div className="flex items-center gap-2">
+                                    {step.duration && (
+                                      <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">
+                                        {step.duration}
+                                      </span>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6"
+                                      onClick={() => setEditingStep({ processoId: p.id, step })}
+                                    >
+                                      <Edit className="w-3 h-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                                 <p className="text-sm text-muted-foreground mb-2">{step.description}</p>
                                 {step.responsible && (
@@ -280,10 +363,36 @@ export default function Processos() {
                                     Responsável: {step.responsible}
                                   </span>
                                 )}
+                                {(step.imageUrl || step.videoUrl) && (
+                                  <div className="flex items-center gap-2 mt-2">
+                                    {step.imageUrl && (
+                                      <span className="text-xs flex items-center gap-1 text-muted-foreground">
+                                        <Image className="w-3 h-3" /> Imagem anexada
+                                      </span>
+                                    )}
+                                    {step.videoUrl && (
+                                      <span className="text-xs flex items-center gap-1 text-muted-foreground">
+                                        <Video className="w-3 h-3" /> Vídeo anexado
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           ))}
                         </div>
+                      </div>
+
+                      {/* Export Button */}
+                      <div className="flex justify-end pt-4">
+                        <Button
+                          variant="outline"
+                          className="gap-2"
+                          onClick={() => handleExportPDF(p)}
+                        >
+                          <FileDown className="w-4 h-4" />
+                          Exportar PDF
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -293,7 +402,269 @@ export default function Processos() {
           ))}
         </div>
       </div>
+
+      {/* Edit Step Dialog */}
+      {editingStep && (
+        <EditStepDialog
+          step={editingStep.step}
+          open={!!editingStep}
+          onOpenChange={(open) => !open && setEditingStep(null)}
+          onUpdate={(updatedStep) => handleUpdateStep(editingStep.processoId, updatedStep)}
+        />
+      )}
     </MainLayout>
+  );
+}
+
+function EditStepDialog({
+  step,
+  open,
+  onOpenChange,
+  onUpdate,
+}: {
+  step: ProcessoStep;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdate: (step: ProcessoStep) => void;
+}) {
+  const [editedStep, setEditedStep] = useState(step);
+
+  const handleSave = () => {
+    onUpdate(editedStep);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[550px] bg-card border-border">
+        <DialogHeader>
+          <DialogTitle className="text-foreground">Editar Etapa</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="space-y-2">
+            <Label>Título da Etapa</Label>
+            <Input
+              value={editedStep.title}
+              onChange={(e) => setEditedStep({ ...editedStep, title: e.target.value })}
+              className="bg-muted border-border"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Descrição Detalhada</Label>
+            <Textarea
+              value={editedStep.description}
+              onChange={(e) => setEditedStep({ ...editedStep, description: e.target.value })}
+              className="bg-muted border-border min-h-[100px]"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Responsável</Label>
+              <Input
+                value={editedStep.responsible || ""}
+                onChange={(e) => setEditedStep({ ...editedStep, responsible: e.target.value })}
+                placeholder="Cargo ou nome"
+                className="bg-muted border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Duração Estimada</Label>
+              <Input
+                value={editedStep.duration || ""}
+                onChange={(e) => setEditedStep({ ...editedStep, duration: e.target.value })}
+                placeholder="Ex: 2-3 dias"
+                className="bg-muted border-border"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>URL da Imagem (opcional)</Label>
+            <Input
+              value={editedStep.imageUrl || ""}
+              onChange={(e) => setEditedStep({ ...editedStep, imageUrl: e.target.value })}
+              placeholder="https://..."
+              className="bg-muted border-border"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>URL do Vídeo (opcional)</Label>
+            <Input
+              value={editedStep.videoUrl || ""}
+              onChange={(e) => setEditedStep({ ...editedStep, videoUrl: e.target.value })}
+              placeholder="https://youtube.com/..."
+              className="bg-muted border-border"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave}>Salvar</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditProcessoDialog({
+  processo,
+  onUpdate,
+}: {
+  processo: Processo;
+  onUpdate: (p: Processo) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [editedProcesso, setEditedProcesso] = useState(processo);
+  const [newStepTitle, setNewStepTitle] = useState("");
+
+  const handleSave = () => {
+    onUpdate({
+      ...editedProcesso,
+      lastUpdated: new Date().toISOString().split("T")[0],
+    });
+    setOpen(false);
+  };
+
+  const handleAddStep = () => {
+    if (!newStepTitle.trim()) return;
+    const newStep: ProcessoStep = {
+      id: Date.now().toString(),
+      title: newStepTitle,
+      description: "",
+    };
+    setEditedProcesso({
+      ...editedProcesso,
+      steps: [...editedProcesso.steps, newStep],
+    });
+    setNewStepTitle("");
+  };
+
+  const handleRemoveStep = (stepId: string) => {
+    setEditedProcesso({
+      ...editedProcesso,
+      steps: editedProcesso.steps.filter((s) => s.id !== stepId),
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="gap-1">
+          <Edit className="w-3 h-3" />
+          Editar
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-card border-border">
+        <DialogHeader>
+          <DialogTitle className="text-foreground">Editar Processo</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="space-y-2">
+            <Label>Nome do Processo</Label>
+            <Input
+              value={editedProcesso.name}
+              onChange={(e) => setEditedProcesso({ ...editedProcesso, name: e.target.value })}
+              className="bg-muted border-border"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Descrição</Label>
+            <Textarea
+              value={editedProcesso.description}
+              onChange={(e) => setEditedProcesso({ ...editedProcesso, description: e.target.value })}
+              className="bg-muted border-border"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Departamento</Label>
+              <Select
+                value={editedProcesso.department}
+                onValueChange={(v) => setEditedProcesso({ ...editedProcesso, department: v })}
+              >
+                <SelectTrigger className="bg-muted border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  {departments.map((d) => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select
+                value={editedProcesso.status}
+                onValueChange={(v: Processo["status"]) => setEditedProcesso({ ...editedProcesso, status: v })}
+              >
+                <SelectTrigger className="bg-muted border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="em_revisao">Em Revisão</SelectItem>
+                  <SelectItem value="arquivado">Arquivado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Responsável</Label>
+            <Input
+              value={editedProcesso.owner}
+              onChange={(e) => setEditedProcesso({ ...editedProcesso, owner: e.target.value })}
+              className="bg-muted border-border"
+            />
+          </div>
+
+          {/* Steps Management */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Etapas ({editedProcesso.steps.length})</Label>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={newStepTitle}
+                onChange={(e) => setNewStepTitle(e.target.value)}
+                placeholder="Título da nova etapa"
+                className="bg-muted border-border"
+                onKeyDown={(e) => e.key === "Enter" && handleAddStep()}
+              />
+              <Button onClick={handleAddStep} size="sm">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+              {editedProcesso.steps.map((step, index) => (
+                <div key={step.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
+                  <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+                    {index + 1}
+                  </span>
+                  <span className="flex-1 text-sm text-foreground">{step.title}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveStep(step.id)}
+                    className="h-6 w-6 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave}>Salvar</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -304,11 +675,29 @@ function AddProcessoDialog({ onAdd }: { onAdd: (p: Processo) => void }) {
     description: "",
     department: "",
     owner: "",
+    status: "em_revisao" as Processo["status"],
   });
+  const [steps, setSteps] = useState<ProcessoStep[]>([]);
+  const [newStepTitle, setNewStepTitle] = useState("");
+
+  const handleAddStep = () => {
+    if (!newStepTitle.trim()) return;
+    const newStep: ProcessoStep = {
+      id: Date.now().toString(),
+      title: newStepTitle,
+      description: "",
+    };
+    setSteps([...steps, newStep]);
+    setNewStepTitle("");
+  };
+
+  const handleRemoveStep = (stepId: string) => {
+    setSteps(steps.filter((s) => s.id !== stepId));
+  };
 
   const handleSubmit = () => {
     if (!form.name || !form.department) return;
-    
+
     const processo: Processo = {
       id: Date.now().toString(),
       name: form.name,
@@ -316,13 +705,14 @@ function AddProcessoDialog({ onAdd }: { onAdd: (p: Processo) => void }) {
       department: form.department,
       owner: form.owner,
       lastUpdated: new Date().toISOString().split("T")[0],
-      status: "em_revisao",
+      status: form.status,
       icon: FileText,
-      steps: [],
+      steps: steps,
     };
-    
+
     onAdd(processo);
-    setForm({ name: "", description: "", department: "", owner: "" });
+    setForm({ name: "", description: "", department: "", owner: "", status: "em_revisao" });
+    setSteps([]);
     setOpen(false);
   };
 
@@ -334,7 +724,7 @@ function AddProcessoDialog({ onAdd }: { onAdd: (p: Processo) => void }) {
           Novo Processo
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] bg-card border-border">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-foreground">Novo Processo</DialogTitle>
         </DialogHeader>
@@ -372,13 +762,67 @@ function AddProcessoDialog({ onAdd }: { onAdd: (p: Processo) => void }) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Responsável</Label>
+              <Label>Status</Label>
+              <Select value={form.status} onValueChange={(v: Processo["status"]) => setForm({ ...form, status: v })}>
+                <SelectTrigger className="bg-muted border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="em_revisao">Em Revisão</SelectItem>
+                  <SelectItem value="arquivado">Arquivado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Responsável</Label>
+            <Input
+              value={form.owner}
+              onChange={(e) => setForm({ ...form, owner: e.target.value })}
+              placeholder="Nome do responsável"
+              className="bg-muted border-border"
+            />
+          </div>
+
+          {/* Steps */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Etapas do Processo</Label>
+              <span className="text-xs text-muted-foreground">
+                Este processo contém {steps.length} etapas
+              </span>
+            </div>
+            <div className="flex gap-2">
               <Input
-                value={form.owner}
-                onChange={(e) => setForm({ ...form, owner: e.target.value })}
-                placeholder="Nome do responsável"
+                value={newStepTitle}
+                onChange={(e) => setNewStepTitle(e.target.value)}
+                placeholder="Título da etapa"
                 className="bg-muted border-border"
+                onKeyDown={(e) => e.key === "Enter" && handleAddStep()}
               />
+              <Button onClick={handleAddStep} size="sm">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="space-y-2 max-h-[150px] overflow-y-auto">
+              {steps.map((step, index) => (
+                <div key={step.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
+                  <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+                    {index + 1}
+                  </span>
+                  <span className="flex-1 text-sm text-foreground">{step.title}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveStep(step.id)}
+                    className="h-6 w-6 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
             </div>
           </div>
         </div>

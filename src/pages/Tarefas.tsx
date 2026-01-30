@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ListTodo,
   Plus,
@@ -30,6 +31,8 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
+  Trash2,
+  GripVertical,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -46,14 +49,22 @@ import {
   Tooltip,
 } from "recharts";
 
+interface SubTask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
 interface Atividade {
   id: string;
   title: string;
   description: string;
   dueDate: string;
-  priority: "alta" | "media" | "baixa";
+  priority: "urgente" | "alta" | "media" | "baixa";
   status: "pendente" | "concluida";
   category: "tarefa" | "meta";
+  responsible?: string;
+  subtasks: SubTask[];
 }
 
 const initialAtividades: Atividade[] = [
@@ -62,9 +73,14 @@ const initialAtividades: Atividade[] = [
     title: "Revisar proposta comercial",
     description: "Finalizar proposta para cliente Tech Solutions",
     dueDate: "2025-01-29",
-    priority: "alta",
+    priority: "urgente",
     status: "pendente",
     category: "tarefa",
+    responsible: "Ana Silva",
+    subtasks: [
+      { id: "s1", title: "Levantar requisitos", completed: true },
+      { id: "s2", title: "Definir escopo", completed: false },
+    ],
   },
   {
     id: "2",
@@ -74,6 +90,7 @@ const initialAtividades: Atividade[] = [
     priority: "alta",
     status: "pendente",
     category: "meta",
+    subtasks: [],
   },
   {
     id: "3",
@@ -83,6 +100,8 @@ const initialAtividades: Atividade[] = [
     priority: "media",
     status: "pendente",
     category: "tarefa",
+    responsible: "Bruno Costa",
+    subtasks: [],
   },
   {
     id: "4",
@@ -92,6 +111,7 @@ const initialAtividades: Atividade[] = [
     priority: "media",
     status: "pendente",
     category: "meta",
+    subtasks: [],
   },
   {
     id: "5",
@@ -101,47 +121,167 @@ const initialAtividades: Atividade[] = [
     priority: "baixa",
     status: "concluida",
     category: "tarefa",
+    subtasks: [],
+  },
+  {
+    id: "6",
+    title: "Preparar apresentação para investidores",
+    description: "Criar deck para rodada de investimentos",
+    dueDate: "2025-02-01",
+    priority: "alta",
+    status: "pendente",
+    category: "tarefa",
+    responsible: "Carla Oliveira",
+    subtasks: [],
   },
 ];
 
-const statusData = [
-  { name: "Pendentes", value: 4, color: "hsl(var(--warning))" },
-  { name: "Concluídas", value: 1, color: "hsl(var(--success))" },
-];
-
-const priorityData = [
-  { name: "Alta", count: 2 },
-  { name: "Média", count: 2 },
-  { name: "Baixa", count: 1 },
-];
-
 const priorityStyles = {
-  alta: "text-destructive",
-  media: "text-warning",
-  baixa: "text-success",
+  urgente: { text: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/30" },
+  alta: { text: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/30" },
+  media: { text: "text-warning", bg: "bg-warning/10", border: "border-warning/30" },
+  baixa: { text: "text-success", bg: "bg-success/10", border: "border-success/30" },
 };
 
-export default function Atividades() {
+const priorityLabels = {
+  urgente: "Urgente",
+  alta: "Alta",
+  media: "Média",
+  baixa: "Baixa",
+};
+
+export default function Tarefas() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState<"todas" | "pendentes" | "concluidas">("todas");
   const [atividades, setAtividades] = useState<Atividade[]>(initialAtividades);
-
-  const filteredAtividades = atividades.filter((a) => {
-    if (filter === "pendentes") return a.status === "pendente";
-    if (filter === "concluidas") return a.status === "concluida";
-    return true;
-  });
+  const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
 
   const pendentes = atividades.filter((a) => a.status === "pendente").length;
   const concluidas = atividades.filter((a) => a.status === "concluida").length;
   const metas = atividades.filter((a) => a.category === "meta").length;
-  const urgentes = atividades.filter((a) => a.priority === "alta" && a.status === "pendente").length;
+  const urgentes = atividades.filter((a) => (a.priority === "alta" || a.priority === "urgente") && a.status === "pendente").length;
+
+  const statusData = [
+    { name: "Pendentes", value: pendentes, color: "hsl(var(--warning))" },
+    { name: "Concluídas", value: concluidas, color: "hsl(var(--success))" },
+  ];
+
+  const priorityData = [
+    { name: "Urgente", count: atividades.filter((a) => a.priority === "urgente").length },
+    { name: "Alta", count: atividades.filter((a) => a.priority === "alta").length },
+    { name: "Média", count: atividades.filter((a) => a.priority === "media").length },
+    { name: "Baixa", count: atividades.filter((a) => a.priority === "baixa").length },
+  ];
 
   const toggleStatus = (id: string) => {
     setAtividades(atividades.map((a) =>
       a.id === id ? { ...a, status: a.status === "pendente" ? "concluida" : "pendente" } : a
     ));
+  };
+
+  const handleUpdateAtividade = (updated: Atividade) => {
+    setAtividades(atividades.map((a) => (a.id === updated.id ? updated : a)));
+    setSelectedAtividade(null);
+  };
+
+  const handleDeleteAtividade = (id: string) => {
+    setAtividades(atividades.filter((a) => a.id !== id));
+    setSelectedAtividade(null);
+  };
+
+  const getAtividadesByPriority = (priority: Atividade["priority"]) => {
+    return atividades.filter((a) => a.priority === priority && a.status === "pendente");
+  };
+
+  const todasAtividades = atividades;
+  const concluidasAtividades = atividades.filter((a) => a.status === "concluida");
+
+  const renderAtividadeItem = (a: Atividade) => (
+    <div
+      key={a.id}
+      onClick={() => setSelectedAtividade(a)}
+      className={cn(
+        "p-4 flex items-start gap-4 hover:bg-muted/30 transition-colors cursor-pointer",
+        a.status === "concluida" && "opacity-60"
+      )}
+    >
+      <div onClick={(e) => e.stopPropagation()}>
+        <Checkbox
+          checked={a.status === "concluida"}
+          onCheckedChange={() => toggleStatus(a.id)}
+          className="mt-1"
+        />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          {a.category === "meta" ? (
+            <Target className="w-4 h-4 text-primary flex-shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+          )}
+          <p
+            className={cn(
+              "font-medium text-foreground",
+              a.status === "concluida" && "line-through"
+            )}
+          >
+            {a.title}
+          </p>
+        </div>
+        <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
+          {a.description}
+        </p>
+        <div className="flex items-center gap-3 mt-2 text-xs">
+          <span className="text-muted-foreground">
+            Prazo: {new Date(a.dueDate).toLocaleDateString("pt-BR")}
+          </span>
+          <span className={cn("font-medium capitalize px-2 py-0.5 rounded-full", priorityStyles[a.priority].bg, priorityStyles[a.priority].text)}>
+            {priorityLabels[a.priority]}
+          </span>
+          {a.responsible && (
+            <span className="text-muted-foreground">• {a.responsible}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderKanbanColumn = (priority: Atividade["priority"], label: string) => {
+    const items = getAtividadesByPriority(priority);
+    return (
+      <div className={cn("flex-1 min-w-[250px] rounded-lg border p-3", priorityStyles[priority].border, priorityStyles[priority].bg)}>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className={cn("font-semibold", priorityStyles[priority].text)}>{label}</h4>
+          <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", priorityStyles[priority].bg, priorityStyles[priority].text)}>
+            {items.length}
+          </span>
+        </div>
+        <div className="space-y-2">
+          {items.map((a) => (
+            <div
+              key={a.id}
+              onClick={() => setSelectedAtividade(a)}
+              className="bg-card rounded-lg p-3 shadow-sm border border-border/50 cursor-pointer hover:border-primary/30 transition-colors"
+            >
+              <div className="flex items-start gap-2">
+                <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground text-sm line-clamp-2">{a.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{a.description}</p>
+                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    <span>{new Date(a.dueDate).toLocaleDateString("pt-BR")}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {items.length === 0 && (
+            <p className="text-center text-sm text-muted-foreground py-4">Nenhuma tarefa</p>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -159,13 +299,12 @@ export default function Atividades() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Atividades</h1>
+              <h1 className="text-2xl font-bold text-foreground">Tarefas</h1>
               <p className="text-muted-foreground mt-1">
                 Tarefas e metas do negócio
               </p>
             </div>
           </div>
-          <AddAtividadeDialog onAdd={(a) => setAtividades([a, ...atividades])} />
         </div>
 
         {/* Overview */}
@@ -254,31 +393,13 @@ export default function Atividades() {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* New Activity Button */}
+        <div className="flex justify-center">
+          <AddAtividadeDialog onAdd={(a) => setAtividades([a, ...atividades])} />
+        </div>
+
+        {/* Search */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              variant={filter === "todas" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setFilter("todas")}
-            >
-              Todas
-            </Button>
-            <Button
-              variant={filter === "pendentes" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setFilter("pendentes")}
-            >
-              Pendentes
-            </Button>
-            <Button
-              variant={filter === "concluidas" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setFilter("concluidas")}
-            >
-              Concluídas
-            </Button>
-          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -290,54 +411,239 @@ export default function Atividades() {
           </div>
         </div>
 
-        {/* List */}
-        <div className="bg-card rounded-xl border border-border/50 shadow-premium divide-y divide-border/50">
-          {filteredAtividades.map((a) => (
-            <div
-              key={a.id}
-              className={cn(
-                "p-4 flex items-start gap-4 hover:bg-muted/30 transition-colors",
-                a.status === "concluida" && "opacity-60"
-              )}
-            >
-              <Checkbox
-                checked={a.status === "concluida"}
-                onCheckedChange={() => toggleStatus(a.id)}
-                className="mt-1"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  {a.category === "meta" ? (
-                    <Target className="w-4 h-4 text-primary flex-shrink-0" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  )}
-                  <p
-                    className={cn(
-                      "font-medium text-foreground",
-                      a.status === "concluida" && "line-through"
-                    )}
-                  >
-                    {a.title}
-                  </p>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
-                  {a.description}
-                </p>
-                <div className="flex items-center gap-3 mt-2 text-xs">
-                  <span className="text-muted-foreground">
-                    Prazo: {new Date(a.dueDate).toLocaleDateString("pt-BR")}
-                  </span>
-                  <span className={cn("font-medium capitalize", priorityStyles[a.priority])}>
-                    Prioridade {a.priority}
-                  </span>
-                </div>
-              </div>
+        {/* Tabs */}
+        <Tabs defaultValue="todas" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 max-w-md">
+            <TabsTrigger value="todas">Todas</TabsTrigger>
+            <TabsTrigger value="kanban">Kanban</TabsTrigger>
+            <TabsTrigger value="concluidas">Concluídas</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="todas" className="mt-6">
+            <div className="bg-card rounded-xl border border-border/50 shadow-premium divide-y divide-border/50">
+              {todasAtividades.map(renderAtividadeItem)}
             </div>
-          ))}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="kanban" className="mt-6">
+            <div className="flex gap-4 overflow-x-auto pb-4">
+              {renderKanbanColumn("urgente", "Urgente")}
+              {renderKanbanColumn("alta", "Alta")}
+              {renderKanbanColumn("media", "Média")}
+              {renderKanbanColumn("baixa", "Baixa")}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="concluidas" className="mt-6">
+            <div className="bg-card rounded-xl border border-border/50 shadow-premium divide-y divide-border/50">
+              {concluidasAtividades.map(renderAtividadeItem)}
+              {concluidasAtividades.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">Nenhuma tarefa concluída</p>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {/* Edit Dialog */}
+      {selectedAtividade && (
+        <EditAtividadeDialog
+          atividade={selectedAtividade}
+          open={!!selectedAtividade}
+          onOpenChange={(open) => !open && setSelectedAtividade(null)}
+          onUpdate={handleUpdateAtividade}
+          onDelete={handleDeleteAtividade}
+        />
+      )}
     </MainLayout>
+  );
+}
+
+function EditAtividadeDialog({
+  atividade,
+  open,
+  onOpenChange,
+  onUpdate,
+  onDelete,
+}: {
+  atividade: Atividade;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdate: (a: Atividade) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [editedAtividade, setEditedAtividade] = useState(atividade);
+  const [newSubtask, setNewSubtask] = useState("");
+
+  const handleSave = () => {
+    onUpdate(editedAtividade);
+    onOpenChange(false);
+  };
+
+  const handleAddSubtask = () => {
+    if (!newSubtask.trim()) return;
+    const subtask: SubTask = {
+      id: Date.now().toString(),
+      title: newSubtask,
+      completed: false,
+    };
+    setEditedAtividade({
+      ...editedAtividade,
+      subtasks: [...editedAtividade.subtasks, subtask],
+    });
+    setNewSubtask("");
+  };
+
+  const handleToggleSubtask = (subtaskId: string) => {
+    setEditedAtividade({
+      ...editedAtividade,
+      subtasks: editedAtividade.subtasks.map((s) =>
+        s.id === subtaskId ? { ...s, completed: !s.completed } : s
+      ),
+    });
+  };
+
+  const handleRemoveSubtask = (subtaskId: string) => {
+    setEditedAtividade({
+      ...editedAtividade,
+      subtasks: editedAtividade.subtasks.filter((s) => s.id !== subtaskId),
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto bg-card border-border">
+        <DialogHeader>
+          <DialogTitle className="text-foreground">Editar Tarefa</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="space-y-2">
+            <Label>Título</Label>
+            <Input
+              value={editedAtividade.title}
+              onChange={(e) => setEditedAtividade({ ...editedAtividade, title: e.target.value })}
+              className="bg-muted border-border"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Descrição</Label>
+            <Textarea
+              value={editedAtividade.description}
+              onChange={(e) => setEditedAtividade({ ...editedAtividade, description: e.target.value })}
+              className="bg-muted border-border"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Prazo</Label>
+              <Input
+                type="date"
+                value={editedAtividade.dueDate}
+                onChange={(e) => setEditedAtividade({ ...editedAtividade, dueDate: e.target.value })}
+                className="bg-muted border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Responsável</Label>
+              <Input
+                value={editedAtividade.responsible || ""}
+                onChange={(e) => setEditedAtividade({ ...editedAtividade, responsible: e.target.value })}
+                placeholder="Nome do responsável"
+                className="bg-muted border-border"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Prioridade</Label>
+              <Select
+                value={editedAtividade.priority}
+                onValueChange={(v: Atividade["priority"]) => setEditedAtividade({ ...editedAtividade, priority: v })}
+              >
+                <SelectTrigger className="bg-muted border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="urgente">Urgente</SelectItem>
+                  <SelectItem value="alta">Alta</SelectItem>
+                  <SelectItem value="media">Média</SelectItem>
+                  <SelectItem value="baixa">Baixa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <Select
+                value={editedAtividade.category}
+                onValueChange={(v: "tarefa" | "meta") => setEditedAtividade({ ...editedAtividade, category: v })}
+              >
+                <SelectTrigger className="bg-muted border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  <SelectItem value="tarefa">Tarefa</SelectItem>
+                  <SelectItem value="meta">Meta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Subtasks */}
+          <div className="space-y-3">
+            <Label>Subtarefas</Label>
+            <div className="flex gap-2">
+              <Input
+                value={newSubtask}
+                onChange={(e) => setNewSubtask(e.target.value)}
+                placeholder="Nova subtarefa"
+                className="bg-muted border-border"
+                onKeyDown={(e) => e.key === "Enter" && handleAddSubtask()}
+              />
+              <Button onClick={handleAddSubtask} size="sm">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {editedAtividade.subtasks.map((subtask) => (
+                <div key={subtask.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
+                  <Checkbox
+                    checked={subtask.completed}
+                    onCheckedChange={() => handleToggleSubtask(subtask.id)}
+                  />
+                  <span className={cn("flex-1 text-sm", subtask.completed && "line-through text-muted-foreground")}>
+                    {subtask.title}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveSubtask(subtask.id)}
+                    className="h-6 w-6 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-between">
+          <Button
+            variant="destructive"
+            onClick={() => onDelete(atividade.id)}
+            className="gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Excluir
+          </Button>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave}>Salvar</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -347,13 +653,14 @@ function AddAtividadeDialog({ onAdd }: { onAdd: (a: Atividade) => void }) {
     title: "",
     description: "",
     dueDate: "",
-    priority: "media" as "alta" | "media" | "baixa",
+    priority: "media" as Atividade["priority"],
     category: "tarefa" as "tarefa" | "meta",
+    responsible: "",
   });
 
   const handleSubmit = () => {
     if (!form.title) return;
-    
+
     const atividade: Atividade = {
       id: Date.now().toString(),
       title: form.title,
@@ -362,10 +669,12 @@ function AddAtividadeDialog({ onAdd }: { onAdd: (a: Atividade) => void }) {
       priority: form.priority,
       status: "pendente",
       category: form.category,
+      responsible: form.responsible,
+      subtasks: [],
     };
-    
+
     onAdd(atividade);
-    setForm({ title: "", description: "", dueDate: "", priority: "media", category: "tarefa" });
+    setForm({ title: "", description: "", dueDate: "", priority: "media", category: "tarefa", responsible: "" });
     setOpen(false);
   };
 
@@ -400,7 +709,7 @@ function AddAtividadeDialog({ onAdd }: { onAdd: (a: Atividade) => void }) {
               className="bg-muted border-border"
             />
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Prazo</Label>
               <Input
@@ -411,12 +720,24 @@ function AddAtividadeDialog({ onAdd }: { onAdd: (a: Atividade) => void }) {
               />
             </div>
             <div className="space-y-2">
+              <Label>Responsável</Label>
+              <Input
+                value={form.responsible}
+                onChange={(e) => setForm({ ...form, responsible: e.target.value })}
+                placeholder="Nome"
+                className="bg-muted border-border"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label>Prioridade</Label>
-              <Select value={form.priority} onValueChange={(v: "alta" | "media" | "baixa") => setForm({ ...form, priority: v })}>
+              <Select value={form.priority} onValueChange={(v: Atividade["priority"]) => setForm({ ...form, priority: v })}>
                 <SelectTrigger className="bg-muted border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">
+                  <SelectItem value="urgente">Urgente</SelectItem>
                   <SelectItem value="alta">Alta</SelectItem>
                   <SelectItem value="media">Média</SelectItem>
                   <SelectItem value="baixa">Baixa</SelectItem>
