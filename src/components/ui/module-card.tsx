@@ -16,8 +16,9 @@ export function ModuleCard({ icon: Icon, title, description, onClick, className 
       className={cn(
         "group relative flex flex-col items-start gap-3 p-5 rounded-lg",
         "bg-card border border-border/50 shadow-premium",
-        "transition-all duration-300 ease-out",
+        "transition-all duration-300 ease-smooth",
         "hover:border-primary/30 hover:shadow-glow hover:bg-muted/50",
+        "hover:-translate-y-2",
         "focus:outline-none focus:ring-2 focus:ring-primary/50",
         "text-left w-full",
         className
