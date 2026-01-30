@@ -32,6 +32,7 @@ import {
   Building,
   Upload,
   Edit,
+  Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -221,6 +222,11 @@ export default function RH() {
     setVagas(vagas.map((v) => (v.id === id ? { ...v, status } : v)));
   };
 
+  const handleDeleteColaborador = (id: string) => {
+    setColaboradores(colaboradores.filter((c) => c.id !== id));
+    setSelectedColaborador(null);
+  };
+
   return (
     <MainLayout>
       <div className="space-y-8 animate-fade-in">
@@ -281,118 +287,127 @@ export default function RH() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="colaboradores" className="space-y-6">
-          <TabsList className="bg-muted">
-            <TabsTrigger value="colaboradores">Colaboradores</TabsTrigger>
-            <TabsTrigger value="vagas">Vagas</TabsTrigger>
-          </TabsList>
+        {/* Seção de Colaboradores */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Colaboradores</h2>
+            <AddColaboradorDialog onAdd={(c) => setColaboradores([c, ...colaboradores])} />
+          </div>
 
-          <TabsContent value="colaboradores" className="space-y-6">
-            <div className="flex justify-end">
-              <AddColaboradorDialog onAdd={(c) => setColaboradores([c, ...colaboradores])} />
-            </div>
+          <Tabs defaultValue="ativo" className="space-y-4">
+            <TabsList className="bg-muted/50">
+              <TabsTrigger value="ativo">Ativos</TabsTrigger>
+              <TabsTrigger value="ferias">Em Férias</TabsTrigger>
+              <TabsTrigger value="licenca">Afastados</TabsTrigger>
+              <TabsTrigger value="todos">Todos</TabsTrigger>
+            </TabsList>
 
-            {/* Sub-tabs for Colaboradores */}
-            <Tabs defaultValue="ativo" className="space-y-4">
-              <TabsList className="bg-muted/50">
-                <TabsTrigger value="ativo">Ativos</TabsTrigger>
-                <TabsTrigger value="ferias">Em Férias</TabsTrigger>
-                <TabsTrigger value="licenca">Afastados</TabsTrigger>
-                <TabsTrigger value="todos">Todos</TabsTrigger>
-              </TabsList>
-
-              {["ativo", "ferias", "licenca", "todos"].map((filter) => (
-                <TabsContent key={filter} value={filter} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {getFilteredColaboradores(filter as any).map((c) => (
-                      <div
-                        key={c.id}
-                        className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
-                        onClick={() => setSelectedColaborador(c)}
-                      >
-                        <div className="flex items-start gap-4">
-                          <Avatar className="w-12 h-12">
-                            <AvatarImage src={c.avatar} alt={c.name} />
-                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                              {c.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <p className="font-semibold text-foreground truncate">{c.name}</p>
-                                <p className="text-sm text-muted-foreground">{c.role}</p>
-                              </div>
-                              <span className={cn("text-xs px-2 py-1 rounded-full font-medium flex-shrink-0", statusColaborador[c.status].class)}>
-                                {statusColaborador[c.status].label}
-                              </span>
+            {["ativo", "ferias", "licenca", "todos"].map((filter) => (
+              <TabsContent key={filter} value={filter} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {getFilteredColaboradores(filter as any).map((c) => (
+                    <div
+                      key={c.id}
+                      className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
+                      onClick={() => setSelectedColaborador(c)}
+                    >
+                      <div className="flex items-start gap-4">
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={c.avatar} alt={c.name} />
+                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                            {c.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="font-semibold text-foreground truncate">{c.name}</p>
+                              <p className="text-sm text-muted-foreground">{c.role}</p>
                             </div>
+                            <span className={cn("text-xs px-2 py-1 rounded-full font-medium flex-shrink-0", statusColaborador[c.status].class)}>
+                              {statusColaborador[c.status].label}
+                            </span>
                           </div>
                         </div>
-                        <div className="mt-4 space-y-2">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Building className="w-4 h-4" />
-                            <span>{c.department}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Mail className="w-4 h-4" />
-                            <span className="truncate">{c.email}</span>
-                          </div>
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Building className="w-4 h-4" />
+                          <span>{c.department}</span>
                         </div>
-                        <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Desde {new Date(c.startDate).toLocaleDateString("pt-BR")}</span>
-                          <span className="text-foreground font-medium">R$ {c.salary.toLocaleString("pt-BR")}</span>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Mail className="w-4 h-4" />
+                          <span className="truncate">{c.email}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </TabsContent>
-              ))}
-            </Tabs>
-          </TabsContent>
-
-          <TabsContent value="vagas" className="space-y-4">
-            <div className="flex justify-end">
-              <AddVagaDialog onAdd={(v) => setVagas([v, ...vagas])} />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {vagas.map((v) => (
-                <div
-                  key={v.id}
-                  className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
-                  onClick={() => setSelectedVaga(v)}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Briefcase className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-foreground">{v.title}</p>
-                        <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{v.department}</span>
+                      <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Desde {new Date(c.startDate).toLocaleDateString("pt-BR")}</span>
+                        <span className="text-foreground font-medium">R$ {c.salary.toLocaleString("pt-BR")}</span>
                       </div>
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Nível</span>
-                      <span className="text-foreground font-medium">{v.level}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Faixa Salarial</span>
-                      <span className="text-foreground font-medium">{v.salaryRange}</span>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
-                    <span className={cn("text-xs px-2 py-1 rounded-full font-medium", statusVaga[v.status].class)}>{statusVaga[v.status].label}</span>
-                    <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", priorityStyles[v.priority])}>{v.priority}</span>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+
+        {/* Seção de Vagas (abaixo de Colaboradores) */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Vagas</h2>
+            <AddVagaDialog onAdd={(v) => setVagas([v, ...vagas])} />
+          </div>
+
+          <Tabs defaultValue="aberta" className="space-y-4">
+            <TabsList className="bg-muted/50">
+              <TabsTrigger value="aberta">Abertas</TabsTrigger>
+              <TabsTrigger value="em_analise">Em Análise</TabsTrigger>
+              <TabsTrigger value="processo_recrutamento">Recrutamento</TabsTrigger>
+              <TabsTrigger value="todas">Todas</TabsTrigger>
+            </TabsList>
+
+            {["aberta", "em_analise", "processo_recrutamento", "todas"].map((filter) => (
+              <TabsContent key={filter} value={filter} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {vagas.filter((v) => filter === "todas" || v.status === filter).map((v) => (
+                    <div
+                      key={v.id}
+                      className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
+                      onClick={() => setSelectedVaga(v)}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Briefcase className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-foreground">{v.title}</p>
+                            <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{v.department}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Nível</span>
+                          <span className="text-foreground font-medium">{v.level}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Faixa Salarial</span>
+                          <span className="text-foreground font-medium">{v.salaryRange}</span>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
+                        <span className={cn("text-xs px-2 py-1 rounded-full font-medium", statusVaga[v.status].class)}>{statusVaga[v.status].label}</span>
+                        <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", priorityStyles[v.priority])}>{v.priority}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
 
         {/* Colaborador Detail Dialog */}
         <Dialog open={!!selectedColaborador} onOpenChange={() => setSelectedColaborador(null)}>
@@ -457,6 +472,15 @@ export default function RH() {
                 )}
               </div>
             )}
+            <div className="flex justify-between pt-4 border-t border-border/50">
+              <Button variant="destructive" onClick={() => selectedColaborador && handleDeleteColaborador(selectedColaborador.id)}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir Colaborador
+              </Button>
+              <Button variant="outline" onClick={() => setSelectedColaborador(null)}>
+                Fechar
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
 

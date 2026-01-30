@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Pin, Plus } from "lucide-react";
+import { MessageSquare, Pin, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -46,6 +46,7 @@ const initialNotes: Note[] = [
 export function BulletinBoard() {
   const [notes, setNotes] = useState<Note[]>(initialNotes);
   const [open, setOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [newNote, setNewNote] = useState({
     content: "",
     author: "",
@@ -68,7 +69,6 @@ export function BulletinBoard() {
       isPinned: newNote.isPinned,
     };
 
-    // Adiciona notas fixadas no topo
     if (note.isPinned) {
       setNotes([note, ...notes]);
     } else {
@@ -79,6 +79,25 @@ export function BulletinBoard() {
 
     setNewNote({ content: "", author: "", isPinned: false });
     setOpen(false);
+  };
+
+  const handleUpdateNote = () => {
+    if (!editingNote) return;
+    
+    const updatedNotes = notes.map((n) => 
+      n.id === editingNote.id ? editingNote : n
+    );
+    
+    // Reordenar se o status de fixado mudou
+    const pinnedNotes = updatedNotes.filter((n) => n.isPinned);
+    const unpinnedNotes = updatedNotes.filter((n) => !n.isPinned);
+    setNotes([...pinnedNotes, ...unpinnedNotes]);
+    setEditingNote(null);
+  };
+
+  const handleDeleteNote = (id: string) => {
+    setNotes(notes.filter((n) => n.id !== id));
+    setEditingNote(null);
   };
 
   return (
@@ -146,7 +165,8 @@ export function BulletinBoard() {
         {notes.map((note) => (
           <div
             key={note.id}
-            className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+            onClick={() => setEditingNote(note)}
+            className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
           >
             <div className="flex items-start gap-2">
               {note.isPinned && (
@@ -164,6 +184,59 @@ export function BulletinBoard() {
           </div>
         ))}
       </div>
+
+      {/* Edit Note Dialog */}
+      <Dialog open={!!editingNote} onOpenChange={() => setEditingNote(null)}>
+        <DialogContent className="sm:max-w-[425px] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Editar Recado</DialogTitle>
+          </DialogHeader>
+          {editingNote && (
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label>Autor</Label>
+                <Input
+                  value={editingNote.author}
+                  onChange={(e) => setEditingNote({ ...editingNote, author: e.target.value })}
+                  className="bg-muted border-border"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Mensagem</Label>
+                <Textarea
+                  value={editingNote.content}
+                  onChange={(e) => setEditingNote({ ...editingNote, content: e.target.value })}
+                  className="bg-muted border-border min-h-[100px]"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-pinned"
+                  checked={editingNote.isPinned || false}
+                  onCheckedChange={(checked) =>
+                    setEditingNote({ ...editingNote, isPinned: checked === true })
+                  }
+                />
+                <Label htmlFor="edit-pinned" className="text-sm font-normal cursor-pointer">
+                  Fixar no topo do mural
+                </Label>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <Button variant="destructive" onClick={() => editingNote && handleDeleteNote(editingNote.id)}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Excluir
+            </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setEditingNote(null)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateNote}>Salvar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
