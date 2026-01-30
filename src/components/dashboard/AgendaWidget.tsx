@@ -70,6 +70,7 @@ const priorityStyles = {
 export function AgendaWidget() {
   const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
   const [open, setOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [newAppointment, setNewAppointment] = useState<{
     title: string;
     date: string;
@@ -99,6 +100,19 @@ export function AgendaWidget() {
     setAppointments([appointment, ...appointments]);
     setNewAppointment({ title: "", date: "", time: "", type: "meeting", priority: "medium" });
     setOpen(false);
+  };
+
+  const handleUpdateAppointment = () => {
+    if (!editingAppointment) return;
+    setAppointments(appointments.map((apt) => 
+      apt.id === editingAppointment.id ? editingAppointment : apt
+    ));
+    setEditingAppointment(null);
+  };
+
+  const handleDeleteAppointment = (id: string) => {
+    setAppointments(appointments.filter((apt) => apt.id !== id));
+    setEditingAppointment(null);
   };
 
   return (
@@ -204,8 +218,9 @@ export function AgendaWidget() {
         {appointments.map((apt) => (
           <div
             key={apt.id}
+            onClick={() => setEditingAppointment(apt)}
             className={cn(
-              "p-3 rounded-lg bg-muted/30 border-l-2",
+              "p-3 rounded-lg bg-muted/30 border-l-2 cursor-pointer hover:bg-muted/50 transition-colors",
               apt.priority ? priorityStyles[apt.priority] : "border-l-primary"
             )}
           >
@@ -226,6 +241,85 @@ export function AgendaWidget() {
           </div>
         ))}
       </div>
+
+      {/* Edit Appointment Dialog */}
+      <Dialog open={!!editingAppointment} onOpenChange={() => setEditingAppointment(null)}>
+        <DialogContent className="sm:max-w-[425px] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Editar Compromisso</DialogTitle>
+          </DialogHeader>
+          {editingAppointment && (
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label>Título</Label>
+                <Input
+                  value={editingAppointment.title}
+                  onChange={(e) => setEditingAppointment({ ...editingAppointment, title: e.target.value })}
+                  className="bg-muted border-border"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Horário</Label>
+                  <Input
+                    type="time"
+                    value={editingAppointment.time}
+                    onChange={(e) => setEditingAppointment({ ...editingAppointment, time: e.target.value })}
+                    className="bg-muted border-border"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tipo</Label>
+                  <Select
+                    value={editingAppointment.type}
+                    onValueChange={(value: "meeting" | "deadline" | "event") =>
+                      setEditingAppointment({ ...editingAppointment, type: value })
+                    }
+                  >
+                    <SelectTrigger className="bg-muted border-border">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border">
+                      <SelectItem value="meeting">Reunião</SelectItem>
+                      <SelectItem value="deadline">Prazo</SelectItem>
+                      <SelectItem value="event">Evento</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Prioridade</Label>
+                <Select
+                  value={editingAppointment.priority || "medium"}
+                  onValueChange={(value: "high" | "medium" | "low") =>
+                    setEditingAppointment({ ...editingAppointment, priority: value })
+                  }
+                >
+                  <SelectTrigger className="bg-muted border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="high">Alta</SelectItem>
+                    <SelectItem value="medium">Média</SelectItem>
+                    <SelectItem value="low">Baixa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <Button variant="destructive" onClick={() => editingAppointment && handleDeleteAppointment(editingAppointment.id)}>
+              Excluir
+            </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setEditingAppointment(null)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateAppointment}>Salvar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

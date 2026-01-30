@@ -207,6 +207,7 @@ export default function Financas() {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
 
   const totalReceita = transactions.filter((t) => t.type === "receita" && t.status === "pago").reduce((sum, t) => sum + t.value, 0);
   const totalDespesa = transactions.filter((t) => t.type === "despesa" && t.status === "pago").reduce((sum, t) => sum + t.value, 0);
@@ -259,6 +260,19 @@ export default function Financas() {
 
   const handleAddBankAccount = (account: Omit<BankAccount, "id">) => {
     setBankAccounts([...bankAccounts, { ...account, id: Date.now().toString() }]);
+  };
+
+  const handleUpdateBankAccount = () => {
+    if (!editingAccount) return;
+    setBankAccounts(bankAccounts.map((acc) => 
+      acc.id === editingAccount.id ? editingAccount : acc
+    ));
+    setEditingAccount(null);
+  };
+
+  const handleDeleteBankAccount = (id: string) => {
+    setBankAccounts(bankAccounts.filter((acc) => acc.id !== id));
+    setEditingAccount(null);
   };
 
   const statusStyles = {
@@ -410,7 +424,11 @@ export default function Financas() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {bankAccounts.map((account) => (
-              <div key={account.id} className="bg-card rounded-xl border border-border/50 shadow-premium p-5">
+              <div 
+                key={account.id} 
+                className="bg-card rounded-xl border border-border/50 shadow-premium p-5 cursor-pointer hover:border-primary/30 transition-colors"
+                onClick={() => setEditingAccount(account)}
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -433,6 +451,74 @@ export default function Financas() {
             ))}
           </div>
         </div>
+
+        {/* Edit Bank Account Dialog */}
+        <Dialog open={!!editingAccount} onOpenChange={() => setEditingAccount(null)}>
+          <DialogContent className="sm:max-w-[425px] bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Editar Conta Bancária</DialogTitle>
+            </DialogHeader>
+            {editingAccount && (
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label>Nome da Conta</Label>
+                  <Input
+                    value={editingAccount.name}
+                    onChange={(e) => setEditingAccount({ ...editingAccount, name: e.target.value })}
+                    className="bg-muted border-border"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Instituição</Label>
+                  <Input
+                    value={editingAccount.institution}
+                    onChange={(e) => setEditingAccount({ ...editingAccount, institution: e.target.value })}
+                    className="bg-muted border-border"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tipo</Label>
+                    <Select
+                      value={editingAccount.type}
+                      onValueChange={(v: "principal" | "operacional" | "reserva") => setEditingAccount({ ...editingAccount, type: v })}
+                    >
+                      <SelectTrigger className="bg-muted border-border">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        {accountTypes.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Saldo</Label>
+                    <Input
+                      type="number"
+                      value={editingAccount.balance}
+                      onChange={(e) => setEditingAccount({ ...editingAccount, balance: parseFloat(e.target.value) || 0 })}
+                      className="bg-muted border-border"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <Button variant="destructive" onClick={() => editingAccount && handleDeleteBankAccount(editingAccount.id)}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir
+              </Button>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setEditingAccount(null)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleUpdateBankAccount}>Salvar</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Transaction Detail Dialog */}
         <Dialog open={!!selectedTransaction} onOpenChange={() => setSelectedTransaction(null)}>
