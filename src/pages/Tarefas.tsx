@@ -393,12 +393,7 @@ export default function Tarefas() {
           </div>
         </div>
 
-        {/* New Activity Button */}
-        <div className="flex justify-center">
-          <AddAtividadeDialog onAdd={(a) => setAtividades([a, ...atividades])} />
-        </div>
-
-        {/* Search */}
+        {/* Search + New Activity Button */}
         <div className="flex items-center justify-between">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -409,6 +404,7 @@ export default function Tarefas() {
               className="pl-9 w-64 bg-muted border-border"
             />
           </div>
+          <AddAtividadeDialog onAdd={(a) => setAtividades([a, ...atividades])} />
         </div>
 
         {/* Tabs */}

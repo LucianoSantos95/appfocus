@@ -71,6 +71,8 @@ interface Cliente {
   company?: string;
   contractType?: string;
   contractValue?: number;
+  attachmentUrl?: string;
+  attachmentName?: string;
 }
 
 interface FinanceEntry {
@@ -197,7 +199,7 @@ export default function Clientes() {
   });
 
   const clientesAtivos = clientes.filter((c) => c.status === "ativo").length;
-  const totalRevenue = clientes.reduce((sum, c) => sum + c.totalValue, 0);
+  const receitaAtivos = clientes.filter((c) => c.status === "ativo").reduce((sum, c) => sum + c.totalValue, 0);
   const prospectos = clientes.filter((c) => c.status === "prospecto").length;
 
   const prospectosClientes = clientes.filter((c) => c.status === "prospecto");
@@ -371,8 +373,8 @@ export default function Clientes() {
           />
           <StatCard
             icon={DollarSign}
-            label="Receita Total"
-            value={`R$ ${(totalRevenue / 1000).toFixed(0)}K`}
+            label="Receita Clientes Ativos"
+            value={`R$ ${(receitaAtivos / 1000).toFixed(0)}K`}
             trend={{ value: 12, isPositive: true }}
             variant="success"
           />
@@ -579,7 +581,7 @@ function EditClienteDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px] bg-card border-border">
+        <DialogContent className="sm:max-w-[500px] bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-foreground">Editar Cliente</DialogTitle>
           </DialogHeader>
@@ -645,27 +647,46 @@ function EditClienteDialog({
                 </Select>
               </div>
             </div>
-            {editedCliente.status === "ativo" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Tipo de Contrato</Label>
-                  <Input
-                    value={editedCliente.contractType || ""}
-                    onChange={(e) => setEditedCliente({ ...editedCliente, contractType: e.target.value })}
-                    className="bg-muted border-border"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Valor Total</Label>
-                  <Input
-                    type="number"
-                    value={editedCliente.totalValue}
-                    onChange={(e) => setEditedCliente({ ...editedCliente, totalValue: parseFloat(e.target.value) || 0 })}
-                    className="bg-muted border-border"
-                  />
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tipo de Contrato</Label>
+                <Input
+                  value={editedCliente.contractType || ""}
+                  onChange={(e) => setEditedCliente({ ...editedCliente, contractType: e.target.value })}
+                  placeholder="Ex: Consultoria, Serviços..."
+                  className="bg-muted border-border"
+                />
               </div>
-            )}
+              <div className="space-y-2">
+                <Label>Valor Total (R$)</Label>
+                <Input
+                  type="number"
+                  value={editedCliente.totalValue}
+                  onChange={(e) => setEditedCliente({ ...editedCliente, totalValue: parseFloat(e.target.value) || 0 })}
+                  className="bg-muted border-border"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Link Contrato/Comprovante</Label>
+              <Input
+                value={editedCliente.attachmentUrl || ""}
+                onChange={(e) => setEditedCliente({ ...editedCliente, attachmentUrl: e.target.value, attachmentName: e.target.value ? "Contrato/Comprovante" : undefined })}
+                placeholder="https://drive.google.com/... ou link do documento"
+                className="bg-muted border-border"
+              />
+              {editedCliente.attachmentUrl && (
+                <a
+                  href={editedCliente.attachmentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline flex items-center gap-1"
+                >
+                  <FileText className="w-3 h-3" />
+                  Visualizar anexo
+                </a>
+              )}
+            </div>
           </div>
           <div className="flex justify-between">
             <Button
@@ -720,6 +741,8 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: Cliente) => void }) {
     phone: "",
     segment: "",
     status: "prospecto" as "ativo" | "inativo" | "prospecto",
+    totalValue: "",
+    attachmentUrl: "",
   });
 
   const handleSubmit = () => {
@@ -731,14 +754,16 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: Cliente) => void }) {
       email: form.email,
       phone: form.phone,
       status: form.status,
-      totalValue: 0,
+      totalValue: parseFloat(form.totalValue) || 0,
       lastInteraction: new Date().toISOString().split("T")[0],
       segment: form.segment,
       company: form.name,
+      attachmentUrl: form.attachmentUrl || undefined,
+      attachmentName: form.attachmentUrl ? "Contrato/Comprovante" : undefined,
     };
 
     onAdd(cliente);
-    setForm({ name: "", email: "", phone: "", segment: "", status: "prospecto" });
+    setForm({ name: "", email: "", phone: "", segment: "", status: "prospecto", totalValue: "", attachmentUrl: "" });
     setOpen(false);
   };
 
@@ -811,6 +836,27 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: Cliente) => void }) {
                   <SelectItem value="inativo">Inativo</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Valor do Cliente (R$)</Label>
+              <Input
+                type="number"
+                value={form.totalValue}
+                onChange={(e) => setForm({ ...form, totalValue: e.target.value })}
+                placeholder="0,00"
+                className="bg-muted border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Link Contrato/Comprovante</Label>
+              <Input
+                value={form.attachmentUrl}
+                onChange={(e) => setForm({ ...form, attachmentUrl: e.target.value })}
+                placeholder="https://..."
+                className="bg-muted border-border"
+              />
             </div>
           </div>
         </div>
