@@ -490,39 +490,6 @@ export default function Guia() {
           </Button>
         </section>
 
-        {/* Pro Features */}
-        <div 
-          data-tour="pro"
-          className="bg-card rounded-xl border border-border/50 shadow-premium p-6"
-        >
-          <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-primary" />
-            Funcionalidades Pro
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Evolua para o Hub Empresarial Pro e desbloqueie:
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              "Relatórios avançados",
-              "Automações",
-              "Integrações",
-              "Usuários ilimitados",
-              "Suporte prioritário",
-              "Dashboard personalizado",
-              "Exportação PDF",
-              "API de integração",
-            ].map((feature, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 text-sm text-foreground"
-              >
-                <CheckCircle className="w-4 h-4 text-primary" />
-                <span>{feature}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </MainLayout>
   );

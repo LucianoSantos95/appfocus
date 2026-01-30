@@ -51,11 +51,4 @@ export const tourSteps: Step[] = [
       "Depois de conhecer o sistema, clique aqui para ir direto ao Painel Principal e começar a usar o Hub Empresarial!",
     placement: "top",
   },
-  {
-    target: '[data-tour="pro"]',
-    title: "⚡ Funcionalidades Pro",
-    content:
-      "Quer ainda mais poder? Conheça os recursos avançados disponíveis na versão Pro: relatórios, automações, integrações e muito mais!",
-    placement: "top",
-  },
 ];
