@@ -74,6 +74,7 @@ interface Conteudo {
   status: "ideia" | "producao" | "revisao" | "publicado";
   dueDate: string;
   description?: string;
+  mediaUrl?: string;
 }
 
 interface FunnelItem {
@@ -499,6 +500,20 @@ export default function Marketing() {
                     <Input type="date" value={selectedCampanha.endDate} onChange={(e) => setSelectedCampanha({ ...selectedCampanha, endDate: e.target.value })} className="bg-muted border-border" />
                   </div>
                 </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Impressões</Label>
+                    <Input type="number" value={selectedCampanha.impressions || ""} onChange={(e) => setSelectedCampanha({ ...selectedCampanha, impressions: parseInt(e.target.value) || 0 })} placeholder="0" className="bg-muted border-border" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cliques</Label>
+                    <Input type="number" value={selectedCampanha.clicks || ""} onChange={(e) => setSelectedCampanha({ ...selectedCampanha, clicks: parseInt(e.target.value) || 0 })} placeholder="0" className="bg-muted border-border" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Conversões</Label>
+                    <Input type="number" value={selectedCampanha.conversions || ""} onChange={(e) => setSelectedCampanha({ ...selectedCampanha, conversions: parseInt(e.target.value) || 0 })} placeholder="0" className="bg-muted border-border" />
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label>Responsável</Label>
                   <Input value={selectedCampanha.responsible || ""} onChange={(e) => setSelectedCampanha({ ...selectedCampanha, responsible: e.target.value })} placeholder="Nome do responsável" className="bg-muted border-border" />
@@ -559,6 +574,10 @@ export default function Marketing() {
                     </Select>
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <Label>URL da Mídia (imagem, vídeo, artigo)</Label>
+                  <Input value={selectedConteudo.mediaUrl || ""} onChange={(e) => setSelectedConteudo({ ...selectedConteudo, mediaUrl: e.target.value })} placeholder="https://exemplo.com/imagem.jpg" className="bg-muted border-border" />
+                </div>
               </div>
             )}
             <div className="flex justify-between pt-4 border-t border-border/50">
@@ -588,7 +607,7 @@ export default function Marketing() {
 
 function AddCampanhaDialog({ onAdd }: { onAdd: (c: Campanha) => void }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", objective: "", budget: "", startDate: "", endDate: "", responsible: "" });
+  const [form, setForm] = useState({ name: "", objective: "", budget: "", startDate: "", endDate: "", responsible: "", impressions: "", clicks: "", conversions: "" });
 
   const handleSubmit = () => {
     if (!form.name) return;
@@ -596,9 +615,12 @@ function AddCampanhaDialog({ onAdd }: { onAdd: (c: Campanha) => void }) {
       id: Date.now().toString(), name: form.name, objective: form.objective, platforms: ["Instagram"],
       budget: parseFloat(form.budget) || 0, startDate: form.startDate, endDate: form.endDate,
       status: "planejada", expectedResult: "", responsible: form.responsible,
+      impressions: parseInt(form.impressions) || 0,
+      clicks: parseInt(form.clicks) || 0,
+      conversions: parseInt(form.conversions) || 0,
     };
     onAdd(campanha);
-    setForm({ name: "", objective: "", budget: "", startDate: "", endDate: "", responsible: "" });
+    setForm({ name: "", objective: "", budget: "", startDate: "", endDate: "", responsible: "", impressions: "", clicks: "", conversions: "" });
     setOpen(false);
   };
 
@@ -638,6 +660,20 @@ function AddCampanhaDialog({ onAdd }: { onAdd: (c: Campanha) => void }) {
               <Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} className="bg-muted border-border" />
             </div>
           </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Impressões</Label>
+              <Input type="number" value={form.impressions} onChange={(e) => setForm({ ...form, impressions: e.target.value })} placeholder="0" className="bg-muted border-border" />
+            </div>
+            <div className="space-y-2">
+              <Label>Cliques</Label>
+              <Input type="number" value={form.clicks} onChange={(e) => setForm({ ...form, clicks: e.target.value })} placeholder="0" className="bg-muted border-border" />
+            </div>
+            <div className="space-y-2">
+              <Label>Conversões</Label>
+              <Input type="number" value={form.conversions} onChange={(e) => setForm({ ...form, conversions: e.target.value })} placeholder="0" className="bg-muted border-border" />
+            </div>
+          </div>
         </div>
         <div className="flex justify-end gap-3">
           <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
@@ -650,16 +686,17 @@ function AddCampanhaDialog({ onAdd }: { onAdd: (c: Campanha) => void }) {
 
 function AddConteudoDialog({ onAdd }: { onAdd: (c: Conteudo) => void }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", format: "Carrossel", theme: "", priority: "media" as "alta" | "media" | "baixa", dueDate: "", description: "" });
+  const [form, setForm] = useState({ title: "", format: "Carrossel", theme: "", priority: "media" as "alta" | "media" | "baixa", dueDate: "", description: "", mediaUrl: "" });
 
   const handleSubmit = () => {
     if (!form.title) return;
     const conteudo: Conteudo = {
       id: Date.now().toString(), title: form.title, format: form.format, theme: form.theme,
       priority: form.priority, status: "ideia", dueDate: form.dueDate, description: form.description,
+      mediaUrl: form.mediaUrl,
     };
     onAdd(conteudo);
-    setForm({ title: "", format: "Carrossel", theme: "", priority: "media", dueDate: "", description: "" });
+    setForm({ title: "", format: "Carrossel", theme: "", priority: "media", dueDate: "", description: "", mediaUrl: "" });
     setOpen(false);
   };
 
@@ -699,6 +736,10 @@ function AddConteudoDialog({ onAdd }: { onAdd: (c: Conteudo) => void }) {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label>URL da Mídia (imagem, vídeo, artigo)</Label>
+            <Input value={form.mediaUrl} onChange={(e) => setForm({ ...form, mediaUrl: e.target.value })} placeholder="https://exemplo.com/imagem.jpg" className="bg-muted border-border" />
           </div>
         </div>
         <div className="flex justify-end gap-3">
