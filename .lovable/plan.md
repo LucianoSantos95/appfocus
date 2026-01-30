@@ -1,98 +1,188 @@
 
-# Plano de Melhorias: Animação de Módulos e Guia de Uso UX
+# Plano: Tour Guiado Interativo para o Guia de Uso
 
-## 1. ANIMAÇÃO DE SALTAR NOS MÓDULOS DO PAINEL
-
-### Objetivo
-Adicionar um efeito visual de "salto" (bounce/jump) nos cards de módulos quando o usuário passar o mouse, tornando a interação mais dinâmica e intuitiva.
-
-### Implementação Técnica
-
-**Arquivo: `tailwind.config.ts`**
-- Adicionar novo keyframe `bounce-up` com movimento suave para cima e retorno
-
-**Arquivo: `src/components/ui/module-card.tsx`**
-- Aplicar classe `hover:-translate-y-2` ou animação customizada no hover
-- Manter transição suave de 300ms com easing cubic-bezier
-
-### Comportamento Esperado
-- Card sobe 8-10px ao passar o mouse
-- Retorna suavemente à posição original ao remover o mouse
-- Combina com os efeitos existentes de glow e border
+## Objetivo
+Criar um tour guiado interativo que destaca cada elemento da interface quando o usuário acessa a página de Guia de Uso pela primeira vez. O tour será acionado apenas na página `/guia` e usará localStorage para lembrar se o usuário já completou o tour.
 
 ---
 
-## 2. REESTRUTURAÇÃO DO GUIA DE USO (UX-FOCUSED)
+## Arquitetura da Solução
 
-### Objetivo
-Transformar a página de Guia em uma experiência de onboarding completa, com passo a passo visual e foco na jornada do usuário.
-
-### Nova Estrutura
-
-#### 2.1 Hero Section - Boas-vindas
-- Mensagem acolhedora e motivacional
-- Indicador de tempo estimado (15 min para configurar tudo)
-- Ilustração ou ícone destacado
-
-#### 2.2 Jornada do Usuário (Timeline Visual)
-**Etapa 1: Primeiros 5 minutos**
-- Configure seu perfil
-- Conheça o Painel Principal
-- Navegue pelos módulos
-
-**Etapa 2: Configuração Inicial (10 min)**
-- Cadastre suas contas bancárias
-- Adicione seu primeiro cliente
-- Crie sua primeira tarefa
-
-**Etapa 3: Operação Diária**
-- Como registrar receitas e despesas
-- Como gerenciar projetos com sprints
-- Como acompanhar tarefas no Kanban
-
-**Etapa 4: Recursos Avançados**
-- Automação de conversão de clientes
-- Documentação de processos
-- Exportação de relatórios
-
-#### 2.3 Cards de Módulos Interativos
-- Cada módulo com:
-  - Ícone e nome
-  - "O que você pode fazer aqui"
-  - Lista de ações principais
-  - Botão "Ir para o módulo"
-
-#### 2.4 Dicas de Produtividade
-- Atalhos e truques
-- Melhores práticas
-- Erros comuns a evitar
-
-#### 2.5 Seção de FAQ Expandida
-- Perguntas frequentes com accordion
-- Respostas claras e objetivas
-
-#### 2.6 Call-to-Action Final
-- "Pronto para começar?"
-- Botão destacado para voltar ao Painel
-
-### Elementos de UX
-- Progress indicator (você está na etapa X de Y)
-- Cards expansíveis para detalhes
-- Animações suaves de entrada
-- Cores e ícones consistentes com o design system
-- Micro-interações nos botões e links
+```text
++------------------+     +----------------------+     +------------------+
+|   Guia.tsx       | --> | GuidedTour Component | --> | react-joyride    |
+|   (página)       |     | (lógica do tour)     |     | (biblioteca UI)  |
++------------------+     +----------------------+     +------------------+
+         |                         |
+         v                         v
+  localStorage               Estilos CSS
+  (hasSeenTour)              (tema dark)
+```
 
 ---
 
-## ARQUIVOS A SEREM MODIFICADOS
+## Etapas do Tour (8 passos)
 
-1. **`tailwind.config.ts`** - Adicionar keyframe de bounce
-2. **`src/components/ui/module-card.tsx`** - Aplicar animação de hover
-3. **`src/pages/Guia.tsx`** - Reestruturação completa com foco em UX
+| Passo | Elemento | Título | Descrição |
+|-------|----------|--------|-----------|
+| 1 | Hero Section | Bem-vindo ao Guia! | Apresentação inicial e objetivo da página |
+| 2 | Progress Bar | Sua Jornada | Como acompanhar seu progresso de configuração |
+| 3 | Journey Cards | Etapas de Configuração | Como navegar pelas 4 etapas do onboarding |
+| 4 | Module Cards | Conheça os Módulos | Cards que explicam cada módulo do sistema |
+| 5 | Productivity Tips | Dicas de Produtividade | Atalhos e melhores práticas |
+| 6 | FAQ Section | Perguntas Frequentes | Onde encontrar respostas rápidas |
+| 7 | CTA Section | Pronto para Começar | Como ir para o Painel Principal |
+| 8 | Pro Features | Funcionalidades Pro | Recursos avançados disponíveis |
 
-## RESULTADO ESPERADO
+---
 
-- Módulos do painel com feedback visual imediato ao hover
-- Guia de uso como experiência de onboarding profissional
-- Usuário consegue entender e usar o sistema sem ajuda externa
-- Design consistente com a identidade "Focus Inteligente"
+## Implementação Técnica
+
+### 1. Instalar Dependência
+```bash
+npm install react-joyride
+```
+
+### 2. Criar Componente GuidedTour
+**Arquivo:** `src/components/guide/GuidedTour.tsx`
+
+- Wrapper do react-joyride com configuração personalizada
+- Tema dark matching com o design system "Focus Inteligente"
+- Callbacks para finalizar/pular o tour
+- Integração com localStorage
+
+### 3. Definir Steps do Tour
+**Arquivo:** `src/components/guide/tourSteps.ts`
+
+- Array de steps com targets CSS
+- Conteúdo em português
+- Posicionamento otimizado para cada elemento
+
+### 4. Atualizar Guia.tsx
+**Arquivo:** `src/pages/Guia.tsx`
+
+- Adicionar data-tour-id em cada seção
+- Importar e renderizar GuidedTour
+- Botão "Refazer Tour" para usuários que queiram ver novamente
+
+### 5. Estilos Customizados
+**Arquivo:** `src/index.css`
+
+- Estilos para tooltips do tour
+- Overlay com blur suave
+- Cores consistentes com o tema dark
+
+---
+
+## Comportamento do Tour
+
+### Primeira Visita
+1. Usuário acessa `/guia`
+2. Tour inicia automaticamente
+3. Spotlight destaca cada elemento
+4. Usuário pode avançar, voltar ou pular
+5. Ao finalizar, localStorage salva `hubTourCompleted: true`
+
+### Visitas Subsequentes
+1. Tour não inicia automaticamente
+2. Botão "Iniciar Tour" disponível no header
+3. Usuário pode refazer o tour quando quiser
+
+---
+
+## Customização Visual
+
+```css
+/* Cores do tooltip */
+--tour-bg: hsl(210, 10%, 9%)        /* Card background */
+--tour-text: hsl(210, 40%, 98%)     /* Foreground */
+--tour-primary: hsl(213, 94%, 68%)  /* Primary blue */
+--tour-overlay: rgba(0, 0, 0, 0.85) /* Overlay escuro */
+```
+
+### Animações
+- Fade-in suave no tooltip
+- Pulse no spotlight
+- Transições de 300ms entre steps
+
+---
+
+## Arquivos a Serem Criados/Modificados
+
+| Arquivo | Ação |
+|---------|------|
+| `src/components/guide/GuidedTour.tsx` | Criar |
+| `src/components/guide/tourSteps.ts` | Criar |
+| `src/pages/Guia.tsx` | Modificar |
+| `src/index.css` | Modificar (adicionar estilos do tour) |
+| `package.json` | Adicionar react-joyride |
+
+---
+
+## Detalhes Técnicos
+
+### Hook de Controle
+```typescript
+const [runTour, setRunTour] = useState(false);
+const [hasSeenTour, setHasSeenTour] = useState(() => {
+  return localStorage.getItem('hubTourCompleted') === 'true';
+});
+
+useEffect(() => {
+  if (!hasSeenTour) {
+    // Pequeno delay para elementos renderizarem
+    setTimeout(() => setRunTour(true), 500);
+  }
+}, [hasSeenTour]);
+```
+
+### Callback de Finalização
+```typescript
+const handleTourFinish = (data: CallBackProps) => {
+  const { status } = data;
+  if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+    setRunTour(false);
+    localStorage.setItem('hubTourCompleted', 'true');
+    setHasSeenTour(true);
+  }
+};
+```
+
+### Configuração do Joyride
+```typescript
+<Joyride
+  steps={tourSteps}
+  run={runTour}
+  continuous
+  showProgress
+  showSkipButton
+  spotlightClicks
+  disableOverlayClose
+  locale={{
+    back: 'Voltar',
+    close: 'Fechar',
+    last: 'Finalizar',
+    next: 'Próximo',
+    skip: 'Pular Tour'
+  }}
+  styles={{
+    options: {
+      backgroundColor: 'hsl(210, 10%, 9%)',
+      textColor: 'hsl(210, 40%, 98%)',
+      primaryColor: 'hsl(213, 94%, 68%)',
+      overlayColor: 'rgba(0, 0, 0, 0.85)',
+      zIndex: 10000,
+    }
+  }}
+/>
+```
+
+---
+
+## Resultado Esperado
+
+- Tour guiado profissional com visual premium
+- Experiência de onboarding clara e intuitiva
+- Usuário aprende a navegar pelo sistema interativamente
+- Integração perfeita com o design "Focus Inteligente"
+- Opção de refazer o tour a qualquer momento
