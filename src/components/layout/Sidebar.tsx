@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 import {
   LayoutDashboard,
   DollarSign,
@@ -43,11 +44,12 @@ export function Sidebar() {
       <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <span className="text-white font-bold text-sm">H</span>
-            </div>
+            <img src={logo} alt="Hub Empresarial" className="w-8 h-8 rounded-lg object-cover" />
             <span className="font-semibold text-foreground">Hub Empresarial</span>
           </div>
+        )}
+        {collapsed && (
+          <img src={logo} alt="Hub Empresarial" className="w-8 h-8 rounded-lg object-cover" />
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
