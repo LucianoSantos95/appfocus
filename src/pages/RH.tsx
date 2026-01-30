@@ -194,10 +194,15 @@ export default function RH() {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>(initialColaboradores);
   const [vagas, setVagas] = useState<Vaga[]>(initialVagas);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
-  const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
+const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
 
   const totalColaboradores = colaboradores.filter((c) => c.status !== "desligado").length;
   const vagasAbertas = vagas.filter((v) => v.status === "aberta").length;
+
+  const handleDeleteVaga = (id: string) => {
+    setVagas(vagas.filter((v) => v.id !== id));
+    setSelectedVaga(null);
+  };
 
   const departmentData = [
     { name: "Tecnologia", colaboradores: colaboradores.filter((c) => c.department === "Tecnologia").length, color: "hsl(var(--primary))" },
@@ -538,6 +543,15 @@ export default function RH() {
                 )}
               </div>
             )}
+            <div className="flex justify-between pt-4 border-t border-border/50">
+              <Button variant="destructive" onClick={() => selectedVaga && handleDeleteVaga(selectedVaga.id)}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir Vaga
+              </Button>
+              <Button variant="outline" onClick={() => setSelectedVaga(null)}>
+                Fechar
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
