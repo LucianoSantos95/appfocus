@@ -1,188 +1,96 @@
 
-# Plano: Tour Guiado Interativo para o Guia de Uso
+# Sistema de Coleta de Feedback para MVP
 
 ## Objetivo
-Criar um tour guiado interativo que destaca cada elemento da interface quando o usuário acessa a página de Guia de Uso pela primeira vez. O tour será acionado apenas na página `/guia` e usará localStorage para lembrar se o usuário já completou o tour.
+Implementar um sistema para coletar feedback dos usuários de teste, salvando as respostas no banco de dados para que voce possa analisar posteriormente.
+
+## Abordagem Escolhida
+Vou implementar **as duas opcoes combinadas** para maximizar a coleta de feedback:
+
+1. **Widget no Painel** - Uma caixinha fixa no dashboard onde usuarios podem deixar feedback a qualquer momento
+2. **Popup Inicial** - Um popup que aparece na primeira visita convidando o usuario a dar feedback (usando localStorage para nao mostrar toda hora)
+
+## O Que Sera Implementado
+
+### 1. Banco de Dados
+Criar tabela `feedbacks` com os seguintes campos:
+- `id` - Identificador unico
+- `nome` - Nome do usuario (opcional)
+- `email` - Email para contato (opcional)
+- `mensagem` - O feedback em si
+- `avaliacao` - Nota de 1 a 5 estrelas
+- `pagina` - De qual pagina o feedback foi enviado
+- `created_at` - Data/hora do envio
+
+A tabela tera RLS desabilitado temporariamente (politica publica) para permitir que qualquer visitante envie feedback sem precisar de login.
+
+### 2. Componentes Novos
+
+**FeedbackWidget** - Caixinha no dashboard
+- Card compacto com titulo "Deixe seu Feedback"
+- Campo para nome (opcional)
+- Campo para email (opcional)  
+- Campo para mensagem
+- Sistema de avaliacao com estrelas (1-5)
+- Botao de enviar
+- Mensagem de sucesso apos envio
+
+**FeedbackPopup** - Popup na primeira visita
+- Dialog que aparece apos 5 segundos na primeira visita
+- Mesmos campos do widget
+- Usa localStorage para lembrar se o usuario ja viu
+- Opcao de "Lembrar depois" ou "Nao mostrar novamente"
+
+### 3. Integracao no Dashboard
+O widget sera adicionado na area inferior do painel, ao lado ou abaixo dos widgets de Agenda e Mural de Recados.
+
+## Como Voce Vai Visualizar os Feedbacks
+Depois de implementado, voce podera:
+1. Acessar o painel de backend (Lovable Cloud) para ver todos os feedbacks na tabela
+2. Futuramente posso criar uma pagina administrativa para visualizar os feedbacks diretamente no app
 
 ---
 
-## Arquitetura da Solução
+## Detalhes Tecnicos
 
+### Estrutura SQL da Tabela
+```sql
+CREATE TABLE public.feedbacks (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  nome TEXT,
+  email TEXT,
+  mensagem TEXT NOT NULL,
+  avaliacao INTEGER CHECK (avaliacao >= 1 AND avaliacao <= 5),
+  pagina TEXT DEFAULT '/',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Permitir insercao publica (sem autenticacao)
+ALTER TABLE public.feedbacks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir insercao publica" ON public.feedbacks
+  FOR INSERT WITH CHECK (true);
+```
+
+### Arquivos a Serem Criados/Modificados
 ```text
-+------------------+     +----------------------+     +------------------+
-|   Guia.tsx       | --> | GuidedTour Component | --> | react-joyride    |
-|   (página)       |     | (lógica do tour)     |     | (biblioteca UI)  |
-+------------------+     +----------------------+     +------------------+
-         |                         |
-         v                         v
-  localStorage               Estilos CSS
-  (hasSeenTour)              (tema dark)
+src/
+├── components/
+│   └── feedback/
+│       ├── FeedbackWidget.tsx    (novo)
+│       └── FeedbackPopup.tsx     (novo)
+└── pages/
+    └── Index.tsx                 (modificar para incluir os componentes)
 ```
 
----
-
-## Etapas do Tour (8 passos)
-
-| Passo | Elemento | Título | Descrição |
-|-------|----------|--------|-----------|
-| 1 | Hero Section | Bem-vindo ao Guia! | Apresentação inicial e objetivo da página |
-| 2 | Progress Bar | Sua Jornada | Como acompanhar seu progresso de configuração |
-| 3 | Journey Cards | Etapas de Configuração | Como navegar pelas 4 etapas do onboarding |
-| 4 | Module Cards | Conheça os Módulos | Cards que explicam cada módulo do sistema |
-| 5 | Productivity Tips | Dicas de Produtividade | Atalhos e melhores práticas |
-| 6 | FAQ Section | Perguntas Frequentes | Onde encontrar respostas rápidas |
-| 7 | CTA Section | Pronto para Começar | Como ir para o Painel Principal |
-| 8 | Pro Features | Funcionalidades Pro | Recursos avançados disponíveis |
-
----
-
-## Implementação Técnica
-
-### 1. Instalar Dependência
-```bash
-npm install react-joyride
+### Fluxo de Dados
+```text
+Usuario preenche formulario
+        ↓
+Validacao frontend (mensagem obrigatoria)
+        ↓
+supabase.from('feedbacks').insert({...})
+        ↓
+Toast de sucesso/erro
+        ↓
+Dados disponiveis no backend para consulta
 ```
-
-### 2. Criar Componente GuidedTour
-**Arquivo:** `src/components/guide/GuidedTour.tsx`
-
-- Wrapper do react-joyride com configuração personalizada
-- Tema dark matching com o design system "Focus Inteligente"
-- Callbacks para finalizar/pular o tour
-- Integração com localStorage
-
-### 3. Definir Steps do Tour
-**Arquivo:** `src/components/guide/tourSteps.ts`
-
-- Array de steps com targets CSS
-- Conteúdo em português
-- Posicionamento otimizado para cada elemento
-
-### 4. Atualizar Guia.tsx
-**Arquivo:** `src/pages/Guia.tsx`
-
-- Adicionar data-tour-id em cada seção
-- Importar e renderizar GuidedTour
-- Botão "Refazer Tour" para usuários que queiram ver novamente
-
-### 5. Estilos Customizados
-**Arquivo:** `src/index.css`
-
-- Estilos para tooltips do tour
-- Overlay com blur suave
-- Cores consistentes com o tema dark
-
----
-
-## Comportamento do Tour
-
-### Primeira Visita
-1. Usuário acessa `/guia`
-2. Tour inicia automaticamente
-3. Spotlight destaca cada elemento
-4. Usuário pode avançar, voltar ou pular
-5. Ao finalizar, localStorage salva `hubTourCompleted: true`
-
-### Visitas Subsequentes
-1. Tour não inicia automaticamente
-2. Botão "Iniciar Tour" disponível no header
-3. Usuário pode refazer o tour quando quiser
-
----
-
-## Customização Visual
-
-```css
-/* Cores do tooltip */
---tour-bg: hsl(210, 10%, 9%)        /* Card background */
---tour-text: hsl(210, 40%, 98%)     /* Foreground */
---tour-primary: hsl(213, 94%, 68%)  /* Primary blue */
---tour-overlay: rgba(0, 0, 0, 0.85) /* Overlay escuro */
-```
-
-### Animações
-- Fade-in suave no tooltip
-- Pulse no spotlight
-- Transições de 300ms entre steps
-
----
-
-## Arquivos a Serem Criados/Modificados
-
-| Arquivo | Ação |
-|---------|------|
-| `src/components/guide/GuidedTour.tsx` | Criar |
-| `src/components/guide/tourSteps.ts` | Criar |
-| `src/pages/Guia.tsx` | Modificar |
-| `src/index.css` | Modificar (adicionar estilos do tour) |
-| `package.json` | Adicionar react-joyride |
-
----
-
-## Detalhes Técnicos
-
-### Hook de Controle
-```typescript
-const [runTour, setRunTour] = useState(false);
-const [hasSeenTour, setHasSeenTour] = useState(() => {
-  return localStorage.getItem('hubTourCompleted') === 'true';
-});
-
-useEffect(() => {
-  if (!hasSeenTour) {
-    // Pequeno delay para elementos renderizarem
-    setTimeout(() => setRunTour(true), 500);
-  }
-}, [hasSeenTour]);
-```
-
-### Callback de Finalização
-```typescript
-const handleTourFinish = (data: CallBackProps) => {
-  const { status } = data;
-  if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
-    setRunTour(false);
-    localStorage.setItem('hubTourCompleted', 'true');
-    setHasSeenTour(true);
-  }
-};
-```
-
-### Configuração do Joyride
-```typescript
-<Joyride
-  steps={tourSteps}
-  run={runTour}
-  continuous
-  showProgress
-  showSkipButton
-  spotlightClicks
-  disableOverlayClose
-  locale={{
-    back: 'Voltar',
-    close: 'Fechar',
-    last: 'Finalizar',
-    next: 'Próximo',
-    skip: 'Pular Tour'
-  }}
-  styles={{
-    options: {
-      backgroundColor: 'hsl(210, 10%, 9%)',
-      textColor: 'hsl(210, 40%, 98%)',
-      primaryColor: 'hsl(213, 94%, 68%)',
-      overlayColor: 'rgba(0, 0, 0, 0.85)',
-      zIndex: 10000,
-    }
-  }}
-/>
-```
-
----
-
-## Resultado Esperado
-
-- Tour guiado profissional com visual premium
-- Experiência de onboarding clara e intuitiva
-- Usuário aprende a navegar pelo sistema interativamente
-- Integração perfeita com o design "Focus Inteligente"
-- Opção de refazer o tour a qualquer momento
