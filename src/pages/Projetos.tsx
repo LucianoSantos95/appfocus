@@ -310,41 +310,63 @@ export default function Projetos() {
           />
         </div>
 
-        {/* Charts */}
+        {/* Charts - Modern Style */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-card rounded-xl border border-border/50 shadow-premium p-6">
-            <h3 className="font-semibold text-foreground mb-4">Orçamento vs Gasto</h3>
+          <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
+            <h3 className="font-semibold text-foreground mb-6">Orçamento vs Gasto</h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={budgetData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `${v / 1000}k`} />
-                <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} width={80} />
+                <defs>
+                  <linearGradient id="barGradientOrc" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="barGradientGasto" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" horizontal={true} vertical={false} />
+                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={80} axisLine={false} tickLine={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
+                    backgroundColor: "hsl(var(--popover))",
                     border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
                   }}
                   formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]}
                 />
-                <Bar dataKey="orcamento" fill="hsl(var(--muted))" name="Orçamento" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="gasto" fill="hsl(var(--primary))" name="Gasto" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="orcamento" fill="url(#barGradientOrc)" name="Orçamento" radius={[0, 8, 8, 0]} />
+                <Bar dataKey="gasto" fill="url(#barGradientGasto)" name="Gasto" radius={[0, 8, 8, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-card rounded-xl border border-border/50 shadow-premium p-6">
-            <h3 className="font-semibold text-foreground mb-4">Status dos Projetos</h3>
+          <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
+            <h3 className="font-semibold text-foreground mb-6">Status dos Projetos</h3>
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
+                <defs>
+                  <filter id="pieGlowP">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
                 <Pie
                   data={statusData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={75}
-                  paddingAngle={5}
+                  innerRadius={55}
+                  outerRadius={78}
+                  paddingAngle={4}
                   dataKey="value"
+                  strokeWidth={0}
+                  filter="url(#pieGlowP)"
                 >
                   {statusData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -352,17 +374,18 @@ export default function Projetos() {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
+                    backgroundColor: "hsl(var(--popover))",
                     border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
                   }}
                 />
               </PieChart>
             </ResponsiveContainer>
-            <div className="flex flex-wrap gap-4 justify-center mt-2">
+            <div className="flex flex-wrap gap-4 justify-center mt-4">
               {statusData.map((d) => (
                 <div key={d.name} className="flex items-center gap-2 text-xs">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color, boxShadow: `0 0 8px ${d.color}50` }} />
                   <span className="text-muted-foreground">{d.name}</span>
                 </div>
               ))}
