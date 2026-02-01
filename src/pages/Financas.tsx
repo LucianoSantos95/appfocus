@@ -327,56 +327,90 @@ export default function Financas() {
           <StatCard icon={PiggyBank} label="Total em Caixa" value={`R$ ${totalCaixa.toLocaleString("pt-BR")}`} variant="default" />
         </div>
 
-        {/* Charts */}
+        {/* Charts - Modern Style */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-card rounded-xl border border-border/50 shadow-premium p-6">
-            <h3 className="font-semibold text-foreground mb-4">Evolução Financeira</h3>
+          <div className="lg:col-span-2 bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
+            <h3 className="font-semibold text-foreground mb-6">Evolução Financeira</h3>
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={chartData}>
                 <defs>
-                  <linearGradient id="colorReceitas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                  <linearGradient id="colorReceitasFin" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0.02} />
                   </linearGradient>
-                  <linearGradient id="colorDespesas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
+                  <linearGradient id="colorDespesasFin" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `${v / 1000}k`} />
-                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
-                <Legend />
-                <Area type="monotone" dataKey="receitas" stroke="hsl(var(--success))" fillOpacity={1} fill="url(#colorReceitas)" name="Receitas" />
-                <Area type="monotone" dataKey="despesas" stroke="hsl(var(--destructive))" fillOpacity={1} fill="url(#colorDespesas)" name="Despesas" />
+                <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--popover))", 
+                    border: "1px solid hsl(var(--border))", 
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                  }} 
+                />
+                <Legend wrapperStyle={{ paddingTop: "16px" }} />
+                <Area type="monotone" dataKey="receitas" stroke="hsl(var(--success))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorReceitasFin)" name="Receitas" />
+                <Area type="monotone" dataKey="despesas" stroke="hsl(var(--destructive))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorDespesasFin)" name="Despesas" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
           {/* Category Chart with Dialog */}
-          <div className="bg-card rounded-xl border border-border/50 shadow-premium p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="font-semibold text-foreground">Por Categoria</h3>
-              <Button variant="ghost" size="sm" onClick={() => setCategoryDialogOpen(true)}>
+              <Button variant="ghost" size="sm" onClick={() => setCategoryDialogOpen(true)} className="h-8 w-8 p-0">
                 <Edit className="w-4 h-4" />
               </Button>
             </div>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
-                <Pie data={categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={5} dataKey="value">
+                <defs>
+                  <filter id="pieGlowFin">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <Pie 
+                  data={categoryData} 
+                  cx="50%" 
+                  cy="50%" 
+                  innerRadius={55} 
+                  outerRadius={78} 
+                  paddingAngle={4} 
+                  dataKey="value"
+                  strokeWidth={0}
+                  filter="url(#pieGlowFin)"
+                >
                   {categoryData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--popover))", 
+                    border: "1px solid hsl(var(--border))", 
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                  }} 
+                  formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]} 
+                />
               </PieChart>
             </ResponsiveContainer>
-            <div className="mt-4 space-y-2">
+            <div className="mt-5 space-y-2.5">
               {categoryData.slice(0, 4).map((cat) => (
                 <div key={cat.name} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color, boxShadow: `0 0 8px ${cat.color}50` }} />
                     <span className="text-muted-foreground">{cat.name}</span>
                   </div>
                   <span className="text-foreground font-medium">R$ {cat.value.toLocaleString("pt-BR")}</span>

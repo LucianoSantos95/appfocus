@@ -236,43 +236,81 @@ export default function Marketing() {
           <StatCard icon={MousePointerClick} label="Cliques (mês)" value={totalClicks.toLocaleString("pt-BR")} trend={{ value: 8, isPositive: true }} variant="default" />
         </div>
 
-        {/* Charts */}
+        {/* Charts - Modern Style */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-card rounded-xl border border-border/50 shadow-premium p-6">
-            <h3 className="font-semibold text-foreground mb-4">Performance de Marketing</h3>
+          <div className="lg:col-span-2 bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
+            <h3 className="font-semibold text-foreground mb-6">Performance de Marketing</h3>
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={performanceData}>
                 <defs>
-                  <linearGradient id="colorImpressoes" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  <linearGradient id="colorImpressoesM" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="colorCliquesM" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `${v / 1000}k`} />
-                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
-                <Area type="monotone" dataKey="impressoes" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorImpressoes)" name="Impressões" />
-                <Area type="monotone" dataKey="cliques" stroke="hsl(var(--success))" fillOpacity={0.3} fill="hsl(var(--success))" name="Cliques" />
+                <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--popover))", 
+                    border: "1px solid hsl(var(--border))", 
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                  }} 
+                />
+                <Area type="monotone" dataKey="impressoes" stroke="hsl(var(--primary))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorImpressoesM)" name="Impressões" />
+                <Area type="monotone" dataKey="cliques" stroke="hsl(var(--success))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorCliquesM)" name="Cliques" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-card rounded-xl border border-border/50 shadow-premium p-6">
-            <h3 className="font-semibold text-foreground mb-4">Por Plataforma</h3>
+          <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
+            <h3 className="font-semibold text-foreground mb-6">Por Plataforma</h3>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
-                <Pie data={platformData} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={5} dataKey="value">
+                <defs>
+                  <filter id="pieGlowM">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <Pie 
+                  data={platformData} 
+                  cx="50%" 
+                  cy="50%" 
+                  innerRadius={55} 
+                  outerRadius={78} 
+                  paddingAngle={4} 
+                  dataKey="value"
+                  strokeWidth={0}
+                  filter="url(#pieGlowM)"
+                >
                   {platformData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} formatter={(value: number) => [`${value}%`, ""]} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--popover))", 
+                    border: "1px solid hsl(var(--border))", 
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                  }} 
+                  formatter={(value: number) => [`${value}%`, ""]} 
+                />
               </PieChart>
             </ResponsiveContainer>
-            <div className="mt-4 space-y-2">
+            <div className="mt-5 space-y-2.5">
               {platformData.map((p) => (
                 <div key={p.name} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }} />
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color, boxShadow: `0 0 8px ${p.color}50` }} />
                     <span className="text-muted-foreground">{p.name}</span>
                   </div>
                   <span className="text-foreground font-medium">{p.value}%</span>
