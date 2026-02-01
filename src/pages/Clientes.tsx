@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ import {
   Phone,
   FileText,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -58,121 +59,10 @@ import {
   Cell,
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
-
-interface Cliente {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  status: "ativo" | "inativo" | "prospecto";
-  totalValue: number;
-  lastInteraction: string;
-  segment?: string;
-  company?: string;
-  contractType?: string;
-  contractValue?: number;
-  attachmentUrl?: string;
-  attachmentName?: string;
-}
-
-interface FinanceEntry {
-  id: string;
-  description: string;
-  value: number;
-  client: string;
-  category: string;
-  status: "pendente" | "pago";
-  date: string;
-}
-
-const initialClientes: Cliente[] = [
-  {
-    id: "1",
-    name: "Tech Solutions Ltda",
-    email: "contato@techsolutions.com",
-    phone: "(11) 3333-1111",
-    status: "ativo",
-    totalValue: 125000,
-    lastInteraction: "2025-01-28",
-    segment: "Tecnologia",
-    company: "Tech Solutions Ltda",
-    contractType: "Consultoria",
-    contractValue: 125000,
-  },
-  {
-    id: "2",
-    name: "Grupo ABC",
-    email: "financeiro@grupoabc.com",
-    phone: "(11) 3333-2222",
-    status: "ativo",
-    totalValue: 85000,
-    lastInteraction: "2025-01-25",
-    segment: "Varejo",
-    company: "Grupo ABC",
-    contractType: "Serviços",
-    contractValue: 85000,
-  },
-  {
-    id: "3",
-    name: "StartupCo",
-    email: "ceo@startupco.io",
-    phone: "(11) 99999-3333",
-    status: "ativo",
-    totalValue: 45000,
-    lastInteraction: "2025-01-20",
-    segment: "Tecnologia",
-    company: "StartupCo",
-    contractType: "Desenvolvimento",
-    contractValue: 45000,
-  },
-  {
-    id: "4",
-    name: "Empresa XYZ",
-    email: "comercial@xyz.com.br",
-    phone: "(11) 3333-4444",
-    status: "prospecto",
-    totalValue: 0,
-    lastInteraction: "2025-01-15",
-    segment: "Serviços",
-    company: "Empresa XYZ",
-  },
-  {
-    id: "5",
-    name: "Nova Startup",
-    email: "contato@novastartup.com",
-    phone: "(11) 99999-5555",
-    status: "prospecto",
-    totalValue: 0,
-    lastInteraction: "2025-01-28",
-    segment: "Tecnologia",
-    company: "Nova Startup",
-  },
-  {
-    id: "6",
-    name: "Antiga Corp",
-    email: "contato@antigacorp.com",
-    phone: "(11) 3333-5555",
-    status: "inativo",
-    totalValue: 32000,
-    lastInteraction: "2024-08-10",
-    segment: "Indústria",
-    company: "Antiga Corp",
-  },
-];
-
-const segmentData = [
-  { name: "Tecnologia", value: 3, color: "hsl(var(--primary))" },
-  { name: "Varejo", value: 1, color: "hsl(var(--success))" },
-  { name: "Serviços", value: 1, color: "hsl(var(--warning))" },
-  { name: "Indústria", value: 1, color: "hsl(var(--destructive))" },
-];
-
-const revenueData = [
-  { name: "Tech Solutions", valor: 125000 },
-  { name: "Grupo ABC", valor: 85000 },
-  { name: "StartupCo", valor: 45000 },
-  { name: "Antiga Corp", valor: 32000 },
-];
+import { useClientes, type Cliente, type ClienteInput } from "@/hooks/useClientes";
+import { ClienteInsightsCard } from "@/components/clientes/ClienteInsightsCard";
+import { ClienteAIBadge } from "@/components/clientes/ClienteAIBadge";
+import { SugestoesPainel } from "@/components/clientes/SugestoesPainel";
 
 const statusCliente = {
   ativo: { label: "Ativo", class: "bg-success/10 text-success" },
@@ -186,32 +76,94 @@ const contractTypes = ["Consultoria", "Serviços", "Desenvolvimento", "Licenciam
 export default function Clientes() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const {
+    clientes,
+    isLoading,
+    isAnalyzing,
+    addCliente,
+    updateCliente,
+    deleteCliente,
+    analyzeAllClientes,
+    convertToAtivo,
+  } = useClientes();
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [clientes, setClientes] = useState<Cliente[]>(initialClientes);
-  const [financeEntries, setFinanceEntries] = useState<FinanceEntry[]>([]);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [showConversionDialog, setShowConversionDialog] = useState(false);
   const [clienteToConvert, setClienteToConvert] = useState<Cliente | null>(null);
+  const [showSugestoes, setShowSugestoes] = useState(false);
   const [conversionForm, setConversionForm] = useState({
     contractType: "",
     contractValue: "",
     paymentStatus: "pendente" as "pendente" | "pago",
   });
 
+  // Filter and compute data
+  const filteredClientes = useMemo(() => {
+    if (!searchTerm) return clientes;
+    const term = searchTerm.toLowerCase();
+    return clientes.filter(
+      (c) =>
+        c.nome.toLowerCase().includes(term) ||
+        c.email?.toLowerCase().includes(term) ||
+        c.segmento?.toLowerCase().includes(term)
+    );
+  }, [clientes, searchTerm]);
+
+  const prospectosClientes = filteredClientes.filter((c) => c.status === "prospecto");
+  const ativosClientes = filteredClientes.filter((c) => c.status === "ativo");
+
   const clientesAtivos = clientes.filter((c) => c.status === "ativo").length;
-  const receitaAtivos = clientes.filter((c) => c.status === "ativo").reduce((sum, c) => sum + c.totalValue, 0);
+  const receitaAtivos = clientes
+    .filter((c) => c.status === "ativo")
+    .reduce((sum, c) => sum + (c.valor_total || 0), 0);
   const prospectos = clientes.filter((c) => c.status === "prospecto").length;
 
-  const prospectosClientes = clientes.filter((c) => c.status === "prospecto");
-  const ativosClientes = clientes.filter((c) => c.status === "ativo");
+  // Chart data
+  const segmentData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    clientes.forEach((c) => {
+      const seg = c.segmento || "Outros";
+      counts[seg] = (counts[seg] || 0) + 1;
+    });
+    const colors = ["hsl(var(--primary))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--destructive))"];
+    return Object.entries(counts).map(([name, value], i) => ({
+      name,
+      value,
+      color: colors[i % colors.length],
+    }));
+  }, [clientes]);
 
-  const handleUpdateCliente = (updated: Cliente) => {
-    setClientes(clientes.map((c) => (c.id === updated.id ? updated : c)));
+  const revenueData = useMemo(() => {
+    return clientes
+      .filter((c) => (c.valor_total || 0) > 0)
+      .sort((a, b) => (b.valor_total || 0) - (a.valor_total || 0))
+      .slice(0, 5)
+      .map((c) => ({ name: c.nome, valor: c.valor_total || 0 }));
+  }, [clientes]);
+
+  // Suggestions for AI panel
+  const sugestoes = useMemo(() => {
+    return clientes
+      .filter((c) => c.proxima_acao_sugerida)
+      .map((c) => ({
+        id: c.id,
+        clienteId: c.id,
+        clienteNome: c.nome,
+        acao: c.proxima_acao_sugerida!,
+        prioridade: c.prioridade_contato || "baixa",
+        classificacao: c.classificacao,
+      }));
+  }, [clientes]);
+
+  const handleUpdateCliente = async (updated: Partial<ClienteInput> & { id: string }) => {
+    const { id, ...updates } = updated;
+    await updateCliente(id, updates);
     setSelectedCliente(null);
   };
 
-  const handleDeleteCliente = (id: string) => {
-    setClientes(clientes.filter((c) => c.id !== id));
+  const handleDeleteCliente = async (id: string) => {
+    await deleteCliente(id);
     setSelectedCliente(null);
   };
 
@@ -220,40 +172,22 @@ export default function Clientes() {
     setShowConversionDialog(true);
   };
 
-  const handleConfirmConversion = () => {
+  const handleConfirmConversion = async () => {
     if (!clienteToConvert || !conversionForm.contractType || !conversionForm.contractValue) return;
 
     const contractValue = parseFloat(conversionForm.contractValue);
+    const success = await convertToAtivo(
+      clienteToConvert.id,
+      conversionForm.contractType,
+      contractValue
+    );
 
-    // Update client status to active
-    const updatedCliente: Cliente = {
-      ...clienteToConvert,
-      status: "ativo",
-      totalValue: contractValue,
-      contractType: conversionForm.contractType,
-      contractValue: contractValue,
-      lastInteraction: new Date().toISOString().split("T")[0],
-    };
-
-    setClientes(clientes.map((c) => (c.id === clienteToConvert.id ? updatedCliente : c)));
-
-    // Create finance entry
-    const newFinanceEntry: FinanceEntry = {
-      id: Date.now().toString(),
-      description: `${clienteToConvert.name} - ${conversionForm.contractType}`,
-      value: contractValue,
-      client: clienteToConvert.name,
-      category: "Serviços",
-      status: conversionForm.paymentStatus,
-      date: new Date().toISOString().split("T")[0],
-    };
-
-    setFinanceEntries([...financeEntries, newFinanceEntry]);
-
-    toast({
-      title: "Cliente convertido com sucesso!",
-      description: `${clienteToConvert.name} agora é um cliente ativo. Entrada financeira de R$ ${contractValue.toLocaleString("pt-BR")} criada.`,
-    });
+    if (success) {
+      toast({
+        title: "Cliente convertido com sucesso!",
+        description: `${clienteToConvert.nome} agora é um cliente ativo.`,
+      });
+    }
 
     setShowConversionDialog(false);
     setClienteToConvert(null);
@@ -269,42 +203,45 @@ export default function Clientes() {
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
-            {c.name.charAt(0)}
+            {c.nome.charAt(0)}
           </div>
           <div>
-            <p className="font-semibold text-foreground">{c.name}</p>
-            {c.segment && (
-              <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">
-                {c.segment}
-              </span>
-            )}
+            <p className="font-semibold text-foreground">{c.nome}</p>
+            <div className="flex items-center gap-2 mt-1">
+              {c.segmento && (
+                <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">
+                  {c.segmento}
+                </span>
+              )}
+              <ClienteAIBadge classificacao={c.classificacao} />
+            </div>
           </div>
         </div>
         <span
           className={cn(
             "text-xs px-2 py-1 rounded-full font-medium",
-            statusCliente[c.status].class
+            statusCliente[c.status as keyof typeof statusCliente]?.class || statusCliente.prospecto.class
           )}
         >
-          {statusCliente[c.status].label}
+          {statusCliente[c.status as keyof typeof statusCliente]?.label || c.status}
         </span>
       </div>
 
       <div className="space-y-2 mb-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Mail className="w-4 h-4" />
-          <span className="truncate">{c.email}</span>
+          <span className="truncate">{c.email || "—"}</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Phone className="w-4 h-4" />
-          <span>{c.phone}</span>
+          <span>{c.telefone || "—"}</span>
         </div>
       </div>
 
       <div className="pt-3 border-t border-border/50 flex items-center justify-between">
         <div className="flex items-center gap-1 text-foreground font-medium">
           <DollarSign className="w-4 h-4 text-muted-foreground" />
-          <span>R$ {c.totalValue.toLocaleString("pt-BR")}</span>
+          <span>R$ {(c.valor_total || 0).toLocaleString("pt-BR")}</span>
         </div>
         {showConvertButton && (
           <Button
@@ -319,14 +256,24 @@ export default function Clientes() {
             Fechar Contrato
           </Button>
         )}
-        {!showConvertButton && (
+        {!showConvertButton && c.ultima_interacao && (
           <span className="text-xs text-muted-foreground">
-            {new Date(c.lastInteraction).toLocaleDateString("pt-BR")}
+            {new Date(c.ultima_interacao).toLocaleDateString("pt-BR")}
           </span>
         )}
       </div>
     </div>
   );
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -350,6 +297,14 @@ export default function Clientes() {
             </div>
           </div>
         </div>
+
+        {/* AI Insights Card */}
+        <ClienteInsightsCard
+          clientes={clientes}
+          onAnalyzeAll={analyzeAllClientes}
+          isAnalyzing={isAnalyzing}
+          onOpenSugestoes={() => setShowSugestoes(true)}
+        />
 
         {/* Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -450,7 +405,7 @@ export default function Clientes() {
               className="pl-9 w-80 bg-muted border-border"
             />
           </div>
-          <AddClienteDialog onAdd={(c) => setClientes([c, ...clientes])} />
+          <AddClienteDialog onAdd={addCliente} />
         </div>
 
         {/* Clients Tabs */}
@@ -501,7 +456,7 @@ export default function Clientes() {
           <AlertDialogHeader>
             <AlertDialogTitle>Fechar Contrato</AlertDialogTitle>
             <AlertDialogDescription>
-              Converter {clienteToConvert?.name} para cliente ativo. Isso criará uma entrada financeira automaticamente.
+              Converter {clienteToConvert?.nome} para cliente ativo. Isso criará uma entrada financeira automaticamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-4 py-4">
@@ -553,6 +508,13 @@ export default function Clientes() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* AI Suggestions Panel */}
+      <SugestoesPainel
+        open={showSugestoes}
+        onOpenChange={setShowSugestoes}
+        sugestoes={sugestoes}
+      />
     </MainLayout>
   );
 }
@@ -567,14 +529,33 @@ function EditClienteDialog({
   cliente: Cliente;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (c: Cliente) => void;
+  onUpdate: (c: Partial<ClienteInput> & { id: string }) => void;
   onDelete: (id: string) => void;
 }) {
-  const [editedCliente, setEditedCliente] = useState(cliente);
+  const [editedCliente, setEditedCliente] = useState({
+    nome: cliente.nome,
+    email: cliente.email || "",
+    telefone: cliente.telefone || "",
+    segmento: cliente.segmento || "",
+    status: cliente.status,
+    tipo_contrato: cliente.tipo_contrato || "",
+    valor_total: cliente.valor_total || 0,
+    anexo_url: cliente.anexo_url || "",
+  });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleSave = () => {
-    onUpdate(editedCliente);
+    onUpdate({
+      id: cliente.id,
+      nome: editedCliente.nome,
+      email: editedCliente.email || undefined,
+      telefone: editedCliente.telefone || undefined,
+      segmento: editedCliente.segmento || undefined,
+      status: editedCliente.status,
+      tipo_contrato: editedCliente.tipo_contrato || undefined,
+      valor_total: editedCliente.valor_total,
+      anexo_url: editedCliente.anexo_url || undefined,
+    });
     onOpenChange(false);
   };
 
@@ -583,14 +564,25 @@ function EditClienteDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[500px] bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Editar Cliente</DialogTitle>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              Editar Cliente
+              <ClienteAIBadge classificacao={cliente.classificacao} />
+            </DialogTitle>
           </DialogHeader>
+          
+          {cliente.proxima_acao_sugerida && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-sm">
+              <p className="font-medium text-primary mb-1">💡 Sugestão da IA:</p>
+              <p className="text-muted-foreground">{cliente.proxima_acao_sugerida}</p>
+            </div>
+          )}
+
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>Nome / Empresa</Label>
               <Input
-                value={editedCliente.name}
-                onChange={(e) => setEditedCliente({ ...editedCliente, name: e.target.value })}
+                value={editedCliente.nome}
+                onChange={(e) => setEditedCliente({ ...editedCliente, nome: e.target.value })}
                 className="bg-muted border-border"
               />
             </div>
@@ -607,8 +599,8 @@ function EditClienteDialog({
               <div className="space-y-2">
                 <Label>Telefone</Label>
                 <Input
-                  value={editedCliente.phone}
-                  onChange={(e) => setEditedCliente({ ...editedCliente, phone: e.target.value })}
+                  value={editedCliente.telefone}
+                  onChange={(e) => setEditedCliente({ ...editedCliente, telefone: e.target.value })}
                   className="bg-muted border-border"
                 />
               </div>
@@ -617,8 +609,8 @@ function EditClienteDialog({
               <div className="space-y-2">
                 <Label>Segmento</Label>
                 <Select
-                  value={editedCliente.segment}
-                  onValueChange={(v) => setEditedCliente({ ...editedCliente, segment: v })}
+                  value={editedCliente.segmento}
+                  onValueChange={(v) => setEditedCliente({ ...editedCliente, segmento: v })}
                 >
                   <SelectTrigger className="bg-muted border-border">
                     <SelectValue placeholder="Selecione" />
@@ -634,7 +626,7 @@ function EditClienteDialog({
                 <Label>Status</Label>
                 <Select
                   value={editedCliente.status}
-                  onValueChange={(v: "ativo" | "inativo" | "prospecto") => setEditedCliente({ ...editedCliente, status: v })}
+                  onValueChange={(v) => setEditedCliente({ ...editedCliente, status: v })}
                 >
                   <SelectTrigger className="bg-muted border-border">
                     <SelectValue />
@@ -651,8 +643,8 @@ function EditClienteDialog({
               <div className="space-y-2">
                 <Label>Tipo de Contrato</Label>
                 <Input
-                  value={editedCliente.contractType || ""}
-                  onChange={(e) => setEditedCliente({ ...editedCliente, contractType: e.target.value })}
+                  value={editedCliente.tipo_contrato}
+                  onChange={(e) => setEditedCliente({ ...editedCliente, tipo_contrato: e.target.value })}
                   placeholder="Ex: Consultoria, Serviços..."
                   className="bg-muted border-border"
                 />
@@ -661,8 +653,8 @@ function EditClienteDialog({
                 <Label>Valor Total (R$)</Label>
                 <Input
                   type="number"
-                  value={editedCliente.totalValue}
-                  onChange={(e) => setEditedCliente({ ...editedCliente, totalValue: parseFloat(e.target.value) || 0 })}
+                  value={editedCliente.valor_total}
+                  onChange={(e) => setEditedCliente({ ...editedCliente, valor_total: parseFloat(e.target.value) || 0 })}
                   className="bg-muted border-border"
                 />
               </div>
@@ -670,14 +662,14 @@ function EditClienteDialog({
             <div className="space-y-2">
               <Label>Link Contrato/Comprovante</Label>
               <Input
-                value={editedCliente.attachmentUrl || ""}
-                onChange={(e) => setEditedCliente({ ...editedCliente, attachmentUrl: e.target.value, attachmentName: e.target.value ? "Contrato/Comprovante" : undefined })}
+                value={editedCliente.anexo_url}
+                onChange={(e) => setEditedCliente({ ...editedCliente, anexo_url: e.target.value })}
                 placeholder="https://drive.google.com/... ou link do documento"
                 className="bg-muted border-border"
               />
-              {editedCliente.attachmentUrl && (
+              {editedCliente.anexo_url && (
                 <a
-                  href={editedCliente.attachmentUrl}
+                  href={editedCliente.anexo_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-primary hover:underline flex items-center gap-1"
@@ -687,6 +679,22 @@ function EditClienteDialog({
                 </a>
               )}
             </div>
+
+            {cliente.palavras_chave && cliente.palavras_chave.length > 0 && (
+              <div className="space-y-2">
+                <Label>Palavras-chave (IA)</Label>
+                <div className="flex flex-wrap gap-2">
+                  {cliente.palavras_chave.map((keyword, i) => (
+                    <span
+                      key={i}
+                      className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground"
+                    >
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex justify-between">
             <Button
@@ -712,7 +720,7 @@ function EditClienteDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o cliente "{cliente.name}"? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir o cliente "{cliente.nome}"? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -733,37 +741,36 @@ function EditClienteDialog({
   );
 }
 
-function AddClienteDialog({ onAdd }: { onAdd: (c: Cliente) => void }) {
+function AddClienteDialog({ onAdd }: { onAdd: (c: ClienteInput) => Promise<Cliente | null> }) {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
-    name: "",
+    nome: "",
     email: "",
-    phone: "",
-    segment: "",
+    telefone: "",
+    segmento: "",
     status: "prospecto" as "ativo" | "inativo" | "prospecto",
-    totalValue: "",
-    attachmentUrl: "",
+    valor_total: "",
+    anexo_url: "",
   });
 
-  const handleSubmit = () => {
-    if (!form.name || !form.email) return;
+  const handleSubmit = async () => {
+    if (!form.nome || !form.email) return;
 
-    const cliente: Cliente = {
-      id: Date.now().toString(),
-      name: form.name,
+    setIsSubmitting(true);
+    await onAdd({
+      nome: form.nome,
       email: form.email,
-      phone: form.phone,
+      telefone: form.telefone,
+      segmento: form.segmento,
       status: form.status,
-      totalValue: parseFloat(form.totalValue) || 0,
-      lastInteraction: new Date().toISOString().split("T")[0],
-      segment: form.segment,
-      company: form.name,
-      attachmentUrl: form.attachmentUrl || undefined,
-      attachmentName: form.attachmentUrl ? "Contrato/Comprovante" : undefined,
-    };
+      valor_total: parseFloat(form.valor_total) || 0,
+      anexo_url: form.anexo_url || undefined,
+      empresa: form.nome,
+    });
 
-    onAdd(cliente);
-    setForm({ name: "", email: "", phone: "", segment: "", status: "prospecto", totalValue: "", attachmentUrl: "" });
+    setForm({ nome: "", email: "", telefone: "", segmento: "", status: "prospecto", valor_total: "", anexo_url: "" });
+    setIsSubmitting(false);
     setOpen(false);
   };
 
@@ -783,8 +790,8 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: Cliente) => void }) {
           <div className="space-y-2">
             <Label>Nome / Empresa</Label>
             <Input
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              value={form.nome}
+              onChange={(e) => setForm({ ...form, nome: e.target.value })}
               placeholder="Nome do cliente ou empresa"
               className="bg-muted border-border"
             />
@@ -803,8 +810,8 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: Cliente) => void }) {
             <div className="space-y-2">
               <Label>Telefone</Label>
               <Input
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                value={form.telefone}
+                onChange={(e) => setForm({ ...form, telefone: e.target.value })}
                 placeholder="(00) 00000-0000"
                 className="bg-muted border-border"
               />
@@ -813,7 +820,7 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: Cliente) => void }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Segmento</Label>
-              <Select value={form.segment} onValueChange={(v) => setForm({ ...form, segment: v })}>
+              <Select value={form.segmento} onValueChange={(v) => setForm({ ...form, segmento: v })}>
                 <SelectTrigger className="bg-muted border-border">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -843,8 +850,8 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: Cliente) => void }) {
               <Label>Valor do Cliente (R$)</Label>
               <Input
                 type="number"
-                value={form.totalValue}
-                onChange={(e) => setForm({ ...form, totalValue: e.target.value })}
+                value={form.valor_total}
+                onChange={(e) => setForm({ ...form, valor_total: e.target.value })}
                 placeholder="0,00"
                 className="bg-muted border-border"
               />
@@ -852,8 +859,8 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: Cliente) => void }) {
             <div className="space-y-2">
               <Label>Link Contrato/Comprovante</Label>
               <Input
-                value={form.attachmentUrl}
-                onChange={(e) => setForm({ ...form, attachmentUrl: e.target.value })}
+                value={form.anexo_url}
+                onChange={(e) => setForm({ ...form, anexo_url: e.target.value })}
                 placeholder="https://..."
                 className="bg-muted border-border"
               />
@@ -864,7 +871,16 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: Cliente) => void }) {
           <DialogClose asChild>
             <Button variant="outline">Cancelar</Button>
           </DialogClose>
-          <Button onClick={handleSubmit}>Salvar</Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              "Salvar"
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
