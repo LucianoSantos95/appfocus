@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      clientes: {
+        Row: {
+          analisado_em: string | null
+          anexo_url: string | null
+          classificacao: string | null
+          created_at: string
+          email: string | null
+          empresa: string | null
+          id: string
+          nome: string
+          palavras_chave: string[] | null
+          potencial: string | null
+          prioridade_contato: string | null
+          proxima_acao_sugerida: string | null
+          segmento: string | null
+          status: string
+          telefone: string | null
+          tipo_contrato: string | null
+          ultima_interacao: string | null
+          updated_at: string
+          valor_total: number | null
+        }
+        Insert: {
+          analisado_em?: string | null
+          anexo_url?: string | null
+          classificacao?: string | null
+          created_at?: string
+          email?: string | null
+          empresa?: string | null
+          id?: string
+          nome: string
+          palavras_chave?: string[] | null
+          potencial?: string | null
+          prioridade_contato?: string | null
+          proxima_acao_sugerida?: string | null
+          segmento?: string | null
+          status?: string
+          telefone?: string | null
+          tipo_contrato?: string | null
+          ultima_interacao?: string | null
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Update: {
+          analisado_em?: string | null
+          anexo_url?: string | null
+          classificacao?: string | null
+          created_at?: string
+          email?: string | null
+          empresa?: string | null
+          id?: string
+          nome?: string
+          palavras_chave?: string[] | null
+          potencial?: string | null
+          prioridade_contato?: string | null
+          proxima_acao_sugerida?: string | null
+          segmento?: string | null
+          status?: string
+          telefone?: string | null
+          tipo_contrato?: string | null
+          ultima_interacao?: string | null
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Relationships: []
+      }
       feedbacks: {
         Row: {
           avaliacao: number | null
