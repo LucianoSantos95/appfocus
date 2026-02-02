@@ -1,187 +1,327 @@
 
-# Automacao Inteligente para Modulo de Clientes
+# Sistema de Importacao de Planilhas - Todas as Paginas
 
-## Resumo Executivo
+## Resumo
 
-Vamos adicionar inteligencia artificial ao modulo de Clientes para automatizar tarefas repetitivas e gerar insights valiosos. A IA vai trabalhar nos bastidores para classificar, analisar e sugerir acoes - tudo sem voce precisar fazer nada manualmente.
-
----
-
-## O Que Sera Implementado
-
-### 1. Classificacao Automatica de Clientes
-
-Quando um cliente for cadastrado ou atualizado, a IA vai automaticamente classificar:
-
-| Classificacao | Descricao |
-|---------------|-----------|
-| **VIP** | Alto valor, interacoes frequentes, potencial estrategico |
-| **Padrao** | Cliente regular com bom relacionamento |
-| **Em Risco** | Pouca interacao, possivel churn |
-| **Novo** | Recem cadastrado, ainda em avaliacao |
-
-### 2. Analise Automatica de Historico
-
-A IA vai analisar as informacoes do cliente e extrair:
-- **Palavras-chave** do perfil (ex: "tecnologia", "B2B", "startup")
-- **Potencial estimado** baseado no segmento e valor
-- **Prioridade de contato** (alta, media, baixa)
-
-### 3. Alertas Inteligentes
-
-O sistema vai mostrar alertas automaticos para:
-- Clientes sem interacao ha mais de 30 dias
-- Prospectos "quentes" que devem ser contatados
-- Clientes que podem estar insatisfeitos (baseado em padroes)
-
-### 4. Sugestoes de Proximas Acoes
-
-Um painel vai mostrar sugestoes geradas pela IA:
-- "Ligar para Tech Solutions - ultimo contato ha 15 dias"
-- "Enviar proposta para Nova Startup - prospecto quente"
-- "Agendar reuniao de renovacao com Grupo ABC"
+Vamos implementar um sistema universal de importacao de dados via planilha Excel (.xlsx) e CSV que funcionara em todos os modulos do Hub. Cada modulo tera seu proprio botao "Importar Planilha" e mapeamento de colunas especifico para seus dados.
 
 ---
 
-## Como Vai Aparecer na Interface
+## Modulos que Receberao Importacao
 
-### Card de Insights IA (no topo da pagina)
+| Modulo | Dados Importaveis |
+|--------|-------------------|
+| **Clientes** | Nome, email, telefone, empresa, segmento, valor, contrato |
+| **Financas** | Transacoes (receitas e despesas), categorias, contas |
+| **RH** | Colaboradores e vagas |
+| **Projetos** | Projetos com orcamento, equipe, datas |
+| **Tarefas** | Tarefas e metas com prioridade |
+| **Marketing** | Campanhas e conteudos planejados |
+| **Processos** | Processos com etapas |
 
-```text
-+--------------------------------------------------+
-| [Icone IA] Insights Inteligentes                 |
-|                                                  |
-| 3 clientes precisam de atencao                   |
-| 2 prospectos quentes para contato                |
-| 1 renovacao proxima                              |
-|                                                  |
-| [Ver Sugestoes]                                  |
-+--------------------------------------------------+
-```
+---
 
-### Badge de Classificacao (em cada card de cliente)
+## Interface de Importacao
 
-```text
-+---------------------------+
-| Tech Solutions       VIP  |  <- Badge colorido
-| Tecnologia               |
-| ...                      |
-+---------------------------+
-```
-
-### Painel de Sugestoes (expandivel)
+Um modal unificado que se adapta ao modulo:
 
 ```text
-+--------------------------------------------------+
-| Sugestoes da IA                           [X]    |
-+--------------------------------------------------+
-| [ ] Ligar para Grupo ABC (30 dias sem contato)   |
-| [ ] Proposta Nova Startup (prospecto quente)     |
-| [ ] Revisar contrato StartupCo (vence em 60d)    |
-+--------------------------------------------------+
++----------------------------------------------------------+
+|  Importar Planilha - [Nome do Modulo]                [X] |
++----------------------------------------------------------+
+|                                                          |
+|  [1] Arraste seu arquivo ou clique para selecionar       |
+|      +------------------------------------------+        |
+|      |     Arraste .xlsx ou .csv aqui           |        |
+|      |     ou clique para selecionar            |        |
+|      +------------------------------------------+        |
+|                                                          |
+|  [2] Preview dos Dados (5 primeiras linhas)              |
+|      +------------------------------------------+        |
+|      | Col A    | Col B       | Col C    | ...  |        |
+|      |----------|-------------|----------|------|        |
+|      | Dado 1   | Dado 2      | Dado 3   | ...  |        |
+|      +------------------------------------------+        |
+|                                                          |
+|  [3] Mapeamento de Colunas                               |
+|      Coluna "A" -> [Selecionar campo...]                 |
+|      Coluna "B" -> [Selecionar campo...]                 |
+|      Coluna "C" -> [Ignorar]                             |
+|                                                          |
+|  [x] Disparar analise IA para clientes importados        |
+|                                                          |
+|  +---------------+  +------------------+  +-------------+|
+|  |   Cancelar    |  | Baixar Template  |  | Importar    ||
+|  +---------------+  +------------------+  +-------------+|
++----------------------------------------------------------+
 ```
 
 ---
 
-## Fluxo de Funcionamento
+## Mapeamento por Modulo
 
-```text
-1. Usuario cadastra/edita cliente
-           |
-           v
-2. Dados salvos no banco de dados
-           |
-           v
-3. Edge Function "analyze-client" e chamada
-           |
-           v
-4. Lovable AI analisa os dados do cliente
-           |
-           v
-5. Retorna classificacao, insights e sugestoes
-           |
-           v
-6. Dados enriquecidos salvos na tabela
-           |
-           v
-7. Interface atualiza com badges e alertas
-```
+### Clientes
+| Campo Sistema | Colunas Aceitas na Planilha |
+|---------------|----------------------------|
+| nome | Nome, Nome do Cliente, Cliente |
+| email | Email, E-mail |
+| telefone | Telefone, Tel, Fone |
+| empresa | Empresa, Razao Social |
+| segmento | Segmento, Setor, Area |
+| status | Status |
+| valor_total | Valor, Valor Total, Faturamento |
+| tipo_contrato | Contrato, Tipo Contrato |
+
+### Financas - Transacoes
+| Campo Sistema | Colunas Aceitas |
+|---------------|-----------------|
+| description | Descricao, Historico |
+| value | Valor, Montante |
+| date | Data, Vencimento |
+| category | Categoria |
+| type | Tipo (receita/despesa) |
+| status | Status (pago/pendente) |
+| client | Cliente |
+| provider | Fornecedor |
+
+### RH - Colaboradores
+| Campo Sistema | Colunas Aceitas |
+|---------------|-----------------|
+| name | Nome, Colaborador |
+| role | Cargo, Funcao |
+| department | Departamento, Setor |
+| salary | Salario |
+| startDate | Admissao, Data Inicio |
+| email | Email |
+| phone | Telefone |
+| status | Status |
+
+### RH - Vagas
+| Campo Sistema | Colunas Aceitas |
+|---------------|-----------------|
+| title | Titulo, Vaga |
+| department | Departamento |
+| level | Nivel, Senioridade |
+| salaryRange | Faixa Salarial |
+| status | Status |
+| priority | Prioridade |
+
+### Projetos
+| Campo Sistema | Colunas Aceitas |
+|---------------|-----------------|
+| name | Nome, Projeto |
+| status | Status |
+| priority | Prioridade |
+| startDate | Inicio |
+| endDate | Fim, Prazo |
+| budget | Orcamento |
+| responsible | Responsavel, PM |
+| members | Equipe |
+
+### Tarefas
+| Campo Sistema | Colunas Aceitas |
+|---------------|-----------------|
+| title | Titulo, Tarefa |
+| description | Descricao |
+| dueDate | Prazo, Vencimento |
+| priority | Prioridade |
+| status | Status |
+| category | Tipo (tarefa/meta) |
+| responsible | Responsavel |
+
+### Marketing - Campanhas
+| Campo Sistema | Colunas Aceitas |
+|---------------|-----------------|
+| name | Nome, Campanha |
+| objective | Objetivo |
+| platforms | Plataformas |
+| budget | Orcamento |
+| startDate | Inicio |
+| endDate | Fim |
+| status | Status |
+
+### Marketing - Conteudos
+| Campo Sistema | Colunas Aceitas |
+|---------------|-----------------|
+| title | Titulo |
+| format | Formato |
+| theme | Tema |
+| priority | Prioridade |
+| status | Status |
+| dueDate | Prazo |
+
+### Processos
+| Campo Sistema | Colunas Aceitas |
+|---------------|-----------------|
+| name | Nome, Processo |
+| description | Descricao |
+| department | Departamento |
+| owner | Responsavel |
+| status | Status |
 
 ---
 
-## Beneficios Praticos
+## Funcionalidades Inteligentes
 
-1. **Economia de tempo** - Nao precisa classificar clientes manualmente
-2. **Nao esquece ninguem** - Alertas automaticos de follow-up
-3. **Prioriza melhor** - Sabe quem precisa de atencao primeiro
-4. **Insights rapidos** - Ve o panorama geral num relance
-5. **Sem custo extra** - Usa Lovable AI incluso no plano
+1. **Auto-deteccao de colunas**: Reconhece nomes similares automaticamente
+2. **Validacao em tempo real**: Mostra erros antes de importar
+3. **Template para download**: Cada modulo tem seu modelo
+4. **Importacao em lotes**: Para grandes volumes (50 registros por vez)
+5. **Integracao com IA**: Opcao de analisar clientes apos import
+
+---
+
+## Beneficios
+
+- Migracao rapida de sistemas legados
+- Importacao de dados de planilhas existentes
+- Sem digitacao manual
+- Validacao antes de salvar
+- Templates prontos para facilitar
 
 ---
 
 ## Detalhes Tecnicos
 
-### 1. Banco de Dados
+### Dependencia
 
-Criar tabela `clientes` para persistir os dados (atualmente estao apenas em memoria):
-
-**Campos principais:**
-- `id`, `nome`, `email`, `telefone`, `segmento`, `status`, `valor_total`
-- `tipo_contrato`, `ultima_interacao`, `anexo_url`
-
-**Campos de IA (preenchidos automaticamente):**
-- `classificacao` - VIP, Padrao, Em Risco, Novo
-- `potencial` - Alto, Medio, Baixo
-- `prioridade_contato` - Alta, Media, Baixa
-- `palavras_chave` - Array de termos relevantes
-- `proxima_acao_sugerida` - Texto com sugestao da IA
-- `analisado_em` - Timestamp da ultima analise
-
-### 2. Edge Function: analyze-client
-
-Funcao serverless que:
-- Recebe ID do cliente
-- Monta contexto com todos os dados
-- Envia para Lovable AI com prompt estruturado
-- Usa tool calling para resposta estruturada
-- Atualiza registro com resultados
-
-### 3. Componentes de Interface
-
-**ClienteInsightsCard** - Card no topo com resumo de alertas
-**ClienteAIBadge** - Badge de classificacao nos cards
-**SugestoesPainel** - Lista de acoes sugeridas pela IA
-
-### 4. Prompt de Analise
-
-A IA recebera instrucoes para avaliar:
-- Valor do cliente vs media do segmento
-- Tempo desde ultima interacao
-- Status atual e historico
-- Tipo de contrato e potencial de expansao
-
-### Arquivos a Serem Criados/Modificados
-
-```text
-supabase/
-├── functions/
-│   └── analyze-client/
-│       └── index.ts              (novo)
-└── migrations/
-    └── xxx_create_clientes.sql   (novo)
-
-src/
-├── components/
-│   └── clientes/
-│       ├── ClienteInsightsCard.tsx   (novo)
-│       ├── ClienteAIBadge.tsx        (novo)
-│       └── SugestoesPainel.tsx       (novo)
-└── pages/
-    └── Clientes.tsx                  (modificar)
+```json
+{
+  "xlsx": "^0.18.5"
+}
 ```
 
-### Custos e Performance
+### Componentes Reutilizaveis
 
-- **Lovable AI**: Incluso no plano, sem custo adicional
-- **Tempo de analise**: 1-3 segundos por cliente
-- **Trigger**: Analise acontece ao salvar/atualizar cliente
+| Componente | Funcao |
+|------------|--------|
+| `ImportDialog.tsx` | Modal principal, recebe config do modulo |
+| `FileDropzone.tsx` | Area drag-and-drop para arquivos |
+| `DataPreview.tsx` | Tabela de preview dos dados |
+| `ColumnMapper.tsx` | Interface de mapeamento |
+| `ImportProgress.tsx` | Barra de progresso da importacao |
+
+### Configuracao por Modulo
+
+```typescript
+// src/lib/import-configs.ts
+export const importConfigs = {
+  clientes: {
+    label: "Clientes",
+    table: "clientes", // tabela do Supabase
+    fields: [
+      { key: "nome", label: "Nome", required: true, aliases: ["Nome", "Cliente"] },
+      { key: "email", label: "Email", aliases: ["Email", "E-mail"] },
+      // ...
+    ]
+  },
+  financas: {
+    label: "Transacoes",
+    // config local (sem Supabase por enquanto)
+    fields: [...]
+  },
+  // outros modulos...
+}
+```
+
+### Hook de Importacao
+
+```typescript
+// src/hooks/useDataImport.ts
+export function useDataImport(config: ImportConfig) {
+  // Parsing do arquivo
+  // Mapeamento de colunas
+  // Validacao de dados
+  // Insercao em lotes
+  // Callback de progresso
+}
+```
+
+### Arquivos a Serem Criados
+
+```text
+src/
+├── components/
+│   └── import/
+│       ├── ImportDialog.tsx       (modal principal)
+│       ├── FileDropzone.tsx       (drag & drop)
+│       ├── DataPreview.tsx        (preview da tabela)
+│       ├── ColumnMapper.tsx       (mapeamento)
+│       └── ImportProgress.tsx     (progresso)
+├── hooks/
+│   └── useDataImport.ts           (logica de importacao)
+└── lib/
+    ├── spreadsheet.ts             (funcoes de parsing xlsx/csv)
+    └── import-configs.ts          (configs por modulo)
+```
+
+### Arquivos a Modificar
+
+```text
+src/pages/Clientes.tsx    (adicionar botao importar)
+src/pages/Financas.tsx    (adicionar botao importar)
+src/pages/RH.tsx          (adicionar botao importar para colaboradores e vagas)
+src/pages/Projetos.tsx    (adicionar botao importar)
+src/pages/Tarefas.tsx     (adicionar botao importar)
+src/pages/Marketing.tsx   (adicionar botao importar para campanhas e conteudos)
+src/pages/Processos.tsx   (adicionar botao importar)
+```
+
+### Fluxo de Importacao
+
+```text
+1. Usuario clica "Importar Planilha"
+           |
+           v
+2. Modal abre com dropzone
+           |
+           v
+3. Usuario seleciona arquivo (.xlsx ou .csv)
+           |
+           v
+4. Frontend le arquivo com SheetJS
+           |
+           v
+5. Extrai cabecalhos e 5 primeiras linhas
+           |
+           v
+6. Auto-mapeia colunas conhecidas
+           |
+           v
+7. Usuario ajusta mapeamento se necessario
+           |
+           v
+8. Usuario clica "Importar"
+           |
+           v
+9. Valida todos os registros
+           |
+           v
+10. Insere em lotes de 50 registros
+           |
+           v
+11. Mostra progresso e resultado
+           |
+           v
+12. (Opcional) Dispara analise IA para clientes
+```
+
+### Templates para Download
+
+Cada modulo tera um botao "Baixar Template" que gera uma planilha Excel com:
+- Cabecalhos corretos
+- Exemplo de dados
+- Instrucoes na primeira aba
+
+---
+
+## Ordem de Implementacao
+
+1. Criar componentes base (ImportDialog, FileDropzone, etc.)
+2. Criar hook useDataImport
+3. Criar configs por modulo
+4. Integrar em Clientes (com Supabase)
+5. Integrar em Financas (local)
+6. Integrar nos demais modulos
+7. Testar com arquivos reais
+
