@@ -37,6 +37,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,9 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { ImportDialog } from "@/components/import/ImportDialog";
+import { importConfigs } from "@/lib/import-configs";
+import { useToast } from "@/hooks/use-toast";
 
 interface SubTask {
   id: string;
@@ -238,9 +242,34 @@ function getProjectDeadlineStatus(endDate: string, progress: number) {
 
 export default function Projetos() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [projetos, setProjetos] = useState<Projeto[]>(initialProjetos);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
+
+  const handleImportProjetos = (records: Record<string, unknown>[]) => {
+    const newProjetos: Projeto[] = records.map((record, index) => ({
+      id: `imported-${Date.now()}-${index}`,
+      name: String(record.name || ''),
+      status: 'nao_iniciado' as const,
+      priority: (record.priority === 'alta' ? 'alta' : record.priority === 'baixa' ? 'baixa' : 'media') as 'alta' | 'media' | 'baixa',
+      startDate: String(record.startDate || new Date().toISOString().split('T')[0]),
+      endDate: String(record.endDate || new Date().toISOString().split('T')[0]),
+      budget: Number(record.budget) || 0,
+      spent: 0,
+      responsible: String(record.responsible || ''),
+      currentSprint: '-',
+      members: [],
+      progress: 0,
+      description: String(record.description || ''),
+      sprints: [],
+    }));
+    setProjetos([...newProjetos, ...projetos]);
+    toast({
+      title: "Importação concluída",
+      description: `${newProjetos.length} projetos importados com sucesso.`,
+    });
+  };
 
   const projetosAbertos = projetos.filter((p) => p.status === "nao_iniciado").length;
   const projetosAndamento = projetos.filter((p) => p.status === "em_andamento").length;
@@ -404,7 +433,19 @@ export default function Projetos() {
               className="pl-9 w-80 bg-muted border-border"
             />
           </div>
-          <AddProjetoDialog onAdd={(p) => setProjetos([p, ...projetos])} />
+          <div className="flex items-center gap-2">
+            <ImportDialog
+              config={importConfigs.projetos}
+              onImportComplete={handleImportProjetos}
+              trigger={
+                <Button variant="outline" className="gap-2">
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Importar Planilha
+                </Button>
+              }
+            />
+            <AddProjetoDialog onAdd={(p) => setProjetos([p, ...projetos])} />
+          </div>
         </div>
 
         {/* Projects Cards */}
