@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { isValidHttpUrl } from "@/lib/validation";
 import {
   BarChart,
   Bar,
@@ -686,7 +687,7 @@ function EditClienteDialog({
                 placeholder="https://drive.google.com/... ou link do documento"
                 className="bg-muted border-border"
               />
-              {editedCliente.anexo_url && (
+              {editedCliente.anexo_url && isValidHttpUrl(editedCliente.anexo_url) && (
                 <a
                   href={editedCliente.anexo_url}
                   target="_blank"
@@ -696,6 +697,11 @@ function EditClienteDialog({
                   <FileText className="w-3 h-3" />
                   Visualizar anexo
                 </a>
+              )}
+              {editedCliente.anexo_url && !isValidHttpUrl(editedCliente.anexo_url) && (
+                <span className="text-sm text-destructive">
+                  URL inválida (deve começar com http:// ou https://)
+                </span>
               )}
             </div>
 

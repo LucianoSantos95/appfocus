@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { isValidHttpUrl } from "@/lib/validation";
 
 export interface Cliente {
   id: string;
@@ -66,6 +67,16 @@ export function useClientes() {
 
   // Add new client
   const addCliente = async (input: ClienteInput): Promise<Cliente | null> => {
+    // Validate anexo_url if provided
+    if (input.anexo_url && !isValidHttpUrl(input.anexo_url)) {
+      toast({
+        title: "URL inválida",
+        description: "O link do documento deve ser uma URL válida (http/https).",
+        variant: "destructive",
+      });
+      return null;
+    }
+
     try {
       const { data, error } = await supabase
         .from("clientes")
@@ -111,6 +122,16 @@ export function useClientes() {
 
   // Update client
   const updateCliente = async (id: string, updates: Partial<ClienteInput>): Promise<boolean> => {
+    // Validate anexo_url if provided
+    if (updates.anexo_url && !isValidHttpUrl(updates.anexo_url)) {
+      toast({
+        title: "URL inválida",
+        description: "O link do documento deve ser uma URL válida (http/https).",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     try {
       const { error } = await supabase
         .from("clientes")
@@ -175,13 +196,20 @@ export function useClientes() {
   // Analyze single client with AI
   const analyzeCliente = async (clienteId: string): Promise<boolean> => {
     try {
+      // Get current session for auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        console.error("No auth session available for AI analysis");
+        return false;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-client`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ clienteId }),
         }
@@ -189,6 +217,14 @@ export function useClientes() {
 
       if (!response.ok) {
         const error = await response.json();
+        if (response.status === 401) {
+          toast({
+            title: "Sessão expirada",
+            description: "Por favor, faça login novamente.",
+            variant: "destructive",
+          });
+          return false;
+        }
         if (response.status === 429) {
           toast({
             title: "Limite de requisições",
