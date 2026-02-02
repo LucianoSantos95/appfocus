@@ -36,6 +36,7 @@ import {
   Image,
   Video,
   FileDown,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,9 @@ import {
 } from "@/components/ui/collapsible";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { ImportDialog } from "@/components/import/ImportDialog";
+import { importConfigs } from "@/lib/import-configs";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProcessoStep {
   id: string;
@@ -173,10 +177,30 @@ const departments = ["Comercial", "Financeiro", "RH", "Marketing", "Projetos", "
 
 export default function Processos() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [processos, setProcessos] = useState<Processo[]>(initialProcessos);
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
   const [editingStep, setEditingStep] = useState<{ processoId: string; step: ProcessoStep } | null>(null);
+
+  const handleImportProcessos = (records: Record<string, unknown>[]) => {
+    const newProcessos: Processo[] = records.map((record, index) => ({
+      id: `imported-${Date.now()}-${index}`,
+      name: String(record.name || ''),
+      description: String(record.description || ''),
+      department: String(record.department || ''),
+      owner: String(record.owner || ''),
+      lastUpdated: new Date().toISOString().split('T')[0],
+      status: 'ativo' as const,
+      icon: FileText,
+      steps: [],
+    }));
+    setProcessos([...newProcessos, ...processos]);
+    toast({
+      title: "Importação concluída",
+      description: `${newProcessos.length} processos importados com sucesso.`,
+    });
+  };
 
   const handleDeleteProcesso = (id: string) => {
     setProcessos(processos.filter((p) => p.id !== id));
@@ -274,7 +298,19 @@ export default function Processos() {
               className="pl-9 bg-muted border-border"
             />
           </div>
-          <AddProcessoDialog onAdd={(p) => setProcessos([p, ...processos])} />
+          <div className="flex items-center gap-2">
+            <ImportDialog
+              config={importConfigs.processos}
+              onImportComplete={handleImportProcessos}
+              trigger={
+                <Button variant="outline" className="gap-2">
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Importar Planilha
+                </Button>
+              }
+            />
+            <AddProcessoDialog onAdd={(p) => setProcessos([p, ...processos])} />
+          </div>
         </div>
 
         {/* Processos List */}

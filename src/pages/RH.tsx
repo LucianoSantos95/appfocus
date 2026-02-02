@@ -33,6 +33,7 @@ import {
   Upload,
   Edit,
   Trash2,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,9 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { ImportDialog } from "@/components/import/ImportDialog";
+import { importConfigs } from "@/lib/import-configs";
+import { useToast } from "@/hooks/use-toast";
 
 interface Colaborador {
   id: string;
@@ -190,11 +194,51 @@ const priorityStyles = {
 
 export default function RH() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [colaboradores, setColaboradores] = useState<Colaborador[]>(initialColaboradores);
   const [vagas, setVagas] = useState<Vaga[]>(initialVagas);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
-const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
+  const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
+
+  const handleImportColaboradores = (records: Record<string, unknown>[]) => {
+    const newColaboradores: Colaborador[] = records.map((record, index) => ({
+      id: `imported-${Date.now()}-${index}`,
+      name: String(record.name || ''),
+      role: String(record.role || ''),
+      department: String(record.department || ''),
+      salary: Number(record.salary) || 0,
+      startDate: String(record.startDate || new Date().toISOString().split('T')[0]),
+      status: 'ativo' as const,
+      manager: String(record.manager || ''),
+      email: String(record.email || ''),
+      phone: String(record.phone || ''),
+    }));
+    setColaboradores([...newColaboradores, ...colaboradores]);
+    toast({
+      title: "Importação concluída",
+      description: `${newColaboradores.length} colaboradores importados com sucesso.`,
+    });
+  };
+
+  const handleImportVagas = (records: Record<string, unknown>[]) => {
+    const newVagas: Vaga[] = records.map((record, index) => ({
+      id: `imported-${Date.now()}-${index}`,
+      title: String(record.title || ''),
+      department: String(record.department || ''),
+      level: String(record.level || ''),
+      salaryRange: String(record.salaryRange || ''),
+      status: 'aberta' as const,
+      priority: (record.priority === 'alta' ? 'alta' : record.priority === 'baixa' ? 'baixa' : 'media') as 'alta' | 'media' | 'baixa',
+      channel: String(record.channel || ''),
+      description: String(record.description || ''),
+    }));
+    setVagas([...newVagas, ...vagas]);
+    toast({
+      title: "Importação concluída",
+      description: `${newVagas.length} vagas importadas com sucesso.`,
+    });
+  };
 
   const totalColaboradores = colaboradores.filter((c) => c.status !== "desligado").length;
   const vagasAbertas = vagas.filter((v) => v.status === "aberta").length;
@@ -336,7 +380,19 @@ const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Colaboradores</h2>
-            <AddColaboradorDialog onAdd={(c) => setColaboradores([c, ...colaboradores])} />
+            <div className="flex items-center gap-2">
+              <ImportDialog
+                config={importConfigs.rh_colaboradores}
+                onImportComplete={handleImportColaboradores}
+                trigger={
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Importar
+                  </Button>
+                }
+              />
+              <AddColaboradorDialog onAdd={(c) => setColaboradores([c, ...colaboradores])} />
+            </div>
           </div>
 
           <Tabs defaultValue="ativo" className="space-y-4">
@@ -401,7 +457,19 @@ const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Vagas</h2>
-            <AddVagaDialog onAdd={(v) => setVagas([v, ...vagas])} />
+            <div className="flex items-center gap-2">
+              <ImportDialog
+                config={importConfigs.rh_vagas}
+                onImportComplete={handleImportVagas}
+                trigger={
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Importar
+                  </Button>
+                }
+              />
+              <AddVagaDialog onAdd={(v) => setVagas([v, ...vagas])} />
+            </div>
           </div>
 
           <Tabs defaultValue="aberta" className="space-y-4">

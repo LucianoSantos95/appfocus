@@ -33,6 +33,7 @@ import {
   AlertTriangle,
   Trash2,
   GripVertical,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,9 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
+import { ImportDialog } from "@/components/import/ImportDialog";
+import { importConfigs } from "@/lib/import-configs";
+import { useToast } from "@/hooks/use-toast";
 
 interface SubTask {
   id: string;
@@ -152,9 +156,29 @@ const priorityLabels = {
 
 export default function Tarefas() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [atividades, setAtividades] = useState<Atividade[]>(initialAtividades);
   const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
+
+  const handleImportTarefas = (records: Record<string, unknown>[]) => {
+    const newAtividades: Atividade[] = records.map((record, index) => ({
+      id: `imported-${Date.now()}-${index}`,
+      title: String(record.title || ''),
+      description: String(record.description || ''),
+      dueDate: String(record.dueDate || new Date().toISOString().split('T')[0]),
+      priority: (record.priority === 'urgente' ? 'urgente' : record.priority === 'alta' ? 'alta' : record.priority === 'baixa' ? 'baixa' : 'media') as 'urgente' | 'alta' | 'media' | 'baixa',
+      status: 'pendente' as const,
+      category: (record.category === 'meta' ? 'meta' : 'tarefa') as 'tarefa' | 'meta',
+      responsible: String(record.responsible || ''),
+      subtasks: [],
+    }));
+    setAtividades([...newAtividades, ...atividades]);
+    toast({
+      title: "Importação concluída",
+      description: `${newAtividades.length} tarefas importadas com sucesso.`,
+    });
+  };
 
   const pendentes = atividades.filter((a) => a.status === "pendente").length;
   const concluidas = atividades.filter((a) => a.status === "concluida").length;
@@ -404,7 +428,19 @@ export default function Tarefas() {
               className="pl-9 w-64 bg-muted border-border"
             />
           </div>
-          <AddAtividadeDialog onAdd={(a) => setAtividades([a, ...atividades])} />
+          <div className="flex items-center gap-2">
+            <ImportDialog
+              config={importConfigs.tarefas}
+              onImportComplete={handleImportTarefas}
+              trigger={
+                <Button variant="outline" className="gap-2">
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Importar Planilha
+                </Button>
+              }
+            />
+            <AddAtividadeDialog onAdd={(a) => setAtividades([a, ...atividades])} />
+          </div>
         </div>
 
         {/* Tabs */}

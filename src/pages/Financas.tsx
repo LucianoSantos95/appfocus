@@ -50,6 +50,7 @@ import {
   Trash2,
   FileText,
   X,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,9 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { ImportDialog } from "@/components/import/ImportDialog";
+import { importConfigs } from "@/lib/import-configs";
+import { useToast } from "@/hooks/use-toast";
 
 // Types
 interface Transaction {
@@ -201,6 +205,7 @@ const accountTypes = [
 
 export default function Financas() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(initialBankAccounts);
@@ -208,6 +213,26 @@ export default function Financas() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
+
+  const handleImportTransactions = (records: Record<string, unknown>[]) => {
+    const newTransactions: Transaction[] = records.map((record, index) => ({
+      id: `imported-${Date.now()}-${index}`,
+      description: String(record.description || ''),
+      value: Number(record.value) || 0,
+      date: String(record.date || new Date().toISOString().split('T')[0]),
+      category: String(record.category || 'Outros'),
+      type: (record.type === 'despesa' ? 'despesa' : 'receita') as 'receita' | 'despesa',
+      status: 'pendente' as 'pago' | 'pendente' | 'atrasado',
+      paymentMethod: String(record.paymentMethod || ''),
+      client: String(record.client || ''),
+      provider: String(record.provider || ''),
+    }));
+    setTransactions([...newTransactions, ...transactions]);
+    toast({
+      title: "Importação concluída",
+      description: `${newTransactions.length} transações importadas com sucesso.`,
+    });
+  };
 
   const totalReceita = transactions.filter((t) => t.type === "receita" && t.status === "pago").reduce((sum, t) => sum + t.value, 0);
   const totalDespesa = transactions.filter((t) => t.type === "despesa" && t.status === "pago").reduce((sum, t) => sum + t.value, 0);
@@ -301,22 +326,34 @@ export default function Financas() {
               <p className="text-muted-foreground mt-1">Controle completo do seu fluxo financeiro</p>
             </div>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Download className="w-4 h-4" />
-                Exportar
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-card border-border">
-              <DropdownMenuItem onClick={() => handleExport("pdf")}>
-                <FileText className="w-4 h-4 mr-2" /> Exportar PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport("csv")}>
-                <FileText className="w-4 h-4 mr-2" /> Exportar CSV
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <ImportDialog
+              config={importConfigs.financas_transacoes}
+              onImportComplete={handleImportTransactions}
+              trigger={
+                <Button variant="outline" className="gap-2">
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Importar Planilha
+                </Button>
+              }
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Exportar
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-card border-border">
+                <DropdownMenuItem onClick={() => handleExport("pdf")}>
+                  <FileText className="w-4 h-4 mr-2" /> Exportar PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("csv")}>
+                  <FileText className="w-4 h-4 mr-2" /> Exportar CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Overview */}

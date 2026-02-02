@@ -43,6 +43,7 @@ import {
   FileText,
   Trash2,
   Loader2,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,8 @@ import { useClientes, type Cliente, type ClienteInput } from "@/hooks/useCliente
 import { ClienteInsightsCard } from "@/components/clientes/ClienteInsightsCard";
 import { ClienteAIBadge } from "@/components/clientes/ClienteAIBadge";
 import { SugestoesPainel } from "@/components/clientes/SugestoesPainel";
+import { ImportDialog } from "@/components/import/ImportDialog";
+import { importConfigs } from "@/lib/import-configs";
 
 const statusCliente = {
   ativo: { label: "Ativo", class: "bg-success/10 text-success" },
@@ -425,7 +428,25 @@ export default function Clientes() {
               className="pl-9 w-80 bg-muted border-border"
             />
           </div>
-          <AddClienteDialog onAdd={addCliente} />
+          <div className="flex items-center gap-2">
+            <ImportDialog
+              config={importConfigs.clientes}
+              onImportComplete={() => {
+                toast({
+                  title: "Importação concluída",
+                  description: "Os clientes foram importados com sucesso.",
+                });
+              }}
+              onAnalyzeAI={analyzeAllClientes}
+              trigger={
+                <Button variant="outline" className="gap-2">
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Importar Planilha
+                </Button>
+              }
+            />
+            <AddClienteDialog onAdd={addCliente} />
+          </div>
         </div>
 
         {/* Clients Tabs */}
