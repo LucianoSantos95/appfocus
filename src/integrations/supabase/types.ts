@@ -110,12 +110,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          endpoint: string
+          request_count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          endpoint: string
+          request_count?: number
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          endpoint?: string
+          request_count?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_rate_limits: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
