@@ -57,6 +57,62 @@ serve(async (req) => {
       );
     }
 
+    // Rate limiting check
+    const SUPABASE_URL_ENV = Deno.env.get("SUPABASE_URL");
+    const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (SUPABASE_URL_ENV && SERVICE_ROLE_KEY) {
+      const rateLimitClient = createClient(SUPABASE_URL_ENV, SERVICE_ROLE_KEY);
+      const endpoint = "analyze-client";
+      const maxRequests = 30; // max 30 requests per hour per user
+      const windowMs = 3600000; // 1 hour
+
+      const { data: rateLimit } = await rateLimitClient
+        .from("rate_limits")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("endpoint", endpoint)
+        .single();
+
+      if (rateLimit) {
+        const windowStart = new Date(rateLimit.window_start);
+        const hourAgo = new Date(Date.now() - windowMs);
+
+        if (windowStart > hourAgo && rateLimit.request_count >= maxRequests) {
+          return new Response(
+            JSON.stringify({ error: "Limite de análises excedido. Tente novamente em alguns minutos." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "3600" } }
+          );
+        }
+
+        if (windowStart <= hourAgo) {
+          // Reset window
+          await rateLimitClient
+            .from("rate_limits")
+            .update({ request_count: 1, window_start: new Date().toISOString() })
+            .eq("user_id", userId)
+            .eq("endpoint", endpoint);
+        } else {
+          // Increment
+          await rateLimitClient
+            .from("rate_limits")
+            .update({ request_count: rateLimit.request_count + 1 })
+            .eq("user_id", userId)
+            .eq("endpoint", endpoint);
+        }
+      } else {
+        // First request - create entry
+        await rateLimitClient
+          .from("rate_limits")
+          .insert({ user_id: userId, endpoint, request_count: 1, window_start: new Date().toISOString() });
+      }
+
+      // Cleanup old entries occasionally (1% chance per request)
+      if (Math.random() < 0.01) {
+        await rateLimitClient.rpc("cleanup_rate_limits");
+      }
+    }
+
     // Parse request body
     const { clienteId } = await req.json();
     
