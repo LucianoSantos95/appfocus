@@ -107,7 +107,7 @@ export default function Auth() {
       <Card className="w-full max-w-md shadow-premium border-border/50">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto">
-            <img src={logo} alt="AppFocus" className="h-12 w-auto" />
+            <img src={logo} alt="AppFocus" className="h-12 w-auto" width={48} height={48} />
           </div>
           <CardTitle className="text-2xl">AppFocus</CardTitle>
           <CardDescription>
