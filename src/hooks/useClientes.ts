@@ -78,6 +78,17 @@ export function useClientes() {
     }
 
     try {
+      // Get current user for ownership
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+        return null;
+      }
+
       const { data, error } = await supabase
         .from("clientes")
         .insert({
@@ -91,6 +102,7 @@ export function useClientes() {
           anexo_url: input.anexo_url || null,
           empresa: input.empresa || input.nome,
           ultima_interacao: new Date().toISOString().split("T")[0],
+          user_id: user.id,
         })
         .select()
         .single();

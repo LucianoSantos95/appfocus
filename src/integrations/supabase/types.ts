@@ -34,6 +34,7 @@ export type Database = {
           tipo_contrato: string | null
           ultima_interacao: string | null
           updated_at: string
+          user_id: string | null
           valor_total: number | null
         }
         Insert: {
@@ -55,6 +56,7 @@ export type Database = {
           tipo_contrato?: string | null
           ultima_interacao?: string | null
           updated_at?: string
+          user_id?: string | null
           valor_total?: number | null
         }
         Update: {
@@ -76,6 +78,7 @@ export type Database = {
           tipo_contrato?: string | null
           ultima_interacao?: string | null
           updated_at?: string
+          user_id?: string | null
           valor_total?: number | null
         }
         Relationships: []
