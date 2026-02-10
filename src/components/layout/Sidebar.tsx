@@ -59,7 +59,7 @@ export function Sidebar() {
           </div>
         )}
         {collapsed && (
-          <img src={logo} alt="Hub Empresarial" className="w-8 h-8 rounded-lg object-cover" />
+          <img src={logo} alt="Hub Empresarial" className="w-8 h-8 rounded-lg object-cover" width={32} height={32} />
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
