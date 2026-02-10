@@ -54,7 +54,7 @@ export function Sidebar() {
       <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <img src={logo} alt="Hub Empresarial" className="w-8 h-8 rounded-lg object-cover" />
+            <img src={logo} alt="Hub Empresarial" className="w-8 h-8 rounded-lg object-cover" width={32} height={32} />
             <span className="font-semibold text-foreground">Hub Empresarial</span>
           </div>
         )}
