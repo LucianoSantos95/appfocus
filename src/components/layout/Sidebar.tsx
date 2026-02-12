@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.png";
 import {
   LayoutDashboard,
@@ -15,9 +14,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
-  LogOut,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const modules = [
   { name: "Painel", path: "/", icon: LayoutDashboard },
@@ -34,13 +31,6 @@ const modules = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
-  const { signOut, user } = useAuth();
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/auth");
-  };
 
   return (
     <aside
@@ -95,32 +85,15 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* Footer with user info and logout */}
-      <div className="p-4 border-t border-sidebar-border space-y-3">
-        {!collapsed && user && (
-          <div className="text-xs text-muted-foreground truncate">
-            {user.email}
-          </div>
-        )}
-        <Button
-          variant="ghost"
-          size={collapsed ? "icon" : "sm"}
-          onClick={handleLogout}
-          className={cn(
-            "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent",
-            collapsed ? "w-full justify-center" : "w-full justify-start gap-2"
-          )}
-        >
-          <LogOut className="w-4 h-4" />
-          {!collapsed && <span>Sair</span>}
-        </Button>
-        {!collapsed && (
+      {/* Footer */}
+      {!collapsed && (
+        <div className="p-4 border-t border-sidebar-border">
           <div className="text-xs text-muted-foreground">
             <p>Hub Empresarial v1.0</p>
             <p className="mt-1">Focus Inteligente</p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </aside>
   );
 }
