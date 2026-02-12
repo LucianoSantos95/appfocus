@@ -4,9 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import Auth from "./pages/Auth";
 
 const Index = lazy(() => import("./pages/Index"));
 const Financas = lazy(() => import("./pages/Financas"));
@@ -23,34 +20,28 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Suspense fallback={<div className="min-h-screen bg-background" />}>
-            <Routes>
-              {/* Public route for authentication */}
-              <Route path="/auth" element={<Auth />} />
-              
-              {/* Protected routes */}
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/financas" element={<ProtectedRoute><Financas /></ProtectedRoute>} />
-              <Route path="/rh" element={<ProtectedRoute><RH /></ProtectedRoute>} />
-              <Route path="/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
-              <Route path="/projetos" element={<ProtectedRoute><Projetos /></ProtectedRoute>} />
-              <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
-              <Route path="/atividades" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
-              <Route path="/processos" element={<ProtectedRoute><Processos /></ProtectedRoute>} />
-              <Route path="/guia" element={<ProtectedRoute><Guia /></ProtectedRoute>} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Suspense fallback={<div className="min-h-screen bg-background" />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/financas" element={<Financas />} />
+            <Route path="/rh" element={<RH />} />
+            <Route path="/marketing" element={<Marketing />} />
+            <Route path="/projetos" element={<Projetos />} />
+            <Route path="/clientes" element={<Clientes />} />
+            <Route path="/atividades" element={<Tarefas />} />
+            <Route path="/processos" element={<Processos />} />
+            <Route path="/guia" element={<Guia />} />
+            
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 
