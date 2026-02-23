@@ -1,6 +1,7 @@
-import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useSidebar } from "./SidebarContext";
+import { UserMenu } from "@/components/user/UserMenu";
 import logo from "@/assets/logo.png";
 import {
   LayoutDashboard,
@@ -14,23 +15,34 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  Lock as LockIcon,
 } from "lucide-react";
+import { useTeamPermissions } from "@/hooks/useTeamPermissions";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const modules = [
-  { name: "Painel", path: "/", icon: LayoutDashboard },
-  { name: "Finanças", path: "/financas", icon: DollarSign },
-  { name: "RH", path: "/rh", icon: Users },
-  { name: "Marketing", path: "/marketing", icon: Megaphone },
-  { name: "Projetos", path: "/projetos", icon: FolderKanban },
-  { name: "Clientes", path: "/clientes", icon: UserCheck },
-  { name: "Atividades", path: "/atividades", icon: ListTodo },
-  { name: "Processos", path: "/processos", icon: GitBranch },
-  { name: "Guia de Uso", path: "/guia", icon: BookOpen },
+  { name: "Painel", path: "/", slug: "", icon: LayoutDashboard },
+  { name: "Finanças", path: "/financas", slug: "financas", icon: DollarSign },
+  { name: "RH", path: "/rh", slug: "rh", icon: Users },
+  { name: "Marketing", path: "/marketing", slug: "marketing", icon: Megaphone },
+  { name: "Projetos", path: "/projetos", slug: "projetos", icon: FolderKanban },
+  { name: "Clientes", path: "/clientes", slug: "clientes", icon: UserCheck },
+  { name: "Atividades", path: "/atividades", slug: "atividades", icon: ListTodo },
+  { name: "Processos", path: "/processos", slug: "processos", icon: GitBranch },
+  { name: "Guia de Uso", path: "/guia", slug: "guia", icon: BookOpen },
 ];
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, toggle } = useSidebar();
   const location = useLocation();
+  const { isAdmin, isTeamMember, allowedPages, isLoading } = useTeamPermissions();
+
+  const hasAccess = (slug: string) => {
+    if (slug === "" || slug === "guia") return true; // Painel and Guia always accessible
+    if (isAdmin) return true;
+    if (isTeamMember) return allowedPages.includes(slug);
+    return true; // Non-team users (direct owners) have access
+  };
 
   return (
     <aside
@@ -49,10 +61,10 @@ export function Sidebar() {
           </div>
         )}
         {collapsed && (
-          <img src={logo} alt="Hub Empresarial" className="w-8 h-8 rounded-lg object-cover" width={32} height={32} />
+          <img src={logo} alt="Hub Empresarial" className="w-8 h-8 rounded-lg object-cover mx-auto" width={32} height={32} />
         )}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={toggle}
           className="p-1.5 rounded-lg hover:bg-sidebar-accent text-muted-foreground hover:text-foreground transition-colors"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -64,6 +76,34 @@ export function Sidebar() {
         <ul className="space-y-1">
           {modules.map((module) => {
             const isActive = location.pathname === module.path;
+            const locked = !isLoading && !hasAccess(module.slug);
+
+            if (locked) {
+              return (
+                <li key={module.path}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-not-allowed opacity-50",
+                          "text-sm font-medium text-muted-foreground"
+                        )}
+                      >
+                        <module.icon className="w-5 h-5 flex-shrink-0" />
+                        {!collapsed && (
+                          <span className="flex-1">{module.name}</span>
+                        )}
+                        {!collapsed && <LockIcon className="w-3.5 h-3.5" />}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Você não tem acesso a este módulo. Fale com o administrador.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </li>
+              );
+            }
+
             return (
               <li key={module.path}>
                 <NavLink
@@ -84,6 +124,9 @@ export function Sidebar() {
           })}
         </ul>
       </nav>
+
+      {/* User Menu */}
+      <UserMenu collapsed={collapsed} />
 
       {/* Footer */}
       {!collapsed && (
