@@ -78,6 +78,7 @@ import {
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
+import { useTransacoes } from "@/hooks/useTransacoes";
 
 // Types
 interface Transaction {
@@ -92,6 +93,15 @@ interface Transaction {
   client?: string;
   provider?: string;
   notes?: string;
+}
+
+// Local-only types
+interface BankAccount {
+  id: string;
+  name: string;
+  institution: string;
+  type: "principal" | "operacional" | "reserva";
+  balance: number;
 }
 
 interface BankAccount {
@@ -214,32 +224,31 @@ const accountTypes = [
 export default function Financas() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { transacoes, isLoading: isLoadingTransacoes, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
   const [searchTerm, setSearchTerm] = useState("");
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(initialBankAccounts);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
 
-  const handleImportTransactions = (records: Record<string, unknown>[]) => {
-    const newTransactions: Transaction[] = records.map((record, index) => ({
-      id: `imported-${Date.now()}-${index}`,
-      description: String(record.description || ''),
-      value: Number(record.value) || 0,
-      date: String(record.date || new Date().toISOString().split('T')[0]),
-      category: String(record.category || 'Outros'),
-      type: (record.type === 'despesa' ? 'despesa' : 'receita') as 'receita' | 'despesa',
-      status: 'pendente' as 'pago' | 'pendente' | 'atrasado',
-      paymentMethod: String(record.paymentMethod || ''),
-      client: String(record.client || ''),
-      provider: String(record.provider || ''),
-    }));
-    setTransactions([...newTransactions, ...transactions]);
-    toast({
-      title: "Importação concluída",
-      description: `${newTransactions.length} transações importadas com sucesso.`,
-    });
+  // Map DB transacoes to local Transaction type
+  const transactions: Transaction[] = transacoes.map(t => ({
+    id: t.id,
+    description: t.description,
+    value: t.value,
+    date: t.date || new Date().toISOString().split('T')[0],
+    category: t.category || 'Outros',
+    type: (t.type === 'despesa' ? 'despesa' : 'receita') as 'receita' | 'despesa',
+    status: (t.status === 'pago' ? 'pago' : t.status === 'atrasado' ? 'atrasado' : 'pendente') as 'pago' | 'pendente' | 'atrasado',
+    paymentMethod: t.payment_method || undefined,
+    client: t.client || undefined,
+    provider: t.provider || undefined,
+    notes: t.notes || undefined,
+  }));
+
+  const handleImportTransactions = () => {
+    refetchTransacoes();
   };
 
   const totalReceita = transactions.filter((t) => t.type === "receita" && t.status === "pago").reduce((sum, t) => sum + t.value, 0);
@@ -274,7 +283,7 @@ export default function Financas() {
   };
 
   const handleDeleteTransaction = (id: string) => {
-    setTransactions(transactions.filter((t) => t.id !== id));
+    deleteTransacao(id);
   };
 
   const handleAddCategory = (name: string, type: "receita" | "despesa") => {
@@ -482,14 +491,14 @@ export default function Financas() {
 
           <TabsContent value="receitas" className="space-y-4">
             <div className="flex justify-end">
-              <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} onAdd={(t) => setTransactions([t, ...transactions])} />
+              <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} onAdd={() => refetchTransacoes()} />
             </div>
             <TransactionTable transactions={transactions.filter((t) => t.type === "receita")} type="receita" onSelect={setSelectedTransaction} onDelete={handleDeleteTransaction} statusStyles={statusStyles} />
           </TabsContent>
 
           <TabsContent value="despesas" className="space-y-4">
             <div className="flex justify-end">
-              <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} onAdd={(t) => setTransactions([t, ...transactions])} />
+              <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} onAdd={() => refetchTransacoes()} />
             </div>
             <TransactionTable transactions={transactions.filter((t) => t.type === "despesa")} type="despesa" onSelect={setSelectedTransaction} onDelete={handleDeleteTransaction} statusStyles={statusStyles} />
           </TabsContent>

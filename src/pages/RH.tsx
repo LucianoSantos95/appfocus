@@ -52,6 +52,7 @@ import {
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
+import { useColaboradores } from "@/hooks/useColaboradores";
 
 interface Colaborador {
   id: string;
@@ -195,30 +196,28 @@ const priorityStyles = {
 export default function RH() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { colaboradores: dbColaboradores, isLoading, deleteColaborador, refetch: refetchColaboradores } = useColaboradores();
   const [searchTerm, setSearchTerm] = useState("");
-  const [colaboradores, setColaboradores] = useState<Colaborador[]>(initialColaboradores);
   const [vagas, setVagas] = useState<Vaga[]>(initialVagas);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
 
-  const handleImportColaboradores = (records: Record<string, unknown>[]) => {
-    const newColaboradores: Colaborador[] = records.map((record, index) => ({
-      id: `imported-${Date.now()}-${index}`,
-      name: String(record.name || ''),
-      role: String(record.role || ''),
-      department: String(record.department || ''),
-      salary: Number(record.salary) || 0,
-      startDate: String(record.startDate || new Date().toISOString().split('T')[0]),
-      status: 'ativo' as const,
-      manager: String(record.manager || ''),
-      email: String(record.email || ''),
-      phone: String(record.phone || ''),
-    }));
-    setColaboradores([...newColaboradores, ...colaboradores]);
-    toast({
-      title: "Importação concluída",
-      description: `${newColaboradores.length} colaboradores importados com sucesso.`,
-    });
+  // Map DB colaboradores to local type
+  const colaboradores: Colaborador[] = dbColaboradores.map(c => ({
+    id: c.id,
+    name: c.name,
+    role: c.role || '',
+    department: c.department || '',
+    salary: c.salary || 0,
+    startDate: c.start_date || '',
+    status: (c.status === 'ferias' ? 'ferias' : c.status === 'licenca' ? 'licenca' : c.status === 'desligado' ? 'desligado' : 'ativo') as Colaborador['status'],
+    manager: c.manager || '',
+    email: c.email || '',
+    phone: c.phone || '',
+  }));
+
+  const handleImportColaboradores = () => {
+    refetchColaboradores();
   };
 
   const handleImportVagas = (records: Record<string, unknown>[]) => {
@@ -272,7 +271,7 @@ export default function RH() {
   };
 
   const handleDeleteColaborador = (id: string) => {
-    setColaboradores(colaboradores.filter((c) => c.id !== id));
+    deleteColaborador(id);
     setSelectedColaborador(null);
   };
 
@@ -391,7 +390,7 @@ export default function RH() {
                   </Button>
                 }
               />
-              <AddColaboradorDialog onAdd={(c) => setColaboradores([c, ...colaboradores])} />
+              <AddColaboradorDialog onAdd={() => refetchColaboradores()} />
             </div>
           </div>
 

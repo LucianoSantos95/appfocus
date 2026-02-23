@@ -56,6 +56,7 @@ import {
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
+import { useProjetos as useProjetosDB } from "@/hooks/useProjetos";
 
 interface SubTask {
   id: string;
@@ -243,32 +244,14 @@ function getProjectDeadlineStatus(endDate: string, progress: number) {
 export default function Projetos() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { refetch: refetchProjetosDB, deleteProjeto: deleteProjetoDB } = useProjetosDB();
   const [searchTerm, setSearchTerm] = useState("");
   const [projetos, setProjetos] = useState<Projeto[]>(initialProjetos);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
 
-  const handleImportProjetos = (records: Record<string, unknown>[]) => {
-    const newProjetos: Projeto[] = records.map((record, index) => ({
-      id: `imported-${Date.now()}-${index}`,
-      name: String(record.name || ''),
-      status: 'nao_iniciado' as const,
-      priority: (record.priority === 'alta' ? 'alta' : record.priority === 'baixa' ? 'baixa' : 'media') as 'alta' | 'media' | 'baixa',
-      startDate: String(record.startDate || new Date().toISOString().split('T')[0]),
-      endDate: String(record.endDate || new Date().toISOString().split('T')[0]),
-      budget: Number(record.budget) || 0,
-      spent: 0,
-      responsible: String(record.responsible || ''),
-      currentSprint: '-',
-      members: [],
-      progress: 0,
-      description: String(record.description || ''),
-      sprints: [],
-    }));
-    setProjetos([...newProjetos, ...projetos]);
-    toast({
-      title: "Importação concluída",
-      description: `${newProjetos.length} projetos importados com sucesso.`,
-    });
+  const handleImportProjetos = () => {
+    refetchProjetosDB();
+    toast({ title: "Importação concluída", description: "Projetos importados e salvos no banco." });
   };
 
   const projetosAbertos = projetos.filter((p) => p.status === "nao_iniciado").length;
