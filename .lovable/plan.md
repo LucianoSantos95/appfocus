@@ -1,75 +1,53 @@
 
-# Integração Stripe - Pagamento de Assinaturas
+# Precos Anuais + Performance do Site
 
-## Produtos e Preços Criados no Stripe
+## 1. Corrigir exibicao de precos anuais
 
-Todos os 6 preços foram criados com sucesso:
+**Problema**: O preco anual mostra apenas "R$99/mes", o que pode confundir o usuario achando que pagara R$99 pelo ano inteiro.
 
-| Plano | Intervalo | Valor | Product ID | Price ID |
-|---|---|---|---|---|
-| Plus | Mensal | R$119/mês | prod_U23sAKDoEq8OES | price_1T3zkNH7IRFB6gqObtWc6gv5 |
-| Plus | Anual | R$99/mês | prod_U23skBVnn0VuO1 | price_1T3zkbH7IRFB6gqO2mzqrZDl |
-| Pro | Mensal | R$249/mês | prod_U23sma8YXQQIDT | price_1T3zl3H7IRFB6gqOyUJGRvfg |
-| Pro | Anual | R$199/mês | prod_U23tHVjIomeZla | price_1T3zlSH7IRFB6gqO6WwEXP4m |
-| Enterprise | Mensal | R$497/mês | prod_U23toHCQFVRSOr | price_1T3zlmH7IRFB6gqOPr0fsrrI |
-| Enterprise | Anual | R$397/mês | prod_U23tKmvlVDm3lS | price_1T3zm4H7IRFB6gqOpQSBEWjm |
+**Solucao**: Quando o toggle "Anual" estiver ativo, mostrar o valor total como destaque e o equivalente mensal como informacao secundaria.
 
----
+**Arquivo**: `src/pages/Planos.tsx`
 
-## O que será implementado
+- Adicionar campo `annualTotal` calculado (`annualPrice * 12`) ao array de planos
+- Quando **mensal**: manter `R$119/mes`
+- Quando **anual**: exibir `R$1.188/ano` como preco principal, e abaixo em texto menor `equivale a R$99/mes`
 
-### 1. Edge Function: `create-checkout`
-Cria uma sessao de checkout do Stripe para assinaturas. Recebe o `priceId` do frontend, autentica o usuario, e retorna a URL de pagamento.
-
-### 2. Edge Function: `check-subscription`
-Verifica se o usuario tem assinatura ativa no Stripe. Retorna o status, plano (plus/pro/enterprise) e data de vencimento. Chamada no login, ao carregar a pagina, e periodicamente.
-
-### 3. Edge Function: `customer-portal`
-Cria sessao do portal do cliente Stripe para gerenciar assinatura (cancelar, trocar cartao, alterar plano).
-
-### 4. Atualizar `PlanContext.tsx`
-Integrar a verificacao de assinatura via Stripe (`check-subscription`) ao contexto global. O plano do usuario sera determinado pela assinatura ativa no Stripe, nao apenas pela tabela local `subscriptions`.
-
-### 5. Atualizar `Planos.tsx`
-O botao "Assinar" chamara `create-checkout` com o `priceId` correto (mensal ou anual). Apos pagamento, o usuario sera redirecionado de volta ao app.
-
-### 6. Atualizar `BillingPanel.tsx`
-Mostrar data do proximo pagamento real e adicionar botao "Gerenciar Assinatura" que abre o portal do cliente Stripe.
-
-### 7. Config.toml
-Adicionar as 3 novas funcoes com `verify_jwt = false`.
+| Plano | Mensal | Anual Total | Equivalente Mensal |
+|---|---|---|---|
+| Plus | R$119/mes | R$1.188/ano | R$99/mes |
+| Pro | R$249/mes | R$2.388/ano | R$199/mes |
+| Enterprise | R$497/mes | R$4.764/ano | R$397/mes |
 
 ---
 
-## Fluxo do Usuario
+## 2. Melhorar velocidade do site
 
-```text
-1. Usuario acessa /planos
-2. Escolhe mensal ou anual, clica "Assinar"
-3. Redirecionado ao Checkout do Stripe
-4. Paga e retorna ao app
-5. check-subscription detecta assinatura ativa
-6. PlanContext atualiza plano para plus/pro/enterprise
-7. Recursos desbloqueados automaticamente
-```
+### 2a. Skeleton de carregamento para pagina de Planos
+A pagina `/planos` depende do `PlanContext` que faz chamadas ao backend (tabela `subscriptions` + edge function `check-subscription`). Enquanto carrega, a pagina fica travada.
+
+**Solucao**: Adicionar um estado de loading com skeleton cards enquanto o contexto carrega, para dar feedback visual imediato ao usuario.
+
+### 2b. Evitar chamada desnecessaria ao check-subscription na pagina de Planos
+O `PlanContext` ja carrega o plano ao iniciar. Porem, a pagina de Planos nao precisa bloquear a renderizacao ate o plano estar disponivel -- ela pode mostrar os cards e desabilitar o botao "Plano Atual" somente quando o dado estiver pronto.
+
+### 2c. Mover `QueryClient` para fora do componente
+O `QueryClient` ja esta fora do componente (correto). Nenhuma mudanca necessaria.
+
+### 2d. Suspense fallback com spinner visual
+O `Suspense` fallback atual e uma `div` vazia. Trocar por um indicador de carregamento visual (spinner ou skeleton) para que a transicao entre rotas parecam mais rapidas.
+
+### 2e. Prefetch da fonte Inter
+A fonte Inter ja usa `display=swap` e `preconnect`, mas o `media="print"` com `onload` atrasa o carregamento. Mudar para carregamento direto sem o truque de `media="print"` para que a fonte carregue mais cedo.
 
 ---
 
-## Detalhes Tecnicos
+## Resumo de alteracoes
 
-### Mapeamento de planos (constante no frontend)
-Dicionario mapeando `product_id` do Stripe para o nome do plano interno (`plus`, `pro`, `enterprise`), e `price_id` para cada combinacao plano + intervalo.
+| Arquivo | Mudanca |
+|---|---|
+| `src/pages/Planos.tsx` | Exibicao de preco anual total + skeleton de loading |
+| `src/App.tsx` | Suspense fallback com spinner visual |
+| `index.html` | Remover truque `media="print"` da fonte Inter |
 
-### Arquivos criados
-- `supabase/functions/create-checkout/index.ts`
-- `supabase/functions/check-subscription/index.ts`
-- `supabase/functions/customer-portal/index.ts`
-
-### Arquivos modificados
-- `supabase/config.toml` - Adicionar 3 funcoes
-- `src/contexts/PlanContext.tsx` - Integrar check-subscription
-- `src/pages/Planos.tsx` - Conectar botoes ao checkout
-- `src/components/user/BillingPanel.tsx` - Portal do cliente + dados reais
-
-### Dependencias
-Nenhuma nova no frontend. Edge functions usam `stripe@18.5.0` via ESM.
+Nenhuma alteracao de backend necessaria.
