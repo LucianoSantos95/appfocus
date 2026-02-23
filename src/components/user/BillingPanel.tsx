@@ -1,9 +1,15 @@
+import { useState } from "react";
 import { usePlan } from "@/contexts/PlanContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Sparkles } from "lucide-react";
+import { CreditCard, Sparkles, ExternalLink, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface BillingPanelProps {
   open: boolean;
@@ -18,9 +24,27 @@ const planDetails: Record<string, { label: string; price: string; color: string 
 };
 
 export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
-  const { plan } = usePlan();
+  const { plan, subscriptionEnd } = usePlan();
+  const { session } = useAuth();
   const navigate = useNavigate();
   const details = planDetails[plan] || planDetails.gratuito;
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const handleManageSubscription = async () => {
+    if (!session?.access_token) return;
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (error || !data?.url) throw new Error("Erro ao abrir portal");
+      window.open(data.url, "_blank");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao abrir portal de gerenciamento");
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -38,9 +62,9 @@ export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
               <Badge variant={details.color as any}>{details.label}</Badge>
             </div>
             <p className="text-2xl font-bold text-foreground">{details.price}</p>
-            {plan !== "gratuito" && (
+            {plan !== "gratuito" && subscriptionEnd && (
               <p className="text-sm text-muted-foreground">
-                Próximo pagamento: em breve (integração Stripe)
+                Próximo pagamento: {format(new Date(subscriptionEnd), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </p>
             )}
           </div>
@@ -60,9 +84,19 @@ export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
           )}
 
           {plan !== "gratuito" && (
-            <p className="text-xs text-muted-foreground text-center">
-              Para alterar seu plano ou cancelar, entre em contato: comercial@focusinteligente.com.br
-            </p>
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={handleManageSubscription}
+              disabled={portalLoading}
+            >
+              {portalLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ExternalLink className="w-4 h-4" />
+              )}
+              Gerenciar Assinatura
+            </Button>
           )}
         </div>
       </DialogContent>

@@ -4,12 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Check, Sparkles, ArrowLeft } from "lucide-react";
+import { Check, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
 import { usePlan } from "@/contexts/PlanContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { STRIPE_PLANS } from "@/lib/stripe-plans";
+import { toast } from "sonner";
 
 const plans = [
   {
-    id: "plus",
+    id: "plus" as const,
     name: "Plus",
     monthlyPrice: 119,
     annualPrice: 99,
@@ -23,7 +27,7 @@ const plans = [
     popular: false,
   },
   {
-    id: "pro",
+    id: "pro" as const,
     name: "Pro",
     monthlyPrice: 249,
     annualPrice: 199,
@@ -38,7 +42,7 @@ const plans = [
     popular: true,
   },
   {
-    id: "enterprise",
+    id: "enterprise" as const,
     name: "Enterprise",
     monthlyPrice: 497,
     annualPrice: 397,
@@ -56,8 +60,47 @@ const plans = [
 
 export default function Planos() {
   const [annual, setAnnual] = useState(false);
-  const { plan: currentPlan } = usePlan();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { plan: currentPlan, refreshSubscription } = usePlan();
+  const { session } = useAuth();
   const navigate = useNavigate();
+
+  // Check for success/cancel in URL
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("success") === "true") {
+    toast.success("Assinatura realizada com sucesso!");
+    refreshSubscription();
+    window.history.replaceState({}, "", "/planos");
+  }
+
+  const handleSubscribe = async (planId: "plus" | "pro" | "enterprise") => {
+    if (!session?.access_token) {
+      toast.error("Faça login para assinar.");
+      navigate("/auth");
+      return;
+    }
+
+    setLoadingPlan(planId);
+    try {
+      const interval = annual ? "annual" : "monthly";
+      const priceId = STRIPE_PLANS[planId][interval].priceId;
+
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (error || !data?.url) {
+        throw new Error(error?.message || "Erro ao criar sessão de pagamento");
+      }
+
+      window.open(data.url, "_blank");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao iniciar checkout");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background p-6 lg:p-12">
@@ -82,6 +125,7 @@ export default function Planos() {
           {plans.map((p) => {
             const price = annual ? p.annualPrice : p.monthlyPrice;
             const isCurrent = currentPlan === p.id;
+            const isLoading = loadingPlan === p.id;
 
             return (
               <Card
@@ -117,9 +161,16 @@ export default function Planos() {
                   <Button
                     className="w-full mt-6"
                     variant={p.popular ? "default" : "outline"}
-                    disabled={isCurrent}
+                    disabled={isCurrent || isLoading}
+                    onClick={() => handleSubscribe(p.id)}
                   >
-                    {isCurrent ? "Plano Atual" : "Assinar"}
+                    {isLoading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
+                    ) : isCurrent ? (
+                      "Plano Atual"
+                    ) : (
+                      "Assinar"
+                    )}
                   </Button>
                 </CardContent>
               </Card>
