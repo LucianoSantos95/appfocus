@@ -180,6 +180,7 @@ export default function Marketing() {
   const [selectedConteudo, setSelectedConteudo] = useState<Conteudo | null>(null);
   const [funnelDialogOpen, setFunnelDialogOpen] = useState(false);
   const [funnelLevel, setFunnelLevel] = useState<"topo" | "meio" | "fundo">("topo");
+  const [dragOverPriority, setDragOverPriority] = useState<string | null>(null);
 
   const handleImportCampanhas = (records: Record<string, unknown>[]) => {
     const newCampanhas: Campanha[] = records.map((record, index) => ({
@@ -465,11 +466,34 @@ export default function Marketing() {
             <TabsContent value="kanban" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {(["baixa", "media", "alta"] as const).map((priority) => (
-                  <div key={priority} className={cn("bg-card rounded-xl border-2 p-4", priorityStyles[priority])}>
+                  <div
+                    key={priority}
+                    className={cn(
+                      "bg-card rounded-xl border-2 p-4 transition-all duration-200",
+                      priorityStyles[priority],
+                      dragOverPriority === priority && "ring-2 ring-primary scale-[1.02]"
+                    )}
+                    onDragOver={(e) => { e.preventDefault(); setDragOverPriority(priority); }}
+                    onDragLeave={() => setDragOverPriority(null)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragOverPriority(null);
+                      const id = e.dataTransfer.getData("text/plain");
+                      if (id) {
+                        setConteudos(conteudos.map((c) => c.id === id ? { ...c, priority } : c));
+                      }
+                    }}
+                  >
                     <h3 className="font-semibold mb-4 capitalize">Prioridade {priority}</h3>
                     <div className="space-y-3">
                       {getConteudosByPriority(priority).map((c) => (
-                        <div key={c.id} onClick={() => setSelectedConteudo(c)} className="bg-background rounded-lg p-3 border border-border/50 cursor-pointer hover:shadow-md transition-shadow">
+                        <div
+                          key={c.id}
+                          draggable
+                          onDragStart={(e) => { e.dataTransfer.setData("text/plain", c.id); e.dataTransfer.effectAllowed = "move"; }}
+                          onClick={() => setSelectedConteudo(c)}
+                          className="bg-background rounded-lg p-3 border border-border/50 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+                        >
                           <p className="font-medium text-foreground text-sm">{c.title}</p>
                           <p className="text-xs text-muted-foreground mt-1">{c.format} • {c.theme}</p>
                           <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium mt-2 inline-block", statusConteudo[c.status].class)}>{statusConteudo[c.status].label}</span>

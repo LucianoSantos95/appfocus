@@ -2,8 +2,6 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { ModuleCard } from "@/components/ui/module-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
-import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
-import { FeedbackPopup } from "@/components/feedback/FeedbackPopup";
 import { useNavigate } from "react-router-dom";
 import {
   DollarSign,
@@ -103,14 +101,7 @@ const Index = () => {
           <BulletinBoard />
         </div>
 
-        {/* Feedback Widget */}
-        <div className="max-w-md">
-          <FeedbackWidget />
-        </div>
       </div>
-
-      {/* Feedback Popup - appears on first visit */}
-      <FeedbackPopup />
     </MainLayout>
   );
 };
