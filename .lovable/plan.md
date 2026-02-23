@@ -1,53 +1,49 @@
 
-# Precos Anuais + Performance do Site
+# Limpeza de Clientes + Acesso Total para o Dono
 
-## 1. Corrigir exibicao de precos anuais
+## 1. Apagar dados da tabela de clientes
 
-**Problema**: O preco anual mostra apenas "R$99/mes", o que pode confundir o usuario achando que pagara R$99 pelo ano inteiro.
+Sera executado um DELETE para remover todos os 8 registros atuais da tabela `clientes`. As demais tabelas permanecem intactas.
 
-**Solucao**: Quando o toggle "Anual" estiver ativo, mostrar o valor total como destaque e o equivalente mensal como informacao secundaria.
+## 2. Definir Luciano como administrador do sistema
 
-**Arquivo**: `src/pages/Planos.tsx`
+O email `oluciano.dosantos@gmail.com` sera inserido na tabela `user_roles` com o papel de `admin`. Isso garante que o sistema reconheca Luciano como dono/administrador.
 
-- Adicionar campo `annualTotal` calculado (`annualPrice * 12`) ao array de planos
-- Quando **mensal**: manter `R$119/mes`
-- Quando **anual**: exibir `R$1.188/ano` como preco principal, e abaixo em texto menor `equivale a R$99/mes`
+## 3. Acesso total sem restricoes para admins
 
-| Plano | Mensal | Anual Total | Equivalente Mensal |
-|---|---|---|---|
-| Plus | R$119/mes | R$1.188/ano | R$99/mes |
-| Pro | R$249/mes | R$2.388/ano | R$199/mes |
-| Enterprise | R$497/mes | R$4.764/ano | R$397/mes |
+Atualmente, o controle de acesso por plano (`PlanContext`) bloqueia funcionalidades com base no plano contratado (gratuito, plus, pro, enterprise). O problema e que ate o dono do SaaS e restringido pelo plano.
 
----
-
-## 2. Melhorar velocidade do site
-
-### 2a. Skeleton de carregamento para pagina de Planos
-A pagina `/planos` depende do `PlanContext` que faz chamadas ao backend (tabela `subscriptions` + edge function `check-subscription`). Enquanto carrega, a pagina fica travada.
-
-**Solucao**: Adicionar um estado de loading com skeleton cards enquanto o contexto carrega, para dar feedback visual imediato ao usuario.
-
-### 2b. Evitar chamada desnecessaria ao check-subscription na pagina de Planos
-O `PlanContext` ja carrega o plano ao iniciar. Porem, a pagina de Planos nao precisa bloquear a renderizacao ate o plano estar disponivel -- ela pode mostrar os cards e desabilitar o botao "Plano Atual" somente quando o dado estiver pronto.
-
-### 2c. Mover `QueryClient` para fora do componente
-O `QueryClient` ja esta fora do componente (correto). Nenhuma mudanca necessaria.
-
-### 2d. Suspense fallback com spinner visual
-O `Suspense` fallback atual e uma `div` vazia. Trocar por um indicador de carregamento visual (spinner ou skeleton) para que a transicao entre rotas parecam mais rapidas.
-
-### 2e. Prefetch da fonte Inter
-A fonte Inter ja usa `display=swap` e `preconnect`, mas o `media="print"` com `onload` atrasa o carregamento. Mudar para carregamento direto sem o truque de `media="print"` para que a fonte carregue mais cedo.
-
----
-
-## Resumo de alteracoes
+**Mudancas no codigo:**
 
 | Arquivo | Mudanca |
 |---|---|
-| `src/pages/Planos.tsx` | Exibicao de preco anual total + skeleton de loading |
-| `src/App.tsx` | Suspense fallback com spinner visual |
-| `index.html` | Remover truque `media="print"` da fonte Inter |
+| `src/contexts/PlanContext.tsx` | Alterar a funcao `canAccess` para retornar `true` sempre que o usuario tiver role `admin` |
+| `src/components/plan/PlanGate.tsx` | Adicionar verificacao de admin para liberar o conteudo sem mostrar tela de bloqueio |
+| `src/hooks/useTeamPermissions.ts` | Ja verifica admin corretamente, sem mudancas necessarias |
 
-Nenhuma alteracao de backend necessaria.
+**Logica**: Antes de checar as features do plano, o sistema consultara a tabela `user_roles` para verificar se o usuario logado e admin. Se for, todas as funcionalidades estarao liberadas independentemente do plano.
+
+### Secao Tecnica
+
+**SQL a executar:**
+```text
+-- Limpar clientes
+DELETE FROM clientes;
+
+-- Inserir Luciano como admin
+INSERT INTO user_roles (user_id, role)
+VALUES ('a65f3ede-f3f2-4af6-9183-11a8af5dc051', 'admin')
+ON CONFLICT (user_id, role) DO NOTHING;
+```
+
+**PlanContext.tsx** - adicionar estado `isAdmin` que consulta `user_roles`, e na funcao `canAccess`:
+```text
+if (isAdmin) return true;
+```
+
+**PlanGate.tsx** - importar hook para verificar admin e liberar children direto:
+```text
+if (isAdmin) return children;
+```
+
+Isso garante que Luciano (e qualquer futuro admin) tenha acesso irrestrito a todas as funcionalidades do sistema, independentemente do plano de assinatura.
