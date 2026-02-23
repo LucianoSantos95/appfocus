@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 import { PRODUCT_TO_PLAN } from "@/lib/stripe-plans";
+import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 
 interface PlanContextType {
   plan: string;
@@ -23,6 +24,7 @@ const PlanContext = createContext<PlanContextType | undefined>(undefined);
 
 export function PlanProvider({ children }: { children: ReactNode }) {
   const { user, session } = useAuth();
+  const { isAdmin } = useTeamPermissions();
   const [plan, setPlan] = useState("gratuito");
   const [features, setFeatures] = useState<PlanFeature[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,6 +104,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   }, [session?.access_token, refreshSubscription]);
 
   const canAccess = (module: string, action: string): boolean => {
+    if (isAdmin) return true;
     if (module === "guia") return true;
     const feature = features.find(
       (f) => f.module === module && f.action === action
