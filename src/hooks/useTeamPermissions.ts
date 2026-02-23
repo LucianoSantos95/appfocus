@@ -46,7 +46,7 @@ export function useTeamPermissions(): TeamPermissions {
           .select("id, status")
           .eq("member_user_id", user.id)
           .eq("status", "aceito")
-          .single();
+          .maybeSingle();
 
         if (membership) {
           setIsTeamMember(true);

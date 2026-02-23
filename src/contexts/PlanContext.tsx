@@ -39,7 +39,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
         .select("plan")
         .eq("user_id", user.id)
         .eq("status", "active")
-        .single();
+        .maybeSingle();
 
       const currentPlan = sub?.plan || "gratuito";
       setPlan(currentPlan);
