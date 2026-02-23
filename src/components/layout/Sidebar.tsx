@@ -16,10 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Lock as LockIcon,
-  Sun,
-  Moon,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -39,7 +36,6 @@ export function Sidebar() {
   const { collapsed, toggle } = useSidebar();
   const location = useLocation();
   const { isAdmin, isTeamMember, allowedPages, isLoading } = useTeamPermissions();
-  const { theme, setTheme } = useTheme();
 
   const hasAccess = (slug: string) => {
     if (slug === "" || slug === "guia") return true; // Painel and Guia always accessible
@@ -128,20 +124,6 @@ export function Sidebar() {
           })}
         </ul>
       </nav>
-
-      {/* Theme Toggle */}
-      <div className="px-2 mb-2">
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full",
-            "text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
-          )}
-        >
-          {theme === "dark" ? <Sun className="w-5 h-5 flex-shrink-0" /> : <Moon className="w-5 h-5 flex-shrink-0" />}
-          {!collapsed && <span>{theme === "dark" ? "Modo Claro" : "Modo Escuro"}</span>}
-        </button>
-      </div>
 
       {/* User Menu */}
       <UserMenu collapsed={collapsed} />

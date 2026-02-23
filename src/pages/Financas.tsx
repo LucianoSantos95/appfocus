@@ -465,138 +465,6 @@ export default function Financas() {
           </div>
         </div>
 
-        {/* Controle Mensal */}
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Controle Mensal</h2>
-          <Tabs defaultValue="meses" className="space-y-4">
-            <TabsList className="bg-muted">
-              <TabsTrigger value="meses">Meses</TabsTrigger>
-              <TabsTrigger value="grafico-mensal">Gráfico Mensal</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="meses">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {(() => {
-                  const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-                  return meses.map((mes, idx) => {
-                    const monthNum = idx + 1;
-                    const monthTransactions = transactions.filter((t) => {
-                      const d = new Date(t.date);
-                      return d.getMonth() + 1 === monthNum;
-                    });
-                    const recebido = monthTransactions.filter((t) => t.type === "receita").reduce((s, t) => s + t.value, 0);
-                    const gasto = monthTransactions.filter((t) => t.type === "despesa").reduce((s, t) => s + t.value, 0);
-                    const balanco = recebido - gasto;
-                    const hasData = monthTransactions.length > 0;
-
-                    return (
-                      <Collapsible key={mes}>
-                        <Card className={cn("border-border/50 transition-colors", hasData && "hover:border-primary/30")}>
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <h3 className="font-semibold text-foreground text-sm">{mes}</h3>
-                              <span className={cn(
-                                "text-xs px-2 py-0.5 rounded-full font-medium",
-                                !hasData ? "bg-muted text-muted-foreground" :
-                                balanco > 0 ? "bg-success/10 text-success" :
-                                balanco < 0 ? "bg-destructive/10 text-destructive" :
-                                "bg-warning/10 text-warning"
-                              )}>
-                                {!hasData ? "Sem dados" : balanco > 0 ? "Positivo" : balanco < 0 ? "Negativo" : "Equilíbrio"}
-                              </span>
-                            </div>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Recebido</span>
-                                <span className="text-success font-medium">R$ {recebido.toLocaleString("pt-BR")}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Gasto</span>
-                                <span className="text-destructive font-medium">R$ {gasto.toLocaleString("pt-BR")}</span>
-                              </div>
-                              <div className="flex justify-between pt-2 border-t border-border/50">
-                                <span className="text-muted-foreground font-medium">Balanço</span>
-                                <span className={cn("font-bold", balanco >= 0 ? "text-success" : "text-destructive")}>
-                                  R$ {balanco.toLocaleString("pt-BR")}
-                                </span>
-                              </div>
-                            </div>
-                            {hasData && (
-                              <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="sm" className="w-full mt-3 gap-1 text-xs">
-                                  <ChevronDown className="w-3 h-3" /> Detalhes
-                                </Button>
-                              </CollapsibleTrigger>
-                            )}
-                            <CollapsibleContent>
-                              <div className="mt-3 pt-3 border-t border-border/50 space-y-1.5 max-h-40 overflow-y-auto">
-                                {monthTransactions.map((t) => (
-                                  <div key={t.id} className="flex justify-between text-xs">
-                                    <span className="text-muted-foreground truncate mr-2">{t.description}</span>
-                                    <span className={cn("font-medium whitespace-nowrap", t.type === "receita" ? "text-success" : "text-destructive")}>
-                                      {t.type === "receita" ? "+" : "-"}R$ {t.value.toLocaleString("pt-BR")}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </CollapsibleContent>
-                          </CardContent>
-                        </Card>
-                      </Collapsible>
-                    );
-                  });
-                })()}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="grafico-mensal">
-              <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6">
-                <h3 className="font-semibold text-foreground mb-6">Receitas vs Despesas por Mês</h3>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={(() => {
-                    const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-                    return meses.map((mes, idx) => {
-                      const monthNum = idx + 1;
-                      const monthTx = transactions.filter((t) => new Date(t.date).getMonth() + 1 === monthNum);
-                      return {
-                        month: mes,
-                        receitas: monthTx.filter((t) => t.type === "receita").reduce((s, t) => s + t.value, 0),
-                        despesas: monthTx.filter((t) => t.type === "despesa").reduce((s, t) => s + t.value, 0),
-                      };
-                    });
-                  })()}>
-                    <defs>
-                      <linearGradient id="barReceitas" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.9} />
-                        <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0.5} />
-                      </linearGradient>
-                      <linearGradient id="barDespesas" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.9} />
-                        <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.5} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" />
-                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--popover))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "12px",
-                        boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                      }}
-                      formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]}
-                    />
-                    <Legend wrapperStyle={{ paddingTop: "16px" }} />
-                    <Bar dataKey="receitas" fill="url(#barReceitas)" name="Receitas" radius={[6, 6, 0, 0]} />
-                    <Bar dataKey="despesas" fill="url(#barDespesas)" name="Despesas" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </section>
-
         {/* Receitas e Despesas */}
         <Tabs defaultValue="receitas" className="space-y-6">
           <div className="flex items-center justify-between">
@@ -730,6 +598,138 @@ export default function Financas() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Controle Mensal */}
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Controle Mensal</h2>
+          <Tabs defaultValue="meses" className="space-y-4">
+            <TabsList className="bg-muted">
+              <TabsTrigger value="meses">Meses</TabsTrigger>
+              <TabsTrigger value="grafico-mensal">Gráfico Mensal</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="meses">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {(() => {
+                  const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                  return meses.map((mes, idx) => {
+                    const monthNum = idx + 1;
+                    const monthTransactions = transactions.filter((t) => {
+                      const d = new Date(t.date);
+                      return d.getMonth() + 1 === monthNum;
+                    });
+                    const recebido = monthTransactions.filter((t) => t.type === "receita").reduce((s, t) => s + t.value, 0);
+                    const gasto = monthTransactions.filter((t) => t.type === "despesa").reduce((s, t) => s + t.value, 0);
+                    const balanco = recebido - gasto;
+                    const hasData = monthTransactions.length > 0;
+
+                    return (
+                      <Collapsible key={mes}>
+                        <Card className={cn("border-border/50 transition-colors", hasData && "hover:border-primary/30")}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <h3 className="font-semibold text-foreground text-sm">{mes}</h3>
+                              <span className={cn(
+                                "text-xs px-2 py-0.5 rounded-full font-medium",
+                                !hasData ? "bg-muted text-muted-foreground" :
+                                balanco > 0 ? "bg-success/10 text-success" :
+                                balanco < 0 ? "bg-destructive/10 text-destructive" :
+                                "bg-warning/10 text-warning"
+                              )}>
+                                {!hasData ? "Sem dados" : balanco > 0 ? "Positivo" : balanco < 0 ? "Negativo" : "Equilíbrio"}
+                              </span>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Recebido</span>
+                                <span className="text-success font-medium">R$ {recebido.toLocaleString("pt-BR")}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Gasto</span>
+                                <span className="text-destructive font-medium">R$ {gasto.toLocaleString("pt-BR")}</span>
+                              </div>
+                              <div className="flex justify-between pt-2 border-t border-border/50">
+                                <span className="text-muted-foreground font-medium">Balanço</span>
+                                <span className={cn("font-bold", balanco >= 0 ? "text-success" : "text-destructive")}>
+                                  R$ {balanco.toLocaleString("pt-BR")}
+                                </span>
+                              </div>
+                            </div>
+                            {hasData && (
+                              <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="sm" className="w-full mt-3 gap-1 text-xs">
+                                  <ChevronDown className="w-3 h-3" /> Detalhes
+                                </Button>
+                              </CollapsibleTrigger>
+                            )}
+                            <CollapsibleContent>
+                              <div className="mt-3 pt-3 border-t border-border/50 space-y-1.5 max-h-40 overflow-y-auto">
+                                {monthTransactions.map((t) => (
+                                  <div key={t.id} className="flex justify-between text-xs">
+                                    <span className="text-muted-foreground truncate mr-2">{t.description}</span>
+                                    <span className={cn("font-medium whitespace-nowrap", t.type === "receita" ? "text-success" : "text-destructive")}>
+                                      {t.type === "receita" ? "+" : "-"}R$ {t.value.toLocaleString("pt-BR")}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </CollapsibleContent>
+                          </CardContent>
+                        </Card>
+                      </Collapsible>
+                    );
+                  });
+                })()}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="grafico-mensal">
+              <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6">
+                <h3 className="font-semibold text-foreground mb-6">Receitas vs Despesas por Mês</h3>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={(() => {
+                    const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                    return meses.map((mes, idx) => {
+                      const monthNum = idx + 1;
+                      const monthTx = transactions.filter((t) => new Date(t.date).getMonth() + 1 === monthNum);
+                      return {
+                        month: mes,
+                        receitas: monthTx.filter((t) => t.type === "receita").reduce((s, t) => s + t.value, 0),
+                        despesas: monthTx.filter((t) => t.type === "despesa").reduce((s, t) => s + t.value, 0),
+                      };
+                    });
+                  })()}>
+                    <defs>
+                      <linearGradient id="barReceitas" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.9} />
+                        <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0.5} />
+                      </linearGradient>
+                      <linearGradient id="barDespesas" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.9} />
+                        <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.5} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" />
+                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                      }}
+                      formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]}
+                    />
+                    <Legend wrapperStyle={{ paddingTop: "16px" }} />
+                    <Bar dataKey="receitas" fill="url(#barReceitas)" name="Receitas" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="despesas" fill="url(#barDespesas)" name="Despesas" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </section>
 
         {/* Transaction Detail Dialog */}
         <Dialog open={!!selectedTransaction} onOpenChange={() => setSelectedTransaction(null)}>
