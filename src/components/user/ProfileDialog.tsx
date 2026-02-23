@@ -29,7 +29,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
         .from("profiles")
         .select("display_name, phone")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
       if (data) {
         setDisplayName(data.display_name || "");
         setPhone(data.phone || "");
