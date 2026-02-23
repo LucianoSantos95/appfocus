@@ -8,7 +8,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { PlanProvider } from "@/contexts/PlanContext";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { ThemeProvider } from "next-themes";
 
 const Index = lazy(() => import("./pages/Index"));
 const Financas = lazy(() => import("./pages/Financas"));
@@ -28,15 +27,14 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient();
 
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <PlanProvider>
-              <SidebarProvider>
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <PlanProvider>
+            <SidebarProvider>
               <Suspense fallback={<div className="min-h-screen bg-background" />}>
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
@@ -55,13 +53,12 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
-              </SidebarProvider>
-            </PlanProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
+            </SidebarProvider>
+          </PlanProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;
