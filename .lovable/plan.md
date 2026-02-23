@@ -1,101 +1,75 @@
 
-# Plano de Aprimoramento - Sprint 2
+# Integração Stripe - Pagamento de Assinaturas
 
-## 1. Remover Feedback do Painel
+## Produtos e Preços Criados no Stripe
 
-Remover o widget e popup de feedback da pagina inicial. O feedback continua acessivel pelo menu do usuario.
+Todos os 6 preços foram criados com sucesso:
 
-**Alteracoes:**
-- `src/pages/Index.tsx` - Remover imports e uso de `FeedbackWidget` e `FeedbackPopup` (linhas 5-6, 106-113)
-- Deletar `src/components/feedback/FeedbackWidget.tsx`
-- Deletar `src/components/feedback/FeedbackPopup.tsx`
-
----
-
-## 2. Controle Mensal na pagina de Financas
-
-Adicionar uma nova secao com duas abas apos os graficos existentes:
-
-**Aba "Controle Mensal":**
-- Grid com 12 cards (Janeiro a Dezembro)
-- Cada card mostra: Total Recebido, Total Gasto, Balanco Geral
-- Indicador visual de status (positivo/negativo/equilibrio)
-- Sem campo de cartao de credito
-- Botao para expandir detalhes do mes
-
-**Aba "Grafico Mensal":**
-- Grafico de barras comparando receitas vs despesas por mes
-- Reutilizando Recharts com o estilo visual ja existente (gradientes)
-
-**Arquivo:** `src/pages/Financas.tsx` - Nova secao com componente Tabs entre os graficos e a tabela de transacoes
+| Plano | Intervalo | Valor | Product ID | Price ID |
+|---|---|---|---|---|
+| Plus | Mensal | R$119/mês | prod_U23sAKDoEq8OES | price_1T3zkNH7IRFB6gqObtWc6gv5 |
+| Plus | Anual | R$99/mês | prod_U23skBVnn0VuO1 | price_1T3zkbH7IRFB6gqO2mzqrZDl |
+| Pro | Mensal | R$249/mês | prod_U23sma8YXQQIDT | price_1T3zl3H7IRFB6gqOyUJGRvfg |
+| Pro | Anual | R$199/mês | prod_U23tHVjIomeZla | price_1T3zlSH7IRFB6gqO6WwEXP4m |
+| Enterprise | Mensal | R$497/mês | prod_U23toHCQFVRSOr | price_1T3zlmH7IRFB6gqOPr0fsrrI |
+| Enterprise | Anual | R$397/mês | prod_U23tKmvlVDm3lS | price_1T3zm4H7IRFB6gqOpQSBEWjm |
 
 ---
 
-## 3. Kanban Drag-and-Drop no Marketing
+## O que será implementado
 
-Implementar arrastar e soltar nos cards do Kanban de prioridades.
+### 1. Edge Function: `create-checkout`
+Cria uma sessao de checkout do Stripe para assinaturas. Recebe o `priceId` do frontend, autentica o usuario, e retorna a URL de pagamento.
 
-**Implementacao:**
-- HTML5 Drag and Drop nativo (sem dependencia extra)
-- `draggable` nos cards de conteudo
-- `onDragStart`, `onDragOver`, `onDrop` nas colunas de prioridade
-- Ao soltar um card em outra coluna, a prioridade e atualizada no estado
-- Destaque visual na coluna alvo durante o arrasto
+### 2. Edge Function: `check-subscription`
+Verifica se o usuario tem assinatura ativa no Stripe. Retorna o status, plano (plus/pro/enterprise) e data de vencimento. Chamada no login, ao carregar a pagina, e periodicamente.
 
-**Arquivo:** `src/pages/Marketing.tsx` - Modificar secao do Kanban (linhas 465-482)
+### 3. Edge Function: `customer-portal`
+Cria sessao do portal do cliente Stripe para gerenciar assinatura (cancelar, trocar cartao, alterar plano).
 
----
+### 4. Atualizar `PlanContext.tsx`
+Integrar a verificacao de assinatura via Stripe (`check-subscription`) ao contexto global. O plano do usuario sera determinado pela assinatura ativa no Stripe, nao apenas pela tabela local `subscriptions`.
 
-## 4. Botao de Tema Claro/Escuro
+### 5. Atualizar `Planos.tsx`
+O botao "Assinar" chamara `create-checkout` com o `priceId` correto (mensal ou anual). Apos pagamento, o usuario sera redirecionado de volta ao app.
 
-O projeto ja possui variaves CSS para modo claro (classe `.light` no `index.css`) e a dependencia `next-themes` instalada. Falta apenas ativar o sistema.
+### 6. Atualizar `BillingPanel.tsx`
+Mostrar data do proximo pagamento real e adicionar botao "Gerenciar Assinatura" que abre o portal do cliente Stripe.
 
-**Implementacao:**
-- Adicionar `ThemeProvider` do `next-themes` no `App.tsx` envolvendo toda a aplicacao, com `attribute="class"` e `defaultTheme="dark"`
-- Criar botao de alternancia (icone Sol/Lua) na Sidebar, posicionado entre a navegacao e o UserMenu
-- Usar `useTheme()` do `next-themes` para alternar entre "light" e "dark"
-- O botao respeita o estado colapsado da sidebar (mostra apenas icone quando recolhida)
-
-**Arquivos:**
-- `src/App.tsx` - Adicionar ThemeProvider
-- `src/components/layout/Sidebar.tsx` - Adicionar botao de tema
+### 7. Config.toml
+Adicionar as 3 novas funcoes com `verify_jwt = false`.
 
 ---
 
-## 5. Valores dos Planos Anuais (informativo)
-
-Para criar os links de pagamento:
+## Fluxo do Usuario
 
 ```text
-Plano       | Mensal  | Anual (por mes) | Total Anual
-Plus        | R$119   | R$99/mes        | R$1.188/ano
-Pro         | R$249   | R$199/mes       | R$2.388/ano
-Enterprise  | R$497   | R$397/mes       | R$4.764/ano
+1. Usuario acessa /planos
+2. Escolhe mensal ou anual, clica "Assinar"
+3. Redirecionado ao Checkout do Stripe
+4. Paga e retorna ao app
+5. check-subscription detecta assinatura ativa
+6. PlanContext atualiza plano para plus/pro/enterprise
+7. Recursos desbloqueados automaticamente
 ```
 
 ---
 
 ## Detalhes Tecnicos
 
-### Ordem de implementacao
-1. Remover feedback do painel (Index.tsx + deletar arquivos)
-2. Adicionar ThemeProvider no App.tsx + botao na Sidebar
-3. Controle mensal na pagina de Financas (nova secao com Tabs)
-4. Drag-and-drop no Kanban do Marketing
+### Mapeamento de planos (constante no frontend)
+Dicionario mapeando `product_id` do Stripe para o nome do plano interno (`plus`, `pro`, `enterprise`), e `price_id` para cada combinacao plano + intervalo.
 
 ### Arquivos criados
-Nenhum novo arquivo necessario.
+- `supabase/functions/create-checkout/index.ts`
+- `supabase/functions/check-subscription/index.ts`
+- `supabase/functions/customer-portal/index.ts`
 
 ### Arquivos modificados
-- `src/App.tsx` - ThemeProvider
-- `src/pages/Index.tsx` - Remover feedback
-- `src/pages/Financas.tsx` - Nova secao controle mensal
-- `src/pages/Marketing.tsx` - Drag-and-drop no Kanban
-- `src/components/layout/Sidebar.tsx` - Botao tema claro/escuro
-
-### Arquivos deletados
-- `src/components/feedback/FeedbackWidget.tsx`
-- `src/components/feedback/FeedbackPopup.tsx`
+- `supabase/config.toml` - Adicionar 3 funcoes
+- `src/contexts/PlanContext.tsx` - Integrar check-subscription
+- `src/pages/Planos.tsx` - Conectar botoes ao checkout
+- `src/components/user/BillingPanel.tsx` - Portal do cliente + dados reais
 
 ### Dependencias
-Nenhuma nova - `next-themes` ja esta instalado e as variaveis CSS de modo claro ja existem no `index.css`.
+Nenhuma nova no frontend. Edge functions usam `stripe@18.5.0` via ESM.
