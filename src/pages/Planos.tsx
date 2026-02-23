@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Check, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
 import { usePlan } from "@/contexts/PlanContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +18,7 @@ const plans = [
     name: "Plus",
     monthlyPrice: 119,
     annualPrice: 99,
+    annualTotal: 1188,
     description: "Para pequenas empresas que precisam de gestão completa",
     features: [
       "Criar e editar dados em todos os módulos",
@@ -31,6 +33,7 @@ const plans = [
     name: "Pro",
     monthlyPrice: 249,
     annualPrice: 199,
+    annualTotal: 2388,
     description: "Para empresas em crescimento com necessidades avançadas",
     features: [
       "Tudo do Plus",
@@ -46,6 +49,7 @@ const plans = [
     name: "Enterprise",
     monthlyPrice: 497,
     annualPrice: 397,
+    annualTotal: 4764,
     description: "Para grandes empresas com necessidades customizadas",
     features: [
       "Tudo do Pro",
@@ -58,10 +62,30 @@ const plans = [
   },
 ];
 
+function PlanCardSkeleton() {
+  return (
+    <Card className="border border-border">
+      <CardHeader className="text-center pt-8 space-y-3">
+        <Skeleton className="h-7 w-20 mx-auto" />
+        <Skeleton className="h-4 w-48 mx-auto" />
+        <Skeleton className="h-10 w-32 mx-auto mt-4" />
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-4 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-10 w-full mt-6" />
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Planos() {
   const [annual, setAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const { plan: currentPlan, refreshSubscription } = usePlan();
+  const { plan: currentPlan, isLoading: isPlanLoading, refreshSubscription } = usePlan();
   const { session } = useAuth();
   const navigate = useNavigate();
 
@@ -121,62 +145,83 @@ export default function Planos() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {plans.map((p) => {
-            const price = annual ? p.annualPrice : p.monthlyPrice;
-            const isCurrent = currentPlan === p.id;
-            const isLoading = loadingPlan === p.id;
+        {isPlanLoading ? (
+          <div className="grid md:grid-cols-3 gap-6">
+            <PlanCardSkeleton />
+            <PlanCardSkeleton />
+            <PlanCardSkeleton />
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-6">
+            {plans.map((p) => {
+              const isCurrent = currentPlan === p.id;
+              const isLoading = loadingPlan === p.id;
 
-            return (
-              <Card
-                key={p.id}
-                className={`relative card-hover border ${
-                  p.popular ? "border-primary shadow-glow" : "border-border"
-                }`}
-              >
-                {p.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="gradient-primary text-foreground gap-1">
-                      <Sparkles className="w-3 h-3" /> Mais popular
-                    </Badge>
-                  </div>
-                )}
-                <CardHeader className="text-center pt-8">
-                  <CardTitle className="text-2xl">{p.name}</CardTitle>
-                  <CardDescription className="mt-2">{p.description}</CardDescription>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold text-foreground">R${price}</span>
-                    <span className="text-muted-foreground">/mês</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-3">
-                    {p.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    className="w-full mt-6"
-                    variant={p.popular ? "default" : "outline"}
-                    disabled={isCurrent || isLoading}
-                    onClick={() => handleSubscribe(p.id)}
-                  >
-                    {isLoading ? (
-                      <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
-                    ) : isCurrent ? (
-                      "Plano Atual"
-                    ) : (
-                      "Assinar"
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+              return (
+                <Card
+                  key={p.id}
+                  className={`relative card-hover border ${
+                    p.popular ? "border-primary shadow-glow" : "border-border"
+                  }`}
+                >
+                  {p.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <Badge className="gradient-primary text-foreground gap-1">
+                        <Sparkles className="w-3 h-3" /> Mais popular
+                      </Badge>
+                    </div>
+                  )}
+                  <CardHeader className="text-center pt-8">
+                    <CardTitle className="text-2xl">{p.name}</CardTitle>
+                    <CardDescription className="mt-2">{p.description}</CardDescription>
+                    <div className="mt-4">
+                      {annual ? (
+                        <>
+                          <span className="text-4xl font-bold text-foreground">
+                            R${p.annualTotal.toLocaleString("pt-BR")}
+                          </span>
+                          <span className="text-muted-foreground">/ano</span>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            equivale a R${p.annualPrice}/mês
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-4xl font-bold text-foreground">R${p.monthlyPrice}</span>
+                          <span className="text-muted-foreground">/mês</span>
+                        </>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ul className="space-y-3">
+                      {p.features.map((f) => (
+                        <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      className="w-full mt-6"
+                      variant={p.popular ? "default" : "outline"}
+                      disabled={isCurrent || isLoading}
+                      onClick={() => handleSubscribe(p.id)}
+                    >
+                      {isLoading ? (
+                        <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
+                      ) : isCurrent ? (
+                        "Plano Atual"
+                      ) : (
+                        "Assinar"
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
