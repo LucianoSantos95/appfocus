@@ -3,6 +3,7 @@ import { usePlan } from "@/contexts/PlanContext";
 import { Button } from "@/components/ui/button";
 import { Lock, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 
 interface PlanGateProps {
   module: string;
@@ -14,8 +15,9 @@ interface PlanGateProps {
 export function PlanGate({ module, action, children, fallback }: PlanGateProps) {
   const { canAccess, plan } = usePlan();
   const navigate = useNavigate();
+  const { isAdmin } = useTeamPermissions();
 
-  if (canAccess(module, action)) {
+  if (isAdmin || canAccess(module, action)) {
     return <>{children}</>;
   }
 
