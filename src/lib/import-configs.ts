@@ -32,6 +32,7 @@ export const importConfigs: Record<string, ImportConfig> = {
   
   financas_transacoes: {
     label: "Transações Financeiras",
+    table: "transacoes",
     fields: [
       { key: "description", label: "Descrição", required: true, aliases: ["Descrição", "Descricao", "Histórico", "Historico", "Nome"] },
       { key: "value", label: "Valor", required: true, aliases: ["Valor", "Montante", "Quantia"], type: 'number' },
@@ -47,6 +48,7 @@ export const importConfigs: Record<string, ImportConfig> = {
   
   rh_colaboradores: {
     label: "Colaboradores",
+    table: "colaboradores",
     fields: [
       { key: "name", label: "Nome", required: true, aliases: ["Nome", "Colaborador", "Funcionário", "Name"] },
       { key: "role", label: "Cargo", aliases: ["Cargo", "Função", "Funcao", "Position", "Role"] },
@@ -62,6 +64,7 @@ export const importConfigs: Record<string, ImportConfig> = {
   
   rh_vagas: {
     label: "Vagas",
+    table: "vagas",
     fields: [
       { key: "title", label: "Título", required: true, aliases: ["Título", "Titulo", "Vaga", "Cargo", "Position"] },
       { key: "department", label: "Departamento", aliases: ["Departamento", "Setor", "Área"] },
@@ -76,6 +79,7 @@ export const importConfigs: Record<string, ImportConfig> = {
   
   projetos: {
     label: "Projetos",
+    table: "projetos",
     fields: [
       { key: "name", label: "Nome", required: true, aliases: ["Nome", "Projeto", "Project", "Título"] },
       { key: "status", label: "Status", aliases: ["Status", "Situação", "Estado"] },
@@ -90,6 +94,7 @@ export const importConfigs: Record<string, ImportConfig> = {
   
   tarefas: {
     label: "Tarefas",
+    table: "tarefas",
     fields: [
       { key: "title", label: "Título", required: true, aliases: ["Título", "Titulo", "Tarefa", "Task", "Nome"] },
       { key: "description", label: "Descrição", aliases: ["Descrição", "Descricao", "Description", "Detalhes"] },
@@ -103,6 +108,7 @@ export const importConfigs: Record<string, ImportConfig> = {
   
   marketing_campanhas: {
     label: "Campanhas",
+    table: "campanhas",
     fields: [
       { key: "name", label: "Nome", required: true, aliases: ["Nome", "Campanha", "Campaign", "Título"] },
       { key: "objective", label: "Objetivo", aliases: ["Objetivo", "Objective", "Meta", "Goal"] },
@@ -130,6 +136,7 @@ export const importConfigs: Record<string, ImportConfig> = {
   
   processos: {
     label: "Processos",
+    table: "processos",
     fields: [
       { key: "name", label: "Nome", required: true, aliases: ["Nome", "Processo", "Process", "Título"] },
       { key: "description", label: "Descrição", aliases: ["Descrição", "Descricao", "Description"] },

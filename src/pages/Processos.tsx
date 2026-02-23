@@ -50,6 +50,7 @@ import autoTable from "jspdf-autotable";
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
+import { useProcessos as useProcessosDB } from "@/hooks/useProcessos";
 
 interface ProcessoStep {
   id: string;
@@ -178,28 +179,15 @@ const departments = ["Comercial", "Financeiro", "RH", "Marketing", "Projetos", "
 export default function Processos() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { refetch: refetchProcessosDB } = useProcessosDB();
   const [searchTerm, setSearchTerm] = useState("");
   const [processos, setProcessos] = useState<Processo[]>(initialProcessos);
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
   const [editingStep, setEditingStep] = useState<{ processoId: string; step: ProcessoStep } | null>(null);
 
-  const handleImportProcessos = (records: Record<string, unknown>[]) => {
-    const newProcessos: Processo[] = records.map((record, index) => ({
-      id: `imported-${Date.now()}-${index}`,
-      name: String(record.name || ''),
-      description: String(record.description || ''),
-      department: String(record.department || ''),
-      owner: String(record.owner || ''),
-      lastUpdated: new Date().toISOString().split('T')[0],
-      status: 'ativo' as const,
-      icon: FileText,
-      steps: [],
-    }));
-    setProcessos([...newProcessos, ...processos]);
-    toast({
-      title: "Importação concluída",
-      description: `${newProcessos.length} processos importados com sucesso.`,
-    });
+  const handleImportProcessos = () => {
+    refetchProcessosDB();
+    toast({ title: "Importação concluída", description: "Processos importados e salvos no banco." });
   };
 
   const handleDeleteProcesso = (id: string) => {

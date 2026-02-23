@@ -51,6 +51,7 @@ import {
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
+import { useCampanhas as useCampanhasDB } from "@/hooks/useCampanhas";
 
 interface Campanha {
   id: string;
@@ -173,6 +174,7 @@ const platforms = ["Instagram", "Facebook", "LinkedIn", "YouTube", "Google Ads",
 export default function Marketing() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { refetch: refetchCampanhasDB } = useCampanhasDB();
   const [campanhas, setCampanhas] = useState<Campanha[]>(initialCampanhas);
   const [conteudos, setConteudos] = useState<Conteudo[]>(initialConteudos);
   const [funnelItems, setFunnelItems] = useState<FunnelItem[]>(initialFunnelItems);
@@ -182,24 +184,9 @@ export default function Marketing() {
   const [funnelLevel, setFunnelLevel] = useState<"topo" | "meio" | "fundo">("topo");
   const [dragOverPriority, setDragOverPriority] = useState<string | null>(null);
 
-  const handleImportCampanhas = (records: Record<string, unknown>[]) => {
-    const newCampanhas: Campanha[] = records.map((record, index) => ({
-      id: `imported-${Date.now()}-${index}`,
-      name: String(record.name || ''),
-      objective: String(record.objective || ''),
-      platforms: String(record.platforms || '').split(',').map(p => p.trim()).filter(Boolean),
-      budget: Number(record.budget) || 0,
-      startDate: String(record.startDate || new Date().toISOString().split('T')[0]),
-      endDate: String(record.endDate || new Date().toISOString().split('T')[0]),
-      status: 'planejada' as const,
-      expectedResult: '',
-      responsible: String(record.responsible || ''),
-    }));
-    setCampanhas([...newCampanhas, ...campanhas]);
-    toast({
-      title: "Importação concluída",
-      description: `${newCampanhas.length} campanhas importadas com sucesso.`,
-    });
+  const handleImportCampanhas = () => {
+    refetchCampanhasDB();
+    toast({ title: "Importação concluída", description: "Campanhas importadas e salvas no banco." });
   };
 
   const handleImportConteudos = (records: Record<string, unknown>[]) => {

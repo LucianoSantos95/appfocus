@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      campanhas: {
+        Row: {
+          budget: number | null
+          created_at: string
+          end_date: string | null
+          id: string
+          name: string
+          objective: string | null
+          platforms: string | null
+          responsible: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name: string
+          objective?: string | null
+          platforms?: string | null
+          responsible?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          budget?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name?: string
+          objective?: string | null
+          platforms?: string | null
+          responsible?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           analisado_em: string | null
@@ -80,6 +125,87 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           valor_total?: number | null
+        }
+        Relationships: []
+      }
+      colaboradores: {
+        Row: {
+          created_at: string
+          department: string | null
+          email: string | null
+          id: string
+          manager: string | null
+          name: string
+          phone: string | null
+          role: string | null
+          salary: number | null
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          id?: string
+          manager?: string | null
+          name: string
+          phone?: string | null
+          role?: string | null
+          salary?: number | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          id?: string
+          manager?: string | null
+          name?: string
+          phone?: string | null
+          role?: string | null
+          salary?: number | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      contas_bancarias: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          institution: string | null
+          name: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          institution?: string | null
+          name: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          institution?: string | null
+          name?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -172,6 +298,42 @@ export type Database = {
         }
         Relationships: []
       }
+      processos: {
+        Row: {
+          created_at: string
+          department: string | null
+          description: string | null
+          id: string
+          name: string
+          owner: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          owner?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          owner?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -209,6 +371,51 @@ export type Database = {
           onboarding_completed?: boolean
           phone?: string | null
           segment?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      projetos: {
+        Row: {
+          budget: number | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          priority: string | null
+          responsible: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          priority?: string | null
+          responsible?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          budget?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          priority?: string | null
+          responsible?: string | null
+          start_date?: string | null
+          status?: string
           updated_at?: string
           user_id?: string
         }
@@ -307,6 +514,48 @@ export type Database = {
         }
         Relationships: []
       }
+      tarefas: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string | null
+          responsible: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          responsible?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          responsible?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       team_member_permissions: {
         Row: {
           id: string
@@ -360,6 +609,57 @@ export type Database = {
           owner_id?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      transacoes: {
+        Row: {
+          category: string | null
+          client: string | null
+          created_at: string
+          date: string | null
+          description: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          provider: string | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          category?: string | null
+          client?: string | null
+          created_at?: string
+          date?: string | null
+          description: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          provider?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+          value: number
+        }
+        Update: {
+          category?: string | null
+          client?: string | null
+          created_at?: string
+          date?: string | null
+          description?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          provider?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+          value?: number
         }
         Relationships: []
       }

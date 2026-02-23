@@ -52,6 +52,7 @@ import {
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
+import { useTarefas as useTarefasDB } from "@/hooks/useTarefas";
 
 interface SubTask {
   id: string;
@@ -157,27 +158,14 @@ const priorityLabels = {
 export default function Tarefas() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { refetch: refetchTarefasDB } = useTarefasDB();
   const [searchTerm, setSearchTerm] = useState("");
   const [atividades, setAtividades] = useState<Atividade[]>(initialAtividades);
   const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
 
-  const handleImportTarefas = (records: Record<string, unknown>[]) => {
-    const newAtividades: Atividade[] = records.map((record, index) => ({
-      id: `imported-${Date.now()}-${index}`,
-      title: String(record.title || ''),
-      description: String(record.description || ''),
-      dueDate: String(record.dueDate || new Date().toISOString().split('T')[0]),
-      priority: (record.priority === 'urgente' ? 'urgente' : record.priority === 'alta' ? 'alta' : record.priority === 'baixa' ? 'baixa' : 'media') as 'urgente' | 'alta' | 'media' | 'baixa',
-      status: 'pendente' as const,
-      category: (record.category === 'meta' ? 'meta' : 'tarefa') as 'tarefa' | 'meta',
-      responsible: String(record.responsible || ''),
-      subtasks: [],
-    }));
-    setAtividades([...newAtividades, ...atividades]);
-    toast({
-      title: "Importação concluída",
-      description: `${newAtividades.length} tarefas importadas com sucesso.`,
-    });
+  const handleImportTarefas = () => {
+    refetchTarefasDB();
+    toast({ title: "Importação concluída", description: "Tarefas importadas e salvas no banco." });
   };
 
   const pendentes = atividades.filter((a) => a.status === "pendente").length;

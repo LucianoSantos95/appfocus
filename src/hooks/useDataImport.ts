@@ -145,9 +145,11 @@ export function useDataImport(config: ImportConfig): UseDataImportReturn {
 
       // If we have a Supabase table, insert there
       if (config.table && transformedBatch.length > 0) {
-        const { data, error } = await supabase
-          .from(config.table as 'clientes' | 'feedbacks')
-          .insert(transformedBatch as any)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const supabaseAny = supabase as any;
+        const { data, error } = await supabaseAny
+          .from(config.table)
+          .insert(transformedBatch)
           .select();
 
         if (error) {
