@@ -1,20 +1,24 @@
 import { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
-import { cn } from "@/lib/utils";
+import { useSidebar } from "./SidebarContext";
+import { UpgradeCTA } from "@/components/plan/UpgradeCTA";
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const { collapsed } = useSidebar();
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
-      <main className="ml-64 transition-all duration-300">
+      <main className={`${collapsed ? "ml-16" : "ml-64"} transition-all duration-300`}>
         <div className="p-6 lg:p-8">
           {children}
         </div>
       </main>
+      <UpgradeCTA />
     </div>
   );
 }
