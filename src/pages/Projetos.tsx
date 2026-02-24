@@ -57,6 +57,7 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useProjetos as useProjetosDB } from "@/hooks/useProjetos";
+import { PlanGateButton } from "@/components/plan/PlanGateButton";
 
 interface SubTask {
   id: string;
@@ -417,17 +418,21 @@ export default function Projetos() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <ImportDialog
-              config={importConfigs.projetos}
-              onImportComplete={handleImportProjetos}
-              trigger={
-                <Button variant="outline" className="gap-2">
-                  <FileSpreadsheet className="w-4 h-4" />
-                  Importar Planilha
-                </Button>
-              }
-            />
-            <AddProjetoDialog onAdd={(p) => setProjetos([p, ...projetos])} />
+            <PlanGateButton module="projetos" action="create">
+              <ImportDialog
+                config={importConfigs.projetos}
+                onImportComplete={handleImportProjetos}
+                trigger={
+                  <Button variant="outline" className="gap-2">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Importar Planilha
+                  </Button>
+                }
+              />
+            </PlanGateButton>
+            <PlanGateButton module="projetos" action="create">
+              <AddProjetoDialog onAdd={(p) => setProjetos([p, ...projetos])} />
+            </PlanGateButton>
           </div>
         </div>
 

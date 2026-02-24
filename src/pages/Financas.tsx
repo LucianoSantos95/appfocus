@@ -79,6 +79,7 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useTransacoes } from "@/hooks/useTransacoes";
+import { PlanGateButton } from "@/components/plan/PlanGateButton";
 
 // Types
 interface Transaction {
@@ -344,32 +345,36 @@ export default function Financas() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <ImportDialog
-              config={importConfigs.financas_transacoes}
-              onImportComplete={handleImportTransactions}
-              trigger={
-                <Button variant="outline" className="gap-2">
-                  <FileSpreadsheet className="w-4 h-4" />
-                  Importar Planilha
-                </Button>
-              }
-            />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Download className="w-4 h-4" />
-                  Exportar
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-card border-border">
-                <DropdownMenuItem onClick={() => handleExport("pdf")}>
-                  <FileText className="w-4 h-4 mr-2" /> Exportar PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport("csv")}>
-                  <FileText className="w-4 h-4 mr-2" /> Exportar CSV
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <PlanGateButton module="financas" action="create">
+              <ImportDialog
+                config={importConfigs.financas_transacoes}
+                onImportComplete={handleImportTransactions}
+                trigger={
+                  <Button variant="outline" className="gap-2">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Importar Planilha
+                  </Button>
+                }
+              />
+            </PlanGateButton>
+            <PlanGateButton module="financas" action="export">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Download className="w-4 h-4" />
+                    Exportar
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-card border-border">
+                  <DropdownMenuItem onClick={() => handleExport("pdf")}>
+                    <FileText className="w-4 h-4 mr-2" /> Exportar PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport("csv")}>
+                    <FileText className="w-4 h-4 mr-2" /> Exportar CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </PlanGateButton>
           </div>
         </div>
 
@@ -491,14 +496,18 @@ export default function Financas() {
 
           <TabsContent value="receitas" className="space-y-4">
             <div className="flex justify-end">
-              <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} onAdd={() => refetchTransacoes()} />
+              <PlanGateButton module="financas" action="create">
+                <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} onAdd={() => refetchTransacoes()} />
+              </PlanGateButton>
             </div>
             <TransactionTable transactions={transactions.filter((t) => t.type === "receita")} type="receita" onSelect={setSelectedTransaction} onDelete={handleDeleteTransaction} statusStyles={statusStyles} />
           </TabsContent>
 
           <TabsContent value="despesas" className="space-y-4">
             <div className="flex justify-end">
-              <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} onAdd={() => refetchTransacoes()} />
+              <PlanGateButton module="financas" action="create">
+                <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} onAdd={() => refetchTransacoes()} />
+              </PlanGateButton>
             </div>
             <TransactionTable transactions={transactions.filter((t) => t.type === "despesa")} type="despesa" onSelect={setSelectedTransaction} onDelete={handleDeleteTransaction} statusStyles={statusStyles} />
           </TabsContent>
@@ -508,7 +517,9 @@ export default function Financas() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Contas Bancárias</h2>
-            <AddBankAccountDialog onAdd={handleAddBankAccount} />
+            <PlanGateButton module="financas" action="create">
+              <AddBankAccountDialog onAdd={handleAddBankAccount} />
+            </PlanGateButton>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {bankAccounts.map((account) => (

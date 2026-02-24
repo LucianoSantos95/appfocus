@@ -53,6 +53,7 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { PlanGateButton } from "@/components/plan/PlanGateButton";
 
 interface Colaborador {
   id: string;
@@ -380,17 +381,21 @@ export default function RH() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Colaboradores</h2>
             <div className="flex items-center gap-2">
-              <ImportDialog
-                config={importConfigs.rh_colaboradores}
-                onImportComplete={handleImportColaboradores}
-                trigger={
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <FileSpreadsheet className="w-4 h-4" />
-                    Importar
-                  </Button>
-                }
-              />
-              <AddColaboradorDialog onAdd={() => refetchColaboradores()} />
+              <PlanGateButton module="rh" action="create">
+                <ImportDialog
+                  config={importConfigs.rh_colaboradores}
+                  onImportComplete={handleImportColaboradores}
+                  trigger={
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <FileSpreadsheet className="w-4 h-4" />
+                      Importar
+                    </Button>
+                  }
+                />
+              </PlanGateButton>
+              <PlanGateButton module="rh" action="create">
+                <AddColaboradorDialog onAdd={() => refetchColaboradores()} />
+              </PlanGateButton>
             </div>
           </div>
 
@@ -457,17 +462,21 @@ export default function RH() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Vagas</h2>
             <div className="flex items-center gap-2">
-              <ImportDialog
-                config={importConfigs.rh_vagas}
-                onImportComplete={handleImportVagas}
-                trigger={
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <FileSpreadsheet className="w-4 h-4" />
-                    Importar
-                  </Button>
-                }
-              />
-              <AddVagaDialog onAdd={(v) => setVagas([v, ...vagas])} />
+              <PlanGateButton module="rh" action="create">
+                <ImportDialog
+                  config={importConfigs.rh_vagas}
+                  onImportComplete={handleImportVagas}
+                  trigger={
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <FileSpreadsheet className="w-4 h-4" />
+                      Importar
+                    </Button>
+                  }
+                />
+              </PlanGateButton>
+              <PlanGateButton module="rh" action="create">
+                <AddVagaDialog onAdd={(v) => setVagas([v, ...vagas])} />
+              </PlanGateButton>
             </div>
           </div>
 

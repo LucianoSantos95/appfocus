@@ -53,6 +53,7 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useTarefas as useTarefasDB } from "@/hooks/useTarefas";
+import { PlanGateButton } from "@/components/plan/PlanGateButton";
 
 interface SubTask {
   id: string;
@@ -417,17 +418,21 @@ export default function Tarefas() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <ImportDialog
-              config={importConfigs.tarefas}
-              onImportComplete={handleImportTarefas}
-              trigger={
-                <Button variant="outline" className="gap-2">
-                  <FileSpreadsheet className="w-4 h-4" />
-                  Importar Planilha
-                </Button>
-              }
-            />
-            <AddAtividadeDialog onAdd={(a) => setAtividades([a, ...atividades])} />
+            <PlanGateButton module="atividades" action="create">
+              <ImportDialog
+                config={importConfigs.tarefas}
+                onImportComplete={handleImportTarefas}
+                trigger={
+                  <Button variant="outline" className="gap-2">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Importar Planilha
+                  </Button>
+                }
+              />
+            </PlanGateButton>
+            <PlanGateButton module="atividades" action="create">
+              <AddAtividadeDialog onAdd={(a) => setAtividades([a, ...atividades])} />
+            </PlanGateButton>
           </div>
         </div>
 
