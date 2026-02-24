@@ -51,6 +51,7 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessos as useProcessosDB } from "@/hooks/useProcessos";
+import { PlanGateButton } from "@/components/plan/PlanGateButton";
 
 interface ProcessoStep {
   id: string;
@@ -287,17 +288,21 @@ export default function Processos() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <ImportDialog
-              config={importConfigs.processos}
-              onImportComplete={handleImportProcessos}
-              trigger={
-                <Button variant="outline" className="gap-2">
-                  <FileSpreadsheet className="w-4 h-4" />
-                  Importar Planilha
-                </Button>
-              }
-            />
-            <AddProcessoDialog onAdd={(p) => setProcessos([p, ...processos])} />
+            <PlanGateButton module="processos" action="create">
+              <ImportDialog
+                config={importConfigs.processos}
+                onImportComplete={handleImportProcessos}
+                trigger={
+                  <Button variant="outline" className="gap-2">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Importar Planilha
+                  </Button>
+                }
+              />
+            </PlanGateButton>
+            <PlanGateButton module="processos" action="create">
+              <AddProcessoDialog onAdd={(p) => setProcessos([p, ...processos])} />
+            </PlanGateButton>
           </div>
         </div>
 
@@ -413,15 +418,17 @@ export default function Processos() {
                       </div>
 
                       {/* Export Button */}
-                      <div className="flex justify-end pt-4">
-                        <Button
-                          variant="outline"
-                          className="gap-2"
-                          onClick={() => handleExportPDF(p)}
-                        >
-                          <FileDown className="w-4 h-4" />
-                          Exportar PDF
-                        </Button>
+                      <div className="flex justify-end pt-4 gap-2">
+                        <PlanGateButton module="processos" action="export">
+                          <Button
+                            variant="outline"
+                            className="gap-2"
+                            onClick={() => handleExportPDF(p)}
+                          >
+                            <FileDown className="w-4 h-4" />
+                            Exportar PDF
+                          </Button>
+                        </PlanGateButton>
                         <Button
                           variant="destructive"
                           className="gap-2"

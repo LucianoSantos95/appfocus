@@ -52,6 +52,7 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useCampanhas as useCampanhasDB } from "@/hooks/useCampanhas";
+import { PlanGateButton } from "@/components/plan/PlanGateButton";
 
 interface Campanha {
   id: string;
@@ -356,17 +357,21 @@ export default function Marketing() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Campanhas</h2>
             <div className="flex items-center gap-2">
-              <ImportDialog
-                config={importConfigs.marketing_campanhas}
-                onImportComplete={handleImportCampanhas}
-                trigger={
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <FileSpreadsheet className="w-4 h-4" />
-                    Importar
-                  </Button>
-                }
-              />
-              <AddCampanhaDialog onAdd={(c) => setCampanhas([c, ...campanhas])} />
+              <PlanGateButton module="marketing" action="create">
+                <ImportDialog
+                  config={importConfigs.marketing_campanhas}
+                  onImportComplete={handleImportCampanhas}
+                  trigger={
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <FileSpreadsheet className="w-4 h-4" />
+                      Importar
+                    </Button>
+                  }
+                />
+              </PlanGateButton>
+              <PlanGateButton module="marketing" action="create">
+                <AddCampanhaDialog onAdd={(c) => setCampanhas([c, ...campanhas])} />
+              </PlanGateButton>
             </div>
           </div>
           
@@ -411,17 +416,21 @@ export default function Marketing() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Planejamento de Conteúdo</h2>
             <div className="flex items-center gap-2">
-              <ImportDialog
-                config={importConfigs.marketing_conteudos}
-                onImportComplete={handleImportConteudos}
-                trigger={
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <FileSpreadsheet className="w-4 h-4" />
-                    Importar
-                  </Button>
-                }
-              />
-              <AddConteudoDialog onAdd={(c) => setConteudos([c, ...conteudos])} />
+              <PlanGateButton module="marketing" action="create">
+                <ImportDialog
+                  config={importConfigs.marketing_conteudos}
+                  onImportComplete={handleImportConteudos}
+                  trigger={
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <FileSpreadsheet className="w-4 h-4" />
+                      Importar
+                    </Button>
+                  }
+                />
+              </PlanGateButton>
+              <PlanGateButton module="marketing" action="create">
+                <AddConteudoDialog onAdd={(c) => setConteudos([c, ...conteudos])} />
+              </PlanGateButton>
             </div>
           </div>
           

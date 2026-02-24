@@ -67,6 +67,7 @@ import { ClienteAIBadge } from "@/components/clientes/ClienteAIBadge";
 import { SugestoesPainel } from "@/components/clientes/SugestoesPainel";
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
+import { PlanGateButton } from "@/components/plan/PlanGateButton";
 
 const statusCliente = {
   ativo: { label: "Ativo", class: "bg-success/10 text-success" },
@@ -410,12 +411,14 @@ export default function Clientes() {
         </div>
 
         {/* AI Insights Card - Below Charts */}
-        <ClienteInsightsCard
-          clientes={clientes}
-          onAnalyzeAll={analyzeAllClientes}
-          isAnalyzing={isAnalyzing}
-          onOpenSugestoes={() => setShowSugestoes(true)}
-        />
+        <PlanGateButton module="clientes" action="ai_analysis">
+          <ClienteInsightsCard
+            clientes={clientes}
+            onAnalyzeAll={analyzeAllClientes}
+            isAnalyzing={isAnalyzing}
+            onOpenSugestoes={() => setShowSugestoes(true)}
+          />
+        </PlanGateButton>
 
         {/* Search */}
         <div className="flex items-center justify-between">
@@ -429,23 +432,27 @@ export default function Clientes() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <ImportDialog
-              config={importConfigs.clientes}
-              onImportComplete={() => {
-                toast({
-                  title: "Importação concluída",
-                  description: "Os clientes foram importados com sucesso.",
-                });
-              }}
-              onAnalyzeAI={analyzeAllClientes}
-              trigger={
-                <Button variant="outline" className="gap-2">
-                  <FileSpreadsheet className="w-4 h-4" />
-                  Importar Planilha
-                </Button>
-              }
-            />
-            <AddClienteDialog onAdd={addCliente} />
+            <PlanGateButton module="clientes" action="create">
+              <ImportDialog
+                config={importConfigs.clientes}
+                onImportComplete={() => {
+                  toast({
+                    title: "Importação concluída",
+                    description: "Os clientes foram importados com sucesso.",
+                  });
+                }}
+                onAnalyzeAI={analyzeAllClientes}
+                trigger={
+                  <Button variant="outline" className="gap-2">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Importar Planilha
+                  </Button>
+                }
+              />
+            </PlanGateButton>
+            <PlanGateButton module="clientes" action="create">
+              <AddClienteDialog onAdd={addCliente} />
+            </PlanGateButton>
           </div>
         </div>
 
