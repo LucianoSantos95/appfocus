@@ -11,3 +11,7 @@ project_id = "hnextembswhejumvxbzd"
     verify_jwt = false
   [functions.customer-portal]
     verify_jwt = false
+  [functions.send-followup-email]
+    verify_jwt = false
+  [functions.cron-followup]
+    verify_jwt = false

@@ -1,63 +1,70 @@
 
 
-# Integrar Resend para E-mails de Follow-up
+# Aplicar restricoes do PlanGate em todos os modulos
 
-## Objetivo
-Configurar o Resend como serviço de envio de e-mails de follow-up (marketing/transacional) para usuários cadastrados no Focus Gestao Inteligente.
+## Resumo
 
-## O que sera feito
+Atualmente, os componentes `PlanGate` e `usePlanFeatures` existem no codigo mas **nao estao sendo usados em nenhuma pagina**. Isso significa que usuarios do plano gratuito podem criar registros, exportar dados e usar IA sem restricao. Este plano aplica as restricoes em todos os 7 modulos.
 
-### 1. Configurar a API Key do Resend
-- Solicitar que voce insira sua chave de API do Resend (obtida em resend.com/api-keys)
-- Armazenar de forma segura como secret do projeto
+## O que muda para o usuario gratuito
 
-### 2. Criar Edge Function `send-followup-email`
-- Nova funcao backend que recebe destinatario, assunto e tipo de e-mail
-- Usa a API do Resend para envio
-- Valida autenticacao do usuario chamador
-- Suporta diferentes templates (boas-vindas, reengajamento, upgrade)
+| Modulo | Pode ver dados | Criar/Adicionar | Exportar | IA |
+|--------|---------------|-----------------|----------|-----|
+| Financas | Sim | Bloqueado | Bloqueado | - |
+| RH | Sim | Bloqueado | Bloqueado | - |
+| Marketing | Sim | Bloqueado | Bloqueado | - |
+| Projetos | Sim | Bloqueado | Bloqueado | - |
+| Clientes | Sim | Bloqueado | Bloqueado | Bloqueado |
+| Tarefas | Sim | Bloqueado | Bloqueado | - |
+| Processos | Sim | Bloqueado | Bloqueado | - |
 
-### 3. Criar Templates de Follow-up
-- Templates React Email no estilo da marca Focus (azul eletrico #4da3ff, fonte Inter, logo)
-- Todos em Portugues (BR)
-- Templates planejados:
-  - **Boas-vindas** (Day 1): mensagem de onboarding pos-cadastro
-  - **Reengajamento** (Day 3-7): lembrete para explorar funcionalidades
-  - **Upgrade** (Day 14): CTA para planos pagos
+Quando bloqueado, o botao aparece com icone de cadeado e ao clicar redireciona para a pagina de planos.
 
-### 4. Criar Edge Function `cron-followup` (opcional)
-- Funcao que consulta a tabela `profiles` buscando usuarios por data de cadastro
-- Dispara os e-mails automaticamente com base em regras de tempo
-- Acionada via cron job (pg_cron) para automacao completa
+## Abordagem tecnica
 
-## Pre-requisitos
-- Conta no Resend (resend.com) - plano gratuito envia ate 100 emails/dia
-- Dominio verificado no Resend (pode ser o mesmo `app.focusinteligente.com.br` ou outro)
-- API Key do Resend
+Em cada pagina, envolver os botoes de acao com o componente `PlanGate`:
 
-## Detalhes tecnicos
+1. **Botoes "Novo/Adicionar"** - envolver com `<PlanGate module="X" action="create">` 
+2. **Botoes "Exportar"** - envolver com `<PlanGate module="X" action="export">`
+3. **Botoes "Importar Planilha"** - envolver com `<PlanGate module="X" action="create">`
+4. **Botao "Analise IA" (Clientes)** - envolver com `<PlanGate module="clientes" action="ai_analysis">`
 
-### Estrutura de arquivos
+Em vez de esconder os botoes, vou usar a abordagem de mostrar o botao desabilitado com tooltip "Disponivel no plano Plus" e redirecionar para /planos ao clicar. Isso incentiva o upgrade.
+
+### Arquivos a modificar
+
+- `src/pages/Financas.tsx` - Proteger botoes Exportar, Importar e dialog de nova transacao
+- `src/pages/RH.tsx` - Proteger botoes Importar e dialog de novo colaborador/vaga
+- `src/pages/Marketing.tsx` - Proteger botoes Importar e dialogs de nova campanha/conteudo
+- `src/pages/Projetos.tsx` - Proteger botoes Importar e dialog de novo projeto
+- `src/pages/Clientes.tsx` - Proteger botoes Importar, dialog de novo cliente e botao de Analise IA
+- `src/pages/Tarefas.tsx` - Proteger botoes Importar e dialog de nova atividade
+- `src/pages/Processos.tsx` - Proteger botoes Importar, Exportar PDF e dialog de novo processo
+
+### Componente PlanGate - pequeno ajuste
+
+O `PlanGate` atual renderiza um card grande quando o acesso e negado. Para botoes, vou criar uma variante inline que mostra o botao desabilitado com icone de cadeado, em vez do card grande. Isso mantem a interface limpa.
+
+Novo componente: `PlanGateButton` - um wrapper que:
+- Se tem acesso: renderiza o botao normalmente
+- Se nao tem acesso: renderiza o botao com icone de cadeado e redireciona para /planos ao clicar
+
+### Mapeamento de modulos para nomes na tabela plan_features
+
 ```text
-supabase/functions/send-followup-email/index.ts    -- funcao de envio
-supabase/functions/_shared/email-templates/
-  followup-welcome.tsx                              -- template boas-vindas
-  followup-reengagement.tsx                         -- template reengajamento
-  followup-upgrade.tsx                              -- template upgrade
+Financas   -> module: "financas"
+RH         -> module: "rh"
+Marketing  -> module: "marketing"
+Projetos   -> module: "projetos"
+Clientes   -> module: "clientes"
+Tarefas    -> module: "atividades"
+Processos  -> module: "processos"
 ```
 
-### Fluxo
-```text
-pg_cron (agendamento)
-  -> cron-followup (edge function)
-    -> consulta profiles (created_at)
-    -> send-followup-email (edge function)
-      -> Resend API
-        -> usuario recebe e-mail
-```
+## Resultado esperado
 
-### Seguranca
-- API Key armazenada como secret (nunca exposta no frontend)
-- Edge function valida autenticacao antes de permitir envios manuais
-- Rate limiting para evitar envios duplicados
+- Usuarios gratuitos podem navegar e visualizar todos os modulos (dados de exemplo)
+- Ao tentar criar, exportar ou importar, veem uma mensagem orientando a contratar um plano
+- Usuarios com plano Plus, Pro ou Enterprise continuam usando normalmente
+- Admins (dono do SaaS) continuam com acesso total
 
