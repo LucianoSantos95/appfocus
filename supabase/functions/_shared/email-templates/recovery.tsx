@@ -9,7 +9,9 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -22,23 +24,27 @@ export const RecoveryEmail = ({
   siteName,
   confirmationUrl,
 }: RecoveryEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Reset your password for {siteName}</Preview>
+    <Preview>Redefinição de senha — Focus Gestão Inteligente</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Reset your password</Heading>
+        <Section style={logoSection}>
+          <Img src={logoUrl} width="140" height="40" alt="Focus Gestão Inteligente" style={logo} />
+        </Section>
+        <Heading style={h1}>Redefinir sua senha</Heading>
         <Text style={text}>
-          We received a request to reset your password for {siteName}. Click
-          the button below to choose a new password.
+          Recebemos uma solicitação para redefinir a senha da sua conta no Focus Gestão Inteligente. Clique no botão abaixo para criar uma nova senha.
         </Text>
-        <Button style={button} href={confirmationUrl}>
-          Reset Password
-        </Button>
+        <Section style={buttonSection}>
+          <Button style={button} href={confirmationUrl}>
+            Redefinir Senha
+          </Button>
+        </Section>
         <Text style={footer}>
-          If you didn't request a password reset, you can safely ignore this
-          email. Your password will not be changed.
+          Se você não solicitou esta redefinição, ignore este e-mail. Sua senha não será alterada.
         </Text>
+        <Text style={footerBrand}>Focus Gestão Inteligente</Text>
       </Container>
     </Body>
   </Html>
@@ -46,26 +52,34 @@ export const RecoveryEmail = ({
 
 export default RecoveryEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const logoUrl = 'https://hnextembswhejumvxbzd.supabase.co/storage/v1/object/public/email-assets/logo.png'
+const primary = '#4da3ff'
+const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
+const container = { padding: '40px 32px', maxWidth: '480px', margin: '0 auto' }
+const logoSection = { marginBottom: '32px' }
+const logo = { display: 'block' as const }
 const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
+  fontSize: '24px',
+  fontWeight: '700' as const,
+  color: '#141b2d',
+  margin: '0 0 16px',
+  lineHeight: '1.3',
 }
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontSize: '15px',
+  color: '#5a6178',
+  lineHeight: '1.6',
+  margin: '0 0 20px',
 }
+const buttonSection = { margin: '8px 0 32px' }
 const button = {
-  backgroundColor: '#000000',
+  backgroundColor: primary,
   color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
+  fontSize: '15px',
+  fontWeight: '600' as const,
+  borderRadius: '12px',
+  padding: '14px 28px',
   textDecoration: 'none',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = { fontSize: '13px', color: '#9ca3af', margin: '0 0 8px', lineHeight: '1.5' }
+const footerBrand = { fontSize: '12px', color: '#c5cad3', margin: '16px 0 0' }

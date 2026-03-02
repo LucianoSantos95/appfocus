@@ -8,7 +8,9 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -17,18 +19,21 @@ interface ReauthenticationEmailProps {
 }
 
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Your verification code</Preview>
+    <Preview>Seu código de verificação — Focus Gestão Inteligente</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
+        <Section style={logoSection}>
+          <Img src={logoUrl} width="140" height="40" alt="Focus Gestão Inteligente" style={logo} />
+        </Section>
+        <Heading style={h1}>Código de verificação</Heading>
+        <Text style={text}>Use o código abaixo para confirmar sua identidade:</Text>
         <Text style={codeStyle}>{token}</Text>
         <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
+          Este código expira em breve. Se você não solicitou, ignore este e-mail.
         </Text>
+        <Text style={footerBrand}>Focus Gestão Inteligente</Text>
       </Container>
     </Body>
   </Html>
@@ -36,25 +41,32 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 
 export default ReauthenticationEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const logoUrl = 'https://hnextembswhejumvxbzd.supabase.co/storage/v1/object/public/email-assets/logo.png'
+const primary = '#4da3ff'
+const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
+const container = { padding: '40px 32px', maxWidth: '480px', margin: '0 auto' }
+const logoSection = { marginBottom: '32px' }
+const logo = { display: 'block' as const }
 const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
+  fontSize: '24px',
+  fontWeight: '700' as const,
+  color: '#141b2d',
+  margin: '0 0 16px',
+  lineHeight: '1.3',
 }
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontSize: '15px',
+  color: '#5a6178',
+  lineHeight: '1.6',
+  margin: '0 0 20px',
 }
 const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
+  fontFamily: "'Inter', Courier, monospace",
+  fontSize: '28px',
+  fontWeight: '700' as const,
+  color: primary,
+  margin: '0 0 32px',
+  letterSpacing: '4px',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = { fontSize: '13px', color: '#9ca3af', margin: '0 0 8px', lineHeight: '1.5' }
+const footerBrand = { fontSize: '12px', color: '#c5cad3', margin: '16px 0 0' }
