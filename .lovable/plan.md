@@ -1,70 +1,40 @@
 
 
-# Aplicar restricoes do PlanGate em todos os modulos
+# Plano: Redesign da Tela de Login
 
-## Resumo
+## O que sera feito
 
-Atualmente, os componentes `PlanGate` e `usePlanFeatures` existem no codigo mas **nao estao sendo usados em nenhuma pagina**. Isso significa que usuarios do plano gratuito podem criar registros, exportar dados e usar IA sem restricao. Este plano aplica as restricoes em todos os 7 modulos.
+Redesign completo do `src/pages/Auth.tsx` seguindo a estetica da landing page do Hub Empresarial: fundo escuro com gradientes, tipografia grande com `gradient-text`, efeitos de glow, e layout split-screen.
 
-## O que muda para o usuario gratuito
+## Mudancas
 
-| Modulo | Pode ver dados | Criar/Adicionar | Exportar | IA |
-|--------|---------------|-----------------|----------|-----|
-| Financas | Sim | Bloqueado | Bloqueado | - |
-| RH | Sim | Bloqueado | Bloqueado | - |
-| Marketing | Sim | Bloqueado | Bloqueado | - |
-| Projetos | Sim | Bloqueado | Bloqueado | - |
-| Clientes | Sim | Bloqueado | Bloqueado | Bloqueado |
-| Tarefas | Sim | Bloqueado | Bloqueado | - |
-| Processos | Sim | Bloqueado | Bloqueado | - |
+### Arquivo: `src/pages/Auth.tsx`
 
-Quando bloqueado, o botao aparece com icone de cadeado e ao clicar redireciona para a pagina de planos.
+**Layout split-screen (desktop):**
+- Coluna esquerda (50%): Painel de branding com fundo `gradient-dark`, logo grande, headline "Gestao Completa para PMEs" com `gradient-text`, bullets de modulos (Financas, CRM, Projetos, RH, Marketing, Atividades, Processos) com icones Lucide, efeito `shadow-glow` decorativo, e circulos/formas CSS sutis no fundo
+- Coluna direita (50%): Formulario atual de login/cadastro com efeito `glass`, tabs e inputs mantidos, botao principal com `gradient-primary`
 
-## Abordagem tecnica
+**Header discreto:**
+- Logo pequeno no canto esquerdo + link "Ver Precos" no canto direito, linkando para `/planos`
 
-Em cada pagina, envolver os botoes de acao com o componente `PlanGate`:
+**Footer:**
+- Links para Termos, Privacidade e Precos centralizados
 
-1. **Botoes "Novo/Adicionar"** - envolver com `<PlanGate module="X" action="create">` 
-2. **Botoes "Exportar"** - envolver com `<PlanGate module="X" action="export">`
-3. **Botoes "Importar Planilha"** - envolver com `<PlanGate module="X" action="create">`
-4. **Botao "Analise IA" (Clientes)** - envolver com `<PlanGate module="clientes" action="ai_analysis">`
+**Mobile (< 768px):**
+- Coluna unica. Branding compacto no topo (logo + headline + subtitulo, sem bullets completos), formulario abaixo
 
-Em vez de esconder os botoes, vou usar a abordagem de mostrar o botao desabilitado com tooltip "Disponivel no plano Plus" e redirecionar para /planos ao clicar. Isso incentiva o upgrade.
+**Elementos visuais da landing page:**
+- Gradientes azul eletrico nos textos de destaque
+- `shadow-glow` no painel esquerdo
+- Badge `badge-primary` com texto "Hub Empresarial"
+- Circulos decorativos com CSS (position absolute, blur, opacity baixa)
+- Botao "Entrar" e "Criar Conta" com `gradient-primary`
 
-### Arquivos a modificar
+### Arquivo: `.lovable/plan.md`
 
-- `src/pages/Financas.tsx` - Proteger botoes Exportar, Importar e dialog de nova transacao
-- `src/pages/RH.tsx` - Proteger botoes Importar e dialog de novo colaborador/vaga
-- `src/pages/Marketing.tsx` - Proteger botoes Importar e dialogs de nova campanha/conteudo
-- `src/pages/Projetos.tsx` - Proteger botoes Importar e dialog de novo projeto
-- `src/pages/Clientes.tsx` - Proteger botoes Importar, dialog de novo cliente e botao de Analise IA
-- `src/pages/Tarefas.tsx` - Proteger botoes Importar e dialog de nova atividade
-- `src/pages/Processos.tsx` - Proteger botoes Importar, Exportar PDF e dialog de novo processo
+Adicionar ao final do arquivo a secao do Redesign Auth como tarefa concluida e a Sprint 3 de Automacoes como planejamento futuro.
 
-### Componente PlanGate - pequeno ajuste
+## Nenhuma mudanca no backend
 
-O `PlanGate` atual renderiza um card grande quando o acesso e negado. Para botoes, vou criar uma variante inline que mostra o botao desabilitado com icone de cadeado, em vez do card grande. Isso mantem a interface limpa.
-
-Novo componente: `PlanGateButton` - um wrapper que:
-- Se tem acesso: renderiza o botao normalmente
-- Se nao tem acesso: renderiza o botao com icone de cadeado e redireciona para /planos ao clicar
-
-### Mapeamento de modulos para nomes na tabela plan_features
-
-```text
-Financas   -> module: "financas"
-RH         -> module: "rh"
-Marketing  -> module: "marketing"
-Projetos   -> module: "projetos"
-Clientes   -> module: "clientes"
-Tarefas    -> module: "atividades"
-Processos  -> module: "processos"
-```
-
-## Resultado esperado
-
-- Usuarios gratuitos podem navegar e visualizar todos os modulos (dados de exemplo)
-- Ao tentar criar, exportar ou importar, veem uma mensagem orientando a contratar um plano
-- Usuarios com plano Plus, Pro ou Enterprise continuam usando normalmente
-- Admins (dono do SaaS) continuam com acesso total
+Apenas frontend. Nenhuma migration, edge function ou tabela nova.
 
