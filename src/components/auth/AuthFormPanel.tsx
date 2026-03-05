@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Lock, Mail, User, Sparkles } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const GoogleIcon = () => (
   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
