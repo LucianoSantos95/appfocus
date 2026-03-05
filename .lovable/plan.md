@@ -68,3 +68,28 @@ Processos  -> module: "processos"
 - Usuarios com plano Plus, Pro ou Enterprise continuam usando normalmente
 - Admins (dono do SaaS) continuam com acesso total
 
+---
+
+# Tarefas concluidas
+
+## ✅ Redesign da tela de Auth
+
+- Layout split-screen seguindo estetica da landing page do Hub
+- Painel de branding com gradientes, glow e bullets de features
+- Link para pagina de precos no header e rodape
+- Responsivo (coluna unica em mobile)
+- Componentes extraidos: AuthHeader, AuthFooter, AuthBrandingPanel, AuthFormPanel
+
+---
+
+# Sprint 3 — Automacoes e Alertas (planejamento futuro)
+
+## Fase 1: Alertas de tarefas atrasadas e transacoes vencidas
+- pg_cron job diario para verificar tarefas com due_date < now() e status != 'concluida'
+- pg_cron job diario para verificar transacoes com date < now() e status = 'pendente'
+- Edge function para enviar emails de alerta via Resend
+- Widget de alertas no dashboard
+
+## Fase 2: Relatorios automaticos
+- Relatorio semanal de resumo financeiro enviado por email
+- Relatorio mensal de desempenho de projetos
