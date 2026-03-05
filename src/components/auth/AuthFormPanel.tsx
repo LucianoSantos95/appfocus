@@ -80,8 +80,8 @@ export default function AuthFormPanel({
     <div className="flex-1 flex items-center justify-center px-6 py-10 lg:py-16">
       <div className="w-full max-w-md">
         <div className="glass rounded-2xl p-8 shadow-premium">
-          <div className="text-center mb-6 lg:hidden">
-            {/* Only show title on mobile since branding panel is compact */}
+          <div className="flex justify-center mb-6">
+            <img src={logo} alt="AppFocus" className="h-10 w-auto" />
           </div>
 
           <Tabs defaultValue={defaultTab} className="w-full">
