@@ -180,7 +180,7 @@ const departments = ["Comercial", "Financeiro", "RH", "Marketing", "Projetos", "
 export default function Processos() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { refetch: refetchProcessosDB } = useProcessosDB();
+  const { addProcesso, refetch: refetchProcessosDB } = useProcessosDB();
   const [searchTerm, setSearchTerm] = useState("");
   const [processos, setProcessos] = useState<Processo[]>(initialProcessos);
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
@@ -301,7 +301,7 @@ export default function Processos() {
               />
             </PlanGateButton>
             <PlanGateButton module="processos" action="create">
-              <AddProcessoDialog onAdd={(p) => setProcessos([p, ...processos])} />
+              <AddProcessoDialog onAdd={addProcesso} />
             </PlanGateButton>
           </div>
         </div>
@@ -712,51 +712,28 @@ function EditProcessoDialog({
   );
 }
 
-function AddProcessoDialog({ onAdd }: { onAdd: (p: Processo) => void }) {
+function AddProcessoDialog({ onAdd }: { onAdd: (p: { name: string; description?: string; department?: string; owner?: string; status?: string }) => Promise<unknown> }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
     department: "",
     owner: "",
-    status: "em_revisao" as Processo["status"],
+    status: "ativo" as string,
   });
-  const [steps, setSteps] = useState<ProcessoStep[]>([]);
-  const [newStepTitle, setNewStepTitle] = useState("");
 
-  const handleAddStep = () => {
-    if (!newStepTitle.trim()) return;
-    const newStep: ProcessoStep = {
-      id: Date.now().toString(),
-      title: newStepTitle,
-      description: "",
-    };
-    setSteps([...steps, newStep]);
-    setNewStepTitle("");
-  };
-
-  const handleRemoveStep = (stepId: string) => {
-    setSteps(steps.filter((s) => s.id !== stepId));
-  };
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name || !form.department) return;
 
-    const processo: Processo = {
-      id: Date.now().toString(),
+    await onAdd({
       name: form.name,
-      description: form.description,
+      description: form.description || undefined,
       department: form.department,
-      owner: form.owner,
-      lastUpdated: new Date().toISOString().split("T")[0],
+      owner: form.owner || undefined,
       status: form.status,
-      icon: FileText,
-      steps: steps,
-    };
+    });
 
-    onAdd(processo);
-    setForm({ name: "", description: "", department: "", owner: "", status: "em_revisao" });
-    setSteps([]);
+    setForm({ name: "", description: "", department: "", owner: "", status: "ativo" });
     setOpen(false);
   };
 
@@ -830,45 +807,6 @@ function AddProcessoDialog({ onAdd }: { onAdd: (p: Processo) => void }) {
             />
           </div>
 
-          {/* Steps */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Etapas do Processo</Label>
-              <span className="text-xs text-muted-foreground">
-                Este processo contém {steps.length} etapas
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <Input
-                value={newStepTitle}
-                onChange={(e) => setNewStepTitle(e.target.value)}
-                placeholder="Título da etapa"
-                className="bg-muted border-border"
-                onKeyDown={(e) => e.key === "Enter" && handleAddStep()}
-              />
-              <Button onClick={handleAddStep} size="sm">
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="space-y-2 max-h-[150px] overflow-y-auto">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
-                  <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
-                    {index + 1}
-                  </span>
-                  <span className="flex-1 text-sm text-foreground">{step.title}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveStep(step.id)}
-                    className="h-6 w-6 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
         <div className="flex justify-end gap-3">
           <DialogClose asChild>

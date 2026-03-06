@@ -159,7 +159,7 @@ const priorityLabels = {
 export default function Tarefas() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { refetch: refetchTarefasDB } = useTarefasDB();
+  const { addTarefa, refetch: refetchTarefasDB } = useTarefasDB();
   const [searchTerm, setSearchTerm] = useState("");
   const [atividades, setAtividades] = useState<Atividade[]>(initialAtividades);
   const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
@@ -431,7 +431,7 @@ export default function Tarefas() {
               />
             </PlanGateButton>
             <PlanGateButton module="atividades" action="create">
-              <AddAtividadeDialog onAdd={(a) => setAtividades([a, ...atividades])} />
+              <AddAtividadeDialog onAdd={addTarefa} />
             </PlanGateButton>
           </div>
         </div>
@@ -672,33 +672,30 @@ function EditAtividadeDialog({
   );
 }
 
-function AddAtividadeDialog({ onAdd }: { onAdd: (a: Atividade) => void }) {
+function AddAtividadeDialog({ onAdd }: { onAdd: (a: { title: string; description?: string; due_date?: string; priority?: string; status?: string; category?: string; responsible?: string }) => Promise<unknown> }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
     dueDate: "",
-    priority: "media" as Atividade["priority"],
-    category: "tarefa" as "tarefa" | "meta",
+    priority: "media" as string,
+    category: "tarefa" as string,
     responsible: "",
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.title) return;
 
-    const atividade: Atividade = {
-      id: Date.now().toString(),
+    await onAdd({
       title: form.title,
-      description: form.description,
-      dueDate: form.dueDate,
+      description: form.description || undefined,
+      due_date: form.dueDate || undefined,
       priority: form.priority,
       status: "pendente",
       category: form.category,
-      responsible: form.responsible,
-      subtasks: [],
-    };
+      responsible: form.responsible || undefined,
+    });
 
-    onAdd(atividade);
     setForm({ title: "", description: "", dueDate: "", priority: "media", category: "tarefa", responsible: "" });
     setOpen(false);
   };

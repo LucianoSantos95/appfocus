@@ -175,7 +175,7 @@ const platforms = ["Instagram", "Facebook", "LinkedIn", "YouTube", "Google Ads",
 export default function Marketing() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { refetch: refetchCampanhasDB } = useCampanhasDB();
+  const { addCampanha, refetch: refetchCampanhasDB } = useCampanhasDB();
   const [campanhas, setCampanhas] = useState<Campanha[]>(initialCampanhas);
   const [conteudos, setConteudos] = useState<Conteudo[]>(initialConteudos);
   const [funnelItems, setFunnelItems] = useState<FunnelItem[]>(initialFunnelItems);
@@ -370,7 +370,7 @@ export default function Marketing() {
                 />
               </PlanGateButton>
               <PlanGateButton module="marketing" action="create">
-                <AddCampanhaDialog onAdd={(c) => setCampanhas([c, ...campanhas])} />
+                <AddCampanhaDialog onAdd={addCampanha} />
               </PlanGateButton>
             </div>
           </div>
@@ -730,21 +730,22 @@ export default function Marketing() {
   );
 }
 
-function AddCampanhaDialog({ onAdd }: { onAdd: (c: Campanha) => void }) {
+function AddCampanhaDialog({ onAdd }: { onAdd: (c: { name: string; objective?: string; platforms?: string; budget?: number; start_date?: string; end_date?: string; status?: string; responsible?: string }) => Promise<unknown> }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", objective: "", budget: "", startDate: "", endDate: "", responsible: "", impressions: "", clicks: "", conversions: "" });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name) return;
-    const campanha: Campanha = {
-      id: Date.now().toString(), name: form.name, objective: form.objective, platforms: ["Instagram"],
-      budget: parseFloat(form.budget) || 0, startDate: form.startDate, endDate: form.endDate,
-      status: "planejada", expectedResult: "", responsible: form.responsible,
-      impressions: parseInt(form.impressions) || 0,
-      clicks: parseInt(form.clicks) || 0,
-      conversions: parseInt(form.conversions) || 0,
-    };
-    onAdd(campanha);
+    await onAdd({
+      name: form.name,
+      objective: form.objective || undefined,
+      platforms: "Instagram",
+      budget: parseFloat(form.budget) || undefined,
+      start_date: form.startDate || undefined,
+      end_date: form.endDate || undefined,
+      status: "planejamento",
+      responsible: form.responsible || undefined,
+    });
     setForm({ name: "", objective: "", budget: "", startDate: "", endDate: "", responsible: "", impressions: "", clicks: "", conversions: "" });
     setOpen(false);
   };
