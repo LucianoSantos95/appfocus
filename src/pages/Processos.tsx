@@ -807,45 +807,6 @@ function AddProcessoDialog({ onAdd }: { onAdd: (p: { name: string; description?:
             />
           </div>
 
-          {/* Steps */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Etapas do Processo</Label>
-              <span className="text-xs text-muted-foreground">
-                Este processo contém {steps.length} etapas
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <Input
-                value={newStepTitle}
-                onChange={(e) => setNewStepTitle(e.target.value)}
-                placeholder="Título da etapa"
-                className="bg-muted border-border"
-                onKeyDown={(e) => e.key === "Enter" && handleAddStep()}
-              />
-              <Button onClick={handleAddStep} size="sm">
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="space-y-2 max-h-[150px] overflow-y-auto">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
-                  <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
-                    {index + 1}
-                  </span>
-                  <span className="flex-1 text-sm text-foreground">{step.title}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveStep(step.id)}
-                    className="h-6 w-6 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
         <div className="flex justify-end gap-3">
           <DialogClose asChild>
