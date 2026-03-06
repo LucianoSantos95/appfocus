@@ -245,7 +245,7 @@ function getProjectDeadlineStatus(endDate: string, progress: number) {
 export default function Projetos() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { refetch: refetchProjetosDB, deleteProjeto: deleteProjetoDB } = useProjetosDB();
+  const { addProjeto, refetch: refetchProjetosDB, deleteProjeto: deleteProjetoDB } = useProjetosDB();
   const [searchTerm, setSearchTerm] = useState("");
   const [projetos, setProjetos] = useState<Projeto[]>(initialProjetos);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
@@ -431,7 +431,7 @@ export default function Projetos() {
               />
             </PlanGateButton>
             <PlanGateButton module="projetos" action="create">
-              <AddProjetoDialog onAdd={(p) => setProjetos([p, ...projetos])} />
+              <AddProjetoDialog onAdd={addProjeto} />
             </PlanGateButton>
           </div>
         </div>
@@ -891,7 +891,7 @@ function ProjectDetailDialog({
   );
 }
 
-function AddProjetoDialog({ onAdd }: { onAdd: (p: Projeto) => void }) {
+function AddProjetoDialog({ onAdd }: { onAdd: (p: { name: string; status?: string; priority?: string; start_date?: string; end_date?: string; budget?: number; responsible?: string; description?: string }) => Promise<unknown> }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -902,26 +902,19 @@ function AddProjetoDialog({ onAdd }: { onAdd: (p: Projeto) => void }) {
     priority: "media" as "alta" | "media" | "baixa",
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name || !form.responsible) return;
 
-    const projeto: Projeto = {
-      id: Date.now().toString(),
+    await onAdd({
       name: form.name,
-      status: "nao_iniciado",
+      status: "planejamento",
       priority: form.priority,
-      startDate: form.startDate,
-      endDate: form.endDate,
-      budget: parseFloat(form.budget) || 0,
-      spent: 0,
+      start_date: form.startDate || undefined,
+      end_date: form.endDate || undefined,
+      budget: parseFloat(form.budget) || undefined,
       responsible: form.responsible,
-      currentSprint: "-",
-      members: [form.responsible],
-      progress: 0,
-      sprints: [],
-    };
+    });
 
-    onAdd(projeto);
     setForm({ name: "", responsible: "", budget: "", startDate: "", endDate: "", priority: "media" });
     setOpen(false);
   };

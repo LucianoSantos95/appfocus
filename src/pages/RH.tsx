@@ -197,7 +197,7 @@ const priorityStyles = {
 export default function RH() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { colaboradores: dbColaboradores, isLoading, deleteColaborador, refetch: refetchColaboradores } = useColaboradores();
+  const { colaboradores: dbColaboradores, isLoading, addColaborador, deleteColaborador, refetch: refetchColaboradores } = useColaboradores();
   const [searchTerm, setSearchTerm] = useState("");
   const [vagas, setVagas] = useState<Vaga[]>(initialVagas);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
@@ -394,7 +394,7 @@ export default function RH() {
                 />
               </PlanGateButton>
               <PlanGateButton module="rh" action="create">
-                <AddColaboradorDialog onAdd={() => refetchColaboradores()} />
+                <AddColaboradorDialog onAdd={addColaborador} />
               </PlanGateButton>
             </div>
           </div>
@@ -675,20 +675,23 @@ export default function RH() {
   );
 }
 
-function AddColaboradorDialog({ onAdd }: { onAdd: (c: Colaborador) => void }) {
+function AddColaboradorDialog({ onAdd }: { onAdd: (c: { name: string; role?: string; department?: string; salary?: number; email?: string; phone?: string; status?: string }) => Promise<unknown> }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "", role: "", department: "", salary: "", email: "", phone: "", avatar: "", bio: "",
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name || !form.role || !form.department) return;
-    const colaborador: Colaborador = {
-      id: Date.now().toString(), name: form.name, role: form.role, department: form.department,
-      salary: parseFloat(form.salary) || 0, startDate: new Date().toISOString().split("T")[0], status: "ativo",
-      manager: "", email: form.email, phone: form.phone, avatar: form.avatar, bio: form.bio,
-    };
-    onAdd(colaborador);
+    await onAdd({
+      name: form.name,
+      role: form.role,
+      department: form.department,
+      salary: parseFloat(form.salary) || undefined,
+      email: form.email || undefined,
+      phone: form.phone || undefined,
+      status: "ativo",
+    });
     setForm({ name: "", role: "", department: "", salary: "", email: "", phone: "", avatar: "", bio: "" });
     setOpen(false);
   };

@@ -180,7 +180,7 @@ const departments = ["Comercial", "Financeiro", "RH", "Marketing", "Projetos", "
 export default function Processos() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { refetch: refetchProcessosDB } = useProcessosDB();
+  const { addProcesso, refetch: refetchProcessosDB } = useProcessosDB();
   const [searchTerm, setSearchTerm] = useState("");
   const [processos, setProcessos] = useState<Processo[]>(initialProcessos);
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
@@ -301,7 +301,7 @@ export default function Processos() {
               />
             </PlanGateButton>
             <PlanGateButton module="processos" action="create">
-              <AddProcessoDialog onAdd={(p) => setProcessos([p, ...processos])} />
+              <AddProcessoDialog onAdd={addProcesso} />
             </PlanGateButton>
           </div>
         </div>
@@ -712,51 +712,28 @@ function EditProcessoDialog({
   );
 }
 
-function AddProcessoDialog({ onAdd }: { onAdd: (p: Processo) => void }) {
+function AddProcessoDialog({ onAdd }: { onAdd: (p: { name: string; description?: string; department?: string; owner?: string; status?: string }) => Promise<unknown> }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
     department: "",
     owner: "",
-    status: "em_revisao" as Processo["status"],
+    status: "ativo" as string,
   });
-  const [steps, setSteps] = useState<ProcessoStep[]>([]);
-  const [newStepTitle, setNewStepTitle] = useState("");
 
-  const handleAddStep = () => {
-    if (!newStepTitle.trim()) return;
-    const newStep: ProcessoStep = {
-      id: Date.now().toString(),
-      title: newStepTitle,
-      description: "",
-    };
-    setSteps([...steps, newStep]);
-    setNewStepTitle("");
-  };
-
-  const handleRemoveStep = (stepId: string) => {
-    setSteps(steps.filter((s) => s.id !== stepId));
-  };
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name || !form.department) return;
 
-    const processo: Processo = {
-      id: Date.now().toString(),
+    await onAdd({
       name: form.name,
-      description: form.description,
+      description: form.description || undefined,
       department: form.department,
-      owner: form.owner,
-      lastUpdated: new Date().toISOString().split("T")[0],
+      owner: form.owner || undefined,
       status: form.status,
-      icon: FileText,
-      steps: steps,
-    };
+    });
 
-    onAdd(processo);
-    setForm({ name: "", description: "", department: "", owner: "", status: "em_revisao" });
-    setSteps([]);
+    setForm({ name: "", description: "", department: "", owner: "", status: "ativo" });
     setOpen(false);
   };
 
