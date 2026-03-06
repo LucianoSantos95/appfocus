@@ -225,7 +225,7 @@ const accountTypes = [
 export default function Financas() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { transacoes, isLoading: isLoadingTransacoes, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
+  const { transacoes, isLoading: isLoadingTransacoes, addTransacao, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
   const [searchTerm, setSearchTerm] = useState("");
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(initialBankAccounts);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
@@ -497,7 +497,7 @@ export default function Financas() {
           <TabsContent value="receitas" className="space-y-4">
             <div className="flex justify-end">
               <PlanGateButton module="financas" action="create">
-                <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} onAdd={() => refetchTransacoes()} />
+                <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} onAdd={addTransacao} />
               </PlanGateButton>
             </div>
             <TransactionTable transactions={transactions.filter((t) => t.type === "receita")} type="receita" onSelect={setSelectedTransaction} onDelete={handleDeleteTransaction} statusStyles={statusStyles} />
@@ -506,7 +506,7 @@ export default function Financas() {
           <TabsContent value="despesas" className="space-y-4">
             <div className="flex justify-end">
               <PlanGateButton module="financas" action="create">
-                <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} onAdd={() => refetchTransacoes()} />
+                <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} onAdd={addTransacao} />
               </PlanGateButton>
             </div>
             <TransactionTable transactions={transactions.filter((t) => t.type === "despesa")} type="despesa" onSelect={setSelectedTransaction} onDelete={handleDeleteTransaction} statusStyles={statusStyles} />
@@ -873,25 +873,23 @@ function TransactionTable({ transactions, type, onSelect, onDelete, statusStyles
   );
 }
 
-function AddTransactionDialog({ type, categories, onAdd }: { type: "receita" | "despesa"; categories: Category[]; onAdd: (t: Transaction) => void }) {
+function AddTransactionDialog({ type, categories, onAdd }: { type: "receita" | "despesa"; categories: Category[]; onAdd: (input: { description: string; value: number; date?: string; category?: string; type: string; status?: string; payment_method?: string; client?: string; provider?: string; notes?: string }) => Promise<unknown> }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ description: "", value: "", date: "", category: "", paymentMethod: "", entity: "", notes: "" });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.description || !form.value || !form.date) return;
-    const transaction: Transaction = {
-      id: Date.now().toString(),
+    await onAdd({
       description: form.description,
       value: parseFloat(form.value),
       date: form.date,
       category: form.category || "Outros",
       type,
       status: "pendente",
-      paymentMethod: form.paymentMethod,
-      notes: form.notes,
-      ...(type === "receita" ? { client: form.entity } : { provider: form.entity }),
-    };
-    onAdd(transaction);
+      payment_method: form.paymentMethod || undefined,
+      notes: form.notes || undefined,
+      ...(type === "receita" ? { client: form.entity || undefined } : { provider: form.entity || undefined }),
+    });
     setForm({ description: "", value: "", date: "", category: "", paymentMethod: "", entity: "", notes: "" });
     setOpen(false);
   };
