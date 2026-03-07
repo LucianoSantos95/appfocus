@@ -252,55 +252,57 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
           <DialogTitle>Painel Admin</DialogTitle>
         </DialogHeader>
 
-        {/* Subscription Management */}
-        <div className="space-y-3 mt-2">
-          <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
-            <div className="flex items-center gap-2 mb-1">
-              <CreditCard className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Gerenciar Assinaturas</span>
+        {/* Subscription Management - only for system admin */}
+        {isAdmin && (
+          <div className="space-y-3 mt-2">
+            <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <CreditCard className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Gerenciar Assinaturas</span>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Buscar por nome do usuário..."
+                  value={subSearch}
+                  onChange={(e) => setSubSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && searchSubscriptions()}
+                />
+                <Button size="icon" variant="outline" onClick={searchSubscriptions} disabled={subLoading}>
+                  {subLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                </Button>
+              </div>
+              {subResults.length > 0 && (
+                <ul className="space-y-2">
+                  {subResults.map((s) => (
+                    <li key={s.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card/30 gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{s.display_name || "Sem nome"}</p>
+                        <Badge variant="secondary" className="text-xs mt-1">{s.plan}</Badge>
+                      </div>
+                      <Select
+                        value={s.plan}
+                        onValueChange={(val) => updateSubscriptionPlan(s.id, val)}
+                        disabled={updatingSubId === s.id}
+                      >
+                        <SelectTrigger className="w-[130px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {planOptions.map((p) => (
+                            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {subResults.length === 0 && subSearch && !subLoading && (
+                <p className="text-sm text-muted-foreground text-center py-2">Nenhum usuário encontrado.</p>
+              )}
             </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Buscar por nome do usuário..."
-                value={subSearch}
-                onChange={(e) => setSubSearch(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && searchSubscriptions()}
-              />
-              <Button size="icon" variant="outline" onClick={searchSubscriptions} disabled={subLoading}>
-                {subLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-              </Button>
-            </div>
-            {subResults.length > 0 && (
-              <ul className="space-y-2">
-                {subResults.map((s) => (
-                  <li key={s.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card/30 gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{s.display_name || "Sem nome"}</p>
-                      <Badge variant="secondary" className="text-xs mt-1">{s.plan}</Badge>
-                    </div>
-                    <Select
-                      value={s.plan}
-                      onValueChange={(val) => updateSubscriptionPlan(s.id, val)}
-                      disabled={updatingSubId === s.id}
-                    >
-                      <SelectTrigger className="w-[130px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {planOptions.map((p) => (
-                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {subResults.length === 0 && subSearch && !subLoading && (
-              <p className="text-sm text-muted-foreground text-center py-2">Nenhum usuário encontrado.</p>
-            )}
           </div>
-        </div>
+        )}
 
         {/* Invite Section */}
         <div className="space-y-4">
