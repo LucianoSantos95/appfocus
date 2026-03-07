@@ -89,11 +89,9 @@ export function UserMenu({ collapsed }: UserMenuProps) {
             <DropdownMenuItem onClick={() => setProfileOpen(true)}>
               <User className="w-4 h-4 mr-2" /> Perfil
             </DropdownMenuItem>
-            {isAdmin && (
-              <DropdownMenuItem onClick={() => setAdminOpen(true)}>
-                <Shield className="w-4 h-4 mr-2" /> Admin
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem onClick={() => setAdminOpen(true)}>
+              <Shield className="w-4 h-4 mr-2" /> Admin
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setBillingOpen(true)}>
               <CreditCard className="w-4 h-4 mr-2" /> Faturamento
             </DropdownMenuItem>
