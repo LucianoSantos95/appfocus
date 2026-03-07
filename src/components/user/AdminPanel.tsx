@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, UserPlus, Trash2, Mail } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search } from "lucide-react";
 
 interface AdminPanelProps {
   open: boolean;
@@ -34,11 +35,27 @@ const planLimits: Record<string, number> = {
   enterprise: 999,
 };
 
+const planOptions = [
+  { value: "gratuito", label: "Gratuito" },
+  { value: "plus", label: "Plus" },
+  { value: "pro", label: "Pro" },
+  { value: "enterprise", label: "Enterprise" },
+];
+
 interface TeamMember {
   id: string;
   member_email: string;
   status: string;
   member_user_id: string | null;
+}
+
+interface SubscriptionRecord {
+  id: string;
+  user_id: string;
+  plan: string;
+  status: string;
+  display_name: string | null;
+  email: string | null;
 }
 
 export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
@@ -51,6 +68,12 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const [selectedPages, setSelectedPages] = useState<string[]>([]);
   const [allSelected, setAllSelected] = useState(false);
   const [sending, setSending] = useState(false);
+
+  // Subscription management state
+  const [subSearch, setSubSearch] = useState("");
+  const [subResults, setSubResults] = useState<SubscriptionRecord[]>([]);
+  const [subLoading, setSubLoading] = useState(false);
+  const [updatingSubId, setUpdatingSubId] = useState<string | null>(null);
 
   const limit = planLimits[plan] || 1;
 
@@ -104,7 +127,6 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
 
     setSending(true);
     try {
-      // Create team member
       const { data: member, error } = await supabase
         .from("team_members")
         .insert({ owner_id: user.id, member_email: email })
@@ -113,21 +135,18 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
 
       if (error) throw error;
 
-      // Create permissions
       const perms = selectedPages.map((slug) => ({
         team_member_id: member.id,
         page_slug: slug,
       }));
       await supabase.from("team_member_permissions").insert(perms);
 
-      // Create invite token
       const { data: tokenData } = await supabase
         .from("invite_tokens")
         .insert({ team_member_id: member.id })
         .select("token")
         .single();
 
-      // Try to send invite email via edge function
       if (tokenData) {
         try {
           await supabase.functions.invoke("send-invite", {
@@ -138,7 +157,7 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
             },
           });
         } catch {
-          // Edge function might not exist yet, that's ok
+          // Edge function might not exist yet
         }
       }
 
@@ -161,6 +180,69 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     fetchMembers();
   };
 
+  // --- Subscription management ---
+  const searchSubscriptions = async () => {
+    const q = subSearch.trim();
+    if (!q) return;
+    setSubLoading(true);
+    try {
+      // Search profiles by display_name, then join with subscriptions
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name")
+        .ilike("display_name", `%${q}%`)
+        .limit(10);
+
+      if (!profiles || profiles.length === 0) {
+        setSubResults([]);
+        setSubLoading(false);
+        return;
+      }
+
+      const userIds = profiles.map((p) => p.user_id);
+      const { data: subs } = await supabase
+        .from("subscriptions")
+        .select("id, user_id, plan, status")
+        .in("user_id", userIds);
+
+      const results: SubscriptionRecord[] = (subs || []).map((s) => {
+        const profile = profiles.find((p) => p.user_id === s.user_id);
+        return {
+          ...s,
+          display_name: profile?.display_name || null,
+          email: null,
+        };
+      });
+
+      setSubResults(results);
+    } catch {
+      toast({ title: "Erro ao buscar", variant: "destructive" });
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
+  const updateSubscriptionPlan = async (subId: string, newPlan: string) => {
+    setUpdatingSubId(subId);
+    try {
+      const { error } = await supabase
+        .from("subscriptions")
+        .update({ plan: newPlan, updated_at: new Date().toISOString() })
+        .eq("id", subId);
+
+      if (error) throw error;
+
+      setSubResults((prev) =>
+        prev.map((s) => (s.id === subId ? { ...s, plan: newPlan } : s))
+      );
+      toast({ title: "Plano atualizado!", description: `Plano alterado para ${newPlan}` });
+    } catch (err: any) {
+      toast({ title: "Erro ao atualizar", description: err.message, variant: "destructive" });
+    } finally {
+      setUpdatingSubId(null);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
@@ -168,8 +250,58 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
           <DialogTitle>Painel Admin</DialogTitle>
         </DialogHeader>
 
+        {/* Subscription Management */}
+        <div className="space-y-3 mt-2">
+          <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <CreditCard className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold">Gerenciar Assinaturas</span>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Buscar por nome do usuário..."
+                value={subSearch}
+                onChange={(e) => setSubSearch(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && searchSubscriptions()}
+              />
+              <Button size="icon" variant="outline" onClick={searchSubscriptions} disabled={subLoading}>
+                {subLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              </Button>
+            </div>
+            {subResults.length > 0 && (
+              <ul className="space-y-2">
+                {subResults.map((s) => (
+                  <li key={s.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card/30 gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{s.display_name || "Sem nome"}</p>
+                      <Badge variant="secondary" className="text-xs mt-1">{s.plan}</Badge>
+                    </div>
+                    <Select
+                      value={s.plan}
+                      onValueChange={(val) => updateSubscriptionPlan(s.id, val)}
+                      disabled={updatingSubId === s.id}
+                    >
+                      <SelectTrigger className="w-[130px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {planOptions.map((p) => (
+                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {subResults.length === 0 && subSearch && !subLoading && (
+              <p className="text-sm text-muted-foreground text-center py-2">Nenhum usuário encontrado.</p>
+            )}
+          </div>
+        </div>
+
         {/* Invite Section */}
-        <div className="space-y-4 mt-2">
+        <div className="space-y-4">
           <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
             <div className="flex items-center gap-2 mb-1">
               <UserPlus className="w-4 h-4 text-primary" />
