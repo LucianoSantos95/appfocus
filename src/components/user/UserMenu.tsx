@@ -32,6 +32,7 @@ interface UserMenuProps {
 export function UserMenu({ collapsed }: UserMenuProps) {
   const { user, signOut } = useAuth();
   const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
   const navigate = useNavigate();
 
   const [profileOpen, setProfileOpen] = useState(false);
