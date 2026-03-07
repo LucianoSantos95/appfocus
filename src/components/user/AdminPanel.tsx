@@ -61,6 +61,7 @@ interface SubscriptionRecord {
 
 export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const { user } = useAuth();
+  const { isAdmin } = useTeamPermissions();
   const { plan } = usePlan();
   const { toast } = useToast();
   const [members, setMembers] = useState<TeamMember[]>([]);
