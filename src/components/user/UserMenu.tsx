@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlan } from "@/contexts/PlanContext";
+import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ interface UserMenuProps {
 export function UserMenu({ collapsed }: UserMenuProps) {
   const { user, signOut } = useAuth();
   const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
   const navigate = useNavigate();
 
   const [profileOpen, setProfileOpen] = useState(false);
@@ -87,9 +89,11 @@ export function UserMenu({ collapsed }: UserMenuProps) {
             <DropdownMenuItem onClick={() => setProfileOpen(true)}>
               <User className="w-4 h-4 mr-2" /> Perfil
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setAdminOpen(true)}>
-              <Shield className="w-4 h-4 mr-2" /> Admin
-            </DropdownMenuItem>
+            {isAdmin && (
+              <DropdownMenuItem onClick={() => setAdminOpen(true)}>
+                <Shield className="w-4 h-4 mr-2" /> Admin
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => setBillingOpen(true)}>
               <CreditCard className="w-4 h-4 mr-2" /> Faturamento
             </DropdownMenuItem>
