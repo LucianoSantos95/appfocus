@@ -118,16 +118,8 @@ interface Category {
 
 
 
-const initialCategories: Category[] = [
-  { id: "1", name: "Serviços", type: "receita", color: "hsl(var(--primary))" },
-  { id: "2", name: "Produtos", type: "receita", color: "hsl(var(--success))" },
-  { id: "3", name: "Consultoria", type: "receita", color: "hsl(var(--warning))" },
-  { id: "4", name: "Infraestrutura", type: "despesa", color: "hsl(var(--destructive))" },
-  { id: "5", name: "Tecnologia", type: "despesa", color: "hsl(var(--primary))" },
-  { id: "6", name: "Marketing", type: "despesa", color: "hsl(var(--success))" },
-  { id: "7", name: "RH", type: "despesa", color: "hsl(var(--warning))" },
-  { id: "8", name: "Impostos", type: "despesa", color: "hsl(var(--destructive))" },
-];
+
+
 
 const chartData = [
   { month: "Set", receitas: 42000, despesas: 28000 },

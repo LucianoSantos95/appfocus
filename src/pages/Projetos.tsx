@@ -98,19 +98,8 @@ interface Projeto {
 
 
 
-const statusData = [
-  { name: "Em Andamento", value: 2, color: "hsl(var(--primary))" },
-  { name: "Não Iniciado", value: 1, color: "hsl(var(--muted-foreground))" },
-  { name: "Pausado", value: 1, color: "hsl(var(--warning))" },
-  { name: "Concluído", value: 1, color: "hsl(var(--success))" },
-];
 
-const budgetData = [
-  { name: "Site", orcamento: 45000, gasto: 18000 },
-  { name: "App Mobile", orcamento: 120000, gasto: 65000 },
-  { name: "Marketing", orcamento: 25000, gasto: 0 },
-  { name: "ERP", orcamento: 80000, gasto: 32000 },
-];
+
 
 const statusProjeto = {
   nao_iniciado: { label: "Não Iniciado", class: "bg-muted text-muted-foreground" },
