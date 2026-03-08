@@ -105,13 +105,8 @@ interface BankAccount {
   balance: number;
 }
 
-interface BankAccount {
-  id: string;
-  name: string;
-  institution: string;
-  type: "principal" | "operacional" | "reserva";
-  balance: number;
-}
+
+
 
 interface Category {
   id: string;
