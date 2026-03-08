@@ -139,10 +139,27 @@ function getProjectDeadlineStatus(endDate: string, progress: number) {
 export default function Projetos() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addProjeto, refetch: refetchProjetosDB, deleteProjeto: deleteProjetoDB } = useProjetosDB();
+  const { projetos: dbProjetos, isLoading, addProjeto, updateProjeto, deleteProjeto: deleteProjetoDB, refetch: refetchProjetosDB } = useProjetosDB();
   const [searchTerm, setSearchTerm] = useState("");
-  const [projetos, setProjetos] = useState<Projeto[]>(initialProjetos);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
+
+  // Map DB projetos to local type
+  const projetos: Projeto[] = dbProjetos.map(p => ({
+    id: p.id,
+    name: p.name,
+    status: (['nao_iniciado', 'em_andamento', 'pausado', 'concluido'].includes(p.status) ? p.status : 'nao_iniciado') as Projeto['status'],
+    priority: (['alta', 'media', 'baixa'].includes(p.priority || '') ? p.priority : 'media') as Projeto['priority'],
+    startDate: p.start_date || new Date().toISOString().split('T')[0],
+    endDate: p.end_date || new Date().toISOString().split('T')[0],
+    budget: p.budget || 0,
+    spent: 0,
+    responsible: p.responsible || '',
+    currentSprint: '-',
+    members: p.responsible ? [p.responsible] : [],
+    progress: p.status === 'concluido' ? 100 : 0,
+    description: p.description || undefined,
+    sprints: [],
+  }));
 
   const handleImportProjetos = () => {
     refetchProjetosDB();
@@ -156,12 +173,21 @@ export default function Projetos() {
   const totalSpent = projetos.reduce((sum, p) => sum + p.spent, 0);
 
   const handleUpdateProjeto = (updated: Projeto) => {
-    setProjetos(projetos.map((p) => (p.id === updated.id ? updated : p)));
+    updateProjeto(updated.id, {
+      name: updated.name,
+      status: updated.status,
+      priority: updated.priority,
+      start_date: updated.startDate,
+      end_date: updated.endDate,
+      budget: updated.budget,
+      responsible: updated.responsible,
+      description: updated.description,
+    });
     setSelectedProjeto(updated);
   };
 
   const handleDeleteProjeto = (id: string) => {
-    setProjetos(projetos.filter((p) => p.id !== id));
+    deleteProjetoDB(id);
     setSelectedProjeto(null);
   };
 

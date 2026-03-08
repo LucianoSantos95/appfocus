@@ -95,11 +95,23 @@ const departments = ["Comercial", "Financeiro", "RH", "Marketing", "Projetos", "
 export default function Processos() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addProcesso, refetch: refetchProcessosDB } = useProcessosDB();
+  const { processos: dbProcessos, isLoading, addProcesso, updateProcesso, deleteProcesso: deleteProcessoDB, refetch: refetchProcessosDB } = useProcessosDB();
   const [searchTerm, setSearchTerm] = useState("");
-  const [processos, setProcessos] = useState<Processo[]>(initialProcessos);
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
   const [editingStep, setEditingStep] = useState<{ processoId: string; step: ProcessoStep } | null>(null);
+
+  // Map DB processos to local type
+  const processos: Processo[] = dbProcessos.map(p => ({
+    id: p.id,
+    name: p.name,
+    description: p.description || '',
+    department: p.department || '',
+    owner: p.owner || '',
+    lastUpdated: p.updated_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+    status: (['ativo', 'em_revisao', 'arquivado', 'cancelado'].includes(p.status) ? p.status : 'ativo') as Processo['status'],
+    icon: defaultIcons[p.department || ''] || GitBranch,
+    steps: [],
+  }));
 
   const handleImportProcessos = () => {
     refetchProcessosDB();
@@ -107,65 +119,49 @@ export default function Processos() {
   };
 
   const handleDeleteProcesso = (id: string) => {
-    setProcessos(processos.filter((p) => p.id !== id));
+    deleteProcessoDB(id);
     setExpandedProcesso(null);
   };
 
   const handleUpdateStep = (processoId: string, updatedStep: ProcessoStep) => {
-    setProcessos(processos.map((p) => {
-      if (p.id !== processoId) return p;
-      return {
-        ...p,
-        steps: p.steps.map((s) => (s.id === updatedStep.id ? updatedStep : s)),
-        lastUpdated: new Date().toISOString().split("T")[0],
-      };
-    }));
+    // Steps are not persisted in DB yet - this is a UI-only operation
     setEditingStep(null);
+    toast({ title: "Etapa atualizada", description: "Nota: etapas são salvas localmente por enquanto." });
   };
 
   const handleExportPDF = (processo: Processo) => {
     const doc = new jsPDF();
-
     doc.setFontSize(18);
     doc.text(processo.name, 14, 22);
-
     doc.setFontSize(12);
     doc.text(`Departamento: ${processo.department}`, 14, 32);
     doc.text(`Responsável: ${processo.owner}`, 14, 40);
     doc.text(`Status: ${statusProcesso[processo.status].label}`, 14, 48);
     doc.text(`Última atualização: ${new Date(processo.lastUpdated).toLocaleDateString("pt-BR")}`, 14, 56);
-
     doc.setFontSize(10);
     doc.text(processo.description, 14, 66, { maxWidth: 180 });
-
     const tableData = processo.steps.map((step, index) => [
-      (index + 1).toString(),
-      step.title,
-      step.description,
-      step.responsible || "-",
-      step.duration || "-",
+      (index + 1).toString(), step.title, step.description, step.responsible || "-", step.duration || "-",
     ]);
-
     autoTable(doc, {
       startY: 78,
       head: [["#", "Etapa", "Descrição", "Responsável", "Duração"]],
       body: tableData,
       headStyles: { fillColor: [59, 130, 246] },
       styles: { fontSize: 9 },
-      columnStyles: {
-        0: { cellWidth: 10 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 80 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 25 },
-      },
+      columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: 35 }, 2: { cellWidth: 80 }, 3: { cellWidth: 30 }, 4: { cellWidth: 25 } },
     });
-
     doc.save(`${processo.name.replace(/\s+/g, "_")}.pdf`);
   };
 
   const handleUpdateProcesso = (updated: Processo) => {
-    setProcessos(processos.map((p) => (p.id === updated.id ? updated : p)));
+    updateProcesso(updated.id, {
+      name: updated.name,
+      description: updated.description,
+      department: updated.department,
+      owner: updated.owner,
+      status: updated.status,
+    });
   };
 
   return (

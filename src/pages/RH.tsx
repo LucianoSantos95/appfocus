@@ -199,7 +199,7 @@ export default function RH() {
   const { toast } = useToast();
   const { colaboradores: dbColaboradores, isLoading, addColaborador, deleteColaborador, refetch: refetchColaboradores } = useColaboradores();
   const [searchTerm, setSearchTerm] = useState("");
-  const [vagas, setVagas] = useState<Vaga[]>(initialVagas);
+  const [vagas, setVagas] = useState<Vaga[]>([]);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
 

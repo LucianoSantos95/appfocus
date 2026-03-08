@@ -93,10 +93,22 @@ const priorityLabels = {
 export default function Tarefas() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addTarefa, refetch: refetchTarefasDB } = useTarefasDB();
+  const { tarefas: dbTarefas, isLoading, addTarefa, updateTarefa, deleteTarefa, refetch: refetchTarefasDB } = useTarefasDB();
   const [searchTerm, setSearchTerm] = useState("");
-  const [atividades, setAtividades] = useState<Atividade[]>(initialAtividades);
   const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
+
+  // Map DB tarefas to local Atividade type
+  const atividades: Atividade[] = dbTarefas.map(t => ({
+    id: t.id,
+    title: t.title,
+    description: t.description || '',
+    dueDate: t.due_date || new Date().toISOString().split('T')[0],
+    priority: (['urgente', 'alta', 'media', 'baixa'].includes(t.priority || '') ? t.priority : 'media') as Atividade['priority'],
+    status: (t.status === 'concluida' ? 'concluida' : 'pendente') as Atividade['status'],
+    category: (t.category === 'meta' ? 'meta' : 'tarefa') as Atividade['category'],
+    responsible: t.responsible || undefined,
+    subtasks: [],
+  }));
 
   const handleImportTarefas = () => {
     refetchTarefasDB();
@@ -121,18 +133,27 @@ export default function Tarefas() {
   ];
 
   const toggleStatus = (id: string) => {
-    setAtividades(atividades.map((a) =>
-      a.id === id ? { ...a, status: a.status === "pendente" ? "concluida" : "pendente" } : a
-    ));
+    const a = atividades.find(a => a.id === id);
+    if (a) {
+      updateTarefa(id, { status: a.status === "pendente" ? "concluida" : "pendente" });
+    }
   };
 
   const handleUpdateAtividade = (updated: Atividade) => {
-    setAtividades(atividades.map((a) => (a.id === updated.id ? updated : a)));
+    updateTarefa(updated.id, {
+      title: updated.title,
+      description: updated.description,
+      due_date: updated.dueDate,
+      priority: updated.priority,
+      status: updated.status,
+      category: updated.category,
+      responsible: updated.responsible,
+    });
     setSelectedAtividade(null);
   };
 
   const handleDeleteAtividade = (id: string) => {
-    setAtividades(atividades.filter((a) => a.id !== id));
+    deleteTarefa(id);
     setSelectedAtividade(null);
   };
 

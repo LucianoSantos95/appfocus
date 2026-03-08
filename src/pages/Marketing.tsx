@@ -175,15 +175,28 @@ const platforms = ["Instagram", "Facebook", "LinkedIn", "YouTube", "Google Ads",
 export default function Marketing() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addCampanha, refetch: refetchCampanhasDB } = useCampanhasDB();
-  const [campanhas, setCampanhas] = useState<Campanha[]>(initialCampanhas);
-  const [conteudos, setConteudos] = useState<Conteudo[]>(initialConteudos);
-  const [funnelItems, setFunnelItems] = useState<FunnelItem[]>(initialFunnelItems);
+  const { campanhas: dbCampanhas, isLoading, addCampanha, updateCampanha, deleteCampanha: deleteCampanhaDB, refetch: refetchCampanhasDB } = useCampanhasDB();
+  const [conteudos, setConteudos] = useState<Conteudo[]>([]);
+  const [funnelItems, setFunnelItems] = useState<FunnelItem[]>([]);
   const [selectedCampanha, setSelectedCampanha] = useState<Campanha | null>(null);
   const [selectedConteudo, setSelectedConteudo] = useState<Conteudo | null>(null);
   const [funnelDialogOpen, setFunnelDialogOpen] = useState(false);
   const [funnelLevel, setFunnelLevel] = useState<"topo" | "meio" | "fundo">("topo");
   const [dragOverPriority, setDragOverPriority] = useState<string | null>(null);
+
+  // Map DB campanhas to local type
+  const campanhas: Campanha[] = dbCampanhas.map(c => ({
+    id: c.id,
+    name: c.name,
+    objective: c.objective || '',
+    platforms: c.platforms ? c.platforms.split(',').map(p => p.trim()) : [],
+    budget: c.budget || 0,
+    startDate: c.start_date || '',
+    endDate: c.end_date || '',
+    status: (['ativa', 'planejada', 'recusada', 'finalizada'].includes(c.status) ? c.status : 'planejada') as Campanha['status'],
+    expectedResult: '',
+    responsible: c.responsible || undefined,
+  }));
 
   const handleImportCampanhas = () => {
     refetchCampanhasDB();
@@ -202,10 +215,7 @@ export default function Marketing() {
       description: String(record.description || ''),
     }));
     setConteudos([...newConteudos, ...conteudos]);
-    toast({
-      title: "Importação concluída",
-      description: `${newConteudos.length} conteúdos importados com sucesso.`,
-    });
+    toast({ title: "Importação concluída", description: `${newConteudos.length} conteúdos importados com sucesso.` });
   };
 
   const campanhasAtivas = campanhas.filter((c) => c.status === "ativa").length;
@@ -215,12 +225,21 @@ export default function Marketing() {
 
   const handleUpdateCampanha = () => {
     if (!selectedCampanha) return;
-    setCampanhas(campanhas.map((c) => c.id === selectedCampanha.id ? selectedCampanha : c));
+    updateCampanha(selectedCampanha.id, {
+      name: selectedCampanha.name,
+      objective: selectedCampanha.objective,
+      platforms: selectedCampanha.platforms.join(', '),
+      budget: selectedCampanha.budget,
+      start_date: selectedCampanha.startDate,
+      end_date: selectedCampanha.endDate,
+      status: selectedCampanha.status,
+      responsible: selectedCampanha.responsible,
+    });
     setSelectedCampanha(null);
   };
 
   const handleDeleteCampanha = (id: string) => {
-    setCampanhas(campanhas.filter((c) => c.id !== id));
+    deleteCampanhaDB(id);
     setSelectedCampanha(null);
   };
 
