@@ -120,81 +120,8 @@ interface Category {
   color: string;
 }
 
-// Mock Data
-const initialTransactions: Transaction[] = [
-  {
-    id: "1",
-    description: "Projeto Website E-commerce",
-    value: 15000,
-    date: "2025-01-28",
-    category: "Serviços",
-    type: "receita",
-    status: "pago",
-    paymentMethod: "Transferência",
-    client: "Tech Solutions",
-    notes: "Projeto concluído com sucesso",
-  },
-  {
-    id: "2",
-    description: "Aluguel escritório",
-    value: 3500,
-    date: "2025-01-25",
-    category: "Infraestrutura",
-    type: "despesa",
-    status: "pago",
-    paymentMethod: "Débito automático",
-    provider: "Imobiliária Central",
-  },
-  {
-    id: "3",
-    description: "Consultoria mensal",
-    value: 8500,
-    date: "2025-01-22",
-    category: "Serviços",
-    type: "receita",
-    status: "pago",
-    paymentMethod: "Boleto",
-    client: "Grupo ABC",
-  },
-  {
-    id: "4",
-    description: "Software e ferramentas",
-    value: 1200,
-    date: "2025-01-20",
-    category: "Tecnologia",
-    type: "despesa",
-    status: "pago",
-    paymentMethod: "Cartão de crédito",
-  },
-  {
-    id: "5",
-    description: "Marketing digital",
-    value: 2800,
-    date: "2025-01-18",
-    category: "Marketing",
-    type: "despesa",
-    status: "pendente",
-    paymentMethod: "Boleto",
-    provider: "Agência XYZ",
-  },
-  {
-    id: "6",
-    description: "Projeto App Mobile",
-    value: 25000,
-    date: "2025-01-15",
-    category: "Serviços",
-    type: "receita",
-    status: "pendente",
-    paymentMethod: "Transferência",
-    client: "StartupCo",
-  },
-];
 
-const initialBankAccounts: BankAccount[] = [
-  { id: "1", name: "Conta Principal", institution: "Banco Itaú", type: "principal", balance: 45680.5 },
-  { id: "2", name: "Reserva", institution: "Nubank", type: "reserva", balance: 12500.0 },
-  { id: "3", name: "Operacional", institution: "Banco do Brasil", type: "operacional", balance: 8750.0 },
-];
+
 
 const initialCategories: Category[] = [
   { id: "1", name: "Serviços", type: "receita", color: "hsl(var(--primary))" },
