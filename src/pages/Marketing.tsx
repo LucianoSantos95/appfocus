@@ -90,50 +90,8 @@ interface FunnelItem {
   level: "topo" | "meio" | "fundo";
 }
 
-const initialCampanhas: Campanha[] = [
-  {
-    id: "1",
-    name: "Lançamento Produto X",
-    objective: "Gerar leads qualificados",
-    platforms: ["Instagram", "Facebook", "Google Ads"],
-    budget: 5000,
-    startDate: "2025-01-15",
-    endDate: "2025-02-15",
-    status: "ativa",
-    expectedResult: "500 leads",
-    achievedResult: "320 leads",
-    impressions: 150000,
-    clicks: 4500,
-    conversions: 320,
-    responsible: "Maria Santos",
-  },
-  {
-    id: "2",
-    name: "Black Friday 2025",
-    objective: "Aumentar vendas",
-    platforms: ["Instagram", "Email Marketing"],
-    budget: 10000,
-    startDate: "2025-11-20",
-    endDate: "2025-11-30",
-    status: "planejada",
-    expectedResult: "R$ 100.000 em vendas",
-  },
-];
 
-const initialConteudos: Conteudo[] = [
-  { id: "1", title: "5 dicas para aumentar produtividade", format: "Carrossel", theme: "Produtividade", priority: "alta", status: "producao", dueDate: "2025-01-30", description: "Conteúdo focado em dicas práticas" },
-  { id: "2", title: "Case de sucesso: Cliente X", format: "Vídeo", theme: "Cases", priority: "media", status: "ideia", dueDate: "2025-02-05" },
-  { id: "3", title: "Tendências de mercado 2025", format: "Artigo", theme: "Tendências", priority: "alta", status: "revisao", dueDate: "2025-01-29" },
-  { id: "4", title: "Behind the scenes da equipe", format: "Reels/Stories", theme: "Institucional", priority: "baixa", status: "ideia", dueDate: "2025-02-10" },
-];
 
-const initialFunnelItems: FunnelItem[] = [
-  { id: "1", name: "Canal YouTube", description: "Vídeos educativos semanais", level: "topo" },
-  { id: "2", name: "Blog corporativo", description: "Artigos e conteúdos de valor", level: "topo" },
-  { id: "3", name: "Email Marketing", description: "Nutrição de leads", level: "meio" },
-  { id: "4", name: "Webinars", description: "Eventos online para qualificação", level: "meio" },
-  { id: "5", name: "Consultoria gratuita", description: "Chamadas de diagnóstico", level: "fundo" },
-];
 
 const performanceData = [
   { month: "Set", impressoes: 85000, cliques: 2400 },
@@ -175,15 +133,28 @@ const platforms = ["Instagram", "Facebook", "LinkedIn", "YouTube", "Google Ads",
 export default function Marketing() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addCampanha, refetch: refetchCampanhasDB } = useCampanhasDB();
-  const [campanhas, setCampanhas] = useState<Campanha[]>(initialCampanhas);
-  const [conteudos, setConteudos] = useState<Conteudo[]>(initialConteudos);
-  const [funnelItems, setFunnelItems] = useState<FunnelItem[]>(initialFunnelItems);
+  const { campanhas: dbCampanhas, isLoading, addCampanha, updateCampanha, deleteCampanha: deleteCampanhaDB, refetch: refetchCampanhasDB } = useCampanhasDB();
+  const [conteudos, setConteudos] = useState<Conteudo[]>([]);
+  const [funnelItems, setFunnelItems] = useState<FunnelItem[]>([]);
   const [selectedCampanha, setSelectedCampanha] = useState<Campanha | null>(null);
   const [selectedConteudo, setSelectedConteudo] = useState<Conteudo | null>(null);
   const [funnelDialogOpen, setFunnelDialogOpen] = useState(false);
   const [funnelLevel, setFunnelLevel] = useState<"topo" | "meio" | "fundo">("topo");
   const [dragOverPriority, setDragOverPriority] = useState<string | null>(null);
+
+  // Map DB campanhas to local type
+  const campanhas: Campanha[] = dbCampanhas.map(c => ({
+    id: c.id,
+    name: c.name,
+    objective: c.objective || '',
+    platforms: c.platforms ? c.platforms.split(',').map(p => p.trim()) : [],
+    budget: c.budget || 0,
+    startDate: c.start_date || '',
+    endDate: c.end_date || '',
+    status: (['ativa', 'planejada', 'recusada', 'finalizada'].includes(c.status) ? c.status : 'planejada') as Campanha['status'],
+    expectedResult: '',
+    responsible: c.responsible || undefined,
+  }));
 
   const handleImportCampanhas = () => {
     refetchCampanhasDB();
@@ -202,10 +173,7 @@ export default function Marketing() {
       description: String(record.description || ''),
     }));
     setConteudos([...newConteudos, ...conteudos]);
-    toast({
-      title: "Importação concluída",
-      description: `${newConteudos.length} conteúdos importados com sucesso.`,
-    });
+    toast({ title: "Importação concluída", description: `${newConteudos.length} conteúdos importados com sucesso.` });
   };
 
   const campanhasAtivas = campanhas.filter((c) => c.status === "ativa").length;
@@ -215,12 +183,21 @@ export default function Marketing() {
 
   const handleUpdateCampanha = () => {
     if (!selectedCampanha) return;
-    setCampanhas(campanhas.map((c) => c.id === selectedCampanha.id ? selectedCampanha : c));
+    updateCampanha(selectedCampanha.id, {
+      name: selectedCampanha.name,
+      objective: selectedCampanha.objective,
+      platforms: selectedCampanha.platforms.join(', '),
+      budget: selectedCampanha.budget,
+      start_date: selectedCampanha.startDate,
+      end_date: selectedCampanha.endDate,
+      status: selectedCampanha.status,
+      responsible: selectedCampanha.responsible,
+    });
     setSelectedCampanha(null);
   };
 
   const handleDeleteCampanha = (id: string) => {
-    setCampanhas(campanhas.filter((c) => c.id !== id));
+    deleteCampanhaDB(id);
     setSelectedCampanha(null);
   };
 

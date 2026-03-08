@@ -96,127 +96,10 @@ interface Projeto {
   sprints: Sprint[];
 }
 
-const initialProjetos: Projeto[] = [
-  {
-    id: "1",
-    name: "Redesign do Site Institucional",
-    status: "em_andamento",
-    priority: "alta",
-    startDate: "2025-01-01",
-    endDate: "2025-03-15",
-    budget: 45000,
-    spent: 18000,
-    responsible: "Ana Silva",
-    currentSprint: "Sprint 3",
-    members: ["Ana Silva", "Bruno Costa", "Carla Oliveira"],
-    progress: 45,
-    description: "Modernização completa do site institucional",
-    sprints: [
-      {
-        id: "s1",
-        name: "Sprint 1",
-        completed: true,
-        tasks: [
-          { id: "t1", title: "Wireframes", completed: true, subtasks: [] },
-          { id: "t2", title: "Design System", completed: true, subtasks: [] },
-        ],
-      },
-      {
-        id: "s2",
-        name: "Sprint 2",
-        completed: true,
-        tasks: [
-          { id: "t3", title: "Homepage", completed: true, subtasks: [] },
-        ],
-      },
-      {
-        id: "s3",
-        name: "Sprint 3",
-        completed: false,
-        tasks: [
-          { id: "t4", title: "Páginas internas", completed: false, subtasks: [
-            { id: "st1", title: "Sobre nós", completed: true },
-            { id: "st2", title: "Contato", completed: false },
-          ] },
-        ],
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "App Mobile Clientes",
-    status: "em_andamento",
-    priority: "alta",
-    startDate: "2024-11-15",
-    endDate: "2025-04-30",
-    budget: 120000,
-    spent: 65000,
-    responsible: "Bruno Costa",
-    currentSprint: "Sprint 8",
-    members: ["Bruno Costa", "Diego Santos", "Eduardo Lima"],
-    progress: 65,
-    sprints: [],
-  },
-  {
-    id: "3",
-    name: "Automação de Marketing",
-    status: "nao_iniciado",
-    priority: "media",
-    startDate: "2025-02-01",
-    endDate: "2025-04-15",
-    budget: 25000,
-    spent: 0,
-    responsible: "Carla Oliveira",
-    currentSprint: "-",
-    members: ["Carla Oliveira"],
-    progress: 0,
-    sprints: [],
-  },
-  {
-    id: "4",
-    name: "Integração ERP",
-    status: "pausado",
-    priority: "baixa",
-    startDate: "2024-10-01",
-    endDate: "2025-06-30",
-    budget: 80000,
-    spent: 32000,
-    responsible: "Diego Santos",
-    currentSprint: "Sprint 5",
-    members: ["Diego Santos", "Ana Silva"],
-    progress: 40,
-    sprints: [],
-  },
-  {
-    id: "5",
-    name: "Portal do Cliente",
-    status: "concluido",
-    priority: "alta",
-    startDate: "2024-08-01",
-    endDate: "2025-01-15",
-    budget: 55000,
-    spent: 52000,
-    responsible: "Bruno Costa",
-    currentSprint: "Finalizado",
-    members: ["Bruno Costa", "Carla Oliveira", "Eduardo Lima"],
-    progress: 100,
-    sprints: [],
-  },
-];
 
-const statusData = [
-  { name: "Em Andamento", value: 2, color: "hsl(var(--primary))" },
-  { name: "Não Iniciado", value: 1, color: "hsl(var(--muted-foreground))" },
-  { name: "Pausado", value: 1, color: "hsl(var(--warning))" },
-  { name: "Concluído", value: 1, color: "hsl(var(--success))" },
-];
 
-const budgetData = [
-  { name: "Site", orcamento: 45000, gasto: 18000 },
-  { name: "App Mobile", orcamento: 120000, gasto: 65000 },
-  { name: "Marketing", orcamento: 25000, gasto: 0 },
-  { name: "ERP", orcamento: 80000, gasto: 32000 },
-];
+
+
 
 const statusProjeto = {
   nao_iniciado: { label: "Não Iniciado", class: "bg-muted text-muted-foreground" },
@@ -245,10 +128,27 @@ function getProjectDeadlineStatus(endDate: string, progress: number) {
 export default function Projetos() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addProjeto, refetch: refetchProjetosDB, deleteProjeto: deleteProjetoDB } = useProjetosDB();
+  const { projetos: dbProjetos, isLoading, addProjeto, updateProjeto, deleteProjeto: deleteProjetoDB, refetch: refetchProjetosDB } = useProjetosDB();
   const [searchTerm, setSearchTerm] = useState("");
-  const [projetos, setProjetos] = useState<Projeto[]>(initialProjetos);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
+
+  // Map DB projetos to local type
+  const projetos: Projeto[] = dbProjetos.map(p => ({
+    id: p.id,
+    name: p.name,
+    status: (['nao_iniciado', 'em_andamento', 'pausado', 'concluido'].includes(p.status) ? p.status : 'nao_iniciado') as Projeto['status'],
+    priority: (['alta', 'media', 'baixa'].includes(p.priority || '') ? p.priority : 'media') as Projeto['priority'],
+    startDate: p.start_date || new Date().toISOString().split('T')[0],
+    endDate: p.end_date || new Date().toISOString().split('T')[0],
+    budget: p.budget || 0,
+    spent: 0,
+    responsible: p.responsible || '',
+    currentSprint: '-',
+    members: p.responsible ? [p.responsible] : [],
+    progress: p.status === 'concluido' ? 100 : 0,
+    description: p.description || undefined,
+    sprints: [],
+  }));
 
   const handleImportProjetos = () => {
     refetchProjetosDB();
@@ -257,17 +157,41 @@ export default function Projetos() {
 
   const projetosAbertos = projetos.filter((p) => p.status === "nao_iniciado").length;
   const projetosAndamento = projetos.filter((p) => p.status === "em_andamento").length;
+  const projetosPausados = projetos.filter((p) => p.status === "pausado").length;
+  const projetosConcluidos = projetos.filter((p) => p.status === "concluido").length;
 
   const totalBudget = projetos.reduce((sum, p) => sum + p.budget, 0);
   const totalSpent = projetos.reduce((sum, p) => sum + p.spent, 0);
 
+  const statusData = [
+    { name: "Em Andamento", value: projetosAndamento, color: "hsl(var(--primary))" },
+    { name: "Não Iniciado", value: projetosAbertos, color: "hsl(var(--muted-foreground))" },
+    { name: "Pausado", value: projetosPausados, color: "hsl(var(--warning))" },
+    { name: "Concluído", value: projetosConcluidos, color: "hsl(var(--success))" },
+  ];
+
+  const budgetData = projetos.slice(0, 5).map(p => ({
+    name: p.name.length > 15 ? p.name.slice(0, 15) + '…' : p.name,
+    orcamento: p.budget,
+    gasto: p.spent,
+  }));
+
   const handleUpdateProjeto = (updated: Projeto) => {
-    setProjetos(projetos.map((p) => (p.id === updated.id ? updated : p)));
+    updateProjeto(updated.id, {
+      name: updated.name,
+      status: updated.status,
+      priority: updated.priority,
+      start_date: updated.startDate,
+      end_date: updated.endDate,
+      budget: updated.budget,
+      responsible: updated.responsible,
+      description: updated.description,
+    });
     setSelectedProjeto(updated);
   };
 
   const handleDeleteProjeto = (id: string) => {
-    setProjetos(projetos.filter((p) => p.id !== id));
+    deleteProjetoDB(id);
     setSelectedProjeto(null);
   };
 

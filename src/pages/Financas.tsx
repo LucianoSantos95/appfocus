@@ -105,13 +105,8 @@ interface BankAccount {
   balance: number;
 }
 
-interface BankAccount {
-  id: string;
-  name: string;
-  institution: string;
-  type: "principal" | "operacional" | "reserva";
-  balance: number;
-}
+
+
 
 interface Category {
   id: string;
@@ -120,92 +115,11 @@ interface Category {
   color: string;
 }
 
-// Mock Data
-const initialTransactions: Transaction[] = [
-  {
-    id: "1",
-    description: "Projeto Website E-commerce",
-    value: 15000,
-    date: "2025-01-28",
-    category: "Serviços",
-    type: "receita",
-    status: "pago",
-    paymentMethod: "Transferência",
-    client: "Tech Solutions",
-    notes: "Projeto concluído com sucesso",
-  },
-  {
-    id: "2",
-    description: "Aluguel escritório",
-    value: 3500,
-    date: "2025-01-25",
-    category: "Infraestrutura",
-    type: "despesa",
-    status: "pago",
-    paymentMethod: "Débito automático",
-    provider: "Imobiliária Central",
-  },
-  {
-    id: "3",
-    description: "Consultoria mensal",
-    value: 8500,
-    date: "2025-01-22",
-    category: "Serviços",
-    type: "receita",
-    status: "pago",
-    paymentMethod: "Boleto",
-    client: "Grupo ABC",
-  },
-  {
-    id: "4",
-    description: "Software e ferramentas",
-    value: 1200,
-    date: "2025-01-20",
-    category: "Tecnologia",
-    type: "despesa",
-    status: "pago",
-    paymentMethod: "Cartão de crédito",
-  },
-  {
-    id: "5",
-    description: "Marketing digital",
-    value: 2800,
-    date: "2025-01-18",
-    category: "Marketing",
-    type: "despesa",
-    status: "pendente",
-    paymentMethod: "Boleto",
-    provider: "Agência XYZ",
-  },
-  {
-    id: "6",
-    description: "Projeto App Mobile",
-    value: 25000,
-    date: "2025-01-15",
-    category: "Serviços",
-    type: "receita",
-    status: "pendente",
-    paymentMethod: "Transferência",
-    client: "StartupCo",
-  },
-];
 
-const initialBankAccounts: BankAccount[] = [
-  { id: "1", name: "Conta Principal", institution: "Banco Itaú", type: "principal", balance: 45680.5 },
-  { id: "2", name: "Reserva", institution: "Nubank", type: "reserva", balance: 12500.0 },
-  { id: "3", name: "Operacional", institution: "Banco do Brasil", type: "operacional", balance: 8750.0 },
-];
 
-const initialCategories: Category[] = [
-  { id: "1", name: "Serviços", type: "receita", color: "hsl(var(--primary))" },
-  { id: "2", name: "Produtos", type: "receita", color: "hsl(var(--success))" },
-  { id: "3", name: "Consultoria", type: "receita", color: "hsl(var(--warning))" },
-  { id: "4", name: "Infraestrutura", type: "despesa", color: "hsl(var(--destructive))" },
-  { id: "5", name: "Tecnologia", type: "despesa", color: "hsl(var(--primary))" },
-  { id: "6", name: "Marketing", type: "despesa", color: "hsl(var(--success))" },
-  { id: "7", name: "RH", type: "despesa", color: "hsl(var(--warning))" },
-  { id: "8", name: "Impostos", type: "despesa", color: "hsl(var(--destructive))" },
-];
+
+
+
 
 const chartData = [
   { month: "Set", receitas: 42000, despesas: 28000 },
@@ -227,8 +141,17 @@ export default function Financas() {
   const { toast } = useToast();
   const { transacoes, isLoading: isLoadingTransacoes, addTransacao, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
   const [searchTerm, setSearchTerm] = useState("");
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(initialBankAccounts);
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [categories, setCategories] = useState<Category[]>([
+    { id: "1", name: "Serviços", type: "receita", color: "hsl(var(--primary))" },
+    { id: "2", name: "Produtos", type: "receita", color: "hsl(var(--success))" },
+    { id: "3", name: "Consultoria", type: "receita", color: "hsl(var(--warning))" },
+    { id: "4", name: "Infraestrutura", type: "despesa", color: "hsl(var(--destructive))" },
+    { id: "5", name: "Tecnologia", type: "despesa", color: "hsl(var(--primary))" },
+    { id: "6", name: "Marketing", type: "despesa", color: "hsl(var(--success))" },
+    { id: "7", name: "RH", type: "despesa", color: "hsl(var(--warning))" },
+    { id: "8", name: "Impostos", type: "despesa", color: "hsl(var(--destructive))" },
+  ]);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);

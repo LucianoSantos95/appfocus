@@ -83,93 +83,6 @@ interface Vaga {
   requirements?: string[];
 }
 
-const initialColaboradores: Colaborador[] = [
-  {
-    id: "1",
-    name: "Ana Silva",
-    role: "Gerente de Projetos",
-    department: "Projetos",
-    salary: 12000,
-    startDate: "2023-03-15",
-    status: "ativo",
-    manager: "Carlos Diretor",
-    email: "ana.silva@empresa.com",
-    phone: "(11) 99999-1111",
-    bio: "Especialista em gestão de projetos com 8 anos de experiência",
-  },
-  {
-    id: "2",
-    name: "Bruno Costa",
-    role: "Desenvolvedor Senior",
-    department: "Tecnologia",
-    salary: 15000,
-    startDate: "2022-08-01",
-    status: "ativo",
-    manager: "Ana Silva",
-    email: "bruno.costa@empresa.com",
-    phone: "(11) 99999-2222",
-  },
-  {
-    id: "3",
-    name: "Carla Oliveira",
-    role: "Designer",
-    department: "Marketing",
-    salary: 8000,
-    startDate: "2024-01-10",
-    status: "ativo",
-    manager: "Ana Silva",
-    email: "carla.oliveira@empresa.com",
-    phone: "(11) 99999-3333",
-  },
-  {
-    id: "4",
-    name: "Diego Santos",
-    role: "Analista Financeiro",
-    department: "Financeiro",
-    salary: 7500,
-    startDate: "2023-06-20",
-    status: "ferias",
-    manager: "Carlos Diretor",
-    email: "diego.santos@empresa.com",
-    phone: "(11) 99999-4444",
-  },
-];
-
-const initialVagas: Vaga[] = [
-  {
-    id: "1",
-    title: "Desenvolvedor Full Stack",
-    department: "Tecnologia",
-    level: "Pleno",
-    salaryRange: "R$ 10.000 - R$ 14.000",
-    status: "aberta",
-    priority: "alta",
-    channel: "LinkedIn",
-    description: "Vaga para desenvolvedor com experiência em React e Node.js",
-    requirements: ["React", "Node.js", "TypeScript", "3+ anos experiência"],
-  },
-  {
-    id: "2",
-    title: "Analista de Marketing",
-    department: "Marketing",
-    level: "Junior",
-    salaryRange: "R$ 4.000 - R$ 6.000",
-    status: "em_analise",
-    priority: "media",
-    channel: "Indeed",
-    description: "Profissional para atuar com marketing digital",
-  },
-  {
-    id: "3",
-    title: "Estagiário de RH",
-    department: "RH",
-    level: "Estágio",
-    salaryRange: "R$ 1.500 - R$ 2.000",
-    status: "processo_recrutamento",
-    priority: "baixa",
-    channel: "Vagas.com",
-  },
-];
 
 const departments = ["Tecnologia", "Marketing", "Projetos", "Financeiro", "RH", "Comercial"];
 const levels = ["Estágio", "Auxiliar", "Junior", "Pleno", "Senior", "Especialista", "Gerente", "Diretor"];
@@ -199,7 +112,7 @@ export default function RH() {
   const { toast } = useToast();
   const { colaboradores: dbColaboradores, isLoading, addColaborador, deleteColaborador, refetch: refetchColaboradores } = useColaboradores();
   const [searchTerm, setSearchTerm] = useState("");
-  const [vagas, setVagas] = useState<Vaga[]>(initialVagas);
+  const [vagas, setVagas] = useState<Vaga[]>([]);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
 

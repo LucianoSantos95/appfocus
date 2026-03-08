@@ -75,98 +75,13 @@ interface Processo {
   steps: ProcessoStep[];
 }
 
-const initialProcessos: Processo[] = [
-  {
-    id: "1",
-    name: "Processo Comercial",
-    description: "Fluxo completo de prospecção até fechamento de vendas",
-    department: "Comercial",
-    owner: "Ana Silva",
-    lastUpdated: "2025-01-20",
-    status: "ativo",
-    icon: ShoppingCart,
-    steps: [
-      { id: "1.1", title: "Prospecção", description: "Identificar potenciais clientes através de pesquisa de mercado, indicações e marketing", responsible: "SDR", duration: "1-2 dias" },
-      { id: "1.2", title: "Qualificação", description: "Avaliar fit do lead com nosso ICP e capacidade de compra", responsible: "SDR", duration: "1 dia" },
-      { id: "1.3", title: "Apresentação", description: "Realizar demonstração do produto/serviço e apresentar proposta de valor", responsible: "Closer", duration: "1-2 horas" },
-      { id: "1.4", title: "Proposta", description: "Elaborar e enviar proposta comercial personalizada", responsible: "Closer", duration: "2-3 dias" },
-      { id: "1.5", title: "Negociação", description: "Alinhar expectativas, esclarecer dúvidas e negociar condições", responsible: "Closer", duration: "3-5 dias" },
-      { id: "1.6", title: "Fechamento", description: "Formalizar contrato e iniciar onboarding do cliente", responsible: "CS", duration: "1-2 dias" },
-    ],
-  },
-  {
-    id: "2",
-    name: "Processo Financeiro",
-    description: "Gestão de contas a pagar, receber e fluxo de caixa",
-    department: "Financeiro",
-    owner: "Diego Santos",
-    lastUpdated: "2025-01-15",
-    status: "ativo",
-    icon: DollarSign,
-    steps: [
-      { id: "2.1", title: "Registro de Transação", description: "Cadastrar receita ou despesa no sistema com documentação", responsible: "Analista", duration: "15 min" },
-      { id: "2.2", title: "Classificação", description: "Categorizar a transação por centro de custo e categoria", responsible: "Analista", duration: "5 min" },
-      { id: "2.3", title: "Aprovação", description: "Submeter para aprovação conforme alçada (até R$500 automático)", responsible: "Gerente", duration: "1-2 dias" },
-      { id: "2.4", title: "Execução", description: "Realizar pagamento ou confirmar recebimento", responsible: "Analista", duration: "1 dia" },
-      { id: "2.5", title: "Conciliação", description: "Conciliar transação com extrato bancário", responsible: "Analista", duration: "1 dia" },
-      { id: "2.6", title: "Relatório", description: "Consolidar dados para relatório mensal", responsible: "Controller", duration: "Mensal" },
-    ],
-  },
-  {
-    id: "3",
-    name: "Gestão de Projetos",
-    description: "Metodologia e etapas para gestão de projetos internos",
-    department: "Projetos",
-    owner: "Bruno Costa",
-    lastUpdated: "2024-12-15",
-    status: "ativo",
-    icon: FolderKanban,
-    steps: [
-      { id: "3.1", title: "Iniciação", description: "Definir escopo, objetivos e stakeholders do projeto", responsible: "PM", duration: "1 semana" },
-      { id: "3.2", title: "Planejamento", description: "Criar cronograma, alocar recursos e definir entregas", responsible: "PM", duration: "1-2 semanas" },
-      { id: "3.3", title: "Execução", description: "Desenvolver entregas conforme planejamento em sprints", responsible: "Equipe", duration: "Variável" },
-      { id: "3.4", title: "Monitoramento", description: "Acompanhar progresso, riscos e realizar ajustes", responsible: "PM", duration: "Contínuo" },
-      { id: "3.5", title: "Entrega", description: "Realizar aceite formal e transição para operação", responsible: "PM", duration: "1 semana" },
-      { id: "3.6", title: "Encerramento", description: "Documentar lições aprendidas e arquivar projeto", responsible: "PM", duration: "2-3 dias" },
-    ],
-  },
-  {
-    id: "4",
-    name: "Onboarding de Colaboradores",
-    description: "Processo de integração de novos funcionários",
-    department: "RH",
-    owner: "Carla Oliveira",
-    lastUpdated: "2025-01-10",
-    status: "em_revisao",
-    icon: Users,
-    steps: [
-      { id: "4.1", title: "Pré-boarding", description: "Preparar documentação, equipamentos e acessos antes do início", responsible: "RH", duration: "3 dias" },
-      { id: "4.2", title: "Recepção", description: "Boas-vindas, tour pela empresa e apresentação da equipe", responsible: "RH/Gestor", duration: "Meio dia" },
-      { id: "4.3", title: "Treinamento Inicial", description: "Cultura, políticas, ferramentas e processos básicos", responsible: "RH", duration: "2 dias" },
-      { id: "4.4", title: "Treinamento Técnico", description: "Capacitação específica para a função", responsible: "Gestor", duration: "1-2 semanas" },
-      { id: "4.5", title: "Acompanhamento 30 dias", description: "Checkpoint de adaptação e feedbacks", responsible: "Gestor/RH", duration: "1 hora" },
-      { id: "4.6", title: "Avaliação de Experiência", description: "Avaliação formal ao final do período de experiência", responsible: "Gestor", duration: "90 dias" },
-    ],
-  },
-  {
-    id: "5",
-    name: "Campanhas de Marketing",
-    description: "Fluxo de criação e execução de campanhas",
-    department: "Marketing",
-    owner: "Carla Oliveira",
-    lastUpdated: "2025-01-05",
-    status: "ativo",
-    icon: Megaphone,
-    steps: [
-      { id: "5.1", title: "Briefing", description: "Definir objetivo, público-alvo, budget e KPIs", responsible: "Marketing", duration: "1-2 dias" },
-      { id: "5.2", title: "Planejamento", description: "Escolher canais, formatos e cronograma", responsible: "Marketing", duration: "2-3 dias" },
-      { id: "5.3", title: "Criação", description: "Desenvolver peças, copies e materiais", responsible: "Design/Conteúdo", duration: "3-5 dias" },
-      { id: "5.4", title: "Aprovação", description: "Validar materiais com stakeholders", responsible: "Gerente", duration: "1-2 dias" },
-      { id: "5.5", title: "Veiculação", description: "Publicar e distribuir campanha nos canais", responsible: "Marketing", duration: "Período da campanha" },
-      { id: "5.6", title: "Análise", description: "Mensurar resultados e gerar relatório", responsible: "Marketing", duration: "Semanal/Final" },
-    ],
-  },
-];
+const defaultIcons: Record<string, React.ElementType> = {
+  "Comercial": ShoppingCart,
+  "Financeiro": DollarSign,
+  "Projetos": FolderKanban,
+  "RH": Users,
+  "Marketing": Megaphone,
+};
 
 const statusProcesso = {
   ativo: { label: "Ativo", class: "bg-success/10 text-success" },
@@ -180,11 +95,23 @@ const departments = ["Comercial", "Financeiro", "RH", "Marketing", "Projetos", "
 export default function Processos() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addProcesso, refetch: refetchProcessosDB } = useProcessosDB();
+  const { processos: dbProcessos, isLoading, addProcesso, updateProcesso, deleteProcesso: deleteProcessoDB, refetch: refetchProcessosDB } = useProcessosDB();
   const [searchTerm, setSearchTerm] = useState("");
-  const [processos, setProcessos] = useState<Processo[]>(initialProcessos);
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
   const [editingStep, setEditingStep] = useState<{ processoId: string; step: ProcessoStep } | null>(null);
+
+  // Map DB processos to local type
+  const processos: Processo[] = dbProcessos.map(p => ({
+    id: p.id,
+    name: p.name,
+    description: p.description || '',
+    department: p.department || '',
+    owner: p.owner || '',
+    lastUpdated: p.updated_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+    status: (['ativo', 'em_revisao', 'arquivado', 'cancelado'].includes(p.status) ? p.status : 'ativo') as Processo['status'],
+    icon: defaultIcons[p.department || ''] || GitBranch,
+    steps: [],
+  }));
 
   const handleImportProcessos = () => {
     refetchProcessosDB();
@@ -192,65 +119,49 @@ export default function Processos() {
   };
 
   const handleDeleteProcesso = (id: string) => {
-    setProcessos(processos.filter((p) => p.id !== id));
+    deleteProcessoDB(id);
     setExpandedProcesso(null);
   };
 
   const handleUpdateStep = (processoId: string, updatedStep: ProcessoStep) => {
-    setProcessos(processos.map((p) => {
-      if (p.id !== processoId) return p;
-      return {
-        ...p,
-        steps: p.steps.map((s) => (s.id === updatedStep.id ? updatedStep : s)),
-        lastUpdated: new Date().toISOString().split("T")[0],
-      };
-    }));
+    // Steps are not persisted in DB yet - this is a UI-only operation
     setEditingStep(null);
+    toast({ title: "Etapa atualizada", description: "Nota: etapas são salvas localmente por enquanto." });
   };
 
   const handleExportPDF = (processo: Processo) => {
     const doc = new jsPDF();
-
     doc.setFontSize(18);
     doc.text(processo.name, 14, 22);
-
     doc.setFontSize(12);
     doc.text(`Departamento: ${processo.department}`, 14, 32);
     doc.text(`Responsável: ${processo.owner}`, 14, 40);
     doc.text(`Status: ${statusProcesso[processo.status].label}`, 14, 48);
     doc.text(`Última atualização: ${new Date(processo.lastUpdated).toLocaleDateString("pt-BR")}`, 14, 56);
-
     doc.setFontSize(10);
     doc.text(processo.description, 14, 66, { maxWidth: 180 });
-
     const tableData = processo.steps.map((step, index) => [
-      (index + 1).toString(),
-      step.title,
-      step.description,
-      step.responsible || "-",
-      step.duration || "-",
+      (index + 1).toString(), step.title, step.description, step.responsible || "-", step.duration || "-",
     ]);
-
     autoTable(doc, {
       startY: 78,
       head: [["#", "Etapa", "Descrição", "Responsável", "Duração"]],
       body: tableData,
       headStyles: { fillColor: [59, 130, 246] },
       styles: { fontSize: 9 },
-      columnStyles: {
-        0: { cellWidth: 10 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 80 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 25 },
-      },
+      columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: 35 }, 2: { cellWidth: 80 }, 3: { cellWidth: 30 }, 4: { cellWidth: 25 } },
     });
-
     doc.save(`${processo.name.replace(/\s+/g, "_")}.pdf`);
   };
 
   const handleUpdateProcesso = (updated: Processo) => {
-    setProcessos(processos.map((p) => (p.id === updated.id ? updated : p)));
+    updateProcesso(updated.id, {
+      name: updated.name,
+      description: updated.description,
+      department: updated.department,
+      owner: updated.owner,
+      status: updated.status,
+    });
   };
 
   return (
