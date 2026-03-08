@@ -157,9 +157,24 @@ export default function Projetos() {
 
   const projetosAbertos = projetos.filter((p) => p.status === "nao_iniciado").length;
   const projetosAndamento = projetos.filter((p) => p.status === "em_andamento").length;
+  const projetosPausados = projetos.filter((p) => p.status === "pausado").length;
+  const projetosConcluidos = projetos.filter((p) => p.status === "concluido").length;
 
   const totalBudget = projetos.reduce((sum, p) => sum + p.budget, 0);
   const totalSpent = projetos.reduce((sum, p) => sum + p.spent, 0);
+
+  const statusData = [
+    { name: "Em Andamento", value: projetosAndamento, color: "hsl(var(--primary))" },
+    { name: "Não Iniciado", value: projetosAbertos, color: "hsl(var(--muted-foreground))" },
+    { name: "Pausado", value: projetosPausados, color: "hsl(var(--warning))" },
+    { name: "Concluído", value: projetosConcluidos, color: "hsl(var(--success))" },
+  ];
+
+  const budgetData = projetos.slice(0, 5).map(p => ({
+    name: p.name.length > 15 ? p.name.slice(0, 15) + '…' : p.name,
+    orcamento: p.budget,
+    gasto: p.spent,
+  }));
 
   const handleUpdateProjeto = (updated: Projeto) => {
     updateProjeto(updated.id, {
