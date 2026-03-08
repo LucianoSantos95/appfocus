@@ -74,74 +74,7 @@ interface Atividade {
   subtasks: SubTask[];
 }
 
-const initialAtividades: Atividade[] = [
-  {
-    id: "1",
-    title: "Revisar proposta comercial",
-    description: "Finalizar proposta para cliente Tech Solutions",
-    dueDate: "2025-01-29",
-    priority: "urgente",
-    status: "pendente",
-    category: "tarefa",
-    responsible: "Ana Silva",
-    subtasks: [
-      { id: "s1", title: "Levantar requisitos", completed: true },
-      { id: "s2", title: "Definir escopo", completed: false },
-    ],
-  },
-  {
-    id: "2",
-    title: "Aumentar faturamento mensal em 15%",
-    description: "Meta do primeiro trimestre",
-    dueDate: "2025-03-31",
-    priority: "alta",
-    status: "pendente",
-    category: "meta",
-    subtasks: [],
-  },
-  {
-    id: "3",
-    title: "Atualizar documentação de processos",
-    description: "Revisar e atualizar SOPs do departamento",
-    dueDate: "2025-02-15",
-    priority: "media",
-    status: "pendente",
-    category: "tarefa",
-    responsible: "Bruno Costa",
-    subtasks: [],
-  },
-  {
-    id: "4",
-    title: "Contratar 2 desenvolvedores",
-    description: "Expandir equipe de tecnologia",
-    dueDate: "2025-02-28",
-    priority: "media",
-    status: "pendente",
-    category: "meta",
-    subtasks: [],
-  },
-  {
-    id: "5",
-    title: "Enviar relatório semanal",
-    description: "Consolidar métricas e enviar para diretoria",
-    dueDate: "2025-01-27",
-    priority: "baixa",
-    status: "concluida",
-    category: "tarefa",
-    subtasks: [],
-  },
-  {
-    id: "6",
-    title: "Preparar apresentação para investidores",
-    description: "Criar deck para rodada de investimentos",
-    dueDate: "2025-02-01",
-    priority: "alta",
-    status: "pendente",
-    category: "tarefa",
-    responsible: "Carla Oliveira",
-    subtasks: [],
-  },
-];
+
 
 const priorityStyles = {
   urgente: { text: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/30" },
