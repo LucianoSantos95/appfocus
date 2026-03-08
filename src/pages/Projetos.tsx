@@ -235,14 +235,14 @@ export default function Projetos() {
           <StatCard
             icon={DollarSign}
             label="Orçamento Total"
-            value={`R$ ${(totalBudget / 1000).toFixed(0)}K`}
+            value={totalBudget > 0 ? `R$ ${(totalBudget / 1000).toFixed(0)}K` : "R$ 0"}
             variant="default"
           />
           <StatCard
             icon={DollarSign}
             label="Total Gasto"
-            value={`R$ ${(totalSpent / 1000).toFixed(0)}K`}
-            trend={{ value: Math.round((totalSpent / totalBudget) * 100), isPositive: false }}
+            value={totalSpent > 0 ? `R$ ${(totalSpent / 1000).toFixed(0)}K` : "R$ 0"}
+            trend={totalBudget > 0 ? { value: Math.round((totalSpent / totalBudget) * 100), isPositive: false } : undefined}
             variant="warning"
           />
         </div>
