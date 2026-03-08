@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,9 @@ import {
   FileSpreadsheet,
   ChevronDown,
   BarChart3,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import {
   BarChart,
@@ -105,9 +108,6 @@ interface BankAccount {
   balance: number;
 }
 
-
-
-
 interface Category {
   id: string;
   name: string;
@@ -115,18 +115,15 @@ interface Category {
   color: string;
 }
 
-
-
-
-
-
-
-const chartData = [
-  { month: "Set", receitas: 42000, despesas: 28000 },
-  { month: "Out", receitas: 38000, despesas: 25000 },
-  { month: "Nov", receitas: 55000, despesas: 32000 },
-  { month: "Dez", receitas: 48000, despesas: 30000 },
-  { month: "Jan", receitas: 48500, despesas: 7500 },
+const CATEGORY_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--success))",
+  "hsl(var(--warning))",
+  "hsl(var(--destructive))",
+  "hsl(210, 70%, 55%)",
+  "hsl(280, 60%, 55%)",
+  "hsl(30, 80%, 55%)",
+  "hsl(170, 60%, 45%)",
 ];
 
 const paymentMethods = ["Transferência", "Boleto", "Cartão de crédito", "Cartão de débito", "Débito automático", "Pix", "Dinheiro"];
@@ -139,7 +136,7 @@ const accountTypes = [
 export default function Financas() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { transacoes, isLoading: isLoadingTransacoes, addTransacao, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
+  const { transacoes, isLoading: isLoadingTransacoes, addTransacao, updateTransacao, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
   const [searchTerm, setSearchTerm] = useState("");
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [categories, setCategories] = useState<Category[]>([
@@ -156,20 +153,33 @@ export default function Financas() {
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
 
-  // Map DB transacoes to local Transaction type
-  const transactions: Transaction[] = transacoes.map(t => ({
-    id: t.id,
-    description: t.description,
-    value: t.value,
-    date: t.date || new Date().toISOString().split('T')[0],
-    category: t.category || 'Outros',
-    type: (t.type === 'despesa' ? 'despesa' : 'receita') as 'receita' | 'despesa',
-    status: (t.status === 'pago' ? 'pago' : t.status === 'atrasado' ? 'atrasado' : 'pendente') as 'pago' | 'pendente' | 'atrasado',
-    paymentMethod: t.payment_method || undefined,
-    client: t.client || undefined,
-    provider: t.provider || undefined,
-    notes: t.notes || undefined,
-  }));
+  // Map DB transacoes to local Transaction type, auto-marking overdue
+  const today = new Date().toISOString().split('T')[0];
+  const transactions: Transaction[] = transacoes.map(t => {
+    const rawStatus = t.status === 'pago' ? 'pago' : t.status === 'atrasado' ? 'atrasado' : 'pendente';
+    // Auto-mark as atrasado if date has passed and still pendente
+    const isOverdue = rawStatus === 'pendente' && t.date && t.date < today;
+    const finalStatus = isOverdue ? 'atrasado' : rawStatus;
+
+    // If we detected overdue, update in DB silently
+    if (isOverdue) {
+      updateTransacao(t.id, { status: 'atrasado' });
+    }
+
+    return {
+      id: t.id,
+      description: t.description,
+      value: t.value,
+      date: t.date || new Date().toISOString().split('T')[0],
+      category: t.category || 'Outros',
+      type: (t.type === 'despesa' ? 'despesa' : 'receita') as 'receita' | 'despesa',
+      status: finalStatus as 'pago' | 'pendente' | 'atrasado',
+      paymentMethod: t.payment_method || undefined,
+      client: t.client || undefined,
+      provider: t.provider || undefined,
+      notes: t.notes || undefined,
+    };
+  });
 
   const handleImportTransactions = () => {
     refetchTransacoes();
@@ -180,14 +190,44 @@ export default function Financas() {
   const lucroLiquido = totalReceita - totalDespesa;
   const totalCaixa = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
 
-  const categoryData = categories
-    .filter((c) => c.type === "despesa")
-    .map((c) => ({
-      name: c.name,
-      value: transactions.filter((t) => t.category === c.name && t.type === "despesa").reduce((sum, t) => sum + t.value, 0),
-      color: c.color,
-    }))
-    .filter((c) => c.value > 0);
+  // Build category chart from REAL transaction data (both receita and despesa)
+  const categoryData = useMemo(() => {
+    const catMap = new Map<string, number>();
+    transactions.forEach(t => {
+      const cat = t.category || 'Outros';
+      catMap.set(cat, (catMap.get(cat) || 0) + t.value);
+    });
+    return Array.from(catMap.entries())
+      .filter(([, value]) => value > 0)
+      .map(([name, value], idx) => ({
+        name,
+        value,
+        color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
+      }));
+  }, [transactions]);
+
+  // Build evolution chart from REAL transaction data (last 6 months)
+  const chartData = useMemo(() => {
+    if (transactions.length === 0) return [];
+    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    const now = new Date();
+    const months: { month: string; receitas: number; despesas: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const m = d.getMonth();
+      const y = d.getFullYear();
+      const monthTx = transactions.filter(t => {
+        const td = new Date(t.date);
+        return td.getMonth() === m && td.getFullYear() === y;
+      });
+      months.push({
+        month: monthNames[m],
+        receitas: monthTx.filter(t => t.type === "receita").reduce((s, t) => s + t.value, 0),
+        despesas: monthTx.filter(t => t.type === "despesa").reduce((s, t) => s + t.value, 0),
+      });
+    }
+    return months;
+  }, [transactions]);
 
   const handleExport = (format: "pdf" | "csv") => {
     if (format === "csv") {
@@ -208,6 +248,14 @@ export default function Financas() {
 
   const handleDeleteTransaction = (id: string) => {
     deleteTransacao(id);
+  };
+
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    await updateTransacao(id, { status: newStatus });
+    // Update local selected transaction
+    if (selectedTransaction && selectedTransaction.id === id) {
+      setSelectedTransaction({ ...selectedTransaction, status: newStatus as Transaction['status'] });
+    }
   };
 
   const handleAddCategory = (name: string, type: "receita" | "despesa") => {
@@ -252,6 +300,9 @@ export default function Financas() {
     operacional: "bg-warning/10 text-warning",
     reserva: "bg-success/10 text-success",
   };
+
+  // Count overdue transactions for alert
+  const overdueCount = transactions.filter(t => t.status === 'atrasado').length;
 
   return (
     <MainLayout>
@@ -301,6 +352,16 @@ export default function Financas() {
           </div>
         </div>
 
+        {/* Overdue Alert */}
+        {overdueCount > 0 && (
+          <div className="flex items-center gap-3 p-4 rounded-xl border border-destructive/30 bg-destructive/5">
+            <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+            <p className="text-sm text-foreground">
+              Você tem <strong className="text-destructive">{overdueCount}</strong> transaç{overdueCount === 1 ? 'ão atrasada' : 'ões atrasadas'}. Verifique e atualize o status.
+            </p>
+          </div>
+        )}
+
         {/* Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard icon={TrendingUp} label="Receita Total" value={`R$ ${totalReceita.toLocaleString("pt-BR")}`} variant="success" />
@@ -313,37 +374,45 @@ export default function Financas() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
             <h3 className="font-semibold text-foreground mb-6">Evolução Financeira</h3>
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="colorReceitasFin" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="colorDespesasFin" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "hsl(var(--popover))", 
-                    border: "1px solid hsl(var(--border))", 
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                  }} 
-                />
-                <Legend wrapperStyle={{ paddingTop: "16px" }} />
-                <Area type="monotone" dataKey="receitas" stroke="hsl(var(--success))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorReceitasFin)" name="Receitas" />
-                <Area type="monotone" dataKey="despesas" stroke="hsl(var(--destructive))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorDespesasFin)" name="Despesas" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorReceitasFin" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id="colorDespesasFin" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--popover))", 
+                      border: "1px solid hsl(var(--border))", 
+                      borderRadius: "12px",
+                      boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                    }} 
+                    formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: "16px" }} />
+                  <Area type="monotone" dataKey="receitas" stroke="hsl(var(--success))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorReceitasFin)" name="Receitas" />
+                  <Area type="monotone" dataKey="despesas" stroke="hsl(var(--destructive))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorDespesasFin)" name="Despesas" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[280px] text-muted-foreground">
+                <BarChart3 className="w-12 h-12 mb-3 opacity-30" />
+                <p className="text-sm">Adicione transações para visualizar a evolução financeira</p>
+              </div>
+            )}
           </div>
 
-          {/* Category Chart with Dialog */}
+          {/* Category Chart */}
           <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-semibold text-foreground">Por Categoria</h3>
@@ -351,54 +420,63 @@ export default function Financas() {
                 <Edit className="w-4 h-4" />
               </Button>
             </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <defs>
-                  <filter id="pieGlowFin">
-                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                <Pie 
-                  data={categoryData} 
-                  cx="50%" 
-                  cy="50%" 
-                  innerRadius={55} 
-                  outerRadius={78} 
-                  paddingAngle={4} 
-                  dataKey="value"
-                  strokeWidth={0}
-                  filter="url(#pieGlowFin)"
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+            {categoryData.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <defs>
+                      <filter id="pieGlowFin">
+                        <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                        <feMerge>
+                          <feMergeNode in="coloredBlur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <Pie 
+                      data={categoryData} 
+                      cx="50%" 
+                      cy="50%" 
+                      innerRadius={55} 
+                      outerRadius={78} 
+                      paddingAngle={4} 
+                      dataKey="value"
+                      strokeWidth={0}
+                      filter="url(#pieGlowFin)"
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: "hsl(var(--popover))", 
+                        border: "1px solid hsl(var(--border))", 
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                      }} 
+                      formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]} 
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-5 space-y-2.5">
+                  {categoryData.slice(0, 6).map((cat) => (
+                    <div key={cat.name} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color, boxShadow: `0 0 8px ${cat.color}50` }} />
+                        <span className="text-muted-foreground">{cat.name}</span>
+                      </div>
+                      <span className="text-foreground font-medium">R$ {cat.value.toLocaleString("pt-BR")}</span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "hsl(var(--popover))", 
-                    border: "1px solid hsl(var(--border))", 
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                  }} 
-                  formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]} 
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="mt-5 space-y-2.5">
-              {categoryData.slice(0, 4).map((cat) => (
-                <div key={cat.name} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color, boxShadow: `0 0 8px ${cat.color}50` }} />
-                    <span className="text-muted-foreground">{cat.name}</span>
-                  </div>
-                  <span className="text-foreground font-medium">R$ {cat.value.toLocaleString("pt-BR")}</span>
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
+                <PiggyBank className="w-10 h-10 mb-2 opacity-30" />
+                <p className="text-sm text-center">Adicione transações com categoria para ver o gráfico</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -423,7 +501,14 @@ export default function Financas() {
                 <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} onAdd={addTransacao} />
               </PlanGateButton>
             </div>
-            <TransactionTable transactions={transactions.filter((t) => t.type === "receita")} type="receita" onSelect={setSelectedTransaction} onDelete={handleDeleteTransaction} statusStyles={statusStyles} />
+            <TransactionTable 
+              transactions={transactions.filter((t) => t.type === "receita" && (searchTerm === "" || t.description.toLowerCase().includes(searchTerm.toLowerCase())))} 
+              type="receita" 
+              onSelect={setSelectedTransaction} 
+              onDelete={handleDeleteTransaction} 
+              onUpdateStatus={handleUpdateStatus}
+              statusStyles={statusStyles} 
+            />
           </TabsContent>
 
           <TabsContent value="despesas" className="space-y-4">
@@ -432,7 +517,14 @@ export default function Financas() {
                 <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} onAdd={addTransacao} />
               </PlanGateButton>
             </div>
-            <TransactionTable transactions={transactions.filter((t) => t.type === "despesa")} type="despesa" onSelect={setSelectedTransaction} onDelete={handleDeleteTransaction} statusStyles={statusStyles} />
+            <TransactionTable 
+              transactions={transactions.filter((t) => t.type === "despesa" && (searchTerm === "" || t.description.toLowerCase().includes(searchTerm.toLowerCase())))} 
+              type="despesa" 
+              onSelect={setSelectedTransaction} 
+              onDelete={handleDeleteTransaction} 
+              onUpdateStatus={handleUpdateStatus}
+              statusStyles={statusStyles} 
+            />
           </TabsContent>
         </Tabs>
 
@@ -674,7 +766,7 @@ export default function Financas() {
           </Tabs>
         </section>
 
-        {/* Transaction Detail Dialog */}
+        {/* Transaction Detail Dialog with Status Change */}
         <Dialog open={!!selectedTransaction} onOpenChange={() => setSelectedTransaction(null)}>
           <DialogContent className="sm:max-w-[500px] bg-card border-border">
             <DialogHeader>
@@ -706,14 +798,57 @@ export default function Financas() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Status</p>
-                    <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", statusStyles[selectedTransaction.status])}>{selectedTransaction.status}</span>
+                    <p className="text-sm text-muted-foreground mb-1">Status</p>
+                    <Select 
+                      value={selectedTransaction.status} 
+                      onValueChange={(v) => handleUpdateStatus(selectedTransaction.id, v)}
+                    >
+                      <SelectTrigger className="bg-muted border-border w-full">
+                        <div className="flex items-center gap-2">
+                          {selectedTransaction.status === 'pago' && <CheckCircle2 className="w-3.5 h-3.5 text-success" />}
+                          {selectedTransaction.status === 'pendente' && <Clock className="w-3.5 h-3.5 text-warning" />}
+                          {selectedTransaction.status === 'atrasado' && <AlertCircle className="w-3.5 h-3.5 text-destructive" />}
+                          <span className="capitalize">{selectedTransaction.status}</span>
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        <SelectItem value="pago">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                            Pago
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="pendente">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-3.5 h-3.5 text-warning" />
+                            Pendente
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="atrasado">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="w-3.5 h-3.5 text-destructive" />
+                            Atrasado
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Forma de Pagamento</p>
                     <p className="font-medium text-foreground">{selectedTransaction.paymentMethod || "-"}</p>
                   </div>
                 </div>
+
+                {/* Overdue warning */}
+                {selectedTransaction.status === 'atrasado' && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                    <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                    <p className="text-xs text-foreground">
+                      Esta transação está <strong className="text-destructive">atrasada</strong>. A data de vencimento ({new Date(selectedTransaction.date).toLocaleDateString("pt-BR")}) já passou. Atualize o status para "Pago" se já foi quitada.
+                    </p>
+                  </div>
+                )}
+
                 {(selectedTransaction.client || selectedTransaction.provider) && (
                   <div>
                     <p className="text-sm text-muted-foreground">{selectedTransaction.type === "receita" ? "Cliente" : "Fornecedor"}</p>
@@ -738,7 +873,7 @@ export default function Financas() {
   );
 }
 
-function TransactionTable({ transactions, type, onSelect, onDelete, statusStyles }: { transactions: Transaction[]; type: "receita" | "despesa"; onSelect: (t: Transaction) => void; onDelete: (id: string) => void; statusStyles: Record<string, string> }) {
+function TransactionTable({ transactions, type, onSelect, onDelete, onUpdateStatus, statusStyles }: { transactions: Transaction[]; type: "receita" | "despesa"; onSelect: (t: Transaction) => void; onDelete: (id: string) => void; onUpdateStatus: (id: string, status: string) => void; statusStyles: Record<string, string> }) {
   return (
     <div className="bg-card rounded-xl border border-border/50 shadow-premium overflow-hidden">
       <Table>
@@ -753,7 +888,13 @@ function TransactionTable({ transactions, type, onSelect, onDelete, statusStyles
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions.map((t) => (
+          {transactions.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                Nenhuma {type === "receita" ? "receita" : "despesa"} registrada
+              </TableCell>
+            </TableRow>
+          ) : transactions.map((t) => (
             <TableRow key={t.id} className="border-border/50 cursor-pointer hover:bg-muted/30" onClick={() => onSelect(t)}>
               <TableCell>
                 <div>
@@ -769,7 +910,24 @@ function TransactionTable({ transactions, type, onSelect, onDelete, statusStyles
                 <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground">{t.category}</span>
               </TableCell>
               <TableCell>
-                <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", statusStyles[t.status])}>{t.status}</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                    <button className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize cursor-pointer hover:opacity-80 transition-opacity", statusStyles[t.status])}>
+                      {t.status}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-card border-border" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuItem onClick={() => onUpdateStatus(t.id, "pago")}>
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-success" /> Pago
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onUpdateStatus(t.id, "pendente")}>
+                      <Clock className="w-3.5 h-3.5 mr-2 text-warning" /> Pendente
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onUpdateStatus(t.id, "atrasado")}>
+                      <AlertCircle className="w-3.5 h-3.5 mr-2 text-destructive" /> Atrasado
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
               <TableCell>
                 <DropdownMenu>
