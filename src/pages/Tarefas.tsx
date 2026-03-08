@@ -53,6 +53,7 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useTarefas as useTarefasDB } from "@/hooks/useTarefas";
+import { Loader2 } from "lucide-react";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 
 interface SubTask {
