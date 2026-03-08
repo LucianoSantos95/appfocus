@@ -241,7 +241,7 @@ export default function Marketing() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard icon={Target} label="Campanhas Ativas" value={campanhasAtivas.toString()} variant="success" />
           <StatCard icon={Lightbulb} label="Conteúdos em Produção" value={conteudosProducao.toString()} variant="default" />
-          <StatCard icon={Eye} label="Impressões (mês)" value={`${(totalImpressions / 1000).toFixed(0)}K`} trend={{ value: 15, isPositive: true }} variant="default" />
+          <StatCard icon={Eye} label="Impressões (mês)" value={totalImpressions > 0 ? `${(totalImpressions / 1000).toFixed(0)}K` : "0"} trend={{ value: 15, isPositive: true }} variant="default" />
           <StatCard icon={MousePointerClick} label="Cliques (mês)" value={totalClicks.toLocaleString("pt-BR")} trend={{ value: 8, isPositive: true }} variant="default" />
         </div>
 

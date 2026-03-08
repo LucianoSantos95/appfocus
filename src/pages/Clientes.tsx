@@ -326,7 +326,7 @@ export default function Clientes() {
           <StatCard
             icon={DollarSign}
             label="Receita Clientes Ativos"
-            value={`R$ ${(receitaAtivos / 1000).toFixed(0)}K`}
+            value={receitaAtivos > 0 ? `R$ ${(receitaAtivos / 1000).toFixed(0)}K` : "R$ 0"}
             trend={{ value: 12, isPositive: true }}
             variant="success"
           />
