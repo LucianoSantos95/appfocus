@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_items: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          priority: string | null
+          time: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          priority?: string | null
+          time: string
+          title: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          priority?: string | null
+          time?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bulletin_notes: {
+        Row: {
+          author: string
+          content: string
+          created_at: string
+          id: string
+          is_pinned: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author: string
+          content: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          author?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_pinned?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       campanhas: {
         Row: {
           budget: number | null

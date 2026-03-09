@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Calendar, Clock, AlertCircle, Plus } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Calendar, Clock, AlertCircle, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-interface Appointment {
+interface AgendaItem {
   id: string;
   title: string;
   date: string;
@@ -28,91 +30,107 @@ interface Appointment {
   priority?: "high" | "medium" | "low";
 }
 
-const initialAppointments: Appointment[] = [
-  {
-    id: "1",
-    title: "Reunião com investidores",
-    date: "Hoje",
-    time: "14:00",
-    type: "meeting",
-    priority: "high",
-  },
-  {
-    id: "2",
-    title: "Prazo: Entrega relatório financeiro",
-    date: "Amanhã",
-    time: "18:00",
-    type: "deadline",
-    priority: "high",
-  },
-  {
-    id: "3",
-    title: "Call com equipe de marketing",
-    date: "28 Jan",
-    time: "10:00",
-    type: "meeting",
-  },
-  {
-    id: "4",
-    title: "Revisão de contratos",
-    date: "30 Jan",
-    time: "09:00",
-    type: "event",
-  },
-];
-
 const priorityStyles = {
   high: "border-l-destructive",
   medium: "border-l-warning",
   low: "border-l-success",
 };
 
+const sb = supabase as any;
+
 export function AgendaWidget() {
-  const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
+  const { toast } = useToast();
+  const [items, setItems] = useState<AgendaItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
-  const [newAppointment, setNewAppointment] = useState<{
-    title: string;
-    date: string;
-    time: string;
-    type: "meeting" | "deadline" | "event";
-    priority: "high" | "medium" | "low";
-  }>({
+  const [editingItem, setEditingItem] = useState<AgendaItem | null>(null);
+  const [newItem, setNewItem] = useState({
     title: "",
     date: "",
     time: "",
-    type: "meeting",
-    priority: "medium",
+    type: "meeting" as "meeting" | "deadline" | "event",
+    priority: "medium" as "high" | "medium" | "low",
   });
 
-  const handleAddAppointment = () => {
-    if (!newAppointment.title || !newAppointment.date || !newAppointment.time) return;
-    
-    const appointment: Appointment = {
-      id: Date.now().toString(),
-      title: newAppointment.title,
-      date: new Date(newAppointment.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
-      time: newAppointment.time,
-      type: newAppointment.type,
-      priority: newAppointment.priority,
-    };
-    
-    setAppointments([appointment, ...appointments]);
-    setNewAppointment({ title: "", date: "", time: "", type: "meeting", priority: "medium" });
-    setOpen(false);
+  const fetchItems = useCallback(async () => {
+    try {
+      const { data, error } = await sb
+        .from("agenda_items")
+        .select("*")
+        .order("date", { ascending: true });
+      if (error) throw error;
+      setItems(
+        (data || []).map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          date: new Date(d.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+          time: d.time?.substring(0, 5) || "",
+          type: d.type as AgendaItem["type"],
+          priority: d.priority as AgendaItem["priority"],
+          _rawDate: d.date,
+        }))
+      );
+    } catch (err) {
+      console.error("Error fetching agenda:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  const handleAdd = async () => {
+    if (!newItem.title || !newItem.date || !newItem.time) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { error } = await sb.from("agenda_items").insert({
+        user_id: user.id,
+        title: newItem.title,
+        date: newItem.date,
+        time: newItem.time,
+        type: newItem.type,
+        priority: newItem.priority,
+      });
+      if (error) throw error;
+      setNewItem({ title: "", date: "", time: "", type: "meeting", priority: "medium" });
+      setOpen(false);
+      fetchItems();
+      toast({ title: "Compromisso adicionado!" });
+    } catch (err: any) {
+      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    }
   };
 
-  const handleUpdateAppointment = () => {
-    if (!editingAppointment) return;
-    setAppointments(appointments.map((apt) => 
-      apt.id === editingAppointment.id ? editingAppointment : apt
-    ));
-    setEditingAppointment(null);
+  const handleUpdate = async () => {
+    if (!editingItem) return;
+    try {
+      const { error } = await sb
+        .from("agenda_items")
+        .update({
+          title: editingItem.title,
+          time: editingItem.time,
+          type: editingItem.type,
+          priority: editingItem.priority,
+        })
+        .eq("id", editingItem.id);
+      if (error) throw error;
+      setEditingItem(null);
+      fetchItems();
+    } catch (err: any) {
+      toast({ title: "Erro ao atualizar", description: err.message, variant: "destructive" });
+    }
   };
 
-  const handleDeleteAppointment = (id: string) => {
-    setAppointments(appointments.filter((apt) => apt.id !== id));
-    setEditingAppointment(null);
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await sb.from("agenda_items").delete().eq("id", id);
+      if (error) throw error;
+      setEditingItem(null);
+      fetchItems();
+    } catch (err: any) {
+      toast({ title: "Erro ao excluir", description: err.message, variant: "destructive" });
+    }
   };
 
   return (
@@ -138,8 +156,8 @@ export function AgendaWidget() {
                 <Label htmlFor="title">Título</Label>
                 <Input
                   id="title"
-                  value={newAppointment.title}
-                  onChange={(e) => setNewAppointment({ ...newAppointment, title: e.target.value })}
+                  value={newItem.title}
+                  onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
                   placeholder="Ex: Reunião com cliente"
                   className="bg-muted border-border"
                 />
@@ -150,8 +168,8 @@ export function AgendaWidget() {
                   <Input
                     id="date"
                     type="date"
-                    value={newAppointment.date}
-                    onChange={(e) => setNewAppointment({ ...newAppointment, date: e.target.value })}
+                    value={newItem.date}
+                    onChange={(e) => setNewItem({ ...newItem, date: e.target.value })}
                     className="bg-muted border-border"
                   />
                 </div>
@@ -160,8 +178,8 @@ export function AgendaWidget() {
                   <Input
                     id="time"
                     type="time"
-                    value={newAppointment.time}
-                    onChange={(e) => setNewAppointment({ ...newAppointment, time: e.target.value })}
+                    value={newItem.time}
+                    onChange={(e) => setNewItem({ ...newItem, time: e.target.value })}
                     className="bg-muted border-border"
                   />
                 </div>
@@ -170,9 +188,9 @@ export function AgendaWidget() {
                 <div className="space-y-2">
                   <Label>Tipo</Label>
                   <Select
-                    value={newAppointment.type}
+                    value={newItem.type}
                     onValueChange={(value: "meeting" | "deadline" | "event") =>
-                      setNewAppointment({ ...newAppointment, type: value })
+                      setNewItem({ ...newItem, type: value })
                     }
                   >
                     <SelectTrigger className="bg-muted border-border">
@@ -188,9 +206,9 @@ export function AgendaWidget() {
                 <div className="space-y-2">
                   <Label>Prioridade</Label>
                   <Select
-                    value={newAppointment.priority}
+                    value={newItem.priority}
                     onValueChange={(value: "high" | "medium" | "low") =>
-                      setNewAppointment({ ...newAppointment, priority: value })
+                      setNewItem({ ...newItem, priority: value })
                     }
                   >
                     <SelectTrigger className="bg-muted border-border">
@@ -206,55 +224,64 @@ export function AgendaWidget() {
               </div>
             </div>
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleAddAppointment}>Salvar</Button>
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+              <Button onClick={handleAdd}>Salvar</Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
       <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
-        {appointments.map((apt) => (
-          <div
-            key={apt.id}
-            onClick={() => setEditingAppointment(apt)}
-            className={cn(
-              "p-3 rounded-lg bg-muted/30 border-l-2 cursor-pointer hover:bg-muted/50 transition-colors",
-              apt.priority ? priorityStyles[apt.priority] : "border-l-primary"
-            )}
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">{apt.title}</p>
-                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                  <span>{apt.date}</span>
-                  <span>•</span>
-                  <Clock className="w-3 h-3" />
-                  <span>{apt.time}</span>
-                </div>
-              </div>
-              {apt.priority === "high" && (
-                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
-              )}
-            </div>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
           </div>
-        ))}
+        ) : items.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Calendar className="w-10 h-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">Nenhum compromisso agendado</p>
+          </div>
+        ) : (
+          items.map((apt) => (
+            <div
+              key={apt.id}
+              onClick={() => setEditingItem(apt)}
+              className={cn(
+                "p-3 rounded-lg bg-muted/30 border-l-2 cursor-pointer hover:bg-muted/50 transition-colors",
+                apt.priority ? priorityStyles[apt.priority] : "border-l-primary"
+              )}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">{apt.title}</p>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                    <span>{apt.date}</span>
+                    <span>•</span>
+                    <Clock className="w-3 h-3" />
+                    <span>{apt.time}</span>
+                  </div>
+                </div>
+                {apt.priority === "high" && (
+                  <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+                )}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
-      {/* Edit Appointment Dialog */}
-      <Dialog open={!!editingAppointment} onOpenChange={() => setEditingAppointment(null)}>
+      {/* Edit Dialog */}
+      <Dialog open={!!editingItem} onOpenChange={() => setEditingItem(null)}>
         <DialogContent className="sm:max-w-[425px] bg-card border-border">
           <DialogHeader>
             <DialogTitle className="text-foreground">Editar Compromisso</DialogTitle>
           </DialogHeader>
-          {editingAppointment && (
+          {editingItem && (
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
                 <Label>Título</Label>
                 <Input
-                  value={editingAppointment.title}
-                  onChange={(e) => setEditingAppointment({ ...editingAppointment, title: e.target.value })}
+                  value={editingItem.title}
+                  onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
                   className="bg-muted border-border"
                 />
               </div>
@@ -263,17 +290,17 @@ export function AgendaWidget() {
                   <Label>Horário</Label>
                   <Input
                     type="time"
-                    value={editingAppointment.time}
-                    onChange={(e) => setEditingAppointment({ ...editingAppointment, time: e.target.value })}
+                    value={editingItem.time}
+                    onChange={(e) => setEditingItem({ ...editingItem, time: e.target.value })}
                     className="bg-muted border-border"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Tipo</Label>
                   <Select
-                    value={editingAppointment.type}
+                    value={editingItem.type}
                     onValueChange={(value: "meeting" | "deadline" | "event") =>
-                      setEditingAppointment({ ...editingAppointment, type: value })
+                      setEditingItem({ ...editingItem, type: value })
                     }
                   >
                     <SelectTrigger className="bg-muted border-border">
@@ -290,9 +317,9 @@ export function AgendaWidget() {
               <div className="space-y-2">
                 <Label>Prioridade</Label>
                 <Select
-                  value={editingAppointment.priority || "medium"}
+                  value={editingItem.priority || "medium"}
                   onValueChange={(value: "high" | "medium" | "low") =>
-                    setEditingAppointment({ ...editingAppointment, priority: value })
+                    setEditingItem({ ...editingItem, priority: value })
                   }
                 >
                   <SelectTrigger className="bg-muted border-border">
@@ -308,14 +335,12 @@ export function AgendaWidget() {
             </div>
           )}
           <div className="flex justify-between">
-            <Button variant="destructive" onClick={() => editingAppointment && handleDeleteAppointment(editingAppointment.id)}>
+            <Button variant="destructive" onClick={() => editingItem && handleDelete(editingItem.id)}>
               Excluir
             </Button>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setEditingAppointment(null)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleUpdateAppointment}>Salvar</Button>
+              <Button variant="outline" onClick={() => setEditingItem(null)}>Cancelar</Button>
+              <Button onClick={handleUpdate}>Salvar</Button>
             </div>
           </div>
         </DialogContent>
