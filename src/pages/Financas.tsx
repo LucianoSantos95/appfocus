@@ -82,6 +82,7 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useTransacoes } from "@/hooks/useTransacoes";
+import { useContasBancarias, ContaBancaria } from "@/hooks/useContasBancarias";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 
 // Types
@@ -97,15 +98,7 @@ interface Transaction {
   client?: string;
   provider?: string;
   notes?: string;
-}
-
-// Local-only types
-interface BankAccount {
-  id: string;
-  name: string;
-  institution: string;
-  type: "principal" | "operacional" | "reserva";
-  balance: number;
+  bank_account_id?: string | null;
 }
 
 interface Category {
@@ -128,17 +121,17 @@ const CATEGORY_COLORS = [
 
 const paymentMethods = ["Transferência", "Boleto", "Cartão de crédito", "Cartão de débito", "Débito automático", "Pix", "Dinheiro"];
 const accountTypes = [
-  { value: "principal", label: "Conta Principal" },
-  { value: "operacional", label: "Conta Operacional" },
-  { value: "reserva", label: "Conta Reserva" },
+  { value: "corrente", label: "Conta Corrente" },
+  { value: "poupanca", label: "Conta Poupança" },
+  { value: "investimento", label: "Conta Investimento" },
 ];
 
 export default function Financas() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { transacoes, isLoading: isLoadingTransacoes, addTransacao, updateTransacao, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
+  const { contas: bankAccounts, addConta, updateConta, updateBalance, deleteConta } = useContasBancarias();
   const [searchTerm, setSearchTerm] = useState("");
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [categories, setCategories] = useState<Category[]>([
     { id: "1", name: "Serviços", type: "receita", color: "hsl(var(--primary))" },
     { id: "2", name: "Produtos", type: "receita", color: "hsl(var(--success))" },
@@ -151,17 +144,15 @@ export default function Financas() {
   ]);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
+  const [editingAccount, setEditingAccount] = useState<ContaBancaria | null>(null);
 
   // Map DB transacoes to local Transaction type, auto-marking overdue
   const today = new Date().toISOString().split('T')[0];
   const transactions: Transaction[] = transacoes.map(t => {
     const rawStatus = t.status === 'pago' ? 'pago' : t.status === 'atrasado' ? 'atrasado' : 'pendente';
-    // Auto-mark as atrasado if date has passed and still pendente
     const isOverdue = rawStatus === 'pendente' && t.date && t.date < today;
     const finalStatus = isOverdue ? 'atrasado' : rawStatus;
 
-    // If we detected overdue, update in DB silently
     if (isOverdue) {
       updateTransacao(t.id, { status: 'atrasado' });
     }
@@ -178,6 +169,7 @@ export default function Financas() {
       client: t.client || undefined,
       provider: t.provider || undefined,
       notes: t.notes || undefined,
+      bank_account_id: t.bank_account_id,
     };
   });
 
@@ -190,10 +182,25 @@ export default function Financas() {
   const lucroLiquido = totalReceita - totalDespesa;
   const totalCaixa = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
 
-  // Build category chart from REAL transaction data (both receita and despesa)
-  const categoryData = useMemo(() => {
+  // Category charts separated by type
+  const receitaCategoryData = useMemo(() => {
     const catMap = new Map<string, number>();
-    transactions.forEach(t => {
+    transactions.filter(t => t.type === 'receita').forEach(t => {
+      const cat = t.category || 'Outros';
+      catMap.set(cat, (catMap.get(cat) || 0) + t.value);
+    });
+    return Array.from(catMap.entries())
+      .filter(([, value]) => value > 0)
+      .map(([name, value], idx) => ({
+        name,
+        value,
+        color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
+      }));
+  }, [transactions]);
+
+  const despesaCategoryData = useMemo(() => {
+    const catMap = new Map<string, number>();
+    transactions.filter(t => t.type === 'despesa').forEach(t => {
       const cat = t.category || 'Outros';
       catMap.set(cat, (catMap.get(cat) || 0) + t.value);
     });
@@ -251,11 +258,46 @@ export default function Financas() {
   };
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
+    const tx = transactions.find(t => t.id === id);
+    if (!tx) return;
+
+    const oldStatus = tx.status;
     await updateTransacao(id, { status: newStatus });
-    // Update local selected transaction
+
+    // Update bank balance when status changes to/from "pago"
+    if (tx.bank_account_id) {
+      const account = bankAccounts.find(a => a.id === tx.bank_account_id);
+      if (account) {
+        let balanceDelta = 0;
+        if (oldStatus !== 'pago' && newStatus === 'pago') {
+          // Became paid
+          balanceDelta = tx.type === 'receita' ? tx.value : -tx.value;
+        } else if (oldStatus === 'pago' && newStatus !== 'pago') {
+          // Was paid, now unpaid — reverse
+          balanceDelta = tx.type === 'receita' ? -tx.value : tx.value;
+        }
+        if (balanceDelta !== 0) {
+          await updateBalance(account.id, account.balance + balanceDelta);
+        }
+      }
+    }
+
     if (selectedTransaction && selectedTransaction.id === id) {
       setSelectedTransaction({ ...selectedTransaction, status: newStatus as Transaction['status'] });
     }
+  };
+
+  const handleAddTransaction = async (input: { description: string; value: number; date?: string; category?: string; type: string; status?: string; payment_method?: string; client?: string; provider?: string; notes?: string; bank_account_id?: string }) => {
+    const result = await addTransacao(input);
+    // If transaction is created as "pago" and has bank_account_id, update balance
+    if (result && input.status === 'pago' && input.bank_account_id) {
+      const account = bankAccounts.find(a => a.id === input.bank_account_id);
+      if (account) {
+        const delta = input.type === 'receita' ? input.value : -input.value;
+        await updateBalance(account.id, account.balance + delta);
+      }
+    }
+    return result;
   };
 
   const handleAddCategory = (name: string, type: "receita" | "despesa") => {
@@ -272,20 +314,23 @@ export default function Financas() {
     setCategories(categories.filter((c) => c.id !== id));
   };
 
-  const handleAddBankAccount = (account: Omit<BankAccount, "id">) => {
-    setBankAccounts([...bankAccounts, { ...account, id: Date.now().toString() }]);
+  const handleAddBankAccount = async (account: { name: string; institution: string; type: string; balance: number }) => {
+    await addConta(account);
   };
 
-  const handleUpdateBankAccount = () => {
+  const handleUpdateBankAccount = async () => {
     if (!editingAccount) return;
-    setBankAccounts(bankAccounts.map((acc) => 
-      acc.id === editingAccount.id ? editingAccount : acc
-    ));
+    await updateConta(editingAccount.id, {
+      name: editingAccount.name,
+      institution: editingAccount.institution || undefined,
+      type: editingAccount.type,
+      balance: editingAccount.balance,
+    });
     setEditingAccount(null);
   };
 
-  const handleDeleteBankAccount = (id: string) => {
-    setBankAccounts(bankAccounts.filter((acc) => acc.id !== id));
+  const handleDeleteBankAccount = async (id: string) => {
+    await deleteConta(id);
     setEditingAccount(null);
   };
 
@@ -295,13 +340,12 @@ export default function Financas() {
     atrasado: "bg-destructive/10 text-destructive",
   };
 
-  const accountTypeStyles = {
-    principal: "bg-primary/10 text-primary",
-    operacional: "bg-warning/10 text-warning",
-    reserva: "bg-success/10 text-success",
+  const accountTypeStyles: Record<string, string> = {
+    corrente: "bg-primary/10 text-primary",
+    poupanca: "bg-warning/10 text-warning",
+    investimento: "bg-success/10 text-success",
   };
 
-  // Count overdue transactions for alert
   const overdueCount = transactions.filter(t => t.status === 'atrasado').length;
 
   return (
@@ -367,11 +411,12 @@ export default function Financas() {
           <StatCard icon={TrendingUp} label="Receita Total" value={`R$ ${totalReceita.toLocaleString("pt-BR")}`} variant="success" />
           <StatCard icon={TrendingDown} label="Despesas Totais" value={`R$ ${totalDespesa.toLocaleString("pt-BR")}`} variant="destructive" />
           <StatCard icon={Wallet} label="Lucro Líquido" value={`R$ ${lucroLiquido.toLocaleString("pt-BR")}`} variant={lucroLiquido > 0 ? "success" : "destructive"} />
-          <StatCard icon={PiggyBank} label="Total em Caixa" value={`R$ ${totalCaixa.toLocaleString("pt-BR")}`} variant="default" />
+          <StatCard icon={PiggyBank} label="Total em Caixa" value={`R$ ${totalCaixa.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} variant="default" />
         </div>
 
-        {/* Charts - Modern Style */}
+        {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Evolution Chart */}
           <div className="lg:col-span-2 bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
             <h3 className="font-semibold text-foreground mb-6">Evolução Financeira</h3>
             {chartData.length > 0 ? (
@@ -412,71 +457,26 @@ export default function Financas() {
             )}
           </div>
 
-          {/* Category Chart */}
+          {/* Category Charts - Separated */}
           <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-foreground">Por Categoria</h3>
               <Button variant="ghost" size="sm" onClick={() => setCategoryDialogOpen(true)} className="h-8 w-8 p-0">
                 <Edit className="w-4 h-4" />
               </Button>
             </div>
-            {categoryData.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <defs>
-                      <filter id="pieGlowFin">
-                        <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                        <feMerge>
-                          <feMergeNode in="coloredBlur" />
-                          <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                      </filter>
-                    </defs>
-                    <Pie 
-                      data={categoryData} 
-                      cx="50%" 
-                      cy="50%" 
-                      innerRadius={55} 
-                      outerRadius={78} 
-                      paddingAngle={4} 
-                      dataKey="value"
-                      strokeWidth={0}
-                      filter="url(#pieGlowFin)"
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: "hsl(var(--popover))", 
-                        border: "1px solid hsl(var(--border))", 
-                        borderRadius: "12px",
-                        boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                      }} 
-                      formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]} 
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="mt-5 space-y-2.5">
-                  {categoryData.slice(0, 6).map((cat) => (
-                    <div key={cat.name} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color, boxShadow: `0 0 8px ${cat.color}50` }} />
-                        <span className="text-muted-foreground">{cat.name}</span>
-                      </div>
-                      <span className="text-foreground font-medium">R$ {cat.value.toLocaleString("pt-BR")}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
-                <PiggyBank className="w-10 h-10 mb-2 opacity-30" />
-                <p className="text-sm text-center">Adicione transações com categoria para ver o gráfico</p>
-              </div>
-            )}
+            <Tabs defaultValue="receita-cat" className="space-y-3">
+              <TabsList className="bg-muted w-full h-8">
+                <TabsTrigger value="receita-cat" className="flex-1 text-xs">Receitas</TabsTrigger>
+                <TabsTrigger value="despesa-cat" className="flex-1 text-xs">Despesas</TabsTrigger>
+              </TabsList>
+              <TabsContent value="receita-cat">
+                <CategoryPieChart data={receitaCategoryData} emptyLabel="receitas" />
+              </TabsContent>
+              <TabsContent value="despesa-cat">
+                <CategoryPieChart data={despesaCategoryData} emptyLabel="despesas" />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
 
@@ -498,12 +498,13 @@ export default function Financas() {
           <TabsContent value="receitas" className="space-y-4">
             <div className="flex justify-end">
               <PlanGateButton module="financas" action="create">
-                <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} onAdd={addTransacao} />
+                <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} bankAccounts={bankAccounts} onAdd={handleAddTransaction} />
               </PlanGateButton>
             </div>
             <TransactionTable 
               transactions={transactions.filter((t) => t.type === "receita" && (searchTerm === "" || t.description.toLowerCase().includes(searchTerm.toLowerCase())))} 
               type="receita" 
+              bankAccounts={bankAccounts}
               onSelect={setSelectedTransaction} 
               onDelete={handleDeleteTransaction} 
               onUpdateStatus={handleUpdateStatus}
@@ -514,12 +515,13 @@ export default function Financas() {
           <TabsContent value="despesas" className="space-y-4">
             <div className="flex justify-end">
               <PlanGateButton module="financas" action="create">
-                <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} onAdd={addTransacao} />
+                <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} bankAccounts={bankAccounts} onAdd={handleAddTransaction} />
               </PlanGateButton>
             </div>
             <TransactionTable 
               transactions={transactions.filter((t) => t.type === "despesa" && (searchTerm === "" || t.description.toLowerCase().includes(searchTerm.toLowerCase())))} 
               type="despesa" 
+              bankAccounts={bankAccounts}
               onSelect={setSelectedTransaction} 
               onDelete={handleDeleteTransaction} 
               onUpdateStatus={handleUpdateStatus}
@@ -536,34 +538,41 @@ export default function Financas() {
               <AddBankAccountDialog onAdd={handleAddBankAccount} />
             </PlanGateButton>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {bankAccounts.map((account) => (
-              <div 
-                key={account.id} 
-                className="bg-card rounded-xl border border-border/50 shadow-premium p-5 cursor-pointer hover:border-primary/30 transition-colors"
-                onClick={() => setEditingAccount(account)}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-primary" />
+          {bankAccounts.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl">
+              <Building2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">Nenhuma conta bancária cadastrada</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {bankAccounts.map((account) => (
+                <div 
+                  key={account.id} 
+                  className="bg-card rounded-xl border border-border/50 shadow-premium p-5 cursor-pointer hover:border-primary/30 transition-colors"
+                  onClick={() => setEditingAccount(account)}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground">{account.name}</p>
+                        <p className="text-xs text-muted-foreground">{account.institution || '-'}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-foreground">{account.name}</p>
-                      <p className="text-xs text-muted-foreground">{account.institution}</p>
-                    </div>
+                    <CreditCard className="w-5 h-5 text-muted-foreground" />
                   </div>
-                  <CreditCard className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", accountTypeStyles[account.type] || "bg-muted text-muted-foreground")}>
+                      {accountTypes.find((t) => t.value === account.type)?.label || account.type}
+                    </span>
+                    <p className="text-2xl font-bold text-foreground mt-2">R$ {account.balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                  </div>
                 </div>
-                <div>
-                  <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", accountTypeStyles[account.type])}>
-                    {accountTypes.find((t) => t.value === account.type)?.label}
-                  </span>
-                  <p className="text-2xl font-bold text-foreground mt-2">R$ {account.balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Edit Bank Account Dialog */}
@@ -585,7 +594,7 @@ export default function Financas() {
                 <div className="space-y-2">
                   <Label>Instituição</Label>
                   <Input
-                    value={editingAccount.institution}
+                    value={editingAccount.institution || ""}
                     onChange={(e) => setEditingAccount({ ...editingAccount, institution: e.target.value })}
                     className="bg-muted border-border"
                   />
@@ -595,7 +604,7 @@ export default function Financas() {
                     <Label>Tipo</Label>
                     <Select
                       value={editingAccount.type}
-                      onValueChange={(v: "principal" | "operacional" | "reserva") => setEditingAccount({ ...editingAccount, type: v })}
+                      onValueChange={(v) => setEditingAccount({ ...editingAccount, type: v })}
                     >
                       <SelectTrigger className="bg-muted border-border">
                         <SelectValue />
@@ -839,7 +848,16 @@ export default function Financas() {
                   </div>
                 </div>
 
-                {/* Overdue warning */}
+                {/* Bank account info */}
+                {selectedTransaction.bank_account_id && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Conta Bancária</p>
+                    <p className="font-medium text-foreground">
+                      {bankAccounts.find(a => a.id === selectedTransaction.bank_account_id)?.name || "-"}
+                    </p>
+                  </div>
+                )}
+
                 {selectedTransaction.status === 'atrasado' && (
                   <div className="flex items-center gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5">
                     <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
@@ -873,7 +891,61 @@ export default function Financas() {
   );
 }
 
-function TransactionTable({ transactions, type, onSelect, onDelete, onUpdateStatus, statusStyles }: { transactions: Transaction[]; type: "receita" | "despesa"; onSelect: (t: Transaction) => void; onDelete: (id: string) => void; onUpdateStatus: (id: string, status: string) => void; statusStyles: Record<string, string> }) {
+// Category PieChart component
+function CategoryPieChart({ data, emptyLabel }: { data: { name: string; value: number; color: string }[]; emptyLabel: string }) {
+  if (data.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[180px] text-muted-foreground">
+        <PiggyBank className="w-8 h-8 mb-2 opacity-30" />
+        <p className="text-xs text-center">Sem {emptyLabel} para exibir</p>
+      </div>
+    );
+  }
+  return (
+    <>
+      <ResponsiveContainer width="100%" height={160}>
+        <PieChart>
+          <Pie 
+            data={data} 
+            cx="50%" 
+            cy="50%" 
+            innerRadius={45} 
+            outerRadius={65} 
+            paddingAngle={4} 
+            dataKey="value"
+            strokeWidth={0}
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: "hsl(var(--popover))", 
+              border: "1px solid hsl(var(--border))", 
+              borderRadius: "12px",
+              boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+            }} 
+            formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]} 
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="mt-3 space-y-2">
+        {data.slice(0, 5).map((cat) => (
+          <div key={cat.name} className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+              <span className="text-muted-foreground">{cat.name}</span>
+            </div>
+            <span className="text-foreground font-medium">R$ {cat.value.toLocaleString("pt-BR")}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function TransactionTable({ transactions, type, bankAccounts, onSelect, onDelete, onUpdateStatus, statusStyles }: { transactions: Transaction[]; type: "receita" | "despesa"; bankAccounts: ContaBancaria[]; onSelect: (t: Transaction) => void; onDelete: (id: string) => void; onUpdateStatus: (id: string, status: string) => void; statusStyles: Record<string, string> }) {
   return (
     <div className="bg-card rounded-xl border border-border/50 shadow-premium overflow-hidden">
       <Table>
@@ -883,6 +955,7 @@ function TransactionTable({ transactions, type, onSelect, onDelete, onUpdateStat
             <TableHead className="text-muted-foreground">Valor</TableHead>
             <TableHead className="text-muted-foreground">Data</TableHead>
             <TableHead className="text-muted-foreground">Categoria</TableHead>
+            <TableHead className="text-muted-foreground">Banco</TableHead>
             <TableHead className="text-muted-foreground">Status</TableHead>
             <TableHead className="text-muted-foreground w-10"></TableHead>
           </TableRow>
@@ -890,7 +963,7 @@ function TransactionTable({ transactions, type, onSelect, onDelete, onUpdateStat
         <TableBody>
           {transactions.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                 Nenhuma {type === "receita" ? "receita" : "despesa"} registrada
               </TableCell>
             </TableRow>
@@ -908,6 +981,11 @@ function TransactionTable({ transactions, type, onSelect, onDelete, onUpdateStat
               <TableCell className="text-muted-foreground">{new Date(t.date).toLocaleDateString("pt-BR")}</TableCell>
               <TableCell>
                 <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground">{t.category}</span>
+              </TableCell>
+              <TableCell>
+                <span className="text-xs text-muted-foreground">
+                  {t.bank_account_id ? bankAccounts.find(a => a.id === t.bank_account_id)?.name || '-' : '-'}
+                </span>
               </TableCell>
               <TableCell>
                 <DropdownMenu>
@@ -954,9 +1032,9 @@ function TransactionTable({ transactions, type, onSelect, onDelete, onUpdateStat
   );
 }
 
-function AddTransactionDialog({ type, categories, onAdd }: { type: "receita" | "despesa"; categories: Category[]; onAdd: (input: { description: string; value: number; date?: string; category?: string; type: string; status?: string; payment_method?: string; client?: string; provider?: string; notes?: string }) => Promise<unknown> }) {
+function AddTransactionDialog({ type, categories, bankAccounts, onAdd }: { type: "receita" | "despesa"; categories: Category[]; bankAccounts: ContaBancaria[]; onAdd: (input: { description: string; value: number; date?: string; category?: string; type: string; status?: string; payment_method?: string; client?: string; provider?: string; notes?: string; bank_account_id?: string }) => Promise<unknown> }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ description: "", value: "", date: "", category: "", paymentMethod: "", entity: "", notes: "" });
+  const [form, setForm] = useState({ description: "", value: "", date: "", category: "", paymentMethod: "", entity: "", notes: "", bankAccountId: "" });
 
   const handleSubmit = async () => {
     if (!form.description || !form.value || !form.date) return;
@@ -969,9 +1047,10 @@ function AddTransactionDialog({ type, categories, onAdd }: { type: "receita" | "
       status: "pendente",
       payment_method: form.paymentMethod || undefined,
       notes: form.notes || undefined,
+      bank_account_id: form.bankAccountId || undefined,
       ...(type === "receita" ? { client: form.entity || undefined } : { provider: form.entity || undefined }),
     });
-    setForm({ description: "", value: "", date: "", category: "", paymentMethod: "", entity: "", notes: "" });
+    setForm({ description: "", value: "", date: "", category: "", paymentMethod: "", entity: "", notes: "", bankAccountId: "" });
     setOpen(false);
   };
 
@@ -1022,9 +1101,20 @@ function AddTransactionDialog({ type, categories, onAdd }: { type: "receita" | "
               </Select>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>{type === "receita" ? "Cliente" : "Fornecedor"}</Label>
-            <Input value={form.entity} onChange={(e) => setForm({ ...form, entity: e.target.value })} placeholder={type === "receita" ? "Nome do cliente" : "Nome do fornecedor"} className="bg-muted border-border" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>{type === "receita" ? "Cliente" : "Fornecedor"}</Label>
+              <Input value={form.entity} onChange={(e) => setForm({ ...form, entity: e.target.value })} placeholder={type === "receita" ? "Nome do cliente" : "Nome do fornecedor"} className="bg-muted border-border" />
+            </div>
+            <div className="space-y-2">
+              <Label>Conta Bancária</Label>
+              <Select value={form.bankAccountId} onValueChange={(v) => setForm({ ...form, bankAccountId: v })}>
+                <SelectTrigger className="bg-muted border-border"><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  {bankAccounts.map((acc) => (<SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <div className="flex justify-end gap-3">
@@ -1036,14 +1126,14 @@ function AddTransactionDialog({ type, categories, onAdd }: { type: "receita" | "
   );
 }
 
-function AddBankAccountDialog({ onAdd }: { onAdd: (account: Omit<BankAccount, "id">) => void }) {
+function AddBankAccountDialog({ onAdd }: { onAdd: (account: { name: string; institution: string; type: string; balance: number }) => void }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", institution: "", type: "principal" as BankAccount["type"], balance: "" });
+  const [form, setForm] = useState({ name: "", institution: "", type: "corrente", balance: "" });
 
   const handleSubmit = () => {
-    if (!form.name || !form.institution) return;
+    if (!form.name) return;
     onAdd({ name: form.name, institution: form.institution, type: form.type, balance: parseFloat(form.balance) || 0 });
-    setForm({ name: "", institution: "", type: "principal", balance: "" });
+    setForm({ name: "", institution: "", type: "corrente", balance: "" });
     setOpen(false);
   };
 
@@ -1065,7 +1155,7 @@ function AddBankAccountDialog({ onAdd }: { onAdd: (account: Omit<BankAccount, "i
           </div>
           <div className="space-y-2">
             <Label>Tipo de Conta</Label>
-            <Select value={form.type} onValueChange={(v: BankAccount["type"]) => setForm({ ...form, type: v })}>
+            <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
               <SelectTrigger className="bg-muted border-border"><SelectValue /></SelectTrigger>
               <SelectContent className="bg-card border-border">
                 {accountTypes.map((t) => (<SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>))}

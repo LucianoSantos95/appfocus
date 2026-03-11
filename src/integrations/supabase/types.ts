@@ -680,6 +680,7 @@ export type Database = {
       }
       transacoes: {
         Row: {
+          bank_account_id: string | null
           category: string | null
           client: string | null
           created_at: string
@@ -696,6 +697,7 @@ export type Database = {
           value: number
         }
         Insert: {
+          bank_account_id?: string | null
           category?: string | null
           client?: string | null
           created_at?: string
@@ -712,6 +714,7 @@ export type Database = {
           value: number
         }
         Update: {
+          bank_account_id?: string | null
           category?: string | null
           client?: string | null
           created_at?: string
@@ -727,7 +730,15 @@ export type Database = {
           user_id?: string
           value?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transacoes_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

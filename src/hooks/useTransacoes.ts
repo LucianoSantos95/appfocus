@@ -14,6 +14,7 @@ export interface Transacao {
   client: string | null;
   provider: string | null;
   notes: string | null;
+  bank_account_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -29,6 +30,7 @@ export interface TransacaoInput {
   client?: string;
   provider?: string;
   notes?: string;
+  bank_account_id?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

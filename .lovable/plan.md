@@ -1,57 +1,95 @@
 
 
-## Plano de Ajustes no Módulo Financeiro
+# Aplicar restricoes do PlanGate em todos os modulos
 
-### Problema 1: Contas bancárias não persistem
-As contas bancárias usam `useState` local (linha 141) sem integração com o banco de dados. A tabela `contas_bancarias` já existe no banco.
+## Resumo
 
-### Problema 2: Transações sem vínculo com banco
-Não há campo `bank_account_id` na tabela `transacoes` para associar uma transação a uma conta bancária.
+Atualmente, os componentes `PlanGate` e `usePlanFeatures` existem no codigo mas **nao estao sendo usados em nenhuma pagina**. Isso significa que usuarios do plano gratuito podem criar registros, exportar dados e usar IA sem restricao. Este plano aplica as restricoes em todos os 7 modulos.
 
-### Problema 3: Gráfico "Por Categoria" não separa receitas e despesas
-O gráfico atual mistura tudo num único PieChart. O usuário quer ver categorias de receita e despesa separadamente.
+## O que muda para o usuario gratuito
 
-### Problema 4: StatCards não totalmente sincronizados
-"Total em Caixa" soma saldos de contas locais (que somem ao recarregar). Precisa refletir os saldos reais do banco de dados.
+| Modulo | Pode ver dados | Criar/Adicionar | Exportar | IA |
+|--------|---------------|-----------------|----------|-----|
+| Financas | Sim | Bloqueado | Bloqueado | - |
+| RH | Sim | Bloqueado | Bloqueado | - |
+| Marketing | Sim | Bloqueado | Bloqueado | - |
+| Projetos | Sim | Bloqueado | Bloqueado | - |
+| Clientes | Sim | Bloqueado | Bloqueado | Bloqueado |
+| Tarefas | Sim | Bloqueado | Bloqueado | - |
+| Processos | Sim | Bloqueado | Bloqueado | - |
+
+Quando bloqueado, o botao aparece com icone de cadeado e ao clicar redireciona para a pagina de planos.
+
+## Abordagem tecnica
+
+Em cada pagina, envolver os botoes de acao com o componente `PlanGate`:
+
+1. **Botoes "Novo/Adicionar"** - envolver com `<PlanGate module="X" action="create">` 
+2. **Botoes "Exportar"** - envolver com `<PlanGate module="X" action="export">`
+3. **Botoes "Importar Planilha"** - envolver com `<PlanGate module="X" action="create">`
+4. **Botao "Analise IA" (Clientes)** - envolver com `<PlanGate module="clientes" action="ai_analysis">`
+
+Em vez de esconder os botoes, vou usar a abordagem de mostrar o botao desabilitado com tooltip "Disponivel no plano Plus" e redirecionar para /planos ao clicar. Isso incentiva o upgrade.
+
+### Arquivos a modificar
+
+- `src/pages/Financas.tsx` - Proteger botoes Exportar, Importar e dialog de nova transacao
+- `src/pages/RH.tsx` - Proteger botoes Importar e dialog de novo colaborador/vaga
+- `src/pages/Marketing.tsx` - Proteger botoes Importar e dialogs de nova campanha/conteudo
+- `src/pages/Projetos.tsx` - Proteger botoes Importar e dialog de novo projeto
+- `src/pages/Clientes.tsx` - Proteger botoes Importar, dialog de novo cliente e botao de Analise IA
+- `src/pages/Tarefas.tsx` - Proteger botoes Importar e dialog de nova atividade
+- `src/pages/Processos.tsx` - Proteger botoes Importar, Exportar PDF e dialog de novo processo
+
+### Componente PlanGate - pequeno ajuste
+
+O `PlanGate` atual renderiza um card grande quando o acesso e negado. Para botoes, vou criar uma variante inline que mostra o botao desabilitado com icone de cadeado, em vez do card grande. Isso mantem a interface limpa.
+
+Novo componente: `PlanGateButton` - um wrapper que:
+- Se tem acesso: renderiza o botao normalmente
+- Se nao tem acesso: renderiza o botao com icone de cadeado e redireciona para /planos ao clicar
+
+### Mapeamento de modulos para nomes na tabela plan_features
+
+```text
+Financas   -> module: "financas"
+RH         -> module: "rh"
+Marketing  -> module: "marketing"
+Projetos   -> module: "projetos"
+Clientes   -> module: "clientes"
+Tarefas    -> module: "atividades"
+Processos  -> module: "processos"
+```
+
+## Resultado esperado
+
+- Usuarios gratuitos podem navegar e visualizar todos os modulos (dados de exemplo)
+- Ao tentar criar, exportar ou importar, veem uma mensagem orientando a contratar um plano
+- Usuarios com plano Plus, Pro ou Enterprise continuam usando normalmente
+- Admins (dono do SaaS) continuam com acesso total
 
 ---
 
-### Implementação
+# Tarefas concluidas
 
-**1. Criar hook `useContasBancarias`**
-- CRUD completo contra a tabela `contas_bancarias` (já existe com RLS configurado)
-- Funções: `fetchContas`, `addConta`, `updateConta`, `deleteConta`
+## ✅ Redesign da tela de Auth
 
-**2. Migração: adicionar coluna `bank_account_id` na tabela `transacoes`**
-- `ALTER TABLE public.transacoes ADD COLUMN bank_account_id uuid REFERENCES public.contas_bancarias(id) ON DELETE SET NULL;`
+- Layout split-screen seguindo estetica da landing page do Hub
+- Painel de branding com gradientes, glow e bullets de features
+- Link para pagina de precos no header e rodape
+- Responsivo (coluna unica em mobile)
+- Componentes extraidos: AuthHeader, AuthFooter, AuthBrandingPanel, AuthFormPanel
 
-**3. Atualizar `useTransacoes`**
-- Adicionar `bank_account_id` ao `TransacaoInput` e `Transacao`
+---
 
-**4. Lógica de atualização automática do saldo bancário**
-- Quando uma transação com status "pago" é criada/atualizada e tem `bank_account_id`:
-  - Receita: soma o valor ao saldo do banco
-  - Despesa: subtrai o valor do saldo do banco
-- Quando status muda de/para "pago", ajustar o saldo correspondente
+# Sprint 3 — Automacoes e Alertas (planejamento futuro)
 
-**5. Refatorar `Financas.tsx`**
-- Substituir `useState<BankAccount[]>([])` pelo hook `useContasBancarias`
-- No `AddTransactionDialog`, adicionar select para escolher conta bancária
-- No detalhe da transação, mostrar o banco associado
-- **StatCards**: 
-  - Receita Total / Despesa Total: somar todas (pagas)
-  - Lucro Líquido: receita - despesa
-  - Total em Caixa: somar saldos das contas bancárias do banco de dados
+## Fase 1: Alertas de tarefas atrasadas e transacoes vencidas
+- pg_cron job diario para verificar tarefas com due_date < now() e status != 'concluida'
+- pg_cron job diario para verificar transacoes com date < now() e status = 'pendente'
+- Edge function para enviar emails de alerta via Resend
+- Widget de alertas no dashboard
 
-**6. Gráfico "Por Categoria" separado**
-- Substituir o PieChart único por dois gráficos lado a lado (ou tabs):
-  - "Categorias de Receita": PieChart com categorias onde `type === 'receita'`
-  - "Categorias de Despesa": PieChart com categorias onde `type === 'despesa'`
-- Cada um com sua legenda mostrando os valores
-
-### Arquivos alterados
-- `supabase/migrations/` — nova migração para `bank_account_id`
-- `src/hooks/useContasBancarias.ts` — novo hook
-- `src/hooks/useTransacoes.ts` — adicionar `bank_account_id`
-- `src/pages/Financas.tsx` — integrar hook de contas, select de banco no form, gráfico separado por tipo
-
+## Fase 2: Relatorios automaticos
+- Relatorio semanal de resumo financeiro enviado por email
+- Relatorio mensal de desempenho de projetos
