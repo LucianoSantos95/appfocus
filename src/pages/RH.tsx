@@ -374,6 +374,18 @@ export default function RH() {
                 </div>
               </TabsContent>
             ))}
+
+            <TabsContent value="timeline" className="space-y-4">
+              <FeriasAniversariosTimeline
+                colaboradores={dbColaboradores.map(c => ({
+                  id: c.id,
+                  name: c.name,
+                  status: c.status,
+                  start_date: c.start_date,
+                  department: c.department,
+                }))}
+              />
+            </TabsContent>
           </Tabs>
         </div>
 
