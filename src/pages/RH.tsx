@@ -593,11 +593,16 @@ export default function RH() {
   );
 }
 
-function AddColaboradorDialog({ onAdd }: { onAdd: (c: { name: string; role?: string; department?: string; salary?: number; email?: string; phone?: string; status?: string }) => Promise<unknown> }) {
+function AddColaboradorDialog({ onAdd, disabled, onBlocked }: { onAdd: (c: { name: string; role?: string; department?: string; salary?: number; email?: string; phone?: string; status?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "", role: "", department: "", salary: "", email: "", phone: "", avatar: "", bio: "",
   });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) { onBlocked?.(); return; }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.name || !form.role || !form.department) return;
@@ -615,7 +620,7 @@ function AddColaboradorDialog({ onAdd }: { onAdd: (c: { name: string; role?: str
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2"><Plus className="w-4 h-4" />Novo Colaborador</Button>
       </DialogTrigger>

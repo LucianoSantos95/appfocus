@@ -799,7 +799,7 @@ function EditClienteDialog({
   );
 }
 
-function AddClienteDialog({ onAdd }: { onAdd: (c: ClienteInput) => Promise<Cliente | null> }) {
+function AddClienteDialog({ onAdd, disabled, onBlocked }: { onAdd: (c: ClienteInput) => Promise<Cliente | null>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -811,6 +811,11 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: ClienteInput) => Promise<Clien
     valor_total: "",
     anexo_url: "",
   });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) { onBlocked?.(); return; }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.nome || !form.email) return;
@@ -833,7 +838,7 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: ClienteInput) => Promise<Clien
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />

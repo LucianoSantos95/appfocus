@@ -820,7 +820,7 @@ function ProjectDetailDialog({
   );
 }
 
-function AddProjetoDialog({ onAdd }: { onAdd: (p: { name: string; status?: string; priority?: string; start_date?: string; end_date?: string; budget?: number; responsible?: string; description?: string }) => Promise<unknown> }) {
+function AddProjetoDialog({ onAdd, disabled, onBlocked }: { onAdd: (p: { name: string; status?: string; priority?: string; start_date?: string; end_date?: string; budget?: number; responsible?: string; description?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -830,6 +830,11 @@ function AddProjetoDialog({ onAdd }: { onAdd: (p: { name: string; status?: strin
     endDate: "",
     priority: "media" as "alta" | "media" | "baixa",
   });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) { onBlocked?.(); return; }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.name || !form.responsible) return;
@@ -849,7 +854,7 @@ function AddProjetoDialog({ onAdd }: { onAdd: (p: { name: string; status?: strin
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />

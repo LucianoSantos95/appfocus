@@ -628,7 +628,7 @@ function EditProcessoDialog({
   );
 }
 
-function AddProcessoDialog({ onAdd }: { onAdd: (p: { name: string; description?: string; department?: string; owner?: string; status?: string }) => Promise<unknown> }) {
+function AddProcessoDialog({ onAdd, disabled, onBlocked }: { onAdd: (p: { name: string; description?: string; department?: string; owner?: string; status?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -637,6 +637,11 @@ function AddProcessoDialog({ onAdd }: { onAdd: (p: { name: string; description?:
     owner: "",
     status: "ativo" as string,
   });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) { onBlocked?.(); return; }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.name || !form.department) return;
@@ -654,7 +659,7 @@ function AddProcessoDialog({ onAdd }: { onAdd: (p: { name: string; description?:
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />

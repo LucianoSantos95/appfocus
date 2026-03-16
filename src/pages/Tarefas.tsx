@@ -632,7 +632,7 @@ function EditAtividadeDialog({
   );
 }
 
-function AddAtividadeDialog({ onAdd }: { onAdd: (a: { title: string; description?: string; due_date?: string; priority?: string; status?: string; category?: string; responsible?: string }) => Promise<unknown> }) {
+function AddAtividadeDialog({ onAdd, disabled, onBlocked }: { onAdd: (a: { title: string; description?: string; due_date?: string; priority?: string; status?: string; category?: string; responsible?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -642,6 +642,11 @@ function AddAtividadeDialog({ onAdd }: { onAdd: (a: { title: string; description
     category: "tarefa" as string,
     responsible: "",
   });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) { onBlocked?.(); return; }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.title) return;
@@ -661,7 +666,7 @@ function AddAtividadeDialog({ onAdd }: { onAdd: (a: { title: string; description
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />
