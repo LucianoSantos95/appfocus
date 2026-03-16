@@ -132,6 +132,8 @@ export default function Projetos() {
   const { toast } = useToast();
   const { projetos: dbProjetos, isLoading, addProjeto, updateProjeto, deleteProjeto: deleteProjetoDB, refetch: refetchProjetosDB } = useProjetosDB();
   const [searchTerm, setSearchTerm] = useState("");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(dbProjetos.length);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
 
   // Map DB projetos to local type
