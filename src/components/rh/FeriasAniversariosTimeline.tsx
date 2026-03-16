@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Cake, Palmtree, Briefcase } from "lucide-react";
+import { ChevronLeft, ChevronRight, Cake, Palmtree } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Colaborador {
@@ -15,6 +15,15 @@ interface FeriasAniversariosTimelineProps {
   colaboradores: Colaborador[];
 }
 
+const platformColors: Record<string, string> = {
+  Tecnologia: "bg-primary/80",
+  Marketing: "bg-success/80",
+  Projetos: "bg-warning/80",
+  Financeiro: "bg-destructive/80",
+  RH: "bg-accent-foreground/60",
+  Comercial: "bg-primary/60",
+};
+
 export function FeriasAniversariosTimeline({ colaboradores }: FeriasAniversariosTimelineProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const currentYear = currentDate.getFullYear();
@@ -24,33 +33,17 @@ export function FeriasAniversariosTimeline({ colaboradores }: FeriasAniversarios
 
   const events = useMemo(() => {
     const items: { day: number; name: string; type: "aniversario" | "ferias"; department: string }[] = [];
-
     colaboradores.forEach((c) => {
-      // Company anniversary (start_date month matches current month)
       if (c.start_date) {
         const startDate = new Date(c.start_date);
         if (startDate.getMonth() === currentMonth) {
-          items.push({
-            day: startDate.getDate(),
-            name: c.name,
-            type: "aniversario",
-            department: c.department || "",
-          });
+          items.push({ day: startDate.getDate(), name: c.name, type: "aniversario", department: c.department || "" });
         }
       }
-
-      // On vacation
       if (c.status === "ferias") {
-        // Show across all days as a banner
-        items.push({
-          day: 0, // special: full month
-          name: c.name,
-          type: "ferias",
-          department: c.department || "",
-        });
+        items.push({ day: 0, name: c.name, type: "ferias", department: c.department || "" });
       }
     });
-
     return items;
   }, [colaboradores, currentMonth]);
 
@@ -61,6 +54,8 @@ export function FeriasAniversariosTimeline({ colaboradores }: FeriasAniversarios
     const days: (number | null)[] = [];
     for (let i = 0; i < firstDayOfWeek; i++) days.push(null);
     for (let d = 1; d <= daysInMonth; d++) days.push(d);
+    // Fill trailing nulls to complete the grid
+    while (days.length % 7 !== 0) days.push(null);
     return days;
   }, [firstDayOfWeek, daysInMonth]);
 
@@ -70,7 +65,8 @@ export function FeriasAniversariosTimeline({ colaboradores }: FeriasAniversarios
   const prevMonth = () => setCurrentDate(new Date(currentYear, currentMonth - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(currentYear, currentMonth + 1, 1));
 
-  const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const weekDays = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+  const today = new Date();
 
   return (
     <div className="space-y-4">
@@ -83,7 +79,7 @@ export function FeriasAniversariosTimeline({ colaboradores }: FeriasAniversarios
           </div>
           <div className="flex flex-wrap gap-2">
             {feriasColaboradores.map((c, i) => (
-              <span key={i} className="text-xs bg-warning/10 text-warning px-2 py-1 rounded-full">
+              <span key={i} className="text-xs bg-warning/10 text-warning px-3 py-1.5 rounded-full font-medium">
                 {c.name}
               </span>
             ))}
@@ -91,52 +87,93 @@ export function FeriasAniversariosTimeline({ colaboradores }: FeriasAniversarios
         </div>
       )}
 
-      {/* Calendar */}
-      <div className="bg-card rounded-xl border border-border/50 p-4">
-        <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8">
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <h3 className="font-semibold text-foreground">
-            {monthNames[currentMonth]} {currentYear}
-          </h3>
-          <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8">
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+      {/* Google Calendar Style */}
+      <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())} className="text-xs">
+              Hoje
+            </Button>
+            <div className="flex items-center">
+              <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8">
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8">
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">
+              {monthNames[currentMonth]} {currentYear}
+            </h3>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-1.5">
+              <Cake className="w-3.5 h-3.5 text-primary" />
+              <span className="text-muted-foreground">Aniversário de empresa</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Palmtree className="w-3.5 h-3.5 text-warning" />
+              <span className="text-muted-foreground">Em férias</span>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1">
+        {/* Weekday headers */}
+        <div className="grid grid-cols-7 border-b border-border/30">
           {weekDays.map((d) => (
-            <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">
+            <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground py-2.5 tracking-wider">
               {d}
             </div>
           ))}
+        </div>
 
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7">
           {calendarDays.map((day, idx) => {
             const dayEvents = day ? getEventsForDay(day) : [];
-            const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
+            const isToday = day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
+            const isWeekend = idx % 7 === 0 || idx % 7 === 6;
 
             return (
               <div
                 key={idx}
                 className={cn(
-                  "min-h-[48px] p-1 rounded-lg text-center relative",
-                  day && "hover:bg-muted/30 transition-colors",
-                  isToday && "bg-primary/10 border border-primary/30"
+                  "min-h-[100px] border-b border-r border-border/20 p-1.5 transition-colors",
+                  day && "hover:bg-muted/30",
+                  isWeekend && day && "bg-muted/10",
+                  !day && "bg-muted/5"
                 )}
               >
                 {day && (
                   <>
-                    <span className={cn("text-xs", isToday ? "text-primary font-bold" : "text-foreground")}>{day}</span>
-                    {dayEvents.length > 0 && (
-                      <div className="flex flex-col items-center gap-0.5 mt-0.5">
-                        {dayEvents.slice(0, 2).map((e, i) => (
-                          <div key={i} className="flex items-center gap-0.5" title={`${e.name} - Aniversário de empresa`}>
-                            <Cake className="w-3 h-3 text-primary" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <div className="flex justify-end mb-1">
+                      <span className={cn(
+                        "text-xs w-6 h-6 flex items-center justify-center rounded-full",
+                        isToday 
+                          ? "bg-primary text-primary-foreground font-bold" 
+                          : "text-foreground"
+                      )}>
+                        {day}
+                      </span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {dayEvents.map((e, i) => (
+                        <div
+                          key={i}
+                          className={cn(
+                            "text-[10px] px-2 py-1 rounded-md text-primary-foreground font-medium truncate",
+                            platformColors[e.department] || "bg-primary/70"
+                          )}
+                          title={`${e.name} - Aniversário de empresa${e.department ? ` (${e.department})` : ""}`}
+                        >
+                          <span className="flex items-center gap-1">
+                            <Cake className="w-2.5 h-2.5 flex-shrink-0" />
+                            {e.name}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </>
                 )}
               </div>
@@ -147,25 +184,27 @@ export function FeriasAniversariosTimeline({ colaboradores }: FeriasAniversarios
 
       {/* Upcoming Anniversary List */}
       {events.filter((e) => e.type === "aniversario").length > 0 && (
-        <div className="bg-card rounded-xl border border-border/50 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Briefcase className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Aniversários de empresa neste mês</span>
-          </div>
+        <div className="bg-card rounded-xl border border-border/50 p-5">
+          <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <Cake className="w-4 h-4 text-primary" />
+            Aniversários de empresa — {monthNames[currentMonth]}
+          </h4>
           <div className="space-y-2">
             {events
               .filter((e) => e.type === "aniversario")
               .sort((a, b) => a.day - b.day)
               .map((e, i) => (
-                <div key={i} className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Cake className="w-4 h-4 text-primary" />
-                    <span className="text-sm text-foreground">{e.name}</span>
-                    {e.department && (
-                      <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{e.department}</span>
-                    )}
+                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-1 h-8 rounded-full", platformColors[e.department] || "bg-primary/70")} />
+                    <div>
+                      <span className="text-sm font-medium text-foreground">{e.name}</span>
+                      {e.department && (
+                        <p className="text-xs text-muted-foreground">{e.department}</p>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">Dia {e.day}</span>
+                  <span className="text-xs text-muted-foreground font-medium">{e.day} de {monthNames[currentMonth].toLowerCase()}</span>
                 </div>
               ))}
           </div>
