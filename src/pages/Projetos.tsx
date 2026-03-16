@@ -359,7 +359,7 @@ export default function Projetos() {
               />
             </PlanGateButton>
             <PlanGateButton module="projetos" action="create">
-              <AddProjetoDialog onAdd={addProjeto} />
+              <AddProjetoDialog onAdd={addProjeto} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
             </PlanGateButton>
           </div>
         </div>
