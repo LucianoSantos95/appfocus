@@ -62,6 +62,7 @@ import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { ProjetosBIPanel } from "@/components/bi/ProjetosBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
+import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
