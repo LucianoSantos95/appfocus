@@ -163,14 +163,10 @@ export default function Financas() {
 
   // Map DB transacoes to local Transaction type, auto-marking overdue
   const today = new Date().toISOString().split('T')[0];
-  const transactions: Transaction[] = transacoes.map(t => {
+  const transactions: Transaction[] = useMemo(() => transacoes.map(t => {
     const rawStatus = t.status === 'pago' ? 'pago' : t.status === 'atrasado' ? 'atrasado' : 'pendente';
     const isOverdue = rawStatus === 'pendente' && t.date && t.date < today;
     const finalStatus = isOverdue ? 'atrasado' : rawStatus;
-
-    if (isOverdue) {
-      updateTransacao(t.id, { status: 'atrasado' });
-    }
 
     return {
       id: t.id,
@@ -186,7 +182,16 @@ export default function Financas() {
       notes: t.notes || undefined,
       bank_account_id: t.bank_account_id,
     };
-  });
+  }), [transacoes, today]);
+
+  // Auto-mark overdue transactions (side effect in useEffect, not render)
+  useEffect(() => {
+    const overdueIds = transacoes
+      .filter(t => t.status === 'pendente' && t.date && t.date < today)
+      .map(t => t.id);
+    overdueIds.forEach(id => updateTransacao(id, { status: 'atrasado' }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transacoes.length]);
 
   const handleImportTransactions = () => {
     refetchTransacoes();
