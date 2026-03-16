@@ -378,6 +378,17 @@ export default function Financas() {
           </div>
           <div className="flex items-center gap-2">
             <PlanGateButton module="financas" action="create">
+              <ImportExtratoDialog
+                onImportComplete={handleImportTransactions}
+                trigger={
+                  <Button variant="outline" className="gap-2">
+                    <Receipt className="w-4 h-4" />
+                    Importar Extrato
+                  </Button>
+                }
+              />
+            </PlanGateButton>
+            <PlanGateButton module="financas" action="create">
               <ImportDialog
                 config={importConfigs.financas_transacoes}
                 onImportComplete={handleImportTransactions}
