@@ -519,7 +519,7 @@ export default function Financas() {
           <TabsContent value="despesas" className="space-y-4">
             <div className="flex justify-end">
               <PlanGateButton module="financas" action="create">
-                <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} bankAccounts={bankAccounts} onAdd={handleAddTransaction} />
+                <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} bankAccounts={bankAccounts} onAdd={handleAddTransaction} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
               </PlanGateButton>
             </div>
             <TransactionTable 
