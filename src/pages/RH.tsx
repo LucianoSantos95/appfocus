@@ -588,6 +588,7 @@ export default function RH() {
           </DialogContent>
         </Dialog>
       </div>
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="RH" />
     </MainLayout>
   );
 }
