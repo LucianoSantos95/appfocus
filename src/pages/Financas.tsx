@@ -86,6 +86,10 @@ import { useContasBancarias, ContaBancaria } from "@/hooks/useContasBancarias";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { FinanceiroBIPanel } from "@/components/bi/FinanceiroBIPanel";
+import { usePlan } from "@/contexts/PlanContext";
+import { Maximize2 } from "lucide-react";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 // Types
 interface Transaction {
