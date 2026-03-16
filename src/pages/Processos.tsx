@@ -216,7 +216,7 @@ export default function Processos() {
               />
             </PlanGateButton>
             <PlanGateButton module="processos" action="create">
-              <AddProcessoDialog onAdd={addProcesso} />
+              <AddProcessoDialog onAdd={addProcesso} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
             </PlanGateButton>
           </div>
         </div>
