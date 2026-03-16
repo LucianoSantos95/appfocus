@@ -371,6 +371,7 @@ export default function Processos() {
           onUpdate={(updatedStep) => handleUpdateStep(editingStep.processoId, updatedStep)}
         />
       )}
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Processos" />
     </MainLayout>
   );
 }
