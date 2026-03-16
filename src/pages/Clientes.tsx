@@ -64,6 +64,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useClientes, type Cliente, type ClienteInput } from "@/hooks/useClientes";
 import { ClienteInsightsCard } from "@/components/clientes/ClienteInsightsCard";
 import { ClienteAIBadge } from "@/components/clientes/ClienteAIBadge";
+import { MeetingNotesEditor } from "@/components/clientes/MeetingNotesEditor";
 import { SugestoesPainel } from "@/components/clientes/SugestoesPainel";
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
