@@ -52,6 +52,8 @@ import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessos as useProcessosDB } from "@/hooks/useProcessos";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
+import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
 interface ProcessoStep {
   id: string;
