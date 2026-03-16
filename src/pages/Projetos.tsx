@@ -460,6 +460,7 @@ export default function Projetos() {
           onDelete={handleDeleteProjeto}
         />
       )}
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Projetos" />
     </MainLayout>
   );
 }
