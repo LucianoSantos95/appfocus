@@ -45,8 +45,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+// jsPDF loaded dynamically to reduce bundle size
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
