@@ -142,6 +142,7 @@ export default function Financas() {
   const [biPanelOpen, setBiPanelOpen] = useState(false);
   const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
   const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(transacoes.length);
   const [categories, setCategories] = useState<Category[]>([
     { id: "1", name: "Serviços", type: "receita", color: "hsl(var(--primary))" },
