@@ -324,6 +324,7 @@ export default function RH() {
               <TabsTrigger value="ferias">Em Férias</TabsTrigger>
               <TabsTrigger value="licenca">Afastados</TabsTrigger>
               <TabsTrigger value="todos">Todos</TabsTrigger>
+              <TabsTrigger value="timeline">Timeline</TabsTrigger>
             </TabsList>
 
             {["ativo", "ferias", "licenca", "todos"].map((filter) => (
