@@ -139,6 +139,10 @@ export default function Financas() {
   const { contas: bankAccounts, addConta, updateConta, updateBalance, deleteConta } = useContasBancarias();
   const [searchTerm, setSearchTerm] = useState("");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [biPanelOpen, setBiPanelOpen] = useState(false);
+  const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
+  const { plan } = usePlan();
+  const usePlanRef = { current: { plan } };
   const freemium = useFreemiumLimit(transacoes.length);
   const [categories, setCategories] = useState<Category[]>([
     { id: "1", name: "Serviços", type: "receita", color: "hsl(var(--primary))" },
