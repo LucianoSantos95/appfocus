@@ -390,7 +390,7 @@ export default function Tarefas() {
               />
             </PlanGateButton>
             <PlanGateButton module="atividades" action="create">
-              <AddAtividadeDialog onAdd={addTarefa} />
+              <AddAtividadeDialog onAdd={addTarefa} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
             </PlanGateButton>
           </div>
         </div>
