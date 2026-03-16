@@ -54,6 +54,8 @@ import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useCampanhas as useCampanhasDB } from "@/hooks/useCampanhas";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
+import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
 interface Campanha {
   id: string;
