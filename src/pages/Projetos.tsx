@@ -601,10 +601,11 @@ function ProjectDetailDialog({
         </DialogHeader>
 
         <Tabs defaultValue="geral" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="geral">Geral</TabsTrigger>
             <TabsTrigger value="equipe">Equipe ({editedProjeto.members.length})</TabsTrigger>
             <TabsTrigger value="sprints">Sprints ({editedProjeto.sprints.length})</TabsTrigger>
+            <TabsTrigger value="anexos">Anexos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="geral" className="space-y-4 mt-4">
