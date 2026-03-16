@@ -380,6 +380,7 @@ export default function Clientes() {
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "12px",
                     boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                    color: "hsl(var(--popover-foreground))",
                   }}
                   formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, "Receita"]}
                 />
