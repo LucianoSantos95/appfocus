@@ -1,95 +1,100 @@
 
 
-# Aplicar restricoes do PlanGate em todos os modulos
+## Plano: Grupo 3 — Novas Funcionalidades Operacionais + Guia Atualizado
 
-## Resumo
+### 1. Financeiro: Importação de Extrato (CSV/OFX)
 
-Atualmente, os componentes `PlanGate` e `usePlanFeatures` existem no codigo mas **nao estao sendo usados em nenhuma pagina**. Isso significa que usuarios do plano gratuito podem criar registros, exportar dados e usar IA sem restricao. Este plano aplica as restricoes em todos os 7 modulos.
+**Novo componente: `src/components/financas/ImportExtratoDialog.tsx`**
+- Botão "Importar Extrato" na toolbar do Financas.tsx (ao lado do botão existente de importar planilha)
+- Aceita CSV e OFX (Open Financial Exchange)
+- Parser OFX simples que extrai transações (data, descrição, valor)
+- Usa o fluxo de mapeamento de colunas existente para CSV
+- Funcional para todos; para planos pagos, integração completa com inserção no banco
 
-## O que muda para o usuario gratuito
-
-| Modulo | Pode ver dados | Criar/Adicionar | Exportar | IA |
-|--------|---------------|-----------------|----------|-----|
-| Financas | Sim | Bloqueado | Bloqueado | - |
-| RH | Sim | Bloqueado | Bloqueado | - |
-| Marketing | Sim | Bloqueado | Bloqueado | - |
-| Projetos | Sim | Bloqueado | Bloqueado | - |
-| Clientes | Sim | Bloqueado | Bloqueado | Bloqueado |
-| Tarefas | Sim | Bloqueado | Bloqueado | - |
-| Processos | Sim | Bloqueado | Bloqueado | - |
-
-Quando bloqueado, o botao aparece com icone de cadeado e ao clicar redireciona para a pagina de planos.
-
-## Abordagem tecnica
-
-Em cada pagina, envolver os botoes de acao com o componente `PlanGate`:
-
-1. **Botoes "Novo/Adicionar"** - envolver com `<PlanGate module="X" action="create">` 
-2. **Botoes "Exportar"** - envolver com `<PlanGate module="X" action="export">`
-3. **Botoes "Importar Planilha"** - envolver com `<PlanGate module="X" action="create">`
-4. **Botao "Analise IA" (Clientes)** - envolver com `<PlanGate module="clientes" action="ai_analysis">`
-
-Em vez de esconder os botoes, vou usar a abordagem de mostrar o botao desabilitado com tooltip "Disponivel no plano Plus" e redirecionar para /planos ao clicar. Isso incentiva o upgrade.
-
-### Arquivos a modificar
-
-- `src/pages/Financas.tsx` - Proteger botoes Exportar, Importar e dialog de nova transacao
-- `src/pages/RH.tsx` - Proteger botoes Importar e dialog de novo colaborador/vaga
-- `src/pages/Marketing.tsx` - Proteger botoes Importar e dialogs de nova campanha/conteudo
-- `src/pages/Projetos.tsx` - Proteger botoes Importar e dialog de novo projeto
-- `src/pages/Clientes.tsx` - Proteger botoes Importar, dialog de novo cliente e botao de Analise IA
-- `src/pages/Tarefas.tsx` - Proteger botoes Importar e dialog de nova atividade
-- `src/pages/Processos.tsx` - Proteger botoes Importar, Exportar PDF e dialog de novo processo
-
-### Componente PlanGate - pequeno ajuste
-
-O `PlanGate` atual renderiza um card grande quando o acesso e negado. Para botoes, vou criar uma variante inline que mostra o botao desabilitado com icone de cadeado, em vez do card grande. Isso mantem a interface limpa.
-
-Novo componente: `PlanGateButton` - um wrapper que:
-- Se tem acesso: renderiza o botao normalmente
-- Se nao tem acesso: renderiza o botao com icone de cadeado e redireciona para /planos ao clicar
-
-### Mapeamento de modulos para nomes na tabela plan_features
-
-```text
-Financas   -> module: "financas"
-RH         -> module: "rh"
-Marketing  -> module: "marketing"
-Projetos   -> module: "projetos"
-Clientes   -> module: "clientes"
-Tarefas    -> module: "atividades"
-Processos  -> module: "processos"
-```
-
-## Resultado esperado
-
-- Usuarios gratuitos podem navegar e visualizar todos os modulos (dados de exemplo)
-- Ao tentar criar, exportar ou importar, veem uma mensagem orientando a contratar um plano
-- Usuarios com plano Plus, Pro ou Enterprise continuam usando normalmente
-- Admins (dono do SaaS) continuam com acesso total
+**Editar: `src/pages/Financas.tsx`** — adicionar botão de importação de extrato
 
 ---
 
-# Tarefas concluidas
+### 2. RH: Upload de Documentos + Timeline de Férias/Aniversários
 
-## ✅ Redesign da tela de Auth
+**2a. Upload de Documentos no perfil do colaborador**
 
-- Layout split-screen seguindo estetica da landing page do Hub
-- Painel de branding com gradientes, glow e bullets de features
-- Link para pagina de precos no header e rodape
-- Responsivo (coluna unica em mobile)
-- Componentes extraidos: AuthHeader, AuthFooter, AuthBrandingPanel, AuthFormPanel
+- Migração: criar bucket `colaborador-docs` no storage
+- Migração: adicionar coluna `documents jsonb default '[]'` na tabela `colaboradores` (array de objetos `{name, url, uploaded_at}`)
+- **Novo componente: `src/components/rh/DocumentUpload.tsx`** — dropzone para PDF/imagens, faz upload ao bucket e salva referência no perfil
+- Integrar no dialog de edição de colaborador em `src/pages/RH.tsx`
+
+**2b. Timeline de Férias/Aniversários**
+
+- **Novo componente: `src/components/rh/FeriasAniversariosTimeline.tsx`** — calendário visual mostrando datas de início (aniversário de empresa) e colaboradores em férias
+- Usa dados existentes da tabela `colaboradores` (campos `start_date` e `status`)
+- Adicionar como nova aba "Timeline" em `src/pages/RH.tsx`
 
 ---
 
-# Sprint 3 — Automacoes e Alertas (planejamento futuro)
+### 3. Marketing: Calendário de Conteúdo
 
-## Fase 1: Alertas de tarefas atrasadas e transacoes vencidas
-- pg_cron job diario para verificar tarefas com due_date < now() e status != 'concluida'
-- pg_cron job diario para verificar transacoes com date < now() e status = 'pendente'
-- Edge function para enviar emails de alerta via Resend
-- Widget de alertas no dashboard
+- Migração: criar tabela `conteudos` com colunas: `id, user_id, title, description, platform, scheduled_date, status (rascunho/agendado/publicado), created_at, updated_at` + RLS por user_id
+- **Novo hook: `src/hooks/useConteudos.ts`** — CRUD para conteúdos
+- **Novo componente: `src/components/marketing/ContentCalendar.tsx`** — visualização de calendário mensal com cards de conteúdo posicionados por data, drag para reagendar
+- Integrar como nova aba "Calendário" em `src/pages/Marketing.tsx`
 
-## Fase 2: Relatorios automaticos
-- Relatorio semanal de resumo financeiro enviado por email
-- Relatorio mensal de desempenho de projetos
+---
+
+### 4. Projetos: Anexos de Projeto
+
+- Migração: criar bucket `projeto-anexos` no storage
+- Migração: adicionar coluna `attachments jsonb default '[]'` na tabela `projetos`
+- **Novo componente: `src/components/projetos/ProjetoAnexos.tsx`** — seção de upload/listagem de arquivos (briefings, documentos) dentro do card expandido do projeto
+- Integrar na área de detalhes do projeto em `src/pages/Projetos.tsx`
+
+---
+
+### 5. CRM: Rich Text para Anotações de Reunião
+
+- Migração: adicionar coluna `meeting_notes text` na tabela `clientes`
+- **Novo componente: `src/components/clientes/MeetingNotesEditor.tsx`** — editor de texto rico usando `contentEditable` com toolbar básica (negrito, itálico, listas, links), salva HTML no campo `meeting_notes`
+- Integrar no dialog de detalhes/edição do cliente em `src/pages/Clientes.tsx`
+
+---
+
+### 6. Guia de Uso Atualizado
+
+**Editar: `src/pages/Guia.tsx`**
+- Atualizar array `modules` com as novas ações de cada módulo (importação de extrato, upload de documentos, calendário de conteúdo, anexos de projeto, anotações de reunião)
+- Adicionar nova seção "Funcionalidades Avançadas" com cards explicativos sobre:
+  - Como usar os Dashboards de BI (clicar nos gráficos para análise detalhada)
+  - Como importar extratos bancários
+  - Como fazer upload de documentos no RH
+  - Como usar o Calendário de Conteúdo no Marketing
+  - Como anexar briefings nos Projetos
+  - Como usar o editor de anotações no CRM
+- Atualizar FAQ com perguntas sobre as novas funcionalidades
+- Atualizar `journeySteps` para incluir etapa sobre funcionalidades avançadas
+
+---
+
+### Resumo de arquivos
+
+| Ação | Arquivo |
+|------|---------|
+| Migração | Bucket `colaborador-docs`, coluna `documents` em colaboradores |
+| Migração | Tabela `conteudos` com RLS |
+| Migração | Bucket `projeto-anexos`, coluna `attachments` em projetos |
+| Migração | Coluna `meeting_notes` em clientes |
+| Criar | `src/components/financas/ImportExtratoDialog.tsx` |
+| Criar | `src/components/rh/DocumentUpload.tsx` |
+| Criar | `src/components/rh/FeriasAniversariosTimeline.tsx` |
+| Criar | `src/hooks/useConteudos.ts` |
+| Criar | `src/components/marketing/ContentCalendar.tsx` |
+| Criar | `src/components/projetos/ProjetoAnexos.tsx` |
+| Criar | `src/components/clientes/MeetingNotesEditor.tsx` |
+| Editar | `src/pages/Financas.tsx` |
+| Editar | `src/pages/RH.tsx` |
+| Editar | `src/pages/Marketing.tsx` |
+| Editar | `src/pages/Projetos.tsx` |
+| Editar | `src/pages/Clientes.tsx` |
+| Editar | `src/pages/Guia.tsx` |
+| Editar | `src/hooks/useColaboradores.ts` |
+| Editar | `src/hooks/useProjetos.ts` |
+
