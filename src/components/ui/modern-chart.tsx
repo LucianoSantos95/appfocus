@@ -83,6 +83,7 @@ export const modernTooltipStyle = {
   borderRadius: "12px",
   boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
   padding: "12px 16px",
+  color: "hsl(var(--popover-foreground))",
 };
 
 // Chart axis style
