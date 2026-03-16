@@ -16,8 +16,9 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { useMemo } from "react";
-import { TrendingUp, TrendingDown, Percent } from "lucide-react";
+import { useMemo, useState } from "react";
+import { TrendingUp, TrendingDown, Percent, ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Transacao {
   date: string | null;
@@ -39,50 +40,47 @@ const tooltipStyle = {
   boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
 };
 
+const monthLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
 export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: FinanceiroBIPanelProps) {
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
   const monthlyData = useMemo(() => {
-    const months: Record<string, { receitas: number; despesas: number }> = {};
-    const now = new Date();
-
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const label = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
-      months[key] = { receitas: 0, despesas: 0 };
-    }
-
-    transacoes.forEach((t) => {
-      if (!t.date) return;
-      const key = t.date.substring(0, 7);
-      if (months[key]) {
-        if (t.type === "receita") months[key].receitas += Number(t.value);
-        else months[key].despesas += Number(t.value);
-      }
-    });
-
-    return Object.entries(months).map(([key, v]) => {
-      const [y, m] = key.split("-");
-      const d = new Date(Number(y), Number(m) - 1);
+    return monthLabels.map((label, i) => {
+      const key = `${selectedYear}-${String(i + 1).padStart(2, "0")}`;
+      let receitas = 0;
+      let despesas = 0;
+      transacoes.forEach((t) => {
+        if (!t.date) return;
+        if (t.date.substring(0, 7) === key) {
+          if (t.type === "receita") receitas += Number(t.value);
+          else despesas += Number(t.value);
+        }
+      });
+      const yy = String(selectedYear).slice(-2);
       return {
-        month: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }),
-        receitas: v.receitas,
-        despesas: v.despesas,
-        lucro: v.receitas - v.despesas,
-        margem: v.receitas > 0 ? Math.round(((v.receitas - v.despesas) / v.receitas) * 100) : 0,
+        month: `${label} de ${yy}`,
+        receitas,
+        despesas,
+        lucro: receitas - despesas,
+        margem: receitas > 0 ? Math.round(((receitas - despesas) / receitas) * 100) : 0,
       };
     });
-  }, [transacoes]);
+  }, [transacoes, selectedYear]);
 
   const projection = useMemo(() => {
-    const last6 = monthlyData.slice(-6);
+    const last6 = monthlyData.filter(m => m.receitas > 0 || m.despesas > 0).slice(-6);
     const avgRec = last6.reduce((s, m) => s + m.receitas, 0) / Math.max(last6.length, 1);
     const avgDesp = last6.reduce((s, m) => s + m.despesas, 0) / Math.max(last6.length, 1);
-    const now = new Date();
+
     const result = monthlyData.map((m) => ({ ...m, recProj: undefined as number | undefined, despProj: undefined as number | undefined }));
-    for (let i = 1; i <= 3; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+
+    // Add 3 projected months into next year
+    const nextYear = selectedYear + 1;
+    for (let i = 0; i < 3; i++) {
+      const yy = String(nextYear).slice(-2);
       result.push({
-        month: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }),
+        month: `${monthLabels[i]} de ${yy}`,
         receitas: 0,
         despesas: 0,
         lucro: 0,
@@ -92,7 +90,7 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
       });
     }
     return result;
-  }, [monthlyData]);
+  }, [monthlyData, selectedYear]);
 
   const totals = useMemo(() => {
     const rec = monthlyData.reduce((s, m) => s + m.receitas, 0);
@@ -104,7 +102,18 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Análise Financeira Detalhada</DialogTitle>
+          <DialogTitle className="text-xl font-bold flex items-center justify-between">
+            <span>Análise Financeira Detalhada</span>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedYear(y => y - 1)}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-base font-semibold min-w-[50px] text-center">{selectedYear}</span>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedYear(y => y + 1)}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </DialogTitle>
         </DialogHeader>
 
         {/* KPI Cards */}
@@ -114,7 +123,7 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
               <TrendingUp className="w-5 h-5 text-success" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Receita Total (12m)</p>
+              <p className="text-xs text-muted-foreground">Receita Total ({selectedYear})</p>
               <p className="text-lg font-bold text-foreground">R$ {totals.rec.toLocaleString("pt-BR")}</p>
             </div>
           </div>
@@ -123,7 +132,7 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
               <TrendingDown className="w-5 h-5 text-destructive" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Despesas Totais (12m)</p>
+              <p className="text-xs text-muted-foreground">Despesas Totais ({selectedYear})</p>
               <p className="text-lg font-bold text-foreground">R$ {totals.desp.toLocaleString("pt-BR")}</p>
             </div>
           </div>
@@ -150,7 +159,7 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} />
+              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={10} axisLine={false} tickLine={false} />
               <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
               <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v}%`, "Margem"]} />
               <Area type="monotone" dataKey="margem" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#gradMargemBI)" />
@@ -161,7 +170,7 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
         {/* Fluxo de Caixa Futuro */}
         <div className="rounded-xl border border-border p-5 mb-6">
           <h4 className="font-semibold text-foreground mb-1">Fluxo de Caixa — Projeção</h4>
-          <p className="text-xs text-muted-foreground mb-4">Últimos 12 meses + 3 meses projetados (linha pontilhada)</p>
+          <p className="text-xs text-muted-foreground mb-4">Ano {selectedYear} + 3 meses projetados (linha pontilhada)</p>
           <ResponsiveContainer width="100%" height={240}>
             <AreaChart data={projection}>
               <defs>
@@ -175,7 +184,7 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={10} axisLine={false} tickLine={false} />
+              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={9} axisLine={false} tickLine={false} />
               <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
               <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`R$ ${v.toLocaleString("pt-BR")}`, ""]} />
               <Legend wrapperStyle={{ paddingTop: "12px" }} />
@@ -193,7 +202,7 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={monthlyData}>
               <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={10} axisLine={false} tickLine={false} />
+              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={9} axisLine={false} tickLine={false} />
               <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
               <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`R$ ${v.toLocaleString("pt-BR")}`, ""]} />
               <Legend wrapperStyle={{ paddingTop: "12px" }} />
