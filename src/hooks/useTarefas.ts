@@ -25,9 +25,6 @@ export interface TarefaInput {
   responsible?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const sb = supabase as any;
-
 export function useTarefas() {
   const { toast } = useToast();
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
@@ -35,9 +32,9 @@ export function useTarefas() {
 
   const fetchTarefas = useCallback(async () => {
     try {
-      const { data, error } = await sb.from("tarefas").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("tarefas").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setTarefas(data || []);
+      setTarefas((data as Tarefa[]) || []);
     } catch (error) {
       console.error("Error fetching tarefas:", error);
     } finally {
@@ -49,11 +46,12 @@ export function useTarefas() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
-      const { data, error } = await sb.from("tarefas").insert({ ...input, user_id: user.id }).select().single();
+      const { data, error } = await supabase.from("tarefas").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
-      setTarefas(prev => [data, ...prev]);
+      const newT = data as Tarefa;
+      setTarefas(prev => [newT, ...prev]);
       toast({ title: "Tarefa adicionada!", description: `${input.title} foi criada.` });
-      return data;
+      return newT;
     } catch (error) {
       console.error("Error adding tarefa:", error);
       toast({ title: "Erro ao adicionar tarefa", variant: "destructive" });
@@ -63,9 +61,9 @@ export function useTarefas() {
 
   const updateTarefa = async (id: string, updates: Partial<TarefaInput>): Promise<boolean> => {
     try {
-      const { error } = await sb.from("tarefas").update(updates).eq("id", id);
+      const { error } = await supabase.from("tarefas").update(updates as never).eq("id", id);
       if (error) throw error;
-      setTarefas(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+      setTarefas(prev => prev.map(t => t.id === id ? { ...t, ...updates } as Tarefa : t));
       return true;
     } catch (error) {
       console.error("Error updating tarefa:", error);
@@ -76,7 +74,7 @@ export function useTarefas() {
 
   const deleteTarefa = async (id: string): Promise<boolean> => {
     try {
-      const { error } = await sb.from("tarefas").delete().eq("id", id);
+      const { error } = await supabase.from("tarefas").delete().eq("id", id);
       if (error) throw error;
       setTarefas(prev => prev.filter(t => t.id !== id));
       toast({ title: "Tarefa excluída" });

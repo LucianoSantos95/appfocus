@@ -99,7 +99,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   // Periodic refresh every 60 seconds
   useEffect(() => {
     if (!session?.access_token) return;
-    const interval = setInterval(refreshSubscription, 60_000);
+    const interval = setInterval(refreshSubscription, 5 * 60_000); // 5 minutes
     return () => clearInterval(interval);
   }, [session?.access_token, refreshSubscription]);
 

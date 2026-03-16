@@ -27,9 +27,6 @@ export interface CampanhaInput {
   responsible?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const sb = supabase as any;
-
 export function useCampanhas() {
   const { toast } = useToast();
   const [campanhas, setCampanhas] = useState<Campanha[]>([]);
@@ -37,9 +34,9 @@ export function useCampanhas() {
 
   const fetchCampanhas = useCallback(async () => {
     try {
-      const { data, error } = await sb.from("campanhas").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("campanhas").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setCampanhas(data || []);
+      setCampanhas((data as Campanha[]) || []);
     } catch (error) {
       console.error("Error fetching campanhas:", error);
     } finally {
@@ -51,11 +48,12 @@ export function useCampanhas() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
-      const { data, error } = await sb.from("campanhas").insert({ ...input, user_id: user.id }).select().single();
+      const { data, error } = await supabase.from("campanhas").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
-      setCampanhas(prev => [data, ...prev]);
+      const newC = data as Campanha;
+      setCampanhas(prev => [newC, ...prev]);
       toast({ title: "Campanha adicionada!", description: `${input.name} foi criada.` });
-      return data;
+      return newC;
     } catch (error) {
       console.error("Error adding campanha:", error);
       toast({ title: "Erro ao adicionar campanha", variant: "destructive" });
@@ -65,9 +63,9 @@ export function useCampanhas() {
 
   const updateCampanha = async (id: string, updates: Partial<CampanhaInput>): Promise<boolean> => {
     try {
-      const { error } = await sb.from("campanhas").update(updates).eq("id", id);
+      const { error } = await supabase.from("campanhas").update(updates as never).eq("id", id);
       if (error) throw error;
-      setCampanhas(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+      setCampanhas(prev => prev.map(c => c.id === id ? { ...c, ...updates } as Campanha : c));
       toast({ title: "Campanha atualizada!" });
       return true;
     } catch (error) {
@@ -79,7 +77,7 @@ export function useCampanhas() {
 
   const deleteCampanha = async (id: string): Promise<boolean> => {
     try {
-      const { error } = await sb.from("campanhas").delete().eq("id", id);
+      const { error } = await supabase.from("campanhas").delete().eq("id", id);
       if (error) throw error;
       setCampanhas(prev => prev.filter(c => c.id !== id));
       toast({ title: "Campanha excluída" });

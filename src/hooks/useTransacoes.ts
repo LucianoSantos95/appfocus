@@ -33,9 +33,6 @@ export interface TransacaoInput {
   bank_account_id?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const sb = supabase as any;
-
 export function useTransacoes() {
   const { toast } = useToast();
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
@@ -43,9 +40,9 @@ export function useTransacoes() {
 
   const fetchTransacoes = useCallback(async () => {
     try {
-      const { data, error } = await sb.from("transacoes").select("*").order("date", { ascending: false });
+      const { data, error } = await supabase.from("transacoes").select("*").order("date", { ascending: false });
       if (error) throw error;
-      setTransacoes(data || []);
+      setTransacoes((data as Transacao[]) || []);
     } catch (error) {
       console.error("Error fetching transacoes:", error);
     } finally {
@@ -57,11 +54,12 @@ export function useTransacoes() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
-      const { data, error } = await sb.from("transacoes").insert({ ...input, user_id: user.id }).select().single();
+      const { data, error } = await supabase.from("transacoes").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
-      setTransacoes(prev => [data, ...prev]);
+      const newT = data as Transacao;
+      setTransacoes(prev => [newT, ...prev]);
       toast({ title: "Transação adicionada!", description: `${input.description} foi registrada.` });
-      return data;
+      return newT;
     } catch (error) {
       console.error("Error adding transacao:", error);
       toast({ title: "Erro ao adicionar transação", variant: "destructive" });
@@ -71,10 +69,9 @@ export function useTransacoes() {
 
   const updateTransacao = async (id: string, updates: Partial<TransacaoInput>): Promise<boolean> => {
     try {
-      const { error } = await sb.from("transacoes").update(updates).eq("id", id);
+      const { error } = await supabase.from("transacoes").update(updates as never).eq("id", id);
       if (error) throw error;
-      setTransacoes(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-      toast({ title: "Transação atualizada!" });
+      setTransacoes(prev => prev.map(t => t.id === id ? { ...t, ...updates } as Transacao : t));
       return true;
     } catch (error) {
       console.error("Error updating transacao:", error);
@@ -85,7 +82,7 @@ export function useTransacoes() {
 
   const deleteTransacao = async (id: string): Promise<boolean> => {
     try {
-      const { error } = await sb.from("transacoes").delete().eq("id", id);
+      const { error } = await supabase.from("transacoes").delete().eq("id", id);
       if (error) throw error;
       setTransacoes(prev => prev.filter(t => t.id !== id));
       toast({ title: "Transação excluída" });

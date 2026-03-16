@@ -45,8 +45,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+// jsPDF loaded dynamically to reduce bundle size
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
@@ -133,7 +132,11 @@ export default function Processos() {
     toast({ title: "Etapa atualizada", description: "Nota: etapas são salvas localmente por enquanto." });
   };
 
-  const handleExportPDF = (processo: Processo) => {
+  const handleExportPDF = async (processo: Processo) => {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text(processo.name, 14, 22);
