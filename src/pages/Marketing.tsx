@@ -57,6 +57,7 @@ import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { MarketingBIPanel } from "@/components/bi/MarketingBIPanel";
+import { ContentCalendar } from "@/components/marketing/ContentCalendar";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2 } from "lucide-react";
