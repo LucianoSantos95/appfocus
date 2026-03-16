@@ -58,6 +58,8 @@ import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useProjetos as useProjetosDB } from "@/hooks/useProjetos";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
+import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
 interface SubTask {
   id: string;
