@@ -331,8 +331,11 @@ export default function Tarefas() {
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
-                    color: "hsl(var(--card-foreground))",
+                    color: "#ffffff",
                   }}
+                  labelStyle={{ color: "#ffffff" }}
+                  itemStyle={{ color: "#ffffff" }}
+                />
                 />
               </PieChart>
             </ResponsiveContainer>
