@@ -54,6 +54,8 @@ import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { DocumentUpload } from "@/components/rh/DocumentUpload";
+import { FeriasAniversariosTimeline } from "@/components/rh/FeriasAniversariosTimeline";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
