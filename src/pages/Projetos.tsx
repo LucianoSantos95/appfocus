@@ -60,6 +60,10 @@ import { useProjetos as useProjetosDB } from "@/hooks/useProjetos";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { ProjetosBIPanel } from "@/components/bi/ProjetosBIPanel";
+import { usePlan } from "@/contexts/PlanContext";
+import { Maximize2 } from "lucide-react";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface SubTask {
   id: string;
