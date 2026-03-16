@@ -16,34 +16,29 @@ const EXPIRY_DAYS = 5;
 
 const updates = [
   {
-    icon: ShieldCheck,
-    title: "Correção crítica no módulo Financeiro",
-    description: "Resolvido loop infinito que causava lentidão ao atualizar transações vencidas.",
+    icon: Sparkles,
+    title: "Dados fictícios em todos os módulos",
+    description: "Todos os módulos agora vêm pré-populados com dados de exemplo para facilitar a exploração: Finanças, RH, Marketing, Projetos, Clientes, Atividades, Processos e Painel.",
   },
   {
     icon: Zap,
-    title: "Performance otimizada",
-    description: "Importações dinâmicas para PDF e planilhas, reduzindo o tamanho inicial do app em ~1.2MB.",
+    title: "Performance geral otimizada",
+    description: "Carregamento mais rápido com importações dinâmicas de bibliotecas pesadas (PDF e planilhas), cache inteligente e redução de requisições ao servidor.",
   },
   {
     icon: ShieldCheck,
-    title: "Segurança de tipos reforçada",
-    description: "Removidos bypasses de tipagem em todos os hooks de dados para maior estabilidade.",
+    title: "Estabilidade e segurança reforçadas",
+    description: "Corrigido problema crítico no módulo Financeiro, reforçada tipagem em todos os hooks de dados e adicionadas barreiras de erro para evitar travamentos.",
   },
   {
     icon: Eye,
-    title: "Acessibilidade melhorada",
-    description: "Corrigidos avisos de acessibilidade em todos os diálogos do sistema.",
+    title: "Acessibilidade dos diálogos",
+    description: "Todos os diálogos e modais do sistema foram ajustados para melhor compatibilidade com leitores de tela.",
   },
   {
     icon: Sparkles,
-    title: "Error Boundaries adicionados",
-    description: "Erros em módulos individuais não derrubam mais o aplicativo inteiro.",
-  },
-  {
-    icon: Zap,
-    title: "Cache e polling otimizados",
-    description: "Reduzidas requisições desnecessárias ao servidor com cache inteligente de 5 minutos.",
+    title: "Popup de novidades",
+    description: "Agora você será notificado sempre que houver atualizações importantes no sistema.",
   },
 ];
 
