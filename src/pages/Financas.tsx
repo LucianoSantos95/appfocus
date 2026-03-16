@@ -58,6 +58,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  Receipt,
 } from "lucide-react";
 import {
   BarChart,

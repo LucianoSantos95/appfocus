@@ -763,6 +763,16 @@ function EditClienteDialog({
               )}
             </div>
 
+            {/* Meeting Notes Rich Text Editor */}
+            <MeetingNotesEditor
+              initialContent={(cliente as any).meeting_notes || ""}
+              onSave={async (content) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const sb = (await import("@/integrations/supabase/client")).supabase as any;
+                await sb.from("clientes").update({ meeting_notes: content }).eq("id", cliente.id);
+              }}
+            />
+
             {cliente.palavras_chave && cliente.palavras_chave.length > 0 && (
               <div className="space-y-2">
                 <Label>Palavras-chave (IA)</Label>

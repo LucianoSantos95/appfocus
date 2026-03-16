@@ -827,6 +827,22 @@ function ProjectDetailDialog({
               ))}
             </div>
           </TabsContent>
+
+          <TabsContent value="anexos" className="mt-4">
+            <ProjetoAnexos
+              projetoId={editedProjeto.id}
+              attachments={(() => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                return (editedProjeto as any).attachments || [];
+              })()}
+              onAttachmentsChange={async (attachments) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const sb = (await import("@/integrations/supabase/client")).supabase as any;
+                await sb.from("projetos").update({ attachments }).eq("id", editedProjeto.id);
+                setEditedProjeto({ ...editedProjeto } as any);
+              }}
+            />
+          </TabsContent>
         </Tabs>
 
         <div className="flex justify-between pt-4 border-t border-border/50">

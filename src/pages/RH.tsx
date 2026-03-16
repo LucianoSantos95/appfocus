@@ -53,6 +53,7 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { supabase } from "@/integrations/supabase/client";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { DocumentUpload } from "@/components/rh/DocumentUpload";
 import { FeriasAniversariosTimeline } from "@/components/rh/FeriasAniversariosTimeline";

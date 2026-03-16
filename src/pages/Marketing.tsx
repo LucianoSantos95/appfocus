@@ -537,6 +537,12 @@ export default function Marketing() {
           </div>
         </section>
 
+        {/* SEÇÃO: Calendário de Conteúdo */}
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Calendário de Conteúdo</h2>
+          <ContentCalendar />
+        </section>
+
         {/* SEÇÃO 3: Funil */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
