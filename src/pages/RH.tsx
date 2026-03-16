@@ -523,6 +523,19 @@ export default function RH() {
                     <p className="font-medium text-foreground">{selectedColaborador.bio}</p>
                   </div>
                 )}
+
+                {/* Document Upload Section */}
+                <DocumentUpload
+                  colaboradorId={selectedColaborador.id}
+                  documents={(() => {
+                    const dbC = dbColaboradores.find(c => c.id === selectedColaborador.id);
+                    return (dbC as any)?.documents || [];
+                  })()}
+                  onDocumentsChange={async (docs) => {
+                    const sb = supabase as any;
+                    await sb.from("colaboradores").update({ documents: docs }).eq("id", selectedColaborador.id);
+                  }}
+                />
               </div>
             )}
             <div className="flex justify-between pt-4 border-t border-border/50">
