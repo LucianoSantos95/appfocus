@@ -31,7 +31,7 @@ export default function AuthBrandingPanel({ compact }: Props) {
         <div className="absolute -top-20 -left-20 w-40 h-40 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-primary/5 blur-2xl" />
 
-        <img src={focusTextLogo} alt="Focus" className="h-14 w-auto mx-auto mb-3" />
+        <img src={focusTextLogo} alt="Focus" className="h-20 w-auto mx-auto mb-3" />
         <h1 className="text-xl font-bold gradient-text mb-1">
           Gestão Completa para PMEs
         </h1>
