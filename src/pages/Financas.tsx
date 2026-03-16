@@ -134,6 +134,8 @@ export default function Financas() {
   const { transacoes, isLoading: isLoadingTransacoes, addTransacao, updateTransacao, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
   const { contas: bankAccounts, addConta, updateConta, updateBalance, deleteConta } = useContasBancarias();
   const [searchTerm, setSearchTerm] = useState("");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(transacoes.length);
   const [categories, setCategories] = useState<Category[]>([
     { id: "1", name: "Serviços", type: "receita", color: "hsl(var(--primary))" },
     { id: "2", name: "Produtos", type: "receita", color: "hsl(var(--success))" },
