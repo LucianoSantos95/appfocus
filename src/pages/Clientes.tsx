@@ -455,7 +455,7 @@ export default function Clientes() {
               />
             </PlanGateButton>
             <PlanGateButton module="clientes" action="create">
-              <AddClienteDialog onAdd={addCliente} />
+              <AddClienteDialog onAdd={addCliente} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
             </PlanGateButton>
           </div>
         </div>
