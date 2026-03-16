@@ -709,6 +709,8 @@ export default function Marketing() {
         </Dialog>
       </div>
       <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Marketing" />
+      <UpgradeModal open={biUpgradeOpen} onOpenChange={setBiUpgradeOpen} currentCount={0} maxCount={0} moduleName="Dashboards de BI" />
+      <MarketingBIPanel open={biPanelOpen} onOpenChange={setBiPanelOpen} campanhas={dbCampanhas.map(c => ({ id: c.id, name: c.name, budget: c.budget, platforms: c.platforms, status: c.status, start_date: c.start_date, end_date: c.end_date }))} />
     </MainLayout>
   );
 }

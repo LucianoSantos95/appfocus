@@ -588,6 +588,8 @@ export default function Clientes() {
         sugestoes={sugestoes}
       />
       <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="CRM" />
+      <UpgradeModal open={biUpgradeOpen} onOpenChange={setBiUpgradeOpen} currentCount={0} maxCount={0} moduleName="Dashboards de BI" />
+      <ClientesBIPanel open={biPanelOpen} onOpenChange={setBiPanelOpen} clientes={clientes.map(c => ({ id: c.id, nome: c.nome, status: c.status, valor_total: c.valor_total, segmento: c.segmento }))} />
     </MainLayout>
   );
 }

@@ -481,6 +481,8 @@ export default function Projetos() {
         />
       )}
       <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Projetos" />
+      <UpgradeModal open={biUpgradeOpen} onOpenChange={setBiUpgradeOpen} currentCount={0} maxCount={0} moduleName="Dashboards de BI" />
+      <ProjetosBIPanel open={biPanelOpen} onOpenChange={setBiPanelOpen} projetos={dbProjetos.map(p => ({ id: p.id, name: p.name, status: p.status, budget: p.budget, start_date: p.start_date, end_date: p.end_date, priority: p.priority }))} />
     </MainLayout>
   );
 }
