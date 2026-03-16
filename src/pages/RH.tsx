@@ -311,7 +311,7 @@ export default function RH() {
                 />
               </PlanGateButton>
               <PlanGateButton module="rh" action="create">
-                <AddColaboradorDialog onAdd={addColaborador} />
+                <AddColaboradorDialog onAdd={addColaborador} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
               </PlanGateButton>
             </div>
           </div>
