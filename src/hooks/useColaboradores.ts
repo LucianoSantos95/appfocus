@@ -29,9 +29,6 @@ export interface ColaboradorInput {
   manager?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const sb = supabase as any;
-
 export function useColaboradores() {
   const { toast } = useToast();
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
@@ -39,9 +36,9 @@ export function useColaboradores() {
 
   const fetchColaboradores = useCallback(async () => {
     try {
-      const { data, error } = await sb.from("colaboradores").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("colaboradores").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setColaboradores(data || []);
+      setColaboradores((data as Colaborador[]) || []);
     } catch (error) {
       console.error("Error fetching colaboradores:", error);
     } finally {
@@ -53,11 +50,12 @@ export function useColaboradores() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
-      const { data, error } = await sb.from("colaboradores").insert({ ...input, user_id: user.id }).select().single();
+      const { data, error } = await supabase.from("colaboradores").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
-      setColaboradores(prev => [data, ...prev]);
+      const newC = data as Colaborador;
+      setColaboradores(prev => [newC, ...prev]);
       toast({ title: "Colaborador adicionado!", description: `${input.name} foi cadastrado.` });
-      return data;
+      return newC;
     } catch (error) {
       console.error("Error adding colaborador:", error);
       toast({ title: "Erro ao adicionar colaborador", variant: "destructive" });
@@ -67,9 +65,9 @@ export function useColaboradores() {
 
   const updateColaborador = async (id: string, updates: Partial<ColaboradorInput>): Promise<boolean> => {
     try {
-      const { error } = await sb.from("colaboradores").update(updates).eq("id", id);
+      const { error } = await supabase.from("colaboradores").update(updates as never).eq("id", id);
       if (error) throw error;
-      setColaboradores(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+      setColaboradores(prev => prev.map(c => c.id === id ? { ...c, ...updates } as Colaborador : c));
       toast({ title: "Colaborador atualizado!" });
       return true;
     } catch (error) {
@@ -81,7 +79,7 @@ export function useColaboradores() {
 
   const deleteColaborador = async (id: string): Promise<boolean> => {
     try {
-      const { error } = await sb.from("colaboradores").delete().eq("id", id);
+      const { error } = await supabase.from("colaboradores").delete().eq("id", id);
       if (error) throw error;
       setColaboradores(prev => prev.filter(c => c.id !== id));
       toast({ title: "Colaborador excluído" });

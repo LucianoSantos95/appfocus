@@ -21,9 +21,6 @@ export interface ProcessoInput {
   status?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const sb = supabase as any;
-
 export function useProcessos() {
   const { toast } = useToast();
   const [processos, setProcessos] = useState<Processo[]>([]);
@@ -31,9 +28,9 @@ export function useProcessos() {
 
   const fetchProcessos = useCallback(async () => {
     try {
-      const { data, error } = await sb.from("processos").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("processos").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setProcessos(data || []);
+      setProcessos((data as Processo[]) || []);
     } catch (error) {
       console.error("Error fetching processos:", error);
     } finally {
@@ -45,11 +42,12 @@ export function useProcessos() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
-      const { data, error } = await sb.from("processos").insert({ ...input, user_id: user.id }).select().single();
+      const { data, error } = await supabase.from("processos").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
-      setProcessos(prev => [data, ...prev]);
+      const newP = data as Processo;
+      setProcessos(prev => [newP, ...prev]);
       toast({ title: "Processo adicionado!", description: `${input.name} foi criado.` });
-      return data;
+      return newP;
     } catch (error) {
       console.error("Error adding processo:", error);
       toast({ title: "Erro ao adicionar processo", variant: "destructive" });
@@ -59,9 +57,9 @@ export function useProcessos() {
 
   const updateProcesso = async (id: string, updates: Partial<ProcessoInput>): Promise<boolean> => {
     try {
-      const { error } = await sb.from("processos").update(updates).eq("id", id);
+      const { error } = await supabase.from("processos").update(updates as never).eq("id", id);
       if (error) throw error;
-      setProcessos(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+      setProcessos(prev => prev.map(p => p.id === id ? { ...p, ...updates } as Processo : p));
       toast({ title: "Processo atualizado!" });
       return true;
     } catch (error) {
@@ -73,7 +71,7 @@ export function useProcessos() {
 
   const deleteProcesso = async (id: string): Promise<boolean> => {
     try {
-      const { error } = await sb.from("processos").delete().eq("id", id);
+      const { error } = await supabase.from("processos").delete().eq("id", id);
       if (error) throw error;
       setProcessos(prev => prev.filter(p => p.id !== id));
       toast({ title: "Processo excluído" });
