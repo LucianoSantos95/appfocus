@@ -64,6 +64,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useClientes, type Cliente, type ClienteInput } from "@/hooks/useClientes";
 import { ClienteInsightsCard } from "@/components/clientes/ClienteInsightsCard";
 import { ClienteAIBadge } from "@/components/clientes/ClienteAIBadge";
+import { MeetingNotesEditor } from "@/components/clientes/MeetingNotesEditor";
 import { SugestoesPainel } from "@/components/clientes/SugestoesPainel";
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
@@ -761,6 +762,16 @@ function EditClienteDialog({
                 </span>
               )}
             </div>
+
+            {/* Meeting Notes Rich Text Editor */}
+            <MeetingNotesEditor
+              initialContent={(cliente as any).meeting_notes || ""}
+              onSave={async (content) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const sb = (await import("@/integrations/supabase/client")).supabase as any;
+                await sb.from("clientes").update({ meeting_notes: content }).eq("id", cliente.id);
+              }}
+            />
 
             {cliente.palavras_chave && cliente.palavras_chave.length > 0 && (
               <div className="space-y-2">

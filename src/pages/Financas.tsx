@@ -58,6 +58,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  Receipt,
 } from "lucide-react";
 import {
   BarChart,
@@ -80,6 +81,7 @@ import {
 } from "recharts";
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
+import { ImportExtratoDialog } from "@/components/financas/ImportExtratoDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { useContasBancarias, ContaBancaria } from "@/hooks/useContasBancarias";
@@ -376,6 +378,17 @@ export default function Financas() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <PlanGateButton module="financas" action="create">
+              <ImportExtratoDialog
+                onImportComplete={handleImportTransactions}
+                trigger={
+                  <Button variant="outline" className="gap-2">
+                    <Receipt className="w-4 h-4" />
+                    Importar Extrato
+                  </Button>
+                }
+              />
+            </PlanGateButton>
             <PlanGateButton module="financas" action="create">
               <ImportDialog
                 config={importConfigs.financas_transacoes}

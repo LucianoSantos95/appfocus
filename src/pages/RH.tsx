@@ -53,7 +53,10 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useColaboradores } from "@/hooks/useColaboradores";
+import { supabase } from "@/integrations/supabase/client";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { DocumentUpload } from "@/components/rh/DocumentUpload";
+import { FeriasAniversariosTimeline } from "@/components/rh/FeriasAniversariosTimeline";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
@@ -322,6 +325,7 @@ export default function RH() {
               <TabsTrigger value="ferias">Em Férias</TabsTrigger>
               <TabsTrigger value="licenca">Afastados</TabsTrigger>
               <TabsTrigger value="todos">Todos</TabsTrigger>
+              <TabsTrigger value="timeline">Timeline</TabsTrigger>
             </TabsList>
 
             {["ativo", "ferias", "licenca", "todos"].map((filter) => (
@@ -371,6 +375,18 @@ export default function RH() {
                 </div>
               </TabsContent>
             ))}
+
+            <TabsContent value="timeline" className="space-y-4">
+              <FeriasAniversariosTimeline
+                colaboradores={dbColaboradores.map(c => ({
+                  id: c.id,
+                  name: c.name,
+                  status: c.status,
+                  start_date: c.start_date,
+                  department: c.department,
+                }))}
+              />
+            </TabsContent>
           </Tabs>
         </div>
 
@@ -508,6 +524,19 @@ export default function RH() {
                     <p className="font-medium text-foreground">{selectedColaborador.bio}</p>
                   </div>
                 )}
+
+                {/* Document Upload Section */}
+                <DocumentUpload
+                  colaboradorId={selectedColaborador.id}
+                  documents={(() => {
+                    const dbC = dbColaboradores.find(c => c.id === selectedColaborador.id);
+                    return (dbC as any)?.documents || [];
+                  })()}
+                  onDocumentsChange={async (docs) => {
+                    const sb = supabase as any;
+                    await sb.from("colaboradores").update({ documents: docs }).eq("id", selectedColaborador.id);
+                  }}
+                />
               </div>
             )}
             <div className="flex justify-between pt-4 border-t border-border/50">

@@ -28,6 +28,12 @@ import {
   TrendingUp,
   Megaphone,
   RotateCcw,
+  BarChart3,
+  Upload,
+  Receipt,
+  Paperclip,
+  PenTool,
+  CalendarDays,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
@@ -69,13 +75,14 @@ const journeySteps = [
   },
   {
     id: 4,
-    title: "Recursos Avançados",
+    title: "Funcionalidades Avançadas",
     icon: Rocket,
-    description: "Extraia o máximo do Hub",
+    description: "Use recursos de importação, BI e mais",
     tasks: [
-      "Converta prospectos em clientes ativos",
-      "Documente processos da sua empresa",
-      "Exporte relatórios em CSV/PDF",
+      "Importe extratos bancários (CSV/OFX)",
+      "Explore os dashboards de BI",
+      "Use o calendário de conteúdo no Marketing",
+      "Anexe documentos em RH e Projetos",
     ],
   },
 ];
@@ -89,7 +96,8 @@ const modules = [
     actions: [
       "Cadastrar contas bancárias",
       "Registrar receitas e despesas",
-      "Visualizar gráficos de evolução",
+      "Importar extratos bancários (CSV/OFX)",
+      "Visualizar dashboards de BI financeiro",
       "Exportar relatórios financeiros",
     ],
   },
@@ -100,9 +108,10 @@ const modules = [
     description: "Gestão da sua base de clientes",
     actions: [
       "Cadastrar novos clientes",
-      "Acompanhar prospectos",
-      "Converter leads em vendas",
-      "Anexar contratos e comprovantes",
+      "Acompanhar prospectos e converter leads",
+      "Anotações de reunião com editor rich text",
+      "Análise inteligente com IA",
+      "Dashboard de BI de clientes",
     ],
   },
   {
@@ -111,10 +120,10 @@ const modules = [
     path: "/projetos",
     description: "Acompanhe entregas e prazos",
     actions: [
-      "Criar projetos com orçamento",
-      "Definir sprints e marcos",
+      "Criar projetos com orçamento e sprints",
+      "Anexar briefings e documentos ao projeto",
       "Atribuir equipe responsável",
-      "Monitorar progresso em tempo real",
+      "Dashboard de BI de projetos",
     ],
   },
   {
@@ -136,9 +145,9 @@ const modules = [
     description: "Gerencie sua equipe",
     actions: [
       "Cadastrar colaboradores",
-      "Controlar status (ativo, férias)",
-      "Criar e gerenciar vagas",
-      "Acompanhar processos seletivos",
+      "Upload de documentos e contratos (PDF/Imagens)",
+      "Timeline de férias e aniversários de empresa",
+      "Gerenciar vagas e processos seletivos",
     ],
   },
   {
@@ -147,10 +156,10 @@ const modules = [
     path: "/marketing",
     description: "Impulsione suas vendas",
     actions: [
-      "Planejar campanhas",
-      "Acompanhar métricas",
-      "Gerenciar leads",
-      "Criar estratégias de crescimento",
+      "Planejar campanhas com orçamento",
+      "Calendário de conteúdo com drag-and-drop",
+      "Funil de marketing por etapas",
+      "Dashboard de BI de marketing",
     ],
   },
   {
@@ -164,6 +173,39 @@ const modules = [
       "Manter documentação atualizada",
       "Consultar procedimentos",
     ],
+  },
+];
+
+const advancedFeatures = [
+  {
+    icon: BarChart3,
+    title: "Dashboards de BI",
+    description: "Clique no ícone de expandir (⛶) nos gráficos de Finanças, Marketing, Projetos e Clientes para abrir análises detalhadas com múltiplos gráficos interativos.",
+  },
+  {
+    icon: Receipt,
+    title: "Importar Extrato Bancário",
+    description: "Em Finanças, clique em 'Importar Extrato' para enviar arquivos CSV ou OFX do seu banco. As transações serão detectadas automaticamente com data, valor e tipo.",
+  },
+  {
+    icon: Upload,
+    title: "Upload de Documentos no RH",
+    description: "No perfil de cada colaborador, você pode fazer upload de PDFs, contratos e imagens. Os documentos ficam salvos e acessíveis a qualquer momento.",
+  },
+  {
+    icon: CalendarDays,
+    title: "Calendário de Conteúdo",
+    description: "Em Marketing, use o Calendário de Conteúdo para planejar postagens por data. Arraste e solte para reagendar, e clique para editar detalhes como plataforma e status.",
+  },
+  {
+    icon: Paperclip,
+    title: "Anexos de Projeto",
+    description: "Dentro de cada projeto, acesse a aba 'Anexos' para enviar briefings, contratos e documentos relevantes. Tudo centralizado no card do projeto.",
+  },
+  {
+    icon: PenTool,
+    title: "Anotações de Reunião (Rich Text)",
+    description: "No detalhe de cada cliente, use o editor de texto rico para fazer anotações de reunião com formatação (negrito, itálico, listas e links).",
   },
 ];
 
@@ -185,8 +227,8 @@ const productivityTips = [
   },
   {
     icon: TrendingUp,
-    title: "Acompanhe tendências",
-    description: "Use os gráficos para identificar padrões e tomar decisões baseadas em dados.",
+    title: "Use os dashboards de BI",
+    description: "Clique no ícone de expandir nos gráficos para análises detalhadas com múltiplos indicadores.",
   },
 ];
 
@@ -196,24 +238,40 @@ const faqItems = [
     answer: "Comece pelo módulo Finanças: cadastre suas contas bancárias e registre suas primeiras receitas e despesas. Depois, adicione seus clientes e crie suas primeiras tarefas. Em 15 minutos você terá o básico configurado.",
   },
   {
-    question: "Posso importar dados de planilhas?",
-    answer: "Atualmente o cadastro é manual, mas você pode exportar todos os dados em CSV. Funcionalidade de importação está prevista para versões futuras.",
+    question: "Como importo meu extrato bancário?",
+    answer: "No módulo Finanças, clique no botão 'Importar Extrato'. Aceita arquivos CSV e OFX. O sistema detecta automaticamente as transações, mostra uma prévia e você confirma a importação.",
   },
   {
-    question: "Como funciona a conversão de prospectos?",
-    answer: "No módulo Clientes, cada prospecto tem um botão 'Converter'. Ao clicar, ele automaticamente muda para status 'Ativo' e entra no cálculo da receita total.",
+    question: "Como faço upload de documentos no RH?",
+    answer: "Clique em um colaborador para abrir os detalhes. Na seção 'Documentos / Contratos', clique em Upload para enviar PDFs ou imagens (até 10MB). Os arquivos ficam salvos no perfil do colaborador.",
+  },
+  {
+    question: "Como uso o Calendário de Conteúdo?",
+    answer: "No módulo Marketing, o Calendário de Conteúdo mostra uma visualização mensal. Passe o mouse sobre um dia e clique em '+' para adicionar conteúdo. Arraste cards entre dias para reagendar.",
+  },
+  {
+    question: "Como anexo arquivos a um projeto?",
+    answer: "Clique em um projeto para abrir os detalhes, vá à aba 'Anexos' e clique em 'Anexar arquivo'. Você pode enviar briefings, contratos e qualquer documento relevante ao projeto.",
+  },
+  {
+    question: "O que é o editor de anotações de reunião?",
+    answer: "No detalhe de cada cliente, há um editor de texto rico onde você pode registrar anotações de reunião com formatação (negrito, itálico, listas). Clique em 'Salvar' para persistir as anotações.",
+  },
+  {
+    question: "Como funciona o Dashboard de BI?",
+    answer: "Nos módulos Finanças, Clientes, Projetos e Marketing, clique no ícone '⛶' ao lado dos gráficos para abrir um painel expandido com análises detalhadas, múltiplos gráficos e indicadores.",
+  },
+  {
+    question: "Posso importar dados de planilhas?",
+    answer: "Sim! Todos os módulos têm um botão 'Importar Planilha' que aceita arquivos .xlsx e .csv. O sistema faz mapeamento automático de colunas e importa em lote.",
   },
   {
     question: "Os dados são salvos automaticamente?",
-    answer: "Sim! Todas as alterações são salvas instantaneamente. Não há necessidade de clicar em 'Salvar' — o sistema cuida disso para você.",
+    answer: "Sim! Todas as alterações são salvas instantaneamente no banco de dados. Não há necessidade de clicar em 'Salvar' — exceto nas anotações de reunião, que têm um botão de salvar explícito.",
   },
   {
     question: "Posso usar em dispositivos móveis?",
-    answer: "O Hub Empresarial é totalmente responsivo. Você pode acessar de qualquer dispositivo com navegador web, seja smartphone, tablet ou computador.",
-  },
-  {
-    question: "Como anexo contratos aos clientes?",
-    answer: "Ao editar um cliente, você encontrará um campo para inserir o link do contrato ou comprovante. Use serviços como Google Drive ou Dropbox para hospedar os arquivos.",
+    answer: "O Hub Empresarial é totalmente responsivo. Você pode acessar de qualquer dispositivo com navegador web.",
   },
 ];
 
@@ -236,45 +294,28 @@ export default function Guia() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/")}
-              className="h-9 w-9"
-            >
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="h-9 w-9">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Guia de Uso</h1>
-              <p className="text-muted-foreground mt-1">
-                Aprenda a usar o Hub Empresarial em poucos minutos
-              </p>
+              <p className="text-muted-foreground mt-1">Aprenda a usar o Hub Empresarial em poucos minutos</p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRestartTour}
-            className="gap-2"
-          >
+          <Button variant="outline" size="sm" onClick={handleRestartTour} className="gap-2">
             <RotateCcw className="w-4 h-4" />
             Refazer Tour
           </Button>
         </div>
 
         {/* Hero Section */}
-        <div 
-          data-tour="hero"
-          className="bg-gradient-to-br from-primary/10 via-card to-secondary/10 rounded-2xl border border-primary/20 shadow-glow p-8"
-        >
+        <div data-tour="hero" className="bg-gradient-to-br from-primary/10 via-card to-secondary/10 rounded-2xl border border-primary/20 shadow-glow p-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center animate-float">
               <BookOpen className="w-10 h-10 text-primary" />
             </div>
             <div className="text-center md:text-left flex-1">
-              <h2 className="text-2xl font-bold text-foreground mb-2">
-                Bem-vindo ao Hub Empresarial! 🚀
-              </h2>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo ao Hub Empresarial! 🚀</h2>
               <p className="text-muted-foreground max-w-2xl">
                 Você está prestes a organizar seu negócio de forma simples e eficiente. 
                 Siga este guia e em <span className="text-primary font-semibold">15 minutos</span> você 
@@ -290,32 +331,21 @@ export default function Guia() {
 
         {/* Journey Timeline */}
         <section className="space-y-6">
-          <div 
-            data-tour="progress"
-            className="space-y-4"
-          >
+          <div data-tour="progress" className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary" />
                 Sua Jornada de Configuração
               </h3>
-              <span className="text-sm text-muted-foreground">
-                Etapa {currentStep} de {journeySteps.length}
-              </span>
+              <span className="text-sm text-muted-foreground">Etapa {currentStep} de {journeySteps.length}</span>
             </div>
-
             <div className="space-y-2">
               <Progress value={progressPercentage} className="h-2" />
-              <p className="text-xs text-muted-foreground text-right">
-                {Math.round(progressPercentage)}% concluído
-              </p>
+              <p className="text-xs text-muted-foreground text-right">{Math.round(progressPercentage)}% concluído</p>
             </div>
           </div>
 
-          <div 
-            data-tour="journey"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-          >
+          <div data-tour="journey" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {journeySteps.map((step) => (
               <button
                 key={step.id}
@@ -327,22 +357,14 @@ export default function Guia() {
                 }`}
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                      currentStep === step.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-primary/10 text-primary group-hover:bg-primary/20"
-                    }`}
-                  >
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                    currentStep === step.id ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary group-hover:bg-primary/20"
+                  }`}>
                     <step.icon className="w-5 h-5" />
                   </div>
-                  <span
-                    className={`text-xs font-medium px-2 py-1 rounded-full ${
-                      currentStep >= step.id
-                        ? "bg-success/20 text-success"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                    currentStep >= step.id ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"
+                  }`}>
                     Etapa {step.id}
                   </span>
                 </div>
@@ -361,11 +383,31 @@ export default function Guia() {
           </div>
         </section>
 
+        {/* Advanced Features Section */}
+        <section className="space-y-6">
+          <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
+            <Rocket className="w-5 h-5 text-primary" />
+            Funcionalidades Avançadas
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {advancedFeatures.map((feature, index) => (
+              <div
+                key={index}
+                className="bg-card rounded-xl border border-border/50 p-5 hover:border-primary/30 hover:shadow-glow transition-all duration-300"
+              >
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+                  <feature.icon className="w-5 h-5 text-primary" />
+                </div>
+                <h4 className="font-semibold text-foreground text-sm mb-2">{feature.title}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Module Cards */}
-        <section 
-          data-tour="modules"
-          className="space-y-6"
-        >
+        <section data-tour="modules" className="space-y-6">
           <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <FolderKanban className="w-5 h-5 text-primary" />
             Conheça os Módulos
@@ -414,10 +456,7 @@ export default function Guia() {
         </section>
 
         {/* Productivity Tips */}
-        <section 
-          data-tour="tips"
-          className="space-y-6"
-        >
+        <section data-tour="tips" className="space-y-6">
           <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Lightbulb className="w-5 h-5 text-warning" />
             Dicas de Produtividade
@@ -440,10 +479,7 @@ export default function Guia() {
         </section>
 
         {/* FAQ Section */}
-        <section 
-          data-tour="faq"
-          className="space-y-6"
-        >
+        <section data-tour="faq" className="space-y-6">
           <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
             Perguntas Frequentes
@@ -466,19 +502,13 @@ export default function Guia() {
         </section>
 
         {/* CTA Section */}
-        <section 
-          data-tour="cta"
-          className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl border border-primary/20 p-8 text-center"
-        >
+        <section data-tour="cta" className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl border border-primary/20 p-8 text-center">
           <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
             <Rocket className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-2xl font-bold text-foreground mb-2">
-            Pronto para começar?
-          </h3>
+          <h3 className="text-2xl font-bold text-foreground mb-2">Pronto para começar?</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Agora que você conhece o Hub Empresarial, é hora de colocar a mão na massa 
-            e organizar seu negócio!
+            Agora que você conhece o Hub Empresarial, é hora de colocar a mão na massa e organizar seu negócio!
           </p>
           <Button
             size="lg"
@@ -489,7 +519,6 @@ export default function Guia() {
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </section>
-
       </div>
     </MainLayout>
   );

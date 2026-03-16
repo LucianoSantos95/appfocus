@@ -61,6 +61,7 @@ import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { ProjetosBIPanel } from "@/components/bi/ProjetosBIPanel";
+import { ProjetoAnexos } from "@/components/projetos/ProjetoAnexos";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2 } from "lucide-react";
@@ -600,10 +601,11 @@ function ProjectDetailDialog({
         </DialogHeader>
 
         <Tabs defaultValue="geral" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="geral">Geral</TabsTrigger>
             <TabsTrigger value="equipe">Equipe ({editedProjeto.members.length})</TabsTrigger>
             <TabsTrigger value="sprints">Sprints ({editedProjeto.sprints.length})</TabsTrigger>
+            <TabsTrigger value="anexos">Anexos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="geral" className="space-y-4 mt-4">
@@ -824,6 +826,22 @@ function ProjectDetailDialog({
                 </div>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="anexos" className="mt-4">
+            <ProjetoAnexos
+              projetoId={editedProjeto.id}
+              attachments={(() => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                return (editedProjeto as any).attachments || [];
+              })()}
+              onAttachmentsChange={async (attachments) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const sb = (await import("@/integrations/supabase/client")).supabase as any;
+                await sb.from("projetos").update({ attachments }).eq("id", editedProjeto.id);
+                setEditedProjeto({ ...editedProjeto } as any);
+              }}
+            />
           </TabsContent>
         </Tabs>
 
