@@ -426,7 +426,56 @@ export default function Financas() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Evolution Chart */}
           <div className="lg:col-span-2 bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
-            <h3 className="font-semibold text-foreground mb-6">Evolução Financeira</h3>
+           <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-foreground">Evolução Financeira</h3>
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <button onClick={() => { const { plan } = usePlanRef.current; if (plan === "gratuito") setBiUpgradeOpen(true); else setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                      <Maximize2 className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Clique para análise detalhada</TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
+            </div>
+            <div className="mt-4" />
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorReceitasFin" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id="colorDespesasFin" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--popover))", 
+                      border: "1px solid hsl(var(--border))", 
+                      borderRadius: "12px",
+                      boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                    }} 
+                    formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: "16px" }} />
+                  <Area type="monotone" dataKey="receitas" stroke="hsl(var(--success))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorReceitasFin)" name="Receitas" />
+                  <Area type="monotone" dataKey="despesas" stroke="hsl(var(--destructive))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorDespesasFin)" name="Despesas" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[280px] text-muted-foreground">
+                <BarChart3 className="w-12 h-12 mb-3 opacity-30" />
+                <p className="text-sm">Adicione transações para visualizar a evolução financeira</p>
+              </div>
+            )}
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={chartData}>
