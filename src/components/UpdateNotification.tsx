@@ -16,29 +16,64 @@ const EXPIRY_DAYS = 5;
 
 const updates = [
   {
+    icon: Zap,
+    title: "Contas gratuitas: até 5 registros por módulo",
+    description: "Agora usuários do plano gratuito podem incluir até 5 informações em cada módulo para experimentar o sistema.",
+  },
+  {
     icon: Sparkles,
-    title: "Dados fictícios em todos os módulos",
-    description: "Todos os módulos agora vêm pré-populados com dados de exemplo para facilitar a exploração: Finanças, RH, Marketing, Projetos, Clientes, Atividades, Processos e Painel.",
+    title: "Financeiro: Painel BI interativo",
+    description: "Clique no gráfico de Evolução Financeira para abrir um painel detalhado com Lucratividade e Fluxo de Caixa Futuro.",
   },
   {
     icon: Zap,
-    title: "Performance geral otimizada",
-    description: "Carregamento mais rápido com importações dinâmicas de bibliotecas pesadas (PDF e planilhas), cache inteligente e redução de requisições ao servidor.",
+    title: "Financeiro: Importação CSV/OFX",
+    description: "Suba seu extrato bancário direto no sistema e elimine a digitação manual de transações.",
   },
   {
     icon: ShieldCheck,
-    title: "Estabilidade e segurança reforçadas",
-    description: "Corrigido problema crítico no módulo Financeiro, reforçada tipagem em todos os hooks de dados e adicionadas barreiras de erro para evitar travamentos.",
+    title: "RH: Gestão de Documentos",
+    description: "Upload de contratos de trabalho e documentos (PDF/Imagens) diretamente no perfil do colaborador.",
   },
   {
     icon: Eye,
-    title: "Acessibilidade dos diálogos",
-    description: "Todos os diálogos e modais do sistema foram ajustados para melhor compatibilidade com leitores de tela.",
+    title: "RH: Timeline de Férias e Aniversários",
+    description: "Visão visual em calendário de quem está saindo de folga e datas de aniversário da equipe.",
   },
   {
     icon: Sparkles,
-    title: "Popup de novidades",
-    description: "Agora você será notificado sempre que houver atualizações importantes no sistema.",
+    title: "Marketing: Painel BI de Performance",
+    description: "Clique no gráfico de Performance para ver comparativo de canais (Instagram vs. Indicação) e Custo de Aquisição (CAC) automático.",
+  },
+  {
+    icon: Zap,
+    title: "Marketing: Calendário de Conteúdo",
+    description: "Planeje postagens da empresa com visualização mensal estilo Google Agenda.",
+  },
+  {
+    icon: Sparkles,
+    title: "Projetos: Painel BI de Status",
+    description: "Clique no gráfico de Status de Projeto para abrir análise detalhada de todos os projetos.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Projetos: Anexos centralizados",
+    description: "Centralize briefings e arquivos importantes dentro de cada projeto.",
+  },
+  {
+    icon: Sparkles,
+    title: "CRM: Painel BI de Clientes",
+    description: "Funil de Vendas visual e ranking dos maiores clientes acessíveis pelo gráfico de Receita por Cliente.",
+  },
+  {
+    icon: Eye,
+    title: "CRM: Anotações de Reunião",
+    description: "Campo de texto rico para registrar o que foi conversado em cada call, integrado ao perfil do cliente.",
+  },
+  {
+    icon: Zap,
+    title: "Guia de uso atualizado",
+    description: "Novo guia interativo com passo a passo de todas as funcionalidades do sistema.",
   },
 ];
 
