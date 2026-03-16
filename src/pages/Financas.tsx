@@ -890,6 +890,7 @@ export default function Financas() {
 
         {/* Category Management Dialog */}
         <CategoryDialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen} categories={categories} onAdd={handleAddCategory} onDelete={handleDeleteCategory} />
+        <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Financeiro" />
       </div>
     </MainLayout>
   );
