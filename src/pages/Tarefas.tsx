@@ -97,6 +97,8 @@ export default function Tarefas() {
   const { toast } = useToast();
   const { tarefas: dbTarefas, isLoading, addTarefa, updateTarefa, deleteTarefa, refetch: refetchTarefasDB } = useTarefasDB();
   const [searchTerm, setSearchTerm] = useState("");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(dbTarefas.length);
   const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
 
   // Map DB tarefas to local Atividade type
