@@ -58,6 +58,7 @@ import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { MarketingBIPanel } from "@/components/bi/MarketingBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
+import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
@@ -139,6 +140,7 @@ export default function Marketing() {
   const [biPanelOpen, setBiPanelOpen] = useState(false);
   const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
   const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(dbCampanhas.length);
   const [funnelItems, setFunnelItems] = useState<FunnelItem[]>([]);
   const [selectedCampanha, setSelectedCampanha] = useState<Campanha | null>(null);
@@ -299,7 +301,7 @@ export default function Marketing() {
               <TooltipProvider>
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={() => { if (plan === "gratuito") setBiUpgradeOpen(true); else setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                    <button onClick={() => { if (plan === "gratuito" && !isAdmin) setBiUpgradeOpen(true); else setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
                       <Maximize2 className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </TooltipTrigger>

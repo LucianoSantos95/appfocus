@@ -72,6 +72,7 @@ import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { ClientesBIPanel } from "@/components/bi/ClientesBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
+import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
@@ -103,6 +104,7 @@ export default function Clientes() {
   const [biPanelOpen, setBiPanelOpen] = useState(false);
   const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
   const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(clientes.length);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [showConversionDialog, setShowConversionDialog] = useState(false);
@@ -351,7 +353,7 @@ export default function Clientes() {
               <TooltipProvider>
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={() => { if (plan === "gratuito") setBiUpgradeOpen(true); else setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                    <button onClick={() => { if (plan === "gratuito" && !isAdmin) setBiUpgradeOpen(true); else setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
                       <Maximize2 className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </TooltipTrigger>
