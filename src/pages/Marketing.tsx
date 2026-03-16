@@ -131,6 +131,8 @@ export default function Marketing() {
   const { toast } = useToast();
   const { campanhas: dbCampanhas, isLoading, addCampanha, updateCampanha, deleteCampanha: deleteCampanhaDB, refetch: refetchCampanhasDB } = useCampanhasDB();
   const [conteudos, setConteudos] = useState<Conteudo[]>([]);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(dbCampanhas.length);
   const [funnelItems, setFunnelItems] = useState<FunnelItem[]>([]);
   const [selectedCampanha, setSelectedCampanha] = useState<Campanha | null>(null);
   const [selectedConteudo, setSelectedConteudo] = useState<Conteudo | null>(null);
