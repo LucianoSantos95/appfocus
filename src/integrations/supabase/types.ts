@@ -134,6 +134,7 @@ export type Database = {
           email: string | null
           empresa: string | null
           id: string
+          meeting_notes: string | null
           nome: string
           palavras_chave: string[] | null
           potencial: string | null
@@ -156,6 +157,7 @@ export type Database = {
           email?: string | null
           empresa?: string | null
           id?: string
+          meeting_notes?: string | null
           nome: string
           palavras_chave?: string[] | null
           potencial?: string | null
@@ -178,6 +180,7 @@ export type Database = {
           email?: string | null
           empresa?: string | null
           id?: string
+          meeting_notes?: string | null
           nome?: string
           palavras_chave?: string[] | null
           potencial?: string | null
@@ -198,6 +201,7 @@ export type Database = {
         Row: {
           created_at: string
           department: string | null
+          documents: Json | null
           email: string | null
           id: string
           manager: string | null
@@ -213,6 +217,7 @@ export type Database = {
         Insert: {
           created_at?: string
           department?: string | null
+          documents?: Json | null
           email?: string | null
           id?: string
           manager?: string | null
@@ -228,6 +233,7 @@ export type Database = {
         Update: {
           created_at?: string
           department?: string | null
+          documents?: Json | null
           email?: string | null
           id?: string
           manager?: string | null
@@ -270,6 +276,42 @@ export type Database = {
           institution?: string | null
           name?: string
           type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      conteudos: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          platform: string | null
+          scheduled_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          platform?: string | null
+          scheduled_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          platform?: string | null
+          scheduled_date?: string | null
+          status?: string
+          title?: string
           updated_at?: string
           user_id?: string
         }
@@ -444,6 +486,7 @@ export type Database = {
       }
       projetos: {
         Row: {
+          attachments: Json | null
           budget: number | null
           created_at: string
           description: string | null
@@ -458,6 +501,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attachments?: Json | null
           budget?: number | null
           created_at?: string
           description?: string | null
@@ -472,6 +516,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          attachments?: Json | null
           budget?: number | null
           created_at?: string
           description?: string | null
