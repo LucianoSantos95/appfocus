@@ -567,6 +567,7 @@ export default function Clientes() {
         onOpenChange={setShowSugestoes}
         sugestoes={sugestoes}
       />
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="CRM" />
     </MainLayout>
   );
 }
