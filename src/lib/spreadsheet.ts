@@ -1,12 +1,16 @@
-import * as XLSX from 'xlsx';
-
 export interface ParsedSpreadsheet {
   headers: string[];
   rows: Record<string, unknown>[];
   totalRows: number;
 }
 
-export function parseSpreadsheetFile(file: File): Promise<ParsedSpreadsheet> {
+async function loadXLSX() {
+  return await import('xlsx');
+}
+
+export async function parseSpreadsheetFile(file: File): Promise<ParsedSpreadsheet> {
+  const XLSX = await loadXLSX();
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
@@ -17,13 +21,11 @@ export function parseSpreadsheetFile(file: File): Promise<ParsedSpreadsheet> {
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         
-        // Convert to JSON with headers
         const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { 
           raw: false,
           defval: '' 
         });
         
-        // Extract headers from the first row
         const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
         const headers: string[] = [];
         
@@ -51,13 +53,13 @@ export function parseSpreadsheetFile(file: File): Promise<ParsedSpreadsheet> {
   });
 }
 
-export function generateTemplate(fields: { key: string; label: string }[], moduleName: string): void {
+export async function generateTemplate(fields: { key: string; label: string }[], moduleName: string): Promise<void> {
+  const XLSX = await loadXLSX();
+
   const workbook = XLSX.utils.book_new();
   
-  // Create headers row
   const headers = fields.map(f => f.label);
   
-  // Create example data row
   const exampleData = fields.map(f => {
     switch (f.key) {
       case 'nome':
@@ -93,13 +95,11 @@ export function generateTemplate(fields: { key: string; label: string }[], modul
   const worksheetData = [headers, exampleData];
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
   
-  // Set column widths
   const colWidths = headers.map(h => ({ wch: Math.max(h.length + 2, 15) }));
   worksheet['!cols'] = colWidths;
   
   XLSX.utils.book_append_sheet(workbook, worksheet, moduleName);
   
-  // Download
   XLSX.writeFile(workbook, `template_${moduleName.toLowerCase().replace(/\s+/g, '_')}.xlsx`);
 }
 
@@ -107,8 +107,8 @@ export function normalizeHeader(header: string): string {
   return header
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-    .replace(/[^a-z0-9]/g, '') // Remove caracteres especiais
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '')
     .trim();
 }
 
