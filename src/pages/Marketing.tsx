@@ -402,7 +402,7 @@ export default function Marketing() {
                 />
               </PlanGateButton>
               <PlanGateButton module="marketing" action="create">
-                <AddCampanhaDialog onAdd={addCampanha} />
+                <AddCampanhaDialog onAdd={addCampanha} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
               </PlanGateButton>
             </div>
           </div>
