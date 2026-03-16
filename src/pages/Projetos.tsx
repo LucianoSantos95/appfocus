@@ -293,7 +293,20 @@ export default function Projetos() {
           </div>
 
           <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
-            <h3 className="font-semibold text-foreground mb-6">Status dos Projetos</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-foreground">Status dos Projetos</h3>
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <button onClick={() => { if (plan === "gratuito") setBiUpgradeOpen(true); else setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                      <Maximize2 className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Clique para análise detalhada</TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
+            </div>
+            <div className="mt-4" />
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <defs>
