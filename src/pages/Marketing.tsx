@@ -688,6 +688,7 @@ export default function Marketing() {
           </DialogContent>
         </Dialog>
       </div>
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Marketing" />
     </MainLayout>
   );
 }
