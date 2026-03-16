@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { PlanProvider } from "@/contexts/PlanContext";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const Index = lazy(() => import("./pages/Index"));
 const Financas = lazy(() => import("./pages/Financas"));
@@ -24,7 +25,16 @@ const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -35,24 +45,26 @@ const App = () => (
         <AuthProvider>
           <PlanProvider>
             <SidebarProvider>
-              <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
-                <Routes>
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/termos" element={<Termos />} />
-                  <Route path="/privacidade" element={<Privacidade />} />
-                  <Route path="/planos" element={<Planos />} />
-                  <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                  <Route path="/financas" element={<ProtectedRoute><Financas /></ProtectedRoute>} />
-                  <Route path="/rh" element={<ProtectedRoute><RH /></ProtectedRoute>} />
-                  <Route path="/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
-                  <Route path="/projetos" element={<ProtectedRoute><Projetos /></ProtectedRoute>} />
-                  <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
-                  <Route path="/atividades" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
-                  <Route path="/processos" element={<ProtectedRoute><Processos /></ProtectedRoute>} />
-                  <Route path="/guia" element={<ProtectedRoute><Guia /></ProtectedRoute>} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
+              <ErrorBoundary>
+                <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+                  <Routes>
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/termos" element={<Termos />} />
+                    <Route path="/privacidade" element={<Privacidade />} />
+                    <Route path="/planos" element={<Planos />} />
+                    <Route path="/" element={<ProtectedRoute><ErrorBoundary><Index /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/financas" element={<ProtectedRoute><ErrorBoundary><Financas /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/rh" element={<ProtectedRoute><ErrorBoundary><RH /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/marketing" element={<ProtectedRoute><ErrorBoundary><Marketing /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/projetos" element={<ProtectedRoute><ErrorBoundary><Projetos /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/clientes" element={<ProtectedRoute><ErrorBoundary><Clientes /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/atividades" element={<ProtectedRoute><ErrorBoundary><Tarefas /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/processos" element={<ProtectedRoute><ErrorBoundary><Processos /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/guia" element={<ProtectedRoute><ErrorBoundary><Guia /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </ErrorBoundary>
             </SidebarProvider>
           </PlanProvider>
         </AuthProvider>
