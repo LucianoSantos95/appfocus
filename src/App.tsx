@@ -9,6 +9,7 @@ import { PlanProvider } from "@/contexts/PlanContext";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { UpdateNotification } from "@/components/UpdateNotification";
 
 const Index = lazy(() => import("./pages/Index"));
 const Financas = lazy(() => import("./pages/Financas"));
