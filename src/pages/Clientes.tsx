@@ -95,6 +95,8 @@ export default function Clientes() {
   } = useClientes();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(clientes.length);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [showConversionDialog, setShowConversionDialog] = useState(false);
   const [clienteToConvert, setClienteToConvert] = useState<Cliente | null>(null);
