@@ -1068,7 +1068,7 @@ function AddTransactionDialog({ type, categories, bankAccounts, onAdd, disabled,
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />
