@@ -294,7 +294,20 @@ export default function Marketing() {
         {/* Charts - Modern Style */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
-            <h3 className="font-semibold text-foreground mb-6">Performance de Marketing</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-foreground">Performance de Marketing</h3>
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <button onClick={() => { if (plan === "gratuito") setBiUpgradeOpen(true); else setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                      <Maximize2 className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Clique para análise detalhada</TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
+            </div>
+            <div className="mt-4" />
             {performanceData.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={performanceData}>
