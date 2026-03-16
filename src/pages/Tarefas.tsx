@@ -439,6 +439,7 @@ export default function Tarefas() {
           onDelete={handleDeleteAtividade}
         />
       )}
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Atividades" />
     </MainLayout>
   );
 }
