@@ -104,6 +104,7 @@ export default function Clientes() {
   const [biPanelOpen, setBiPanelOpen] = useState(false);
   const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
   const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(clientes.length);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [showConversionDialog, setShowConversionDialog] = useState(false);

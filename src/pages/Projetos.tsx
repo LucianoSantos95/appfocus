@@ -141,6 +141,7 @@ export default function Projetos() {
   const [biPanelOpen, setBiPanelOpen] = useState(false);
   const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
   const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(dbProjetos.length);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
 

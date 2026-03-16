@@ -140,6 +140,7 @@ export default function Marketing() {
   const [biPanelOpen, setBiPanelOpen] = useState(false);
   const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
   const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(dbCampanhas.length);
   const [funnelItems, setFunnelItems] = useState<FunnelItem[]>([]);
   const [selectedCampanha, setSelectedCampanha] = useState<Campanha | null>(null);
