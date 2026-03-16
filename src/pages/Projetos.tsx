@@ -61,6 +61,7 @@ import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { ProjetosBIPanel } from "@/components/bi/ProjetosBIPanel";
+import { ProjetoAnexos } from "@/components/projetos/ProjetoAnexos";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2 } from "lucide-react";
