@@ -132,7 +132,11 @@ export default function Processos() {
     toast({ title: "Etapa atualizada", description: "Nota: etapas são salvas localmente por enquanto." });
   };
 
-  const handleExportPDF = (processo: Processo) => {
+  const handleExportPDF = async (processo: Processo) => {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import("jspdf"),
+      import("jspdf-autotable"),
+    ]);
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text(processo.name, 14, 22);
