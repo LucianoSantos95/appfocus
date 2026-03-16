@@ -76,7 +76,7 @@ export default function AuthBrandingPanel({ compact }: Props) {
         </ul>
 
         <p className="mt-10 text-xs text-muted-foreground">
-          +4.000 empresas já utilizam o AppFocus
+          Mais de 100 empresas já utilizam o AppFocus
         </p>
       </div>
 
