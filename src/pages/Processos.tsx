@@ -52,6 +52,8 @@ import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessos as useProcessosDB } from "@/hooks/useProcessos";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
+import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
 interface ProcessoStep {
   id: string;
@@ -97,6 +99,8 @@ export default function Processos() {
   const { toast } = useToast();
   const { processos: dbProcessos, isLoading, addProcesso, updateProcesso, deleteProcesso: deleteProcessoDB, refetch: refetchProcessosDB } = useProcessosDB();
   const [searchTerm, setSearchTerm] = useState("");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(dbProcessos.length);
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
   const [editingStep, setEditingStep] = useState<{ processoId: string; step: ProcessoStep } | null>(null);
 
@@ -212,7 +216,7 @@ export default function Processos() {
               />
             </PlanGateButton>
             <PlanGateButton module="processos" action="create">
-              <AddProcessoDialog onAdd={addProcesso} />
+              <AddProcessoDialog onAdd={addProcesso} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
             </PlanGateButton>
           </div>
         </div>
@@ -367,6 +371,7 @@ export default function Processos() {
           onUpdate={(updatedStep) => handleUpdateStep(editingStep.processoId, updatedStep)}
         />
       )}
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Processos" />
     </MainLayout>
   );
 }
@@ -623,7 +628,7 @@ function EditProcessoDialog({
   );
 }
 
-function AddProcessoDialog({ onAdd }: { onAdd: (p: { name: string; description?: string; department?: string; owner?: string; status?: string }) => Promise<unknown> }) {
+function AddProcessoDialog({ onAdd, disabled, onBlocked }: { onAdd: (p: { name: string; description?: string; department?: string; owner?: string; status?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -632,6 +637,11 @@ function AddProcessoDialog({ onAdd }: { onAdd: (p: { name: string; description?:
     owner: "",
     status: "ativo" as string,
   });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) { onBlocked?.(); return; }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.name || !form.department) return;
@@ -649,7 +659,7 @@ function AddProcessoDialog({ onAdd }: { onAdd: (p: { name: string; description?:
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />

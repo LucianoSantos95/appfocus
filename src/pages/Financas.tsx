@@ -84,6 +84,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { useContasBancarias, ContaBancaria } from "@/hooks/useContasBancarias";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
+import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
 // Types
 interface Transaction {
@@ -132,6 +134,8 @@ export default function Financas() {
   const { transacoes, isLoading: isLoadingTransacoes, addTransacao, updateTransacao, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
   const { contas: bankAccounts, addConta, updateConta, updateBalance, deleteConta } = useContasBancarias();
   const [searchTerm, setSearchTerm] = useState("");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(transacoes.length);
   const [categories, setCategories] = useState<Category[]>([
     { id: "1", name: "Serviços", type: "receita", color: "hsl(var(--primary))" },
     { id: "2", name: "Produtos", type: "receita", color: "hsl(var(--success))" },
@@ -498,7 +502,7 @@ export default function Financas() {
           <TabsContent value="receitas" className="space-y-4">
             <div className="flex justify-end">
               <PlanGateButton module="financas" action="create">
-                <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} bankAccounts={bankAccounts} onAdd={handleAddTransaction} />
+                <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} bankAccounts={bankAccounts} onAdd={handleAddTransaction} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
               </PlanGateButton>
             </div>
             <TransactionTable 
@@ -515,7 +519,7 @@ export default function Financas() {
           <TabsContent value="despesas" className="space-y-4">
             <div className="flex justify-end">
               <PlanGateButton module="financas" action="create">
-                <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} bankAccounts={bankAccounts} onAdd={handleAddTransaction} />
+                <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} bankAccounts={bankAccounts} onAdd={handleAddTransaction} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
               </PlanGateButton>
             </div>
             <TransactionTable 
@@ -886,6 +890,7 @@ export default function Financas() {
 
         {/* Category Management Dialog */}
         <CategoryDialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen} categories={categories} onAdd={handleAddCategory} onDelete={handleDeleteCategory} />
+        <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Financeiro" />
       </div>
     </MainLayout>
   );
@@ -1032,9 +1037,17 @@ function TransactionTable({ transactions, type, bankAccounts, onSelect, onDelete
   );
 }
 
-function AddTransactionDialog({ type, categories, bankAccounts, onAdd }: { type: "receita" | "despesa"; categories: Category[]; bankAccounts: ContaBancaria[]; onAdd: (input: { description: string; value: number; date?: string; category?: string; type: string; status?: string; payment_method?: string; client?: string; provider?: string; notes?: string; bank_account_id?: string }) => Promise<unknown> }) {
+function AddTransactionDialog({ type, categories, bankAccounts, onAdd, disabled, onBlocked }: { type: "receita" | "despesa"; categories: Category[]; bankAccounts: ContaBancaria[]; onAdd: (input: { description: string; value: number; date?: string; category?: string; type: string; status?: string; payment_method?: string; client?: string; provider?: string; notes?: string; bank_account_id?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ description: "", value: "", date: "", category: "", paymentMethod: "", entity: "", notes: "", bankAccountId: "" });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) {
+      onBlocked?.();
+      return;
+    }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.description || !form.value || !form.date) return;
@@ -1055,7 +1068,7 @@ function AddTransactionDialog({ type, categories, bankAccounts, onAdd }: { type:
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />

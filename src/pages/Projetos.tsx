@@ -58,6 +58,8 @@ import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useProjetos as useProjetosDB } from "@/hooks/useProjetos";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
+import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
 interface SubTask {
   id: string;
@@ -130,6 +132,8 @@ export default function Projetos() {
   const { toast } = useToast();
   const { projetos: dbProjetos, isLoading, addProjeto, updateProjeto, deleteProjeto: deleteProjetoDB, refetch: refetchProjetosDB } = useProjetosDB();
   const [searchTerm, setSearchTerm] = useState("");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(dbProjetos.length);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
 
   // Map DB projetos to local type
@@ -355,7 +359,7 @@ export default function Projetos() {
               />
             </PlanGateButton>
             <PlanGateButton module="projetos" action="create">
-              <AddProjetoDialog onAdd={addProjeto} />
+              <AddProjetoDialog onAdd={addProjeto} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
             </PlanGateButton>
           </div>
         </div>
@@ -456,6 +460,7 @@ export default function Projetos() {
           onDelete={handleDeleteProjeto}
         />
       )}
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Projetos" />
     </MainLayout>
   );
 }
@@ -815,7 +820,7 @@ function ProjectDetailDialog({
   );
 }
 
-function AddProjetoDialog({ onAdd }: { onAdd: (p: { name: string; status?: string; priority?: string; start_date?: string; end_date?: string; budget?: number; responsible?: string; description?: string }) => Promise<unknown> }) {
+function AddProjetoDialog({ onAdd, disabled, onBlocked }: { onAdd: (p: { name: string; status?: string; priority?: string; start_date?: string; end_date?: string; budget?: number; responsible?: string; description?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -825,6 +830,11 @@ function AddProjetoDialog({ onAdd }: { onAdd: (p: { name: string; status?: strin
     endDate: "",
     priority: "media" as "alta" | "media" | "baixa",
   });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) { onBlocked?.(); return; }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.name || !form.responsible) return;
@@ -844,7 +854,7 @@ function AddProjetoDialog({ onAdd }: { onAdd: (p: { name: string; status?: strin
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />

@@ -54,6 +54,8 @@ import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
+import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
 interface Colaborador {
   id: string;
@@ -112,6 +114,8 @@ export default function RH() {
   const { toast } = useToast();
   const { colaboradores: dbColaboradores, isLoading, addColaborador, deleteColaborador, refetch: refetchColaboradores } = useColaboradores();
   const [searchTerm, setSearchTerm] = useState("");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(dbColaboradores.length);
   const [vagas, setVagas] = useState<Vaga[]>([]);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
@@ -307,7 +311,7 @@ export default function RH() {
                 />
               </PlanGateButton>
               <PlanGateButton module="rh" action="create">
-                <AddColaboradorDialog onAdd={addColaborador} />
+                <AddColaboradorDialog onAdd={addColaborador} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
               </PlanGateButton>
             </div>
           </div>
@@ -584,15 +588,21 @@ export default function RH() {
           </DialogContent>
         </Dialog>
       </div>
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="RH" />
     </MainLayout>
   );
 }
 
-function AddColaboradorDialog({ onAdd }: { onAdd: (c: { name: string; role?: string; department?: string; salary?: number; email?: string; phone?: string; status?: string }) => Promise<unknown> }) {
+function AddColaboradorDialog({ onAdd, disabled, onBlocked }: { onAdd: (c: { name: string; role?: string; department?: string; salary?: number; email?: string; phone?: string; status?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "", role: "", department: "", salary: "", email: "", phone: "", avatar: "", bio: "",
   });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) { onBlocked?.(); return; }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.name || !form.role || !form.department) return;
@@ -610,7 +620,7 @@ function AddColaboradorDialog({ onAdd }: { onAdd: (c: { name: string; role?: str
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2"><Plus className="w-4 h-4" />Novo Colaborador</Button>
       </DialogTrigger>

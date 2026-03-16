@@ -54,6 +54,8 @@ import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useCampanhas as useCampanhasDB } from "@/hooks/useCampanhas";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
+import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
 interface Campanha {
   id: string;
@@ -129,6 +131,8 @@ export default function Marketing() {
   const { toast } = useToast();
   const { campanhas: dbCampanhas, isLoading, addCampanha, updateCampanha, deleteCampanha: deleteCampanhaDB, refetch: refetchCampanhasDB } = useCampanhasDB();
   const [conteudos, setConteudos] = useState<Conteudo[]>([]);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(dbCampanhas.length);
   const [funnelItems, setFunnelItems] = useState<FunnelItem[]>([]);
   const [selectedCampanha, setSelectedCampanha] = useState<Campanha | null>(null);
   const [selectedConteudo, setSelectedConteudo] = useState<Conteudo | null>(null);
@@ -398,7 +402,7 @@ export default function Marketing() {
                 />
               </PlanGateButton>
               <PlanGateButton module="marketing" action="create">
-                <AddCampanhaDialog onAdd={addCampanha} />
+                <AddCampanhaDialog onAdd={addCampanha} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
               </PlanGateButton>
             </div>
           </div>
@@ -684,15 +688,21 @@ export default function Marketing() {
           </DialogContent>
         </Dialog>
       </div>
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Marketing" />
     </MainLayout>
   );
 }
 
 // Sub-components
 
-function AddCampanhaDialog({ onAdd }: { onAdd: (input: { name: string; objective?: string; platforms?: string; budget?: number; start_date?: string; end_date?: string; status?: string; responsible?: string }) => Promise<unknown> }) {
+function AddCampanhaDialog({ onAdd, disabled, onBlocked }: { onAdd: (input: { name: string; objective?: string; platforms?: string; budget?: number; start_date?: string; end_date?: string; status?: string; responsible?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", objective: "", platforms: [] as string[], budget: "", startDate: "", endDate: "", responsible: "" });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) { onBlocked?.(); return; }
+    setOpen(newOpen);
+  };
 
   const togglePlatform = (p: string) => {
     setForm(f => ({ ...f, platforms: f.platforms.includes(p) ? f.platforms.filter(x => x !== p) : [...f.platforms, p] }));
@@ -715,7 +725,7 @@ function AddCampanhaDialog({ onAdd }: { onAdd: (input: { name: string; objective
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2"><Plus className="w-4 h-4" />Nova Campanha</Button>
       </DialogTrigger>

@@ -68,6 +68,8 @@ import { SugestoesPainel } from "@/components/clientes/SugestoesPainel";
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
+import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
 const statusCliente = {
   ativo: { label: "Ativo", class: "bg-success/10 text-success" },
@@ -93,6 +95,8 @@ export default function Clientes() {
   } = useClientes();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(clientes.length);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [showConversionDialog, setShowConversionDialog] = useState(false);
   const [clienteToConvert, setClienteToConvert] = useState<Cliente | null>(null);
@@ -451,7 +455,7 @@ export default function Clientes() {
               />
             </PlanGateButton>
             <PlanGateButton module="clientes" action="create">
-              <AddClienteDialog onAdd={addCliente} />
+              <AddClienteDialog onAdd={addCliente} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
             </PlanGateButton>
           </div>
         </div>
@@ -563,6 +567,7 @@ export default function Clientes() {
         onOpenChange={setShowSugestoes}
         sugestoes={sugestoes}
       />
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="CRM" />
     </MainLayout>
   );
 }
@@ -794,7 +799,7 @@ function EditClienteDialog({
   );
 }
 
-function AddClienteDialog({ onAdd }: { onAdd: (c: ClienteInput) => Promise<Cliente | null> }) {
+function AddClienteDialog({ onAdd, disabled, onBlocked }: { onAdd: (c: ClienteInput) => Promise<Cliente | null>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -806,6 +811,11 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: ClienteInput) => Promise<Clien
     valor_total: "",
     anexo_url: "",
   });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) { onBlocked?.(); return; }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.nome || !form.email) return;
@@ -828,7 +838,7 @@ function AddClienteDialog({ onAdd }: { onAdd: (c: ClienteInput) => Promise<Clien
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />

@@ -55,6 +55,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useTarefas as useTarefasDB } from "@/hooks/useTarefas";
 import { Loader2 } from "lucide-react";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
+import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
 interface SubTask {
   id: string;
@@ -95,6 +97,8 @@ export default function Tarefas() {
   const { toast } = useToast();
   const { tarefas: dbTarefas, isLoading, addTarefa, updateTarefa, deleteTarefa, refetch: refetchTarefasDB } = useTarefasDB();
   const [searchTerm, setSearchTerm] = useState("");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(dbTarefas.length);
   const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
 
   // Map DB tarefas to local Atividade type
@@ -386,7 +390,7 @@ export default function Tarefas() {
               />
             </PlanGateButton>
             <PlanGateButton module="atividades" action="create">
-              <AddAtividadeDialog onAdd={addTarefa} />
+              <AddAtividadeDialog onAdd={addTarefa} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
             </PlanGateButton>
           </div>
         </div>
@@ -435,6 +439,7 @@ export default function Tarefas() {
           onDelete={handleDeleteAtividade}
         />
       )}
+      <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Atividades" />
     </MainLayout>
   );
 }
@@ -627,7 +632,7 @@ function EditAtividadeDialog({
   );
 }
 
-function AddAtividadeDialog({ onAdd }: { onAdd: (a: { title: string; description?: string; due_date?: string; priority?: string; status?: string; category?: string; responsible?: string }) => Promise<unknown> }) {
+function AddAtividadeDialog({ onAdd, disabled, onBlocked }: { onAdd: (a: { title: string; description?: string; due_date?: string; priority?: string; status?: string; category?: string; responsible?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -637,6 +642,11 @@ function AddAtividadeDialog({ onAdd }: { onAdd: (a: { title: string; description
     category: "tarefa" as string,
     responsible: "",
   });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) { onBlocked?.(); return; }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.title) return;
@@ -656,7 +666,7 @@ function AddAtividadeDialog({ onAdd }: { onAdd: (a: { title: string; description
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />
