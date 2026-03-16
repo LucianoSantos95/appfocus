@@ -50,7 +50,7 @@ export default function AuthBrandingPanel({ compact }: Props) {
       <div className="absolute top-1/2 left-1/3 w-32 h-32 rounded-full bg-primary/[0.07] blur-2xl" />
 
       <div className="relative z-10">
-        <img src={focusTextLogo} alt="Focus" className="h-24 w-auto mb-8" />
+        <img src={focusTextLogo} alt="Focus" className="h-32 w-auto mb-8" />
 
         <span className="badge-primary inline-block mb-6">Hub Empresarial</span>
 
