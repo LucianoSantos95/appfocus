@@ -479,42 +479,6 @@ export default function Financas() {
                 <p className="text-sm">Adicione transações para visualizar a evolução financeira</p>
               </div>
             )}
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorReceitasFin" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
-                      <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0.02} />
-                    </linearGradient>
-                    <linearGradient id="colorDespesasFin" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.4} />
-                      <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--popover))", 
-                      border: "1px solid hsl(var(--border))", 
-                      borderRadius: "12px",
-                      boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                    }} 
-                    formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]}
-                  />
-                  <Legend wrapperStyle={{ paddingTop: "16px" }} />
-                  <Area type="monotone" dataKey="receitas" stroke="hsl(var(--success))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorReceitasFin)" name="Receitas" />
-                  <Area type="monotone" dataKey="despesas" stroke="hsl(var(--destructive))" strokeWidth={2.5} fillOpacity={1} fill="url(#colorDespesasFin)" name="Despesas" />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-[280px] text-muted-foreground">
-                <BarChart3 className="w-12 h-12 mb-3 opacity-30" />
-                <p className="text-sm">Adicione transações para visualizar a evolução financeira</p>
-              </div>
-            )}
           </div>
 
           {/* Category Charts - Separated */}
