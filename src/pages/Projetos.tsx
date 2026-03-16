@@ -60,6 +60,10 @@ import { useProjetos as useProjetosDB } from "@/hooks/useProjetos";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { ProjetosBIPanel } from "@/components/bi/ProjetosBIPanel";
+import { usePlan } from "@/contexts/PlanContext";
+import { Maximize2 } from "lucide-react";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface SubTask {
   id: string;
@@ -133,6 +137,9 @@ export default function Projetos() {
   const { projetos: dbProjetos, isLoading, addProjeto, updateProjeto, deleteProjeto: deleteProjetoDB, refetch: refetchProjetosDB } = useProjetosDB();
   const [searchTerm, setSearchTerm] = useState("");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [biPanelOpen, setBiPanelOpen] = useState(false);
+  const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
+  const { plan } = usePlan();
   const freemium = useFreemiumLimit(dbProjetos.length);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
 
@@ -286,7 +293,20 @@ export default function Projetos() {
           </div>
 
           <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
-            <h3 className="font-semibold text-foreground mb-6">Status dos Projetos</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-foreground">Status dos Projetos</h3>
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <button onClick={() => { if (plan === "gratuito") setBiUpgradeOpen(true); else setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                      <Maximize2 className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Clique para análise detalhada</TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
+            </div>
+            <div className="mt-4" />
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <defs>
@@ -461,6 +481,8 @@ export default function Projetos() {
         />
       )}
       <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Projetos" />
+      <UpgradeModal open={biUpgradeOpen} onOpenChange={setBiUpgradeOpen} currentCount={0} maxCount={0} moduleName="Dashboards de BI" />
+      <ProjetosBIPanel open={biPanelOpen} onOpenChange={setBiPanelOpen} projetos={dbProjetos.map(p => ({ id: p.id, name: p.name, status: p.status, budget: p.budget, start_date: p.start_date, end_date: p.end_date, priority: p.priority }))} />
     </MainLayout>
   );
 }

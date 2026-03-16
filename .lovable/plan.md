@@ -1,77 +1,95 @@
 
 
-## Plano: Dashboards de BI Interativos (Grupo 2)
+# Aplicar restricoes do PlanGate em todos os modulos
 
-Transformar os gráficos principais de 4 módulos em gatilhos clicáveis que abrem modais detalhados estilo Power BI. Recurso exclusivo para assinantes (plano pago).
+## Resumo
+
+Atualmente, os componentes `PlanGate` e `usePlanFeatures` existem no codigo mas **nao estao sendo usados em nenhuma pagina**. Isso significa que usuarios do plano gratuito podem criar registros, exportar dados e usar IA sem restricao. Este plano aplica as restricoes em todos os 7 modulos.
+
+## O que muda para o usuario gratuito
+
+| Modulo | Pode ver dados | Criar/Adicionar | Exportar | IA |
+|--------|---------------|-----------------|----------|-----|
+| Financas | Sim | Bloqueado | Bloqueado | - |
+| RH | Sim | Bloqueado | Bloqueado | - |
+| Marketing | Sim | Bloqueado | Bloqueado | - |
+| Projetos | Sim | Bloqueado | Bloqueado | - |
+| Clientes | Sim | Bloqueado | Bloqueado | Bloqueado |
+| Tarefas | Sim | Bloqueado | Bloqueado | - |
+| Processos | Sim | Bloqueado | Bloqueado | - |
+
+Quando bloqueado, o botao aparece com icone de cadeado e ao clicar redireciona para a pagina de planos.
+
+## Abordagem tecnica
+
+Em cada pagina, envolver os botoes de acao com o componente `PlanGate`:
+
+1. **Botoes "Novo/Adicionar"** - envolver com `<PlanGate module="X" action="create">` 
+2. **Botoes "Exportar"** - envolver com `<PlanGate module="X" action="export">`
+3. **Botoes "Importar Planilha"** - envolver com `<PlanGate module="X" action="create">`
+4. **Botao "Analise IA" (Clientes)** - envolver com `<PlanGate module="clientes" action="ai_analysis">`
+
+Em vez de esconder os botoes, vou usar a abordagem de mostrar o botao desabilitado com tooltip "Disponivel no plano Plus" e redirecionar para /planos ao clicar. Isso incentiva o upgrade.
+
+### Arquivos a modificar
+
+- `src/pages/Financas.tsx` - Proteger botoes Exportar, Importar e dialog de nova transacao
+- `src/pages/RH.tsx` - Proteger botoes Importar e dialog de novo colaborador/vaga
+- `src/pages/Marketing.tsx` - Proteger botoes Importar e dialogs de nova campanha/conteudo
+- `src/pages/Projetos.tsx` - Proteger botoes Importar e dialog de novo projeto
+- `src/pages/Clientes.tsx` - Proteger botoes Importar, dialog de novo cliente e botao de Analise IA
+- `src/pages/Tarefas.tsx` - Proteger botoes Importar e dialog de nova atividade
+- `src/pages/Processos.tsx` - Proteger botoes Importar, Exportar PDF e dialog de novo processo
+
+### Componente PlanGate - pequeno ajuste
+
+O `PlanGate` atual renderiza um card grande quando o acesso e negado. Para botoes, vou criar uma variante inline que mostra o botao desabilitado com icone de cadeado, em vez do card grande. Isso mantem a interface limpa.
+
+Novo componente: `PlanGateButton` - um wrapper que:
+- Se tem acesso: renderiza o botao normalmente
+- Se nao tem acesso: renderiza o botao com icone de cadeado e redireciona para /planos ao clicar
+
+### Mapeamento de modulos para nomes na tabela plan_features
+
+```text
+Financas   -> module: "financas"
+RH         -> module: "rh"
+Marketing  -> module: "marketing"
+Projetos   -> module: "projetos"
+Clientes   -> module: "clientes"
+Tarefas    -> module: "atividades"
+Processos  -> module: "processos"
+```
+
+## Resultado esperado
+
+- Usuarios gratuitos podem navegar e visualizar todos os modulos (dados de exemplo)
+- Ao tentar criar, exportar ou importar, veem uma mensagem orientando a contratar um plano
+- Usuarios com plano Plus, Pro ou Enterprise continuam usando normalmente
+- Admins (dono do SaaS) continuam com acesso total
 
 ---
 
-### Arquitetura
+# Tarefas concluidas
 
-Criar 4 novos componentes de modal BI, um por módulo. Cada gráfico existente receberá `onClick` + `cursor-pointer` para abrir o modal correspondente. Usuários gratuitos verão o `UpgradeModal` ao clicar.
+## ✅ Redesign da tela de Auth
 
-### Componentes a criar
+- Layout split-screen seguindo estetica da landing page do Hub
+- Painel de branding com gradientes, glow e bullets de features
+- Link para pagina de precos no header e rodape
+- Responsivo (coluna unica em mobile)
+- Componentes extraidos: AuthHeader, AuthFooter, AuthBrandingPanel, AuthFormPanel
 
-**1. `src/components/bi/FinanceiroBIPanel.tsx`**
-- Gatilho: clique no gráfico "Evolução Financeira" (Financas.tsx, linha ~424)
-- Conteúdo do modal (fullscreen Dialog):
-  - **Lucratividade**: margem de lucro % por mês (AreaChart)
-  - **Fluxo de Caixa Futuro**: projeção dos próximos 3 meses baseada na média dos últimos 6 (AreaChart com linha pontilhada)
-  - **Despesas vs Receitas detalhado**: BarChart mensal comparativo (12 meses)
-- Dados derivados das `transacoes` existentes via props
+---
 
-**2. `src/components/bi/MarketingBIPanel.tsx`**
-- Gatilho: clique no gráfico "Performance de Marketing" (Marketing.tsx, linha ~289)
-- Conteúdo do modal:
-  - **Comparativo de Canais**: BarChart horizontal por plataforma (Instagram, Google, etc.) com orçamento vs resultado
-  - **CAC (Custo de Aquisição)**: orçamento total / conversões totais, exibido como KPI card
-  - **Performance por Campanha**: tabela rankeada com métricas
-- Dados derivados das `campanhas` existentes via props
+# Sprint 3 — Automacoes e Alertas (planejamento futuro)
 
-**3. `src/components/bi/ProjetosBIPanel.tsx`**
-- Gatilho: clique no gráfico "Status dos Projetos" (Projetos.tsx, linha ~288)
-- Conteúdo do modal:
-  - **Progresso consolidado**: lista de todos os projetos com barra de progresso baseada em subtasks/sprints
-  - **Prazos críticos**: projetos com `end_date` próximo ou ultrapassado, destacados em vermelho
-  - **Orçamento vs Gasto consolidado**: visão geral com totais
-- Dados derivados dos `projetos` existentes via props
+## Fase 1: Alertas de tarefas atrasadas e transacoes vencidas
+- pg_cron job diario para verificar tarefas com due_date < now() e status != 'concluida'
+- pg_cron job diario para verificar transacoes com date < now() e status = 'pendente'
+- Edge function para enviar emails de alerta via Resend
+- Widget de alertas no dashboard
 
-**4. `src/components/bi/ClientesBIPanel.tsx`**
-- Gatilho: clique no gráfico "Receita por Cliente" (Clientes.tsx, linha ~341)
-- Conteúdo do modal:
-  - **Funil de Vendas**: barras horizontais por status (prospecto → ativo → inativo)
-  - **Ranking Maiores Clientes**: top 10 por `valor_total`, com badges
-  - **Distribuição por Segmento**: PieChart detalhado com valores absolutos
-- Dados derivados dos `clientes` existentes via props
-
-### Controle de acesso
-
-Em cada página, ao clicar no gráfico:
-1. Verificar `usePlanFeatures(module).canView` ou checar se `plan !== 'gratuito'` via `usePlan()`
-2. Se gratuito: abrir `UpgradeModal` com mensagem "Dashboards de BI são exclusivos para assinantes"
-3. Se pago: abrir o painel BI correspondente
-
-### Modificações em páginas existentes
-
-- **Financas.tsx**: adicionar estado `biPanelOpen`, envolver div do gráfico Evolução Financeira com `onClick`, importar `FinanceiroBIPanel`
-- **Marketing.tsx**: mesmo padrão para gráfico Performance
-- **Projetos.tsx**: mesmo padrão para gráfico Status dos Projetos
-- **Clientes.tsx**: mesmo padrão para gráfico Receita por Cliente
-
-Cada gráfico clicável terá um indicador visual sutil (ícone de expandir + tooltip "Clique para análise detalhada").
-
-### Arquivos
-
-| Ação | Arquivo |
-|------|---------|
-| Criar | `src/components/bi/FinanceiroBIPanel.tsx` |
-| Criar | `src/components/bi/MarketingBIPanel.tsx` |
-| Criar | `src/components/bi/ProjetosBIPanel.tsx` |
-| Criar | `src/components/bi/ClientesBIPanel.tsx` |
-| Editar | `src/pages/Financas.tsx` |
-| Editar | `src/pages/Marketing.tsx` |
-| Editar | `src/pages/Projetos.tsx` |
-| Editar | `src/pages/Clientes.tsx` |
-
-Sem migrações de banco de dados necessárias — todos os dados já existem nas tabelas atuais.
-
+## Fase 2: Relatorios automaticos
+- Relatorio semanal de resumo financeiro enviado por email
+- Relatorio mensal de desempenho de projetos
