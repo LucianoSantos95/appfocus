@@ -1037,9 +1037,17 @@ function TransactionTable({ transactions, type, bankAccounts, onSelect, onDelete
   );
 }
 
-function AddTransactionDialog({ type, categories, bankAccounts, onAdd }: { type: "receita" | "despesa"; categories: Category[]; bankAccounts: ContaBancaria[]; onAdd: (input: { description: string; value: number; date?: string; category?: string; type: string; status?: string; payment_method?: string; client?: string; provider?: string; notes?: string; bank_account_id?: string }) => Promise<unknown> }) {
+function AddTransactionDialog({ type, categories, bankAccounts, onAdd, disabled, onBlocked }: { type: "receita" | "despesa"; categories: Category[]; bankAccounts: ContaBancaria[]; onAdd: (input: { description: string; value: number; date?: string; category?: string; type: string; status?: string; payment_method?: string; client?: string; provider?: string; notes?: string; bank_account_id?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ description: "", value: "", date: "", category: "", paymentMethod: "", entity: "", notes: "", bankAccountId: "" });
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && disabled) {
+      onBlocked?.();
+      return;
+    }
+    setOpen(newOpen);
+  };
 
   const handleSubmit = async () => {
     if (!form.description || !form.value || !form.date) return;
