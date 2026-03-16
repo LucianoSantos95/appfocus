@@ -55,6 +55,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useTarefas as useTarefasDB } from "@/hooks/useTarefas";
 import { Loader2 } from "lucide-react";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
+import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
+import { UpgradeModal } from "@/components/plan/UpgradeModal";
 
 interface SubTask {
   id: string;
