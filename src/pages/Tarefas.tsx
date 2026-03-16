@@ -336,7 +336,6 @@ export default function Tarefas() {
                   labelStyle={{ color: "#ffffff" }}
                   itemStyle={{ color: "#ffffff" }}
                 />
-                />
               </PieChart>
             </ResponsiveContainer>
             <div className="flex justify-center gap-6 mt-2">
