@@ -947,6 +947,8 @@ export default function Financas() {
         {/* Category Management Dialog */}
         <CategoryDialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen} categories={categories} onAdd={handleAddCategory} onDelete={handleDeleteCategory} />
         <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Financeiro" />
+        <UpgradeModal open={biUpgradeOpen} onOpenChange={setBiUpgradeOpen} currentCount={0} maxCount={0} moduleName="Dashboards de BI" />
+        <FinanceiroBIPanel open={biPanelOpen} onOpenChange={setBiPanelOpen} transacoes={transacoes} />
       </div>
     </MainLayout>
   );
