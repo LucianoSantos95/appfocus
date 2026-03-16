@@ -99,6 +99,8 @@ export default function Processos() {
   const { toast } = useToast();
   const { processos: dbProcessos, isLoading, addProcesso, updateProcesso, deleteProcesso: deleteProcessoDB, refetch: refetchProcessosDB } = useProcessosDB();
   const [searchTerm, setSearchTerm] = useState("");
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const freemium = useFreemiumLimit(dbProcessos.length);
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
   const [editingStep, setEditingStep] = useState<{ processoId: string; step: ProcessoStep } | null>(null);
 
