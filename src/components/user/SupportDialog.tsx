@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Send, CheckCircle2, Clock, AlertCircle, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supportTicketSchema, getZodErrorMessage } from "@/lib/schemas";
+import { stripHtml } from "@/lib/sanitize";
 
 interface SupportDialogProps {
   open: boolean;
