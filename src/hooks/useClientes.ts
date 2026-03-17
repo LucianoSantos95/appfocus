@@ -117,6 +117,7 @@ export function useClientes() {
 
       // Trigger AI analysis for new client
       analyzeCliente(newCliente.id);
+      logEvent("create", "clientes", newCliente.id, { nome: input.nome });
 
       toast({
         title: "Cliente adicionado!",
