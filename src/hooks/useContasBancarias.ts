@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 export interface ContaBancaria {
   id: string;
@@ -21,6 +22,7 @@ export interface ContaBancariaInput {
 
 export function useContasBancarias() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [contas, setContas] = useState<ContaBancaria[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -50,6 +52,7 @@ export function useContasBancarias() {
       if (error) throw error;
       setContas(prev => [...prev, data]);
       toast({ title: "Conta adicionada!", description: `${input.name} foi registrada.` });
+      logEvent("create", "contas_bancarias", data.id, { name: input.name });
       return data;
     } catch (error) {
       console.error("Error adding conta:", error);
@@ -90,6 +93,7 @@ export function useContasBancarias() {
       if (error) throw error;
       setContas(prev => prev.filter(c => c.id !== id));
       toast({ title: "Conta excluída" });
+      logEvent("delete", "contas_bancarias", id);
       return true;
     } catch (error) {
       console.error("Error deleting conta:", error);

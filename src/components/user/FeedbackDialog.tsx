@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Star, Send } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { feedbackSchema, getZodErrorMessage } from "@/lib/schemas";
+import { stripHtml } from "@/lib/sanitize";
 
 interface FeedbackDialogProps {
   open: boolean;
@@ -26,12 +28,9 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!mensagem.trim()) {
-      toast({ title: "Escreva uma mensagem", variant: "destructive" });
-      return;
-    }
-    if (mensagem.trim().length > 1000) {
-      toast({ title: "Mensagem muito longa (máx. 1000 caracteres)", variant: "destructive" });
+    const parsed = feedbackSchema.safeParse({ nome, email, mensagem, avaliacao: avaliacao || undefined });
+    if (!parsed.success) {
+      toast({ title: getZodErrorMessage(parsed.error), variant: "destructive" });
       return;
     }
 
@@ -40,7 +39,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
       const { error } = await supabase.from("feedbacks").insert({
         nome: nome.trim() || null,
         email: email.trim() || null,
-        mensagem: mensagem.trim(),
+        mensagem: stripHtml(mensagem.trim()),
         avaliacao: avaliacao || null,
         pagina: location.pathname,
       });

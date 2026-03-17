@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 export interface Processo {
   id: string;
@@ -23,6 +24,7 @@ export interface ProcessoInput {
 
 export function useProcessos() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [processos, setProcessos] = useState<Processo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,6 +49,7 @@ export function useProcessos() {
       const newP = data as Processo;
       setProcessos(prev => [newP, ...prev]);
       toast({ title: "Processo adicionado!", description: `${input.name} foi criado.` });
+      logEvent("create", "processos", newP.id, { name: input.name });
       return newP;
     } catch (error) {
       console.error("Error adding processo:", error);
@@ -75,6 +78,7 @@ export function useProcessos() {
       if (error) throw error;
       setProcessos(prev => prev.filter(p => p.id !== id));
       toast({ title: "Processo excluído" });
+      logEvent("delete", "processos", id);
       return true;
     } catch (error) {
       console.error("Error deleting processo:", error);

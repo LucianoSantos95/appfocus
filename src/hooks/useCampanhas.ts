@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 export interface Campanha {
   id: string;
@@ -29,6 +30,7 @@ export interface CampanhaInput {
 
 export function useCampanhas() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [campanhas, setCampanhas] = useState<Campanha[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -53,6 +55,7 @@ export function useCampanhas() {
       const newC = data as Campanha;
       setCampanhas(prev => [newC, ...prev]);
       toast({ title: "Campanha adicionada!", description: `${input.name} foi criada.` });
+      logEvent("create", "campanhas", newC.id, { name: input.name });
       return newC;
     } catch (error) {
       console.error("Error adding campanha:", error);
@@ -81,6 +84,7 @@ export function useCampanhas() {
       if (error) throw error;
       setCampanhas(prev => prev.filter(c => c.id !== id));
       toast({ title: "Campanha excluída" });
+      logEvent("delete", "campanhas", id);
       return true;
     } catch (error) {
       console.error("Error deleting campanha:", error);

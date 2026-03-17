@@ -37,6 +37,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    // Rate limit check
+    try {
+      const { data: rateCheck, error: rateError } = await supabase.rpc("check_login_rate_limit", {
+        p_email: email,
+      } as never);
+      if (!rateError && rateCheck && !(rateCheck as any).allowed) {
+        const waitSec = (rateCheck as any).wait_seconds || 60;
+        return { error: new Error(`Muitas tentativas de login. Aguarde ${Math.ceil(waitSec / 60)} minuto(s) e tente novamente.`) };
+      }
+    } catch {
+      // If rate limit check fails, allow login to proceed
+    }
+
+    // Record attempt
+    try {
+      await supabase.rpc("record_login_attempt", { p_email: email } as never);
+    } catch {
+      // Non-blocking
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error ? new Error(error.message) : null };
   };

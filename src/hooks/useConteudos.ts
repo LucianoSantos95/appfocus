@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 export interface Conteudo {
   id: string;
@@ -23,6 +24,7 @@ export interface ConteudoInput {
 
 export function useConteudos() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [conteudos, setConteudos] = useState<Conteudo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,6 +49,7 @@ export function useConteudos() {
       const newC = data as Conteudo;
       setConteudos(prev => [...prev, newC]);
       toast({ title: "Conteúdo adicionado!" });
+      logEvent("create", "conteudos", newC.id, { title: input.title });
       return newC;
     } catch (error) {
       console.error("Error adding conteudo:", error);
@@ -74,6 +77,7 @@ export function useConteudos() {
       if (error) throw error;
       setConteudos(prev => prev.filter(c => c.id !== id));
       toast({ title: "Conteúdo excluído" });
+      logEvent("delete", "conteudos", id);
       return true;
     } catch (error) {
       console.error("Error deleting conteudo:", error);

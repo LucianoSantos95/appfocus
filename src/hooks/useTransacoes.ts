@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 export interface Transacao {
   id: string;
@@ -35,6 +36,7 @@ export interface TransacaoInput {
 
 export function useTransacoes() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -59,6 +61,7 @@ export function useTransacoes() {
       const newT = data as Transacao;
       setTransacoes(prev => [newT, ...prev]);
       toast({ title: "Transação adicionada!", description: `${input.description} foi registrada.` });
+      logEvent("create", "transacoes", newT.id, { description: input.description });
       return newT;
     } catch (error) {
       console.error("Error adding transacao:", error);
@@ -86,6 +89,7 @@ export function useTransacoes() {
       if (error) throw error;
       setTransacoes(prev => prev.filter(t => t.id !== id));
       toast({ title: "Transação excluída" });
+      logEvent("delete", "transacoes", id);
       return true;
     } catch (error) {
       console.error("Error deleting transacao:", error);

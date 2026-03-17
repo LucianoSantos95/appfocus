@@ -50,6 +50,36 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          module: string
+          record_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          module: string
+          record_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          module?: string
+          record_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       bulletin_notes: {
         Row: {
           author: string
@@ -381,6 +411,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          email: string
+          id: string
+          ip_address: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+        }
+        Relationships: []
       }
       plan_features: {
         Row: {
@@ -872,6 +923,7 @@ export type Database = {
       }
     }
     Functions: {
+      check_login_rate_limit: { Args: { p_email: string }; Returns: Json }
       cleanup_rate_limits: { Args: never; Returns: undefined }
       has_role: {
         Args: {
@@ -880,6 +932,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_audit_event: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_module: string
+          p_record_id?: string
+        }
+        Returns: undefined
+      }
+      record_login_attempt: { Args: { p_email: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"

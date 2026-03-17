@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 export interface Colaborador {
   id: string;
@@ -31,6 +32,7 @@ export interface ColaboradorInput {
 
 export function useColaboradores() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -55,6 +57,7 @@ export function useColaboradores() {
       const newC = data as Colaborador;
       setColaboradores(prev => [newC, ...prev]);
       toast({ title: "Colaborador adicionado!", description: `${input.name} foi cadastrado.` });
+      logEvent("create", "colaboradores", newC.id, { name: input.name });
       return newC;
     } catch (error) {
       console.error("Error adding colaborador:", error);
@@ -83,6 +86,7 @@ export function useColaboradores() {
       if (error) throw error;
       setColaboradores(prev => prev.filter(c => c.id !== id));
       toast({ title: "Colaborador excluído" });
+      logEvent("delete", "colaboradores", id);
       return true;
     } catch (error) {
       console.error("Error deleting colaborador:", error);

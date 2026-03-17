@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { isValidHttpUrl } from "@/lib/validation";
+import { useAuditLog } from "@/hooks/useAuditLog";
+import { stripHtml } from "@/lib/sanitize";
 
 export interface Cliente {
   id: string;
@@ -39,6 +41,7 @@ export interface ClienteInput {
 
 export function useClientes() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -114,6 +117,7 @@ export function useClientes() {
 
       // Trigger AI analysis for new client
       analyzeCliente(newCliente.id);
+      logEvent("create", "clientes", newCliente.id, { nome: input.nome });
 
       toast({
         title: "Cliente adicionado!",
@@ -158,6 +162,7 @@ export function useClientes() {
 
       // Trigger AI analysis after update
       analyzeCliente(id);
+      logEvent("update", "clientes", id);
 
       toast({
         title: "Cliente atualizado!",
@@ -187,6 +192,7 @@ export function useClientes() {
       if (error) throw error;
 
       setClientes((prev) => prev.filter((c) => c.id !== id));
+      logEvent("delete", "clientes", id);
 
       toast({
         title: "Cliente excluído",

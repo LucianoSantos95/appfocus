@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 export interface Tarefa {
   id: string;
@@ -27,6 +28,7 @@ export interface TarefaInput {
 
 export function useTarefas() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -51,6 +53,7 @@ export function useTarefas() {
       const newT = data as Tarefa;
       setTarefas(prev => [newT, ...prev]);
       toast({ title: "Tarefa adicionada!", description: `${input.title} foi criada.` });
+      logEvent("create", "tarefas", newT.id, { title: input.title });
       return newT;
     } catch (error) {
       console.error("Error adding tarefa:", error);
@@ -78,6 +81,7 @@ export function useTarefas() {
       if (error) throw error;
       setTarefas(prev => prev.filter(t => t.id !== id));
       toast({ title: "Tarefa excluída" });
+      logEvent("delete", "tarefas", id);
       return true;
     } catch (error) {
       console.error("Error deleting tarefa:", error);

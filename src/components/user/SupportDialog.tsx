@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Send, CheckCircle2, Clock, AlertCircle, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supportTicketSchema, getZodErrorMessage } from "@/lib/schemas";
+import { stripHtml } from "@/lib/sanitize";
 
 interface SupportDialogProps {
   open: boolean;
@@ -71,12 +73,9 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!nome.trim() || !email.trim() || !mensagem.trim()) {
-      toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
-      return;
-    }
-    if (mensagem.trim().length > 2000) {
-      toast({ title: "Mensagem muito longa (máx. 2000 caracteres)", variant: "destructive" });
+    const parsed = supportTicketSchema.safeParse({ nome, email, telefone, mensagem });
+    if (!parsed.success) {
+      toast({ title: getZodErrorMessage(parsed.error), variant: "destructive" });
       return;
     }
 
@@ -84,10 +83,10 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
     try {
       const { error } = await supabase.from("support_tickets").insert({
         user_id: user.id,
-        nome: nome.trim(),
+        nome: stripHtml(nome.trim()),
         email: email.trim(),
         telefone: telefone.trim() || null,
-        mensagem: mensagem.trim(),
+        mensagem: stripHtml(mensagem.trim()),
       });
       if (error) throw error;
       toast({ title: "Ticket enviado!", description: "Responderemos em breve." });

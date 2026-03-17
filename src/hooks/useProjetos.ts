@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 
 export interface Projeto {
   id: string;
@@ -29,6 +30,7 @@ export interface ProjetoInput {
 
 export function useProjetos() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [projetos, setProjetos] = useState<Projeto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -53,6 +55,7 @@ export function useProjetos() {
       const newP = data as Projeto;
       setProjetos(prev => [newP, ...prev]);
       toast({ title: "Projeto adicionado!", description: `${input.name} foi criado.` });
+      logEvent("create", "projetos", newP.id, { name: input.name });
       return newP;
     } catch (error) {
       console.error("Error adding projeto:", error);
@@ -67,6 +70,7 @@ export function useProjetos() {
       if (error) throw error;
       setProjetos(prev => prev.map(p => p.id === id ? { ...p, ...updates } as Projeto : p));
       toast({ title: "Projeto atualizado!" });
+      logEvent("update", "projetos", id);
       return true;
     } catch (error) {
       console.error("Error updating projeto:", error);
@@ -81,6 +85,7 @@ export function useProjetos() {
       if (error) throw error;
       setProjetos(prev => prev.filter(p => p.id !== id));
       toast({ title: "Projeto excluído" });
+      logEvent("delete", "projetos", id);
       return true;
     } catch (error) {
       console.error("Error deleting projeto:", error);
