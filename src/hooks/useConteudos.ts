@@ -24,6 +24,7 @@ export interface ConteudoInput {
 
 export function useConteudos() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [conteudos, setConteudos] = useState<Conteudo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
