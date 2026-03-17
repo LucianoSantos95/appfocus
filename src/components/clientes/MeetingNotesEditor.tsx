@@ -92,7 +92,7 @@ export function MeetingNotesEditor({ initialContent, onSave }: MeetingNotesEdito
         contentEditable
         suppressContentEditableWarning
         onInput={() => setHasChanges(true)}
-        dangerouslySetInnerHTML={{ __html: initialContent }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(initialContent) }}
         className={cn(
           "min-h-[150px] max-h-[300px] overflow-y-auto p-3 rounded-lg border border-border/50 bg-muted/20",
           "text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
