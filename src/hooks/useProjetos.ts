@@ -70,6 +70,7 @@ export function useProjetos() {
       if (error) throw error;
       setProjetos(prev => prev.map(p => p.id === id ? { ...p, ...updates } as Projeto : p));
       toast({ title: "Projeto atualizado!" });
+      logEvent("update", "projetos", id);
       return true;
     } catch (error) {
       console.error("Error updating projeto:", error);
