@@ -553,6 +553,45 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriber_extras: {
+        Row: {
+          canal_aquisicao: string | null
+          created_at: string
+          data_conversao: string | null
+          id: string
+          ltv: number | null
+          notas: string | null
+          origem: string | null
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          canal_aquisicao?: string | null
+          created_at?: string
+          data_conversao?: string | null
+          id?: string
+          ltv?: number | null
+          notas?: string | null
+          origem?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          canal_aquisicao?: string | null
+          created_at?: string
+          data_conversao?: string | null
+          id?: string
+          ltv?: number | null
+          notas?: string | null
+          origem?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -808,7 +847,29 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_assinantes: {
+        Row: {
+          assinatura_fim: string | null
+          assinatura_inicio: string | null
+          cadastro_em: string | null
+          canal_aquisicao: string | null
+          company_name: string | null
+          data_conversao: string | null
+          display_name: string | null
+          employee_count: string | null
+          ltv: number | null
+          notas: string | null
+          origem: string | null
+          phone: string | null
+          plano: string | null
+          segment: string | null
+          status_assinatura: string | null
+          stripe_customer_id: string | null
+          tags: string[] | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_rate_limits: { Args: never; Returns: undefined }
