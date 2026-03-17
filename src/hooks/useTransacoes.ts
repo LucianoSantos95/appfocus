@@ -36,6 +36,7 @@ export interface TransacaoInput {
 
 export function useTransacoes() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
