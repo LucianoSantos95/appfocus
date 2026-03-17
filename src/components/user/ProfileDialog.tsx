@@ -5,8 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { TwoFactorSetup } from "@/components/auth/TwoFactorSetup";
 
 interface ProfileDialogProps {
   open: boolean;
@@ -105,6 +107,14 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirmar nova senha" maxLength={72} />
             </div>
           </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Autenticação de Dois Fatores (2FA)</p>
+            <TwoFactorSetup />
+          </div>
+
           <Button onClick={handleSave} className="w-full" disabled={loading}>
             {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
             Salvar
