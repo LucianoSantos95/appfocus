@@ -40,7 +40,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
       const { error } = await supabase.from("feedbacks").insert({
         nome: nome.trim() || null,
         email: email.trim() || null,
-        mensagem: mensagem.trim(),
+        mensagem: stripHtml(mensagem.trim()),
         avaliacao: avaliacao || null,
         pagina: location.pathname,
       });

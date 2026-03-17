@@ -83,10 +83,10 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
     try {
       const { error } = await supabase.from("support_tickets").insert({
         user_id: user.id,
-        nome: nome.trim(),
+        nome: stripHtml(nome.trim()),
         email: email.trim(),
         telefone: telefone.trim() || null,
-        mensagem: mensagem.trim(),
+        mensagem: stripHtml(mensagem.trim()),
       });
       if (error) throw error;
       toast({ title: "Ticket enviado!", description: "Responderemos em breve." });
