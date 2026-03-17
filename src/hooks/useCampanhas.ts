@@ -30,6 +30,7 @@ export interface CampanhaInput {
 
 export function useCampanhas() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [campanhas, setCampanhas] = useState<Campanha[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
