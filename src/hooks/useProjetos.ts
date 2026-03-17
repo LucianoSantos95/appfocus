@@ -55,6 +55,7 @@ export function useProjetos() {
       const newP = data as Projeto;
       setProjetos(prev => [newP, ...prev]);
       toast({ title: "Projeto adicionado!", description: `${input.name} foi criado.` });
+      logEvent("create", "projetos", newP.id, { name: input.name });
       return newP;
     } catch (error) {
       console.error("Error adding projeto:", error);
