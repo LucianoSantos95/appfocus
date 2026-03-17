@@ -49,6 +49,7 @@ export function useProcessos() {
       const newP = data as Processo;
       setProcessos(prev => [newP, ...prev]);
       toast({ title: "Processo adicionado!", description: `${input.name} foi criado.` });
+      logEvent("create", "processos", newP.id, { name: input.name });
       return newP;
     } catch (error) {
       console.error("Error adding processo:", error);
