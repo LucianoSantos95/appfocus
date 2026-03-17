@@ -52,6 +52,7 @@ export function useContasBancarias() {
       if (error) throw error;
       setContas(prev => [...prev, data]);
       toast({ title: "Conta adicionada!", description: `${input.name} foi registrada.` });
+      logEvent("create", "contas_bancarias", data.id, { name: input.name });
       return data;
     } catch (error) {
       console.error("Error adding conta:", error);
