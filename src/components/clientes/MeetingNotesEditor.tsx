@@ -24,7 +24,7 @@ export function MeetingNotesEditor({ initialContent, onSave }: MeetingNotesEdito
     if (!editorRef.current) return;
     setSaving(true);
     try {
-      await onSave(editorRef.current.innerHTML);
+      await onSave(sanitizeHtml(editorRef.current.innerHTML));
       setHasChanges(false);
     } finally {
       setSaving(false);
