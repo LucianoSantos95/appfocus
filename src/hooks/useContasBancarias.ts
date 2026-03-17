@@ -22,6 +22,7 @@ export interface ContaBancariaInput {
 
 export function useContasBancarias() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [contas, setContas] = useState<ContaBancaria[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
