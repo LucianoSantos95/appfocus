@@ -1,0 +1,1 @@
+UPDATE public.plan_features SET enabled = true WHERE plan = 'gratuito' AND action = 'create';
