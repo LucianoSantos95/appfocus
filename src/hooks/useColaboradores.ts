@@ -57,6 +57,7 @@ export function useColaboradores() {
       const newC = data as Colaborador;
       setColaboradores(prev => [newC, ...prev]);
       toast({ title: "Colaborador adicionado!", description: `${input.name} foi cadastrado.` });
+      logEvent("create", "colaboradores", newC.id, { name: input.name });
       return newC;
     } catch (error) {
       console.error("Error adding colaborador:", error);
