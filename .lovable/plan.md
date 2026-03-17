@@ -1,95 +1,38 @@
 
 
-# Aplicar restricoes do PlanGate em todos os modulos
+## Plano de Segurança — 4 Implementações
 
-## Resumo
+### 1. Rate Limiting no Login
+- Criar uma tabela `login_attempts` no banco para rastrear tentativas por email
+- Criar uma função SQL `check_login_rate_limit(email)` que verifica se houve mais de 5 tentativas nos últimos 5 minutos
+- Criar edge function `check-rate-limit` que o frontend chama antes de `signIn`
+- No `AuthContext.signIn`, chamar a edge function antes de autenticar; se bloqueado, retornar erro com tempo restante
+- Trigger automático para limpar registros antigos (>1 hora)
 
-Atualmente, os componentes `PlanGate` e `usePlanFeatures` existem no codigo mas **nao estao sendo usados em nenhuma pagina**. Isso significa que usuarios do plano gratuito podem criar registros, exportar dados e usar IA sem restricao. Este plano aplica as restricoes em todos os 7 modulos.
+### 2. Validação com Zod em Todos os Formulários
+- Instalar `zod` como dependência
+- Criar `src/lib/schemas.ts` com schemas para cada módulo:
+  - `clienteSchema`, `projetoSchema`, `tarefaSchema`, `processoSchema`, `colaboradorSchema`, `transacaoSchema`, `campanhaSchema`, `conteudoSchema`, `contaBancariaSchema`, `feedbackSchema`, `supportSchema`
+- Atualizar os `handleSubmit` em cada página/componente (Clientes, Projetos, Tarefas, Processos, RH, Financas, Marketing, ContentCalendar, FeedbackDialog, SupportDialog) para validar com `schema.safeParse()` antes de enviar
+- Exibir mensagens de erro granulares via toast
 
-## O que muda para o usuario gratuito
+### 3. Audit Log
+- Criar tabela `audit_log` com colunas: `id`, `user_id`, `action` (login, create, update, delete), `module`, `record_id`, `details` (jsonb), `ip_address`, `created_at`
+- RLS: usuários veem só seus logs; admins veem todos
+- Criar função SQL `log_audit_event(action, module, record_id, details)` usando `SECURITY DEFINER`
+- Criar hook `useAuditLog` no frontend que chama essa função via RPC após ações críticas (login, criação, edição, exclusão em cada módulo)
+- Adicionar chamada ao audit log nos hooks existentes (`useClientes`, `useProjetos`, `useTarefas`, etc.)
 
-| Modulo | Pode ver dados | Criar/Adicionar | Exportar | IA |
-|--------|---------------|-----------------|----------|-----|
-| Financas | Sim | Bloqueado | Bloqueado | - |
-| RH | Sim | Bloqueado | Bloqueado | - |
-| Marketing | Sim | Bloqueado | Bloqueado | - |
-| Projetos | Sim | Bloqueado | Bloqueado | - |
-| Clientes | Sim | Bloqueado | Bloqueado | Bloqueado |
-| Tarefas | Sim | Bloqueado | Bloqueado | - |
-| Processos | Sim | Bloqueado | Bloqueado | - |
+### 4. Sanitização HTML (DOMPurify)
+- Instalar `dompurify` e `@types/dompurify`
+- Criar `src/lib/sanitize.ts` com helper `sanitizeHtml(input)`
+- Aplicar sanitização no `MeetingNotesEditor.tsx` (que usa `dangerouslySetInnerHTML`)
+- Aplicar sanitização em todos os campos de texto livre antes de salvar no banco (notas de clientes, descrições de projetos, bulletin notes, etc.)
 
-Quando bloqueado, o botao aparece com icone de cadeado e ao clicar redireciona para a pagina de planos.
+### Ordem de Execução
+1. Rate Limiting → 2. Zod Validation → 3. Audit Log → 4. DOMPurify
 
-## Abordagem tecnica
+### Arquivos Impactados
+- **Novos**: `src/lib/schemas.ts`, `src/lib/sanitize.ts`, `src/hooks/useAuditLog.ts`, `supabase/functions/check-rate-limit/index.ts`, 3 migrations SQL
+- **Editados**: `src/contexts/AuthContext.tsx`, `src/pages/Auth.tsx`, `src/pages/Clientes.tsx`, `src/pages/Projetos.tsx`, `src/pages/Tarefas.tsx`, `src/pages/Processos.tsx`, `src/pages/RH.tsx`, `src/pages/Financas.tsx`, `src/pages/Marketing.tsx`, `src/components/marketing/ContentCalendar.tsx`, `src/components/user/FeedbackDialog.tsx`, `src/components/user/SupportDialog.tsx`, `src/components/clientes/MeetingNotesEditor.tsx`, hooks de cada módulo
 
-Em cada pagina, envolver os botoes de acao com o componente `PlanGate`:
-
-1. **Botoes "Novo/Adicionar"** - envolver com `<PlanGate module="X" action="create">` 
-2. **Botoes "Exportar"** - envolver com `<PlanGate module="X" action="export">`
-3. **Botoes "Importar Planilha"** - envolver com `<PlanGate module="X" action="create">`
-4. **Botao "Analise IA" (Clientes)** - envolver com `<PlanGate module="clientes" action="ai_analysis">`
-
-Em vez de esconder os botoes, vou usar a abordagem de mostrar o botao desabilitado com tooltip "Disponivel no plano Plus" e redirecionar para /planos ao clicar. Isso incentiva o upgrade.
-
-### Arquivos a modificar
-
-- `src/pages/Financas.tsx` - Proteger botoes Exportar, Importar e dialog de nova transacao
-- `src/pages/RH.tsx` - Proteger botoes Importar e dialog de novo colaborador/vaga
-- `src/pages/Marketing.tsx` - Proteger botoes Importar e dialogs de nova campanha/conteudo
-- `src/pages/Projetos.tsx` - Proteger botoes Importar e dialog de novo projeto
-- `src/pages/Clientes.tsx` - Proteger botoes Importar, dialog de novo cliente e botao de Analise IA
-- `src/pages/Tarefas.tsx` - Proteger botoes Importar e dialog de nova atividade
-- `src/pages/Processos.tsx` - Proteger botoes Importar, Exportar PDF e dialog de novo processo
-
-### Componente PlanGate - pequeno ajuste
-
-O `PlanGate` atual renderiza um card grande quando o acesso e negado. Para botoes, vou criar uma variante inline que mostra o botao desabilitado com icone de cadeado, em vez do card grande. Isso mantem a interface limpa.
-
-Novo componente: `PlanGateButton` - um wrapper que:
-- Se tem acesso: renderiza o botao normalmente
-- Se nao tem acesso: renderiza o botao com icone de cadeado e redireciona para /planos ao clicar
-
-### Mapeamento de modulos para nomes na tabela plan_features
-
-```text
-Financas   -> module: "financas"
-RH         -> module: "rh"
-Marketing  -> module: "marketing"
-Projetos   -> module: "projetos"
-Clientes   -> module: "clientes"
-Tarefas    -> module: "atividades"
-Processos  -> module: "processos"
-```
-
-## Resultado esperado
-
-- Usuarios gratuitos podem navegar e visualizar todos os modulos (dados de exemplo)
-- Ao tentar criar, exportar ou importar, veem uma mensagem orientando a contratar um plano
-- Usuarios com plano Plus, Pro ou Enterprise continuam usando normalmente
-- Admins (dono do SaaS) continuam com acesso total
-
----
-
-# Tarefas concluidas
-
-## ✅ Redesign da tela de Auth
-
-- Layout split-screen seguindo estetica da landing page do Hub
-- Painel de branding com gradientes, glow e bullets de features
-- Link para pagina de precos no header e rodape
-- Responsivo (coluna unica em mobile)
-- Componentes extraidos: AuthHeader, AuthFooter, AuthBrandingPanel, AuthFormPanel
-
----
-
-# Sprint 3 — Automacoes e Alertas (planejamento futuro)
-
-## Fase 1: Alertas de tarefas atrasadas e transacoes vencidas
-- pg_cron job diario para verificar tarefas com due_date < now() e status != 'concluida'
-- pg_cron job diario para verificar transacoes com date < now() e status = 'pendente'
-- Edge function para enviar emails de alerta via Resend
-- Widget de alertas no dashboard
-
-## Fase 2: Relatorios automaticos
-- Relatorio semanal de resumo financeiro enviado por email
-- Relatorio mensal de desempenho de projetos
