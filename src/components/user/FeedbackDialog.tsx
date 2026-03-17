@@ -29,12 +29,9 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!mensagem.trim()) {
-      toast({ title: "Escreva uma mensagem", variant: "destructive" });
-      return;
-    }
-    if (mensagem.trim().length > 1000) {
-      toast({ title: "Mensagem muito longa (máx. 1000 caracteres)", variant: "destructive" });
+    const parsed = feedbackSchema.safeParse({ nome, email, mensagem, avaliacao: avaliacao || undefined });
+    if (!parsed.success) {
+      toast({ title: getZodErrorMessage(parsed.error), variant: "destructive" });
       return;
     }
 
