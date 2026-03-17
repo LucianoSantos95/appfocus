@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Lock as LockIcon,
+  Crown,
 } from "lucide-react";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
