@@ -49,6 +49,7 @@ export function useConteudos() {
       const newC = data as Conteudo;
       setConteudos(prev => [...prev, newC]);
       toast({ title: "Conteúdo adicionado!" });
+      logEvent("create", "conteudos", newC.id, { title: input.title });
       return newC;
     } catch (error) {
       console.error("Error adding conteudo:", error);
