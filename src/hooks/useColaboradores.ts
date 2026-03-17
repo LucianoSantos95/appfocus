@@ -32,6 +32,7 @@ export interface ColaboradorInput {
 
 export function useColaboradores() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
