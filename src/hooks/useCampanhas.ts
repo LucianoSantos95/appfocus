@@ -55,6 +55,7 @@ export function useCampanhas() {
       const newC = data as Campanha;
       setCampanhas(prev => [newC, ...prev]);
       toast({ title: "Campanha adicionada!", description: `${input.name} foi criada.` });
+      logEvent("create", "campanhas", newC.id, { name: input.name });
       return newC;
     } catch (error) {
       console.error("Error adding campanha:", error);
