@@ -30,6 +30,7 @@ export interface ProjetoInput {
 
 export function useProjetos() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [projetos, setProjetos] = useState<Projeto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
