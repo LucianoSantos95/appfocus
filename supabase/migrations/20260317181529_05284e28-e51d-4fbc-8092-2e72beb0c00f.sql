@@ -1,0 +1,1 @@
+ALTER VIEW public.vw_assinantes SET (security_invoker = on);
