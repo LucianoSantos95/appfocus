@@ -24,6 +24,7 @@ export interface ProcessoInput {
 
 export function useProcessos() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [processos, setProcessos] = useState<Processo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
