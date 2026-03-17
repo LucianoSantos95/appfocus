@@ -61,6 +61,7 @@ export function useTransacoes() {
       const newT = data as Transacao;
       setTransacoes(prev => [newT, ...prev]);
       toast({ title: "Transação adicionada!", description: `${input.description} foi registrada.` });
+      logEvent("create", "transacoes", newT.id, { description: input.description });
       return newT;
     } catch (error) {
       console.error("Error adding transacao:", error);
