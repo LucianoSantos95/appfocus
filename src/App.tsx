@@ -24,6 +24,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Planos = lazy(() => import("./pages/Planos"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
+const Assinantes = lazy(() => import("./pages/Assinantes"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
