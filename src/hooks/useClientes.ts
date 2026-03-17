@@ -41,6 +41,7 @@ export interface ClienteInput {
 
 export function useClientes() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
