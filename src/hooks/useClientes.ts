@@ -192,6 +192,7 @@ export function useClientes() {
       if (error) throw error;
 
       setClientes((prev) => prev.filter((c) => c.id !== id));
+      logEvent("delete", "clientes", id);
 
       toast({
         title: "Cliente excluído",

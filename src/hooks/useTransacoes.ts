@@ -89,6 +89,7 @@ export function useTransacoes() {
       if (error) throw error;
       setTransacoes(prev => prev.filter(t => t.id !== id));
       toast({ title: "Transação excluída" });
+      logEvent("delete", "transacoes", id);
       return true;
     } catch (error) {
       console.error("Error deleting transacao:", error);

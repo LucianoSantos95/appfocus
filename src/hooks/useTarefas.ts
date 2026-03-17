@@ -81,6 +81,7 @@ export function useTarefas() {
       if (error) throw error;
       setTarefas(prev => prev.filter(t => t.id !== id));
       toast({ title: "Tarefa excluída" });
+      logEvent("delete", "tarefas", id);
       return true;
     } catch (error) {
       console.error("Error deleting tarefa:", error);

@@ -85,6 +85,7 @@ export function useProjetos() {
       if (error) throw error;
       setProjetos(prev => prev.filter(p => p.id !== id));
       toast({ title: "Projeto excluído" });
+      logEvent("delete", "projetos", id);
       return true;
     } catch (error) {
       console.error("Error deleting projeto:", error);
