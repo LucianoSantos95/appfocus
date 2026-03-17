@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Star, Send } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { feedbackSchema, getZodErrorMessage } from "@/lib/schemas";
+import { stripHtml } from "@/lib/sanitize";
+import { useLocation } from "react-router-dom";
 
 interface FeedbackDialogProps {
   open: boolean;
