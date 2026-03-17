@@ -28,6 +28,7 @@ export interface TarefaInput {
 
 export function useTarefas() {
   const { toast } = useToast();
+  const { logEvent } = useAuditLog();
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
