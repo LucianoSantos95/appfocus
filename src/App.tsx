@@ -64,6 +64,7 @@ const App = () => (
                     <Route path="/atividades" element={<ProtectedRoute><ErrorBoundary><Tarefas /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/processos" element={<ProtectedRoute><ErrorBoundary><Processos /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/guia" element={<ProtectedRoute><ErrorBoundary><Guia /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/assinantes" element={<ProtectedRoute><ErrorBoundary><Assinantes /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
