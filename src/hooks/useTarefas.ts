@@ -53,6 +53,7 @@ export function useTarefas() {
       const newT = data as Tarefa;
       setTarefas(prev => [newT, ...prev]);
       toast({ title: "Tarefa adicionada!", description: `${input.title} foi criada.` });
+      logEvent("create", "tarefas", newT.id, { title: input.title });
       return newT;
     } catch (error) {
       console.error("Error adding tarefa:", error);
