@@ -86,6 +86,7 @@ export function useColaboradores() {
       if (error) throw error;
       setColaboradores(prev => prev.filter(c => c.id !== id));
       toast({ title: "Colaborador excluído" });
+      logEvent("delete", "colaboradores", id);
       return true;
     } catch (error) {
       console.error("Error deleting colaborador:", error);

@@ -84,6 +84,7 @@ export function useCampanhas() {
       if (error) throw error;
       setCampanhas(prev => prev.filter(c => c.id !== id));
       toast({ title: "Campanha excluída" });
+      logEvent("delete", "campanhas", id);
       return true;
     } catch (error) {
       console.error("Error deleting campanha:", error);

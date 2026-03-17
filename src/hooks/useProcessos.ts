@@ -78,6 +78,7 @@ export function useProcessos() {
       if (error) throw error;
       setProcessos(prev => prev.filter(p => p.id !== id));
       toast({ title: "Processo excluído" });
+      logEvent("delete", "processos", id);
       return true;
     } catch (error) {
       console.error("Error deleting processo:", error);

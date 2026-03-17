@@ -93,6 +93,7 @@ export function useContasBancarias() {
       if (error) throw error;
       setContas(prev => prev.filter(c => c.id !== id));
       toast({ title: "Conta excluída" });
+      logEvent("delete", "contas_bancarias", id);
       return true;
     } catch (error) {
       console.error("Error deleting conta:", error);

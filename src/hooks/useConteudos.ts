@@ -77,6 +77,7 @@ export function useConteudos() {
       if (error) throw error;
       setConteudos(prev => prev.filter(c => c.id !== id));
       toast({ title: "Conteúdo excluído" });
+      logEvent("delete", "conteudos", id);
       return true;
     } catch (error) {
       console.error("Error deleting conteudo:", error);
