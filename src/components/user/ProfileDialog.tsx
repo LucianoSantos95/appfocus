@@ -107,6 +107,14 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirmar nova senha" maxLength={72} />
             </div>
           </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Autenticação de Dois Fatores (2FA)</p>
+            <TwoFactorSetup />
+          </div>
+
           <Button onClick={handleSave} className="w-full" disabled={loading}>
             {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
             Salvar
