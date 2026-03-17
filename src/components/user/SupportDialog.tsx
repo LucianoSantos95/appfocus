@@ -73,12 +73,9 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!nome.trim() || !email.trim() || !mensagem.trim()) {
-      toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
-      return;
-    }
-    if (mensagem.trim().length > 2000) {
-      toast({ title: "Mensagem muito longa (máx. 2000 caracteres)", variant: "destructive" });
+    const parsed = supportTicketSchema.safeParse({ nome, email, telefone, mensagem });
+    if (!parsed.success) {
+      toast({ title: getZodErrorMessage(parsed.error), variant: "destructive" });
       return;
     }
 
