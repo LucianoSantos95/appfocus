@@ -162,6 +162,7 @@ export function useClientes() {
 
       // Trigger AI analysis after update
       analyzeCliente(id);
+      logEvent("update", "clientes", id);
 
       toast({
         title: "Cliente atualizado!",
