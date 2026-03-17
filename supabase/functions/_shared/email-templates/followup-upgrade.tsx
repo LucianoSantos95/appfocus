@@ -66,11 +66,11 @@ export const FollowupUpgradeEmail = ({
 
 export default FollowupUpgradeEmail
 
-const logoUrl = 'https://hnextembswhejumvxbzd.supabase.co/storage/v1/object/public/email-assets/logo.png'
+const logoUrl = 'https://hnextembswhejumvxbzd.supabase.co/storage/v1/object/public/email-assets/focus-logo.png'
 const primary = '#4da3ff'
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
 const container = { padding: '40px 32px', maxWidth: '480px', margin: '0 auto' }
-const logoSection = { marginBottom: '32px' }
+const logoSection = { marginBottom: '32px', backgroundColor: '#141b2d', borderRadius: '12px', padding: '16px 20px' }
 const logo = { display: 'block' as const }
 const h1 = {
   fontSize: '24px',
