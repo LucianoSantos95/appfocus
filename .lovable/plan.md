@@ -1,25 +1,95 @@
 
 
-## Ajuste do Logo nos E-mails
+# Aplicar restricoes do PlanGate em todos os modulos
 
-### Problema
-A imagem mostra o logo "Focus" dentro de um container escuro (`#141b2d`) com bordas arredondadas, mas o logo aparece pequeno/cortado. Isso acontece nos templates de followup (welcome, reengagement, upgrade) que usam `logoSection` com fundo escuro.
+## Resumo
 
-Os templates de autenticação (signup, recovery, etc.) não têm esse problema pois usam `logoSection` sem fundo.
+Atualmente, os componentes `PlanGate` e `usePlanFeatures` existem no codigo mas **nao estao sendo usados em nenhuma pagina**. Isso significa que usuarios do plano gratuito podem criar registros, exportar dados e usar IA sem restricao. Este plano aplica as restricoes em todos os 7 modulos.
 
-### Solução
+## O que muda para o usuario gratuito
 
-Atualizar os **3 templates de followup** (`followup-welcome.tsx`, `followup-reengagement.tsx`, `followup-upgrade.tsx`) para:
+| Modulo | Pode ver dados | Criar/Adicionar | Exportar | IA |
+|--------|---------------|-----------------|----------|-----|
+| Financas | Sim | Bloqueado | Bloqueado | - |
+| RH | Sim | Bloqueado | Bloqueado | - |
+| Marketing | Sim | Bloqueado | Bloqueado | - |
+| Projetos | Sim | Bloqueado | Bloqueado | - |
+| Clientes | Sim | Bloqueado | Bloqueado | Bloqueado |
+| Tarefas | Sim | Bloqueado | Bloqueado | - |
+| Processos | Sim | Bloqueado | Bloqueado | - |
 
-1. **Remover o container escuro** do `logoSection` — deixar igual aos templates de auth (sem `backgroundColor`, sem `borderRadius`, sem `padding` extra)
-2. **Unificar a URL do logo** — todos os templates passam a usar `email-assets/logo.png` (mesmo asset dos templates de auth), que é o logo principal da marca
-3. **Manter dimensões `width="140" height="40"`** sem o container escuro, o logo ficará visível sobre o fundo branco do e-mail
+Quando bloqueado, o botao aparece com icone de cadeado e ao clicar redireciona para a pagina de planos.
 
-### Arquivos Editados
-- `supabase/functions/_shared/email-templates/followup-welcome.tsx`
-- `supabase/functions/_shared/email-templates/followup-reengagement.tsx`
-- `supabase/functions/_shared/email-templates/followup-upgrade.tsx`
+## Abordagem tecnica
 
-### Deploy
-- Reimplantar as edge functions de follow-up (`send-followup-email`, `cron-followup`) após as alterações
+Em cada pagina, envolver os botoes de acao com o componente `PlanGate`:
 
+1. **Botoes "Novo/Adicionar"** - envolver com `<PlanGate module="X" action="create">` 
+2. **Botoes "Exportar"** - envolver com `<PlanGate module="X" action="export">`
+3. **Botoes "Importar Planilha"** - envolver com `<PlanGate module="X" action="create">`
+4. **Botao "Analise IA" (Clientes)** - envolver com `<PlanGate module="clientes" action="ai_analysis">`
+
+Em vez de esconder os botoes, vou usar a abordagem de mostrar o botao desabilitado com tooltip "Disponivel no plano Plus" e redirecionar para /planos ao clicar. Isso incentiva o upgrade.
+
+### Arquivos a modificar
+
+- `src/pages/Financas.tsx` - Proteger botoes Exportar, Importar e dialog de nova transacao
+- `src/pages/RH.tsx` - Proteger botoes Importar e dialog de novo colaborador/vaga
+- `src/pages/Marketing.tsx` - Proteger botoes Importar e dialogs de nova campanha/conteudo
+- `src/pages/Projetos.tsx` - Proteger botoes Importar e dialog de novo projeto
+- `src/pages/Clientes.tsx` - Proteger botoes Importar, dialog de novo cliente e botao de Analise IA
+- `src/pages/Tarefas.tsx` - Proteger botoes Importar e dialog de nova atividade
+- `src/pages/Processos.tsx` - Proteger botoes Importar, Exportar PDF e dialog de novo processo
+
+### Componente PlanGate - pequeno ajuste
+
+O `PlanGate` atual renderiza um card grande quando o acesso e negado. Para botoes, vou criar uma variante inline que mostra o botao desabilitado com icone de cadeado, em vez do card grande. Isso mantem a interface limpa.
+
+Novo componente: `PlanGateButton` - um wrapper que:
+- Se tem acesso: renderiza o botao normalmente
+- Se nao tem acesso: renderiza o botao com icone de cadeado e redireciona para /planos ao clicar
+
+### Mapeamento de modulos para nomes na tabela plan_features
+
+```text
+Financas   -> module: "financas"
+RH         -> module: "rh"
+Marketing  -> module: "marketing"
+Projetos   -> module: "projetos"
+Clientes   -> module: "clientes"
+Tarefas    -> module: "atividades"
+Processos  -> module: "processos"
+```
+
+## Resultado esperado
+
+- Usuarios gratuitos podem navegar e visualizar todos os modulos (dados de exemplo)
+- Ao tentar criar, exportar ou importar, veem uma mensagem orientando a contratar um plano
+- Usuarios com plano Plus, Pro ou Enterprise continuam usando normalmente
+- Admins (dono do SaaS) continuam com acesso total
+
+---
+
+# Tarefas concluidas
+
+## ✅ Redesign da tela de Auth
+
+- Layout split-screen seguindo estetica da landing page do Hub
+- Painel de branding com gradientes, glow e bullets de features
+- Link para pagina de precos no header e rodape
+- Responsivo (coluna unica em mobile)
+- Componentes extraidos: AuthHeader, AuthFooter, AuthBrandingPanel, AuthFormPanel
+
+---
+
+# Sprint 3 — Automacoes e Alertas (planejamento futuro)
+
+## Fase 1: Alertas de tarefas atrasadas e transacoes vencidas
+- pg_cron job diario para verificar tarefas com due_date < now() e status != 'concluida'
+- pg_cron job diario para verificar transacoes com date < now() e status = 'pendente'
+- Edge function para enviar emails de alerta via Resend
+- Widget de alertas no dashboard
+
+## Fase 2: Relatorios automaticos
+- Relatorio semanal de resumo financeiro enviado por email
+- Relatorio mensal de desempenho de projetos
