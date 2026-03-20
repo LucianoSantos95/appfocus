@@ -46,8 +46,12 @@ export function PlanProvider({ children }: { children: ReactNode }) {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      if (error || !data) {
+      if (error) {
         console.warn("check-subscription error, falling back to local", error);
+        return;
+      }
+      if (!data || data.error) {
+        console.warn("check-subscription returned error, using local data", data?.error);
         return;
       }
 
