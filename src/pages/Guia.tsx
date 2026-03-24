@@ -31,6 +31,7 @@ import {
   PartyPopper,
   Trophy,
   Sparkles,
+  MessageCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useRef } from "react";
