@@ -342,26 +342,31 @@ export default function Guia() {
                         <button
                           key={task.id}
                           onClick={() => handleTaskToggle(task)}
-                          className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all duration-200 group ${
+                          className={`flex flex-col rounded-lg px-3 py-2.5 text-left transition-all duration-200 group ${
                             checked
                               ? "bg-success/5 hover:bg-success/10"
                               : "hover:bg-muted/50"
                           }`}
                         >
-                          <Checkbox
-                            checked={checked}
-                            className={`transition-colors ${
-                              checked ? "border-success bg-success data-[state=checked]:bg-success data-[state=checked]:border-success" : ""
-                            }`}
-                            tabIndex={-1}
-                          />
-                          <span className={`text-sm transition-all duration-200 flex-1 ${
-                            checked ? "text-muted-foreground line-through" : "text-foreground"
-                          }`}>
-                            {task.label}
-                          </span>
-                          {task.path && !checked && (
-                            <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="flex items-center gap-3 w-full">
+                            <Checkbox
+                              checked={checked}
+                              className={`transition-colors flex-shrink-0 ${
+                                checked ? "border-success bg-success data-[state=checked]:bg-success data-[state=checked]:border-success" : ""
+                              }`}
+                              tabIndex={-1}
+                            />
+                            <span className={`text-sm transition-all duration-200 flex-1 ${
+                              checked ? "text-muted-foreground line-through" : "text-foreground"
+                            }`}>
+                              {task.label}
+                            </span>
+                            {task.path && !checked && (
+                              <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                            )}
+                          </div>
+                          {task.hint && !checked && (
+                            <p className="text-xs text-muted-foreground mt-1 ml-8">{task.hint}</p>
                           )}
                         </button>
                       );
