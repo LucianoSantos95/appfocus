@@ -1,16 +1,30 @@
 
 
-## Atualizar popup de novidades
+## Assistente de Onboarding Proativo
 
-O popup `UpdateNotification.tsx` já tem lógica de 5 dias (`EXPIRY_DAYS = 5`). Preciso apenas atualizar a versão e o conteúdo do changelog para refletir as mudanças recentes.
+### O que será feito
+Um tooltip/popover discreto que aparece após 10 segundos na dashboard para usuários que ainda não completaram nenhuma tarefa do onboarding, oferecendo ajuda para a primeira ação.
 
-### Alterações em `src/components/UpdateNotification.tsx`:
+### Comportamento
+- **Quem vê**: Apenas usuários autenticados com 0 tarefas concluídas na `onboarding_progress`
+- **Quando**: 10 segundos após carregar a dashboard (`/`)
+- **Dismissal**: Clicar "Agora não" → salva em `sessionStorage` para não reaparecer na sessão. Clicar "Sim" → navega para `/guia`
+- **Não aparece mais**: Quando o usuário tem ≥1 tarefa concluída
 
-- Mudar `UPDATE_VERSION` de `"2026-03-16"` para `"2026-03-24"`
-- Substituir o array `updates` pelo novo conteúdo:
-  1. **Limite gratuito ampliado** — de 5 para 20 registros por módulo
-  2. **Novos preços acessíveis** — Plus a partir de R$69/mês
-  3. **Integração WhatsApp** — alertas automáticos de tarefas, clientes e financeiro
-  4. **Guia de Uso interativo** — checklist com progresso real e celebrações
-  5. **Configuração WhatsApp no perfil** — ative notificações em poucos cliques
+### Implementação
+
+**Novo componente**: `src/components/guide/OnboardingPrompt.tsx`
+- Popover/card flutuante no canto inferior direito
+- Ícone amigável + texto: "Quer ajuda para configurar seu Hub?"
+- Dois botões: "Sim, me ajude" (→ `/guia`) e "Agora não" (dismiss)
+- Animação de entrada suave (slide-up + fade)
+- `setTimeout` de 10s + verificação do `useOnboardingProgress`
+
+**Integração**: Adicionar o componente no `src/pages/Index.tsx` (dashboard)
+
+### Arquivos impactados
+- `src/components/guide/OnboardingPrompt.tsx` (novo)
+- `src/pages/Index.tsx` (adicionar o componente)
+
+Nenhuma alteração de banco de dados — usa a tabela `onboarding_progress` existente.
 
