@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Lock, Mail, User, Sparkles } from "lucide-react";
+import { Loader2, Lock, Mail, User, Shield, XCircle, Users } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 const GoogleIcon = () => (
@@ -80,9 +80,17 @@ export default function AuthFormPanel({
     <div className="flex-1 flex items-center justify-center px-6 py-10 lg:py-16">
       <div className="w-full max-w-md">
         <div className="glass rounded-2xl p-8 shadow-premium">
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-2">
             <img src={logo} alt="AppFocus" className="h-10 w-auto" />
           </div>
+
+          {/* Value headline */}
+          <p className="text-center text-sm text-muted-foreground mb-1">
+            Grátis para sempre. Sem cartão.
+          </p>
+          <h2 className="text-center text-base font-semibold text-foreground mb-5">
+            Comece a organizar seu negócio em 2 minutos
+          </h2>
 
           <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -108,7 +116,7 @@ export default function AuthFormPanel({
                 </div>
                 <Button type="submit" className="w-full gradient-primary text-foreground font-semibold" disabled={loading}>
                   {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  Entrar
+                  Acessar minha conta
                 </Button>
                 <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
@@ -163,8 +171,15 @@ export default function AuthFormPanel({
                 </div>
                 <Button type="submit" className="w-full gradient-primary text-foreground font-semibold" disabled={loading}>
                   {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  Criar Conta
+                  Começar Grátis
                 </Button>
+
+                {/* Micro social proof */}
+                <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5 mt-2">
+                  <Users className="w-3.5 h-3.5 text-primary" />
+                  43 empresas já confiam no AppFocus
+                </p>
+
                 <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
                   <div className="relative flex justify-center text-xs uppercase"><span className="bg-transparent px-2 text-muted-foreground">ou</span></div>
@@ -175,18 +190,20 @@ export default function AuthFormPanel({
                   Cadastrar com Google
                 </Button>
               </form>
-              {/* CTA Plus */}
-              <div className="mt-6 p-4 rounded-xl border border-primary/20 bg-primary/5 text-center">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-semibold text-primary">Desbloqueie todos os recursos</span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  <Link to="/planos" className="text-primary hover:underline">Conheça o Plano Plus →</Link>
-                </p>
-              </div>
             </TabsContent>
           </Tabs>
+
+          {/* Trust badges */}
+          <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-border/50">
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Shield className="w-3.5 h-3.5 text-primary" />
+              Dados protegidos
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <XCircle className="w-3.5 h-3.5 text-primary" />
+              Cancele quando quiser
+            </span>
+          </div>
         </div>
       </div>
     </div>
