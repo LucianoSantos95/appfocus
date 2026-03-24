@@ -16,9 +16,9 @@ const plans = [
   {
     id: "plus" as const,
     name: "Plus",
-    monthlyPrice: 119,
-    annualPrice: 99,
-    annualTotal: 1188,
+    monthlyPrice: 69,
+    annualPrice: 55,
+    annualTotal: 660,
     description: "Para pequenas empresas que precisam de gestão completa",
     features: [
       "Criar e editar dados em todos os módulos",
@@ -31,9 +31,9 @@ const plans = [
   {
     id: "pro" as const,
     name: "Pro",
-    monthlyPrice: 249,
-    annualPrice: 199,
-    annualTotal: 2388,
+    monthlyPrice: 149,
+    annualPrice: 119,
+    annualTotal: 1428,
     description: "Para empresas em crescimento com necessidades avançadas",
     features: [
       "Tudo do Plus",
@@ -47,9 +47,9 @@ const plans = [
   {
     id: "enterprise" as const,
     name: "Enterprise",
-    monthlyPrice: 497,
-    annualPrice: 397,
-    annualTotal: 4764,
+    monthlyPrice: 297,
+    annualPrice: 237,
+    annualTotal: 2844,
     description: "Para grandes empresas com necessidades customizadas",
     features: [
       "Tudo do Pro",
