@@ -15,3 +15,7 @@ project_id = "hnextembswhejumvxbzd"
     verify_jwt = false
   [functions.cron-followup]
     verify_jwt = false
+  [functions.send-whatsapp]
+    verify_jwt = false
+  [functions.whatsapp-scheduler]
+    verify_jwt = false
