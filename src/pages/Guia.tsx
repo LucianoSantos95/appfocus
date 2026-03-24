@@ -42,6 +42,7 @@ interface OnboardingTask {
   id: string;
   label: string;
   path?: string;
+  hint?: string;
 }
 
 interface OnboardingStage {
@@ -97,7 +98,18 @@ const stages: OnboardingStage[] = [
       { id: "adv-import", label: "Importe dados de uma planilha", path: "/financas" },
       { id: "adv-campaign", label: "Crie uma campanha de marketing", path: "/marketing" },
       { id: "adv-process", label: "Documente um processo", path: "/processos" },
-      { id: "adv-whatsapp", label: "Ative notificações por WhatsApp" },
+    ],
+  },
+  {
+    id: "whatsapp",
+    title: "Automação WhatsApp",
+    icon: MessageCircle,
+    description: "Receba alertas automáticos no seu WhatsApp",
+    tasks: [
+      { id: "wpp-open-profile", label: "Abra seu Perfil (clique no avatar no menu lateral)", hint: "Clique no seu nome no canto inferior esquerdo → Perfil" },
+      { id: "wpp-add-number", label: "Digite seu número de WhatsApp", hint: "Formato: 5511999999999 (código do país + DDD + número, sem espaços)" },
+      { id: "wpp-enable", label: "Ative o toggle 'Ativar notificações'", hint: "Você pode escolher quais alertas quer: Tarefas, Clientes e/ou Financeiro" },
+      { id: "wpp-save", label: "Clique em 'Salvar preferências'", hint: "Pronto! Você receberá alertas diários às 8h no seu WhatsApp" },
     ],
   },
 ];
