@@ -1,4 +1,5 @@
 import { MainLayout } from "@/components/layout/MainLayout";
+import { OnboardingPrompt } from "@/components/guide/OnboardingPrompt";
 import { ModuleCard } from "@/components/ui/module-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
@@ -101,6 +102,7 @@ const Index = () => {
           <BulletinBoard />
         </div>
 
+        <OnboardingPrompt />
       </div>
     </MainLayout>
   );
