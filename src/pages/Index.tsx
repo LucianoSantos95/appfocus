@@ -102,6 +102,7 @@ const Index = () => {
           <BulletinBoard />
         </div>
 
+        <OnboardingPrompt />
       </div>
     </MainLayout>
   );
