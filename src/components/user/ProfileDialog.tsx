@@ -84,11 +84,11 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Meu Perfil</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 mt-2">
+        <div className="space-y-4 mt-2 overflow-y-auto flex-1 pr-1">
           <div className="space-y-2">
             <Label>Email</Label>
             <Input value={user?.email || ""} disabled className="opacity-60" />
