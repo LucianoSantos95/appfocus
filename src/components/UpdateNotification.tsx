@@ -11,69 +11,34 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, CheckCircle2, ShieldCheck, Zap, Eye } from "lucide-react";
 
 const UPDATE_KEY = "focus_update_dismissed";
-const UPDATE_VERSION = "2026-03-16"; // Change this on each new release
+const UPDATE_VERSION = "2026-03-24"; // Change this on each new release
 const EXPIRY_DAYS = 5;
 
 const updates = [
   {
     icon: Zap,
-    title: "Contas gratuitas: até 5 registros por módulo",
-    description: "Agora usuários do plano gratuito podem incluir até 5 informações em cada módulo para experimentar o sistema.",
+    title: "Limite gratuito ampliado: 20 registros",
+    description: "Usuários do plano gratuito agora podem cadastrar até 20 informações por módulo — 4x mais espaço para experimentar.",
   },
   {
     icon: Sparkles,
-    title: "Financeiro: Painel BI interativo",
-    description: "Clique no gráfico de Evolução Financeira para abrir um painel detalhado com Lucratividade e Fluxo de Caixa Futuro.",
-  },
-  {
-    icon: Zap,
-    title: "Financeiro: Importação CSV/OFX",
-    description: "Suba seu extrato bancário direto no sistema e elimine a digitação manual de transações.",
+    title: "Novos preços mais acessíveis",
+    description: "Plano Plus a partir de R$69/mês. Pro e Enterprise também com valores reduzidos para caber no seu bolso.",
   },
   {
     icon: ShieldCheck,
-    title: "RH: Gestão de Documentos",
-    description: "Upload de contratos de trabalho e documentos (PDF/Imagens) diretamente no perfil do colaborador.",
+    title: "Integração WhatsApp",
+    description: "Receba alertas automáticos no WhatsApp sobre tarefas vencendo, clientes sem contato e transações pendentes.",
   },
   {
     icon: Eye,
-    title: "RH: Timeline de Férias e Aniversários",
-    description: "Visão visual em calendário de quem está saindo de folga e datas de aniversário da equipe.",
-  },
-  {
-    icon: Sparkles,
-    title: "Marketing: Painel BI de Performance",
-    description: "Clique no gráfico de Performance para ver comparativo de canais (Instagram vs. Indicação) e Custo de Aquisição (CAC) automático.",
+    title: "Guia de Uso interativo",
+    description: "Checklist com progresso real, redirecionamento automático para cada módulo e celebração ao completar etapas.",
   },
   {
     icon: Zap,
-    title: "Marketing: Calendário de Conteúdo",
-    description: "Planeje postagens da empresa com visualização mensal estilo Google Agenda.",
-  },
-  {
-    icon: Sparkles,
-    title: "Projetos: Painel BI de Status",
-    description: "Clique no gráfico de Status de Projeto para abrir análise detalhada de todos os projetos.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Projetos: Anexos centralizados",
-    description: "Centralize briefings e arquivos importantes dentro de cada projeto.",
-  },
-  {
-    icon: Sparkles,
-    title: "CRM: Painel BI de Clientes",
-    description: "Funil de Vendas visual e ranking dos maiores clientes acessíveis pelo gráfico de Receita por Cliente.",
-  },
-  {
-    icon: Eye,
-    title: "CRM: Anotações de Reunião",
-    description: "Campo de texto rico para registrar o que foi conversado em cada call, integrado ao perfil do cliente.",
-  },
-  {
-    icon: Zap,
-    title: "Guia de uso atualizado",
-    description: "Novo guia interativo com passo a passo de todas as funcionalidades do sistema.",
+    title: "Configuração WhatsApp no perfil",
+    description: "Cadastre seu número e escolha quais notificações receber — tudo em poucos cliques nas configurações do perfil.",
   },
 ];
 
