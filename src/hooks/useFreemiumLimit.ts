@@ -1,7 +1,7 @@
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 
-const FREE_LIMIT = 5;
+const FREE_LIMIT = 20;
 
 export function useFreemiumLimit(currentCount: number) {
   const { plan } = usePlan();
