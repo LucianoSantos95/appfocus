@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { TwoFactorSetup } from "@/components/auth/TwoFactorSetup";
+import { WhatsAppSettings } from "@/components/user/WhatsAppSettings";
 
 interface ProfileDialogProps {
   open: boolean;
@@ -114,6 +115,10 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             <p className="text-sm font-medium text-foreground">Autenticação de Dois Fatores (2FA)</p>
             <TwoFactorSetup />
           </div>
+
+          <Separator />
+
+          <WhatsAppSettings />
 
           <Button onClick={handleSave} className="w-full" disabled={loading}>
             {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
