@@ -896,6 +896,42 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_preferences: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          notify_clientes: boolean
+          notify_financeiro: boolean
+          notify_tarefas: boolean
+          updated_at: string
+          user_id: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notify_clientes?: boolean
+          notify_financeiro?: boolean
+          notify_tarefas?: boolean
+          updated_at?: string
+          user_id: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notify_clientes?: boolean
+          notify_financeiro?: boolean
+          notify_tarefas?: boolean
+          updated_at?: string
+          user_id?: string
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       vw_assinantes: {
