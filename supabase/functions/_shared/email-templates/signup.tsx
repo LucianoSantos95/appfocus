@@ -68,7 +68,7 @@ export const SignupEmail = ({
 
 export default SignupEmail
 
-const logoUrl = 'https://hnextembswhejumvxbzd.supabase.co/storage/v1/object/public/email-assets/logo.png'
+const logoUrl = 'https://hnextembswhejumvxbzd.supabase.co/storage/v1/object/public/email-assets/logo.png?v=2'
 const primary = '#4da3ff'
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
 const container = { padding: '40px 32px', maxWidth: '480px', margin: '0 auto' }
