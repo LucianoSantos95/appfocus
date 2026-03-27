@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Lock, Mail, User, Shield, XCircle, Users } from "lucide-react";
-import logo from "@/assets/logo.png";
+import { Loader2, Lock, Mail, User, Shield, XCircle, ArrowRight } from "lucide-react";
 
 const GoogleIcon = () => (
   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
@@ -77,134 +76,113 @@ export default function AuthFormPanel({
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center px-6 py-10 lg:py-16">
-      <div className="w-full max-w-md">
-        <div className="glass rounded-2xl p-8 shadow-premium">
-          <div className="flex justify-center mb-2">
-            <img src={logo} alt="AppFocus" className="h-10 w-auto" />
-          </div>
+    <div className="w-full max-w-md mx-auto px-6 pb-10">
+      <Tabs defaultValue={defaultTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="login">Entrar</TabsTrigger>
+          <TabsTrigger value="signup">Cadastrar</TabsTrigger>
+        </TabsList>
 
-          {/* Value headline */}
-          <p className="text-center text-sm text-muted-foreground mb-1">
-            Grátis para sempre. Sem cartão.
-          </p>
-          <h2 className="text-center text-base font-semibold text-foreground mb-5">
-            Comece a organizar seu negócio em 2 minutos
-          </h2>
+        <TabsContent value="login">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="login-email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input id="login-email" type="email" placeholder="seu@email.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="pl-10" disabled={loading} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="login-password">Senha</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input id="login-password" type="password" placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="pl-10" disabled={loading} />
+              </div>
+            </div>
+            <Button type="submit" className="w-full gradient-primary text-foreground font-semibold" disabled={loading}>
+              {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Acessar minha conta
+            </Button>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+              <div className="relative flex justify-center text-xs uppercase"><span className="bg-transparent px-2 text-muted-foreground">ou</span></div>
+            </div>
+            <Button type="button" variant="outline" className="w-full" onClick={onGoogleLogin} disabled={loading}>
+              {googleLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              <GoogleIcon />
+              Entrar com Google
+            </Button>
+          </form>
+        </TabsContent>
 
-          <Tabs defaultValue={defaultTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="signup">Cadastrar</TabsTrigger>
-            </TabsList>
+        <TabsContent value="signup">
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="signup-name">Nome</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input id="signup-name" type="text" placeholder="Seu nome" value={signupName} onChange={(e) => setSignupName(e.target.value)} className="pl-10" disabled={loading} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="signup-email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input id="signup-email" type="email" placeholder="seu@email.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} className="pl-10" disabled={loading} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="signup-password">Senha</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input id="signup-password" type="password" placeholder="••••••••" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} className="pl-10" disabled={loading} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="signup-confirm">Confirmar Senha</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input id="signup-confirm" type="password" placeholder="••••••••" value={signupConfirmPassword} onChange={(e) => setSignupConfirmPassword(e.target.value)} className="pl-10" disabled={loading} />
+              </div>
+            </div>
+            <div className="flex items-start space-x-2">
+              <Checkbox id="terms" checked={acceptedTerms} onCheckedChange={(v) => setAcceptedTerms(v === true)} />
+              <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
+                Li e aceito os{" "}
+                <Link to="/termos" className="text-primary hover:underline" target="_blank">Termos de Uso</Link>
+                {" "}e a{" "}
+                <Link to="/privacidade" className="text-primary hover:underline" target="_blank">Política de Privacidade</Link>
+              </label>
+            </div>
+            <Button type="submit" className="w-full btn-hero text-foreground font-semibold h-12 text-base" disabled={loading}>
+              {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Testar Grátis por 30 dias
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
 
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="login-email" type="email" placeholder="seu@email.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="pl-10" disabled={loading} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="login-password" type="password" placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="pl-10" disabled={loading} />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full gradient-primary text-foreground font-semibold" disabled={loading}>
-                  {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  Acessar minha conta
-                </Button>
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-                  <div className="relative flex justify-center text-xs uppercase"><span className="bg-transparent px-2 text-muted-foreground">ou</span></div>
-                </div>
-                <Button type="button" variant="outline" className="w-full" onClick={onGoogleLogin} disabled={loading}>
-                  {googleLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  <GoogleIcon />
-                  Entrar com Google
-                </Button>
-              </form>
-            </TabsContent>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+              <div className="relative flex justify-center text-xs uppercase"><span className="bg-transparent px-2 text-muted-foreground">ou</span></div>
+            </div>
+            <Button type="button" variant="outline" className="w-full" onClick={onGoogleLogin} disabled={loading}>
+              {googleLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              <GoogleIcon />
+              Cadastrar com Google
+            </Button>
+          </form>
+        </TabsContent>
+      </Tabs>
 
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Nome</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="signup-name" type="text" placeholder="Seu nome" value={signupName} onChange={(e) => setSignupName(e.target.value)} className="pl-10" disabled={loading} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="signup-email" type="email" placeholder="seu@email.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} className="pl-10" disabled={loading} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="signup-password" type="password" placeholder="••••••••" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} className="pl-10" disabled={loading} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-confirm">Confirmar Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="signup-confirm" type="password" placeholder="••••••••" value={signupConfirmPassword} onChange={(e) => setSignupConfirmPassword(e.target.value)} className="pl-10" disabled={loading} />
-                  </div>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <Checkbox id="terms" checked={acceptedTerms} onCheckedChange={(v) => setAcceptedTerms(v === true)} />
-                  <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
-                    Li e aceito os{" "}
-                    <Link to="/termos" className="text-primary hover:underline" target="_blank">Termos de Uso</Link>
-                    {" "}e a{" "}
-                    <Link to="/privacidade" className="text-primary hover:underline" target="_blank">Política de Privacidade</Link>
-                  </label>
-                </div>
-                <Button type="submit" className="w-full gradient-primary text-foreground font-semibold" disabled={loading}>
-                  {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  Começar Grátis
-                </Button>
-
-                {/* Micro social proof */}
-                <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5 mt-2">
-                  <Users className="w-3.5 h-3.5 text-primary" />
-                  43 empresas já confiam no AppFocus
-                </p>
-
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-                  <div className="relative flex justify-center text-xs uppercase"><span className="bg-transparent px-2 text-muted-foreground">ou</span></div>
-                </div>
-                <Button type="button" variant="outline" className="w-full" onClick={onGoogleLogin} disabled={loading}>
-                  {googleLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  <GoogleIcon />
-                  Cadastrar com Google
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-
-          {/* Trust badges */}
-          <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-border/50">
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Shield className="w-3.5 h-3.5 text-primary" />
-              Dados protegidos
-            </span>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <XCircle className="w-3.5 h-3.5 text-primary" />
-              Cancele quando quiser
-            </span>
-          </div>
-        </div>
+      {/* Trust badges */}
+      <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-border/50">
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Shield className="w-3.5 h-3.5 text-primary" />
+          Sem cartão de crédito
+        </span>
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <XCircle className="w-3.5 h-3.5 text-primary" />
+          Cancele quando quiser
+        </span>
       </div>
     </div>
   );

@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { lovable } from "@/integrations/lovable/index";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import logo from "@/assets/logo.png";
-import AuthBrandingPanel from "@/components/auth/AuthBrandingPanel";
+import AuthHeroSection from "@/components/auth/AuthHeroSection";
 import AuthFormPanel from "@/components/auth/AuthFormPanel";
 import AuthHeader from "@/components/auth/AuthHeader";
 import AuthFooter from "@/components/auth/AuthFooter";
@@ -58,14 +57,12 @@ export default function Auth() {
   const loading = isLoading || googleLoading;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col gradient-dark">
       <AuthHeader />
 
-      <div className="flex-1 flex flex-col lg:flex-row">
-        {/* Branding Panel */}
-        <AuthBrandingPanel compact={isMobile} />
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <AuthHeroSection compact={isMobile} />
 
-        {/* Form Panel */}
         <AuthFormPanel
           defaultTab={inviteToken ? "signup" : "login"}
           loading={loading}
