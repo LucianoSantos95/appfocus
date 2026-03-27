@@ -1,4 +1,5 @@
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -207,6 +208,7 @@ export default function Guia() {
 
   return (
     <MainLayout>
+      <PageMeta title="Guia de Uso" description="Aprenda a usar o Hub Empresarial. Tutoriais e dicas para aproveitar ao máximo." />
       <GuidedTour forceRun={shouldRunTour} onTourComplete={onComplete} />
 
       <div className="space-y-8 animate-fade-in pb-10 max-w-5xl mx-auto">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageMeta } from "@/components/seo/PageMeta";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { lovable } from "@/integrations/lovable/index";
