@@ -1,19 +1,37 @@
 
 
-# Ajustes na página Auth
+# Implementar SEO para Google Search
 
 ## Alterações
 
-### 1. `src/pages/Auth.tsx`
-- **Remover o badge "AO VIVO — Hub Empresarial"** (linhas 117-123)
-- **Melhorar o fundo temático** — substituir o grid simples atual (opacity 0.04) por um pattern mais rico e visível (~8% opacidade):
-  - Grid principal de 60px mantido mas com opacidade maior
-  - Adicionar um segundo layer com formas geométricas (retângulos simulando cards/dashboards, linhas horizontais simulando documentos) via SVG inline como background-image
-  - Aumentar a intensidade dos blur blobs (de `bg-primary/5` para `bg-primary/10`)
-  - Adicionar um terceiro blob decorativo central
+### 1. `public/sitemap.xml` (novo)
+Criar sitemap com todas as rotas públicas do Hub:
+- `/` (auth/landing)
+- `/auth`
+- `/planos`
+- `/termos`
+- `/privacidade`
 
-### 2. `src/components/auth/AuthHeader.tsx`
-- Trocar o texto "Focus" por **"Hub Empresarial"** (linha 10)
+### 2. `public/robots.txt` (atualizar)
+Adicionar referência ao sitemap: `Sitemap: https://appfocus.lovable.app/sitemap.xml`
 
-Nenhuma outra alteração — lógica, dialogs, footer permanecem iguais.
+### 3. `index.html` (atualizar)
+- Melhorar meta description com palavras-chave relevantes (gestão empresarial, agências, consultorias, ERP)
+- Adicionar `<link rel="canonical">` 
+- Adicionar Schema markup JSON-LD do tipo `SoftwareApplication` com nome, descrição, categoria e oferta
+- Adicionar `<meta name="keywords">` com termos relevantes
+- Atualizar OG tags com URL absoluta da imagem
+
+### 4. `src/components/seo/PageMeta.tsx` (novo)
+Componente usando `react-helmet-async` para definir `<title>` e `<meta description>` dinâmicos por página. Cada rota terá título e descrição únicos.
+
+### 5. `src/main.tsx` (atualizar)
+Envolver o App com `HelmetProvider` do `react-helmet-async`.
+
+### 6. Adicionar `PageMeta` nas páginas principais
+Cada página (Index, Financas, RH, Marketing, Projetos, Clientes, Tarefas, Processos, Guia, Auth, Planos) receberá um `<PageMeta title="..." description="..." />` com conteúdo único.
+
+## Próximos passos pós-implementação
+- Conectar domínio customizado (recomendado para SEO)
+- Registrar no Google Search Console e enviar o sitemap
 
