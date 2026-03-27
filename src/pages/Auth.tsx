@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { lovable } from "@/integrations/lovable/index";
@@ -7,10 +7,29 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import AuthFooter from "@/components/auth/AuthFooter";
 import AuthLoginDialog from "@/components/auth/AuthLoginDialog";
 import AuthSignupDialog from "@/components/auth/AuthSignupDialog";
-import { Sparkles, ArrowRight, ArrowDown, Shield, XCircle } from "lucide-react";
+import { Sparkles, ArrowRight, ArrowDown, Shield, XCircle, DollarSign, FolderKanban, Users, UserCog, Megaphone, CheckSquare, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-const avatarColors = ["bg-blue-500", "bg-emerald-500", "bg-violet-500", "bg-amber-500", "bg-rose-500"];
+const rotatingWords = ["escalar", "organizar", "automatizar", "crescer", "faturar"];
+
+const modules = [
+  { icon: DollarSign, label: "Finanças", desc: "Controle total de receitas, despesas e fluxo de caixa." },
+  { icon: FolderKanban, label: "Projetos", desc: "Gerencie entregas, prazos e equipes em um só lugar." },
+  { icon: Users, label: "Clientes", desc: "CRM inteligente com histórico e insights por IA." },
+  { icon: UserCog, label: "RH", desc: "Colaboradores, documentos e folha simplificados." },
+  { icon: Megaphone, label: "Marketing", desc: "Campanhas, conteúdos e calendário editorial." },
+  { icon: CheckSquare, label: "Tarefas", desc: "To-dos, prioridades e acompanhamento de atividades." },
+  { icon: Cog, label: "Processos", desc: "Mapeie e otimize os processos da sua operação." },
+];
+
+const fakeLogos = [
+  { initials: "MK", color: "bg-blue-500" },
+  { initials: "DS", color: "bg-emerald-500" },
+  { initials: "AT", color: "bg-violet-500" },
+  { initials: "NX", color: "bg-amber-500" },
+  { initials: "VP", color: "bg-rose-500" },
+];
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -22,6 +41,19 @@ export default function Auth() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(!!inviteToken);
+  const [wordIndex, setWordIndex] = useState(0);
+  const [fadeClass, setFadeClass] = useState("animate-rotate-word-in");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFadeClass("animate-rotate-word-out");
+      setTimeout(() => {
+        setWordIndex((prev) => (prev + 1) % rotatingWords.length);
+        setFadeClass("animate-rotate-word-in");
+      }, 400);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -63,13 +95,26 @@ export default function Auth() {
   const loading = isLoading || googleLoading;
 
   return (
-    <div className="min-h-screen flex flex-col gradient-dark">
+    <div className="min-h-screen flex flex-col gradient-dark relative overflow-hidden">
+      {/* Background pattern */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.04]" style={{
+          backgroundImage: `
+            linear-gradient(hsl(var(--primary)) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px',
+        }} />
+        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
       <AuthHeader />
 
       {/* Hero Section */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
         {/* Badge */}
-        <span className="badge-primary inline-flex items-center gap-1.5 mb-8 text-sm">
+        <span className="badge-primary inline-flex items-center gap-1.5 mb-10 text-sm">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
@@ -77,24 +122,38 @@ export default function Auth() {
           AO VIVO — Hub Empresarial
         </span>
 
-        {/* Headline */}
-        <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold leading-tight mb-6 text-center max-w-4xl">
-          <span className="text-foreground">O sistema de gestão feito para </span>
-          <br className="hidden md:block" />
-          <span className="gradient-text text-glow">agências e consultorias</span>
-          <br className="hidden md:block" />
-          <span className="text-foreground"> que querem escalar.</span>
+        {/* Headline with rotating word */}
+        <h1 className="text-4xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-4 text-center max-w-4xl">
+          <span className="text-foreground">Gestão inteligente para</span>
+          <br />
+          <span key={wordIndex} className={`gradient-text text-glow inline-block ${fadeClass}`}>
+            {rotatingWords[wordIndex]}
+          </span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-base md:text-lg text-muted-foreground mb-6 max-w-xl mx-auto text-center">
-          Finanças · Projetos · Clientes · RH · Marketing · Atividades · Processos — tudo com IA integrada.
+        <p className="text-base md:text-lg text-muted-foreground mb-8 max-w-md mx-auto text-center">
+          Tudo que sua agência precisa em um só lugar.
         </p>
 
-        {/* Price */}
-        <p className="text-base font-semibold text-primary mb-8 text-center">
-          Grátis para começar. Planos a partir de R$69/mês.
-        </p>
+        {/* 7 Module icons with tooltips */}
+        <TooltipProvider delayDuration={200}>
+          <div className="flex items-center justify-center gap-3 mb-10 flex-wrap">
+            {modules.map((mod) => (
+              <Tooltip key={mod.label}>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 bg-secondary/50 cursor-default hover:border-primary/40 hover:bg-primary/10 transition-all duration-200">
+                    <mod.icon className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs text-muted-foreground">{mod.label}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[200px] text-center">
+                  <p className="text-xs">{mod.desc}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+        </TooltipProvider>
 
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
@@ -117,21 +176,21 @@ export default function Auth() {
         {/* Ver Preços link */}
         <Link
           to="/planos"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-10"
         >
           Ver Preços
           <ArrowDown className="w-3.5 h-3.5" />
         </Link>
 
-        {/* Social proof */}
+        {/* Social proof with fake logos */}
         <div className="flex items-center justify-center gap-3 mb-6">
           <div className="flex -space-x-2">
-            {avatarColors.map((color, i) => (
+            {fakeLogos.map((logo, i) => (
               <div
                 key={i}
-                className={`w-7 h-7 rounded-full ${color} border-2 border-background flex items-center justify-center text-[10px] font-bold text-white`}
+                className={`w-8 h-8 rounded-full ${logo.color} border-2 border-background flex items-center justify-center text-[9px] font-black text-white tracking-tight`}
               >
-                {String.fromCharCode(65 + i)}
+                {logo.initials}
               </div>
             ))}
           </div>

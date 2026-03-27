@@ -246,4 +246,20 @@
   .section-padding {
     @apply py-24 lg:py-32;
   }
+
+  /* Rotating word animations */
+  @keyframes rotateWordIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes rotateWordOut {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-20px); }
+  }
+  .animate-rotate-word-in {
+    animation: rotateWordIn 0.4s ease-out forwards;
+  }
+  .animate-rotate-word-out {
+    animation: rotateWordOut 0.4s ease-in forwards;
+  }
 }
