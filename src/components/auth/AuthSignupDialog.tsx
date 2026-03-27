@@ -58,7 +58,7 @@ export default function AuthSignupDialog({ open, onOpenChange, loading, isLoadin
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Criar conta grátis</DialogTitle>
           <DialogDescription>Teste grátis por 30 dias. Sem cartão de crédito.</DialogDescription>
