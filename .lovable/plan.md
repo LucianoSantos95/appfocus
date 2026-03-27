@@ -1,89 +1,92 @@
-# Redesign Auth Page - Estilo CreateSpace com Dialogs
+# Redesign Auth Page - Estilo PhotoSpace com Palavra Rotativa
 
 ## Conceito
 
-Transformar `/auth` de uma pagina com formulario integrado para uma **landing page hero fullscreen** com formularios em **popups (Dialog)**. O usuario chega na pagina, ve a proposta de valor e clica em "Entrar" ou "Cadastrar" para abrir o respectivo dialog.
+Replicar o estilo do PhotoSpace: headline gigante com **ultima palavra rotativa animada** (gradient), subtitulo curto, dois CTAs (Cadastrar abre dialog, Entrar abre dialog), fundo com imagem/pattern temático de sistema de gestão, e prova social com logos fictícios.
 
-## Analise de Conversao
+## Elementos-chave
 
-Este estilo e eficaz para conversao por 3 motivos:
+### 1. Headline com palavra rotativa
 
-1. **Impacto visual imediato** — hero fullscreen com headline grande transmite profissionalismo e gera desejo antes de pedir qualquer dado
-2. **Reducao de fricao** — o formulario so aparece quando o usuario ja decidiu agir (clicou no botao), reduzindo a sensacao de "formulario longo"
-3. **Dois CTAs claros** — "Cadastrar" (primario, destaque) e "Entrar" (secundario) direcionam tanto novos quanto usuarios existentes sem confusao
+Frase fixa: **"Gestão inteligente para"** seguida de uma palavra que muda a cada ~3s com animação fade/slide:
 
-**Ponto de atencao**: para o seu funil (trafego pago → landing page → /auth), esse modelo funciona bem porque o usuario ja chega pre-qualificado. O hero reafirma a proposta e os botoes convertem a intencao.
+- **escalar** → **organizar** → **automatizar** → **crescer** → **faturar**
 
-## Layout da Pagina
+A palavra rotativa usa `gradient-text text-glow` como destaque. Fonte grande (text-5xl / text-7xl).
+
+### 2. Subtitulo + 7 módulos com hover
+
+Subtitulo curto: "Tudo que sua agência precisa em um só lugar."
+Abaixo, 7 ícones/badges dos módulos (Finanças, Projetos, Clientes, RH, Marketing, Tarefas, Processos) — ao passar o mouse, aparece tooltip ou hover-card com descrição breve do módulo.
+
+### 3. Fundo temático
+
+Background com pattern sutil de elementos de gestão (grids, dashboards, documentos) usando CSS — pode ser um SVG pattern ou gradiente radial com formas geométricas sutis em opacidade baixa (~5-10%), mantendo o estilo dark premium do Hub.
+
+### 4. Prova social com logos fictícios
+
+As 5 bolinhas terão **iniciais estilizadas** simulando logos de empresas fictícias (ex: "MK", "DS", "AT", "NX", "VP") com cores distintas e tipografia bold — em vez de A, B, C, D, E.
+
+### 5. CTAs → Dialogs
+
+- **"Cadastrar"** (btn-hero, primário) → abre `AuthSignupDialog`
+- **"Entrar"** (outline) → abre `AuthLoginDialog`
+- Link "Ver Preços ↓" abaixo
+
+## Layout
 
 ```text
 ┌──────────────────────────────────────────┐
-│  [Logo do hub]              [Ver Preços]  │  ← Header
+│  [Logo Focus]              [Ver Preços]  │
 ├──────────────────────────────────────────┤
+│         [fundo pattern gestão]           │
 │                                          │
-│     O sistema de gestão feito para       │
-│     agências e consultorias              │  ← Hero fullscreen
-│     que querem escalar.                  │     com fundo dark + 
-│                                          │     gradiente sutil
-│     Subtitulo + modulos                  │
+│     Gestão inteligente para              │
+│           escalar ←(rotativa, gradient)  │
 │                                          │
-│     [Cadastrar]    [Entrar]              │  ← CTAs
+│  Tudo que sua agência precisa em um      │
+│  só lugar.                               │
 │                                          │
-│     Ver Preços ↓                         │
+│  [💰][📊][👥][🧑‍💼][📣][✅][⚙️]  ← hover = desc │
 │                                          │
-│     Prova social + badges confianca      │
+│     [Cadastrar]    [Entrar]              │
+│                              
+│                                          │
+│  [MK][DS][AT][NX][VP] 43 empresas já...  │
+│  🔒 Sem cartão · ❌ Cancele quando quiser│
+│  ✨ Primeiros 100 usuários...            │
 │                                          │
 ├──────────────────────────────────────────┤
-│  Termos · Privacidade · Preços           │  ← Footer
+│  Termos · Privacidade · Preços           │
 └──────────────────────────────────────────┘
 ```
 
-Ao clicar "Cadastrar" → abre Dialog com formulario de signup
-Ao clicar "Entrar" → abre Dialog com formulario de login
+## Análise de conversão
+
+Este modelo é forte para conversão:
+
+- **Headline rotativa** cria movimento e curiosidade, aumentando tempo na página
+- **Módulos com hover** dão informação sem poluir — o visitante descobre no seu ritmo
+- **Fundo temático** reforça contexto sem distrair
+- **Logos fictícios** transmitem credibilidade mais que letras genéricas
 
 ## Arquivos a alterar
 
-### 1. `src/pages/Auth.tsx`
+### `src/pages/Auth.tsx`
 
-- Layout hero fullscreen (min-h-screen, centralizado)
-- Headline grande com `gradient-text` na palavra destaque
-- Subtitulo com modulos
-- Dois botoes: "Cadastrar" (btn-hero, primario) e "Entrar" (btn-secondary, outline)
-- Link "Ver Preços" abaixo dos botoes
-- Prova social (avatares + "43 empresas") e badges de confianca
-- Badge de urgencia
-- Dois Dialogs controlados por estado: loginOpen e signupOpen
+- Adicionar array de palavras rotativas + estado com `useEffect` (intervalo 3s)
+- Animação CSS de fade-in/out na palavra
+- Substituir lista de módulos por 7 ícones com `HoverCard` (tooltip ao hover)
+- Fundo com SVG pattern ou pseudo-element com gradientes geométricos sutis
+- Logos fictícios nas bolinhas de prova social (iniciais estilizadas)
+- Manter dialogs, header, footer, lógica de auth inalterados
 
-### 2. `src/components/auth/AuthFormPanel.tsx`
+### `src/index.css` (opcional)
 
-- Refatorar para ser usado dentro de Dialogs
-- Separar em dois componentes ou aceitar prop de modo (login/signup)
-- Remover Tabs (cada dialog mostra apenas seu formulario)
-- Manter toda a logica de validacao e submit existente
-- Manter botao Google OAuth em ambos os dialogs
+- Adicionar keyframe `fadeInUp` para a animação da palavra rotativa
 
-### 3. `src/components/auth/AuthHeroSection.tsx`
+## O que NÃO muda
 
-- Remover (conteudo sera integrado diretamente em Auth.tsx)
-
-### 4. `src/components/auth/AuthHeader.tsx`
-
-- Manter como esta (logo Focus + Ver Precos)
-
-### 5. `src/components/auth/AuthFooter.tsx`
-
-- Manter como esta
-
-## O que NAO muda
-
-- Logica de autenticacao (signIn, signUp, Google OAuth, rate limiting)
-- AuthContext, hooks, backend
-- Nenhuma alteracao de banco de dados
-- AuthFooter e AuthHeader permanecem
-
-## Detalhes tecnicos
-
-- Usar `Dialog` de `@/components/ui/dialog` para os popups
-- Classes CSS existentes: `gradient-text`, `text-glow`, `btn-hero`, `btn-secondary`, `badge-primary`, `gradient-dark`
-- Responsivo: no mobile, botoes empilham verticalmente, headline menor
-- Nenhuma dependencia nova
+- AuthLoginDialog, AuthSignupDialog (já funcionam)
+- AuthHeader, AuthFooter
+- Lógica de auth, backend, banco de dados
