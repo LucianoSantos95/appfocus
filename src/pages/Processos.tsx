@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -173,6 +174,7 @@ export default function Processos() {
 
   return (
     <MainLayout>
+      <PageMeta title="Processos" description="Documente e gerencie processos internos da sua empresa." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageMeta } from "@/components/seo/PageMeta";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -296,6 +297,7 @@ export default function Clientes() {
 
   return (
     <MainLayout>
+      <PageMeta title="Clientes" description="Cadastro e relacionamento com clientes. CRM completo para sua empresa." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageMeta } from "@/components/seo/PageMeta";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -128,6 +129,7 @@ export default function Planos() {
 
   return (
     <div className="min-h-screen bg-background p-6 lg:p-12">
+      <PageMeta title="Planos e Preços" description="Escolha o plano ideal para sua empresa. Plus, Pro ou Enterprise. A partir de R$55/mês." />
       <div className="max-w-5xl mx-auto">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-8 gap-2">
           <ArrowLeft className="w-4 h-4" /> Voltar

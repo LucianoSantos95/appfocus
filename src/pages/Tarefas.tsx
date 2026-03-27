@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageMeta } from "@/components/seo/PageMeta";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -258,6 +259,7 @@ export default function Tarefas() {
 
   return (
     <MainLayout>
+      <PageMeta title="Atividades" description="Gerencie tarefas e metas do seu negócio. Organize suas atividades diárias." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">

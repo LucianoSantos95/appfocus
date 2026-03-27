@@ -1,4 +1,5 @@
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageMeta } from "@/components/seo/PageMeta";
 import { OnboardingPrompt } from "@/components/guide/OnboardingPrompt";
 import { ModuleCard } from "@/components/ui/module-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
@@ -71,6 +72,7 @@ const Index = () => {
 
   return (
     <MainLayout>
+      <PageMeta title="Painel Principal" description="Visão geral do seu negócio em um só lugar. Gerencie finanças, RH, marketing, projetos e clientes." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div>

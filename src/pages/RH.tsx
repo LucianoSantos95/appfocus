@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageMeta } from "@/components/seo/PageMeta";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -198,6 +199,7 @@ export default function RH() {
 
   return (
     <MainLayout>
+      <PageMeta title="RH" description="Gerencie colaboradores, vagas e documentos. Gestão de recursos humanos simplificada." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">
