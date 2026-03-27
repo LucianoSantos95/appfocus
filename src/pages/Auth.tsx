@@ -98,29 +98,28 @@ export default function Auth() {
     <div className="min-h-screen flex flex-col gradient-dark relative overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.04]" style={{
+        {/* Grid principal */}
+        <div className="absolute inset-0 opacity-[0.08]" style={{
           backgroundImage: `
             linear-gradient(hsl(var(--primary)) 1px, transparent 1px),
             linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)
           `,
           backgroundSize: '60px 60px',
         }} />
-        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+        {/* Formas geométricas simulando dashboards/cards */}
+        <div className="absolute inset-0 opacity-[0.06]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect x='20' y='20' width='120' height='80' rx='8' fill='none' stroke='%236EA8FE' stroke-width='1'/%3E%3Crect x='260' y='50' width='100' height='60' rx='8' fill='none' stroke='%236EA8FE' stroke-width='1'/%3E%3Crect x='40' y='250' width='140' height='90' rx='8' fill='none' stroke='%236EA8FE' stroke-width='1'/%3E%3Crect x='240' y='220' width='120' height='70' rx='8' fill='none' stroke='%236EA8FE' stroke-width='1'/%3E%3Cline x1='30' y1='140' x2='170' y2='140' stroke='%236EA8FE' stroke-width='1'/%3E%3Cline x1='30' y1='155' x2='130' y2='155' stroke='%236EA8FE' stroke-width='1'/%3E%3Cline x1='30' y1='170' x2='150' y2='170' stroke='%236EA8FE' stroke-width='1'/%3E%3Cline x1='250' y1='160' x2='370' y2='160' stroke='%236EA8FE' stroke-width='1'/%3E%3Cline x1='250' y1='175' x2='340' y2='175' stroke='%236EA8FE' stroke-width='1'/%3E%3Ccircle cx='300' cy='350' r='25' fill='none' stroke='%236EA8FE' stroke-width='1'/%3E%3Crect x='60' y='370' width='80' height='10' rx='4' fill='%236EA8FE' opacity='0.3'/%3E%3C/svg%3E")`,
+        }} />
+        {/* Blur blobs mais intensos */}
+        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl" />
       </div>
 
       <AuthHeader />
 
       {/* Hero Section */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
-        {/* Badge */}
-        <span className="badge-primary inline-flex items-center gap-1.5 mb-10 text-sm">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-          </span>
-          AO VIVO — Hub Empresarial
-        </span>
 
         {/* Headline with rotating word */}
         <h1 className="text-4xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-4 text-center max-w-4xl">
