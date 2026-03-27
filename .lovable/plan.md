@@ -1,67 +1,89 @@
+# Redesign Auth Page - Estilo CreateSpace com Dialogs
 
+## Conceito
 
-# Redesign da Tela de Login - Estilo Landing Page Hub Empresarial
+Transformar `/auth` de uma pagina com formulario integrado para uma **landing page hero fullscreen** com formularios em **popups (Dialog)**. O usuario chega na pagina, ve a proposta de valor e clica em "Entrar" ou "Cadastrar" para abrir o respectivo dialog.
 
-## Objetivo
+## Analise de Conversao
 
-Transformar a tela de login (`/auth`) para seguir o estilo visual e a estrutura de conversao da pagina https://focusinteligente.com.br/hub-empresarial. A tela atual usa um layout split-screen (branding esquerda + formulario direita). A nova versao sera uma pagina single-column, centrada, com hero section + formulario integrado, replicando a experiencia da landing page.
+Este estilo e eficaz para conversao por 3 motivos:
 
-## Elementos visuais da landing page a replicar
+1. **Impacto visual imediato** — hero fullscreen com headline grande transmite profissionalismo e gera desejo antes de pedir qualquer dado
+2. **Reducao de fricao** — o formulario so aparece quando o usuario ja decidiu agir (clicou no botao), reduzindo a sensacao de "formulario longo"
+3. **Dois CTAs claros** — "Cadastrar" (primario, destaque) e "Entrar" (secundario) direcionam tanto novos quanto usuarios existentes sem confusao
 
-- Fundo dark premium com gradientes sutis
-- Headline grande e impactante com destaque em gradient-text ("agencias e consultorias")
-- Badge "AO VIVO" com avatares circulares + "43 empresas ja utilizam"
-- Subtitulo descritivo dos modulos
-- Frase de preco em destaque ("Gratis para comecar. Planos a partir de R$69/mes.")
-- CTA forte ("Testar Gratis por 30 dias")
-- Linha de confianca ("Sem cartao de credito . Cancele quando quiser")
-- Badge de urgencia ("Primeiros 100 usuarios ganham acesso antecipado...")
-- Formulario de cadastro/login logo abaixo, integrado na mesma pagina
+**Ponto de atencao**: para o seu funil (trafego pago → landing page → /auth), esse modelo funciona bem porque o usuario ja chega pre-qualificado. O hero reafirma a proposta e os botoes convertem a intencao.
+
+## Layout da Pagina
+
+```text
+┌──────────────────────────────────────────┐
+│  [Logo do hub]              [Ver Preços]  │  ← Header
+├──────────────────────────────────────────┤
+│                                          │
+│     O sistema de gestão feito para       │
+│     agências e consultorias              │  ← Hero fullscreen
+│     que querem escalar.                  │     com fundo dark + 
+│                                          │     gradiente sutil
+│     Subtitulo + modulos                  │
+│                                          │
+│     [Cadastrar]    [Entrar]              │  ← CTAs
+│                                          │
+│     Ver Preços ↓                         │
+│                                          │
+│     Prova social + badges confianca      │
+│                                          │
+├──────────────────────────────────────────┤
+│  Termos · Privacidade · Preços           │  ← Footer
+└──────────────────────────────────────────┘
+```
+
+Ao clicar "Cadastrar" → abre Dialog com formulario de signup
+Ao clicar "Entrar" → abre Dialog com formulario de login
 
 ## Arquivos a alterar
 
 ### 1. `src/pages/Auth.tsx`
-- Remover layout split-screen (flex-row com BrandingPanel + FormPanel)
-- Novo layout: coluna unica centralizada
-- Hero section no topo (headline, prova social, subtitulo)
-- Formulario abaixo do hero, centralizado
 
-### 2. `src/components/auth/AuthBrandingPanel.tsx` → remover ou substituir
-- O conteudo do branding sera integrado diretamente na pagina Auth como hero section
-- Pode ser refatorado em um novo componente `AuthHeroSection.tsx`
-
-### 3. Novo: `src/components/auth/AuthHeroSection.tsx`
-- Logo Hub Empresarial + badge
-- Headline: "O sistema de gestao feito para **agencias e consultorias** que querem escalar."
-- Indicador "AO VIVO" + avatares coloridos + "43 empresas ja utilizam"
+- Layout hero fullscreen (min-h-screen, centralizado)
+- Headline grande com `gradient-text` na palavra destaque
 - Subtitulo com modulos
-- Frase de preco em primary
-- Badge de urgencia com icone sparkles
+- Dois botoes: "Cadastrar" (btn-hero, primario) e "Entrar" (btn-secondary, outline)
+- Link "Ver Preços" abaixo dos botoes
+- Prova social (avatares + "43 empresas") e badges de confianca
+- Badge de urgencia
+- Dois Dialogs controlados por estado: loginOpen e signupOpen
 
-### 4. `src/components/auth/AuthFormPanel.tsx`
-- Remover container glass/card externo (formulario fica integrado na pagina)
-- Manter tabs Login/Cadastrar
-- Atualizar CTA principal para "Testar Gratis por 30 dias" (signup) com seta
-- Manter badges de confianca abaixo
-- Estilo mais limpo, largura max-w-md centralizado
-- Remover headline/subtitulo duplicados (ja estao no hero)
+### 2. `src/components/auth/AuthFormPanel.tsx`
 
-### 5. `src/components/auth/AuthHeader.tsx`
-- Simplificar: logo "Focus" a esquerda, link "Ver Precos" a direita (ja esta assim, manter)
+- Refatorar para ser usado dentro de Dialogs
+- Separar em dois componentes ou aceitar prop de modo (login/signup)
+- Remover Tabs (cada dialog mostra apenas seu formulario)
+- Manter toda a logica de validacao e submit existente
+- Manter botao Google OAuth em ambos os dialogs
 
-### 6. `.lovable/plan.md`
-- Atualizar plano com novo posicionamento para agencias/consultorias
+### 3. `src/components/auth/AuthHeroSection.tsx`
+
+- Remover (conteudo sera integrado diretamente em Auth.tsx)
+
+### 4. `src/components/auth/AuthHeader.tsx`
+
+- Manter como esta (logo Focus + Ver Precos)
+
+### 5. `src/components/auth/AuthFooter.tsx`
+
+- Manter como esta
 
 ## O que NAO muda
-- Logica de autenticacao (signIn, signUp, Google OAuth)
-- Backend, banco de dados, edge functions
-- AuthFooter (manter como esta)
-- Funcionalidade de MFA, convites, etc.
+
+- Logica de autenticacao (signIn, signUp, Google OAuth, rate limiting)
+- AuthContext, hooks, backend
+- Nenhuma alteracao de banco de dados
+- AuthFooter e AuthHeader permanecem
 
 ## Detalhes tecnicos
 
-- Apenas alteracoes de UI (React + Tailwind)
-- Usar classes CSS existentes: `gradient-text`, `gradient-dark`, `text-glow`, `badge-primary`, `btn-hero`, `glass`, `shadow-glow`
-- Layout responsivo: no mobile, hero compacto + formulario empilhado
+- Usar `Dialog` de `@/components/ui/dialog` para os popups
+- Classes CSS existentes: `gradient-text`, `text-glow`, `btn-hero`, `btn-secondary`, `badge-primary`, `gradient-dark`
+- Responsivo: no mobile, botoes empilham verticalmente, headline menor
 - Nenhuma dependencia nova
-
