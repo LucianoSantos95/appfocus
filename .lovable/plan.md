@@ -1,41 +1,67 @@
 
 
-## Redesign da Tela de Login para Maior Conversao
+# Redesign da Tela de Login - Estilo Landing Page Hub Empresarial
 
-### Analise dos problemas atuais
+## Objetivo
 
-1. **Prova social inflada** -- diz "Mais de 100 empresas" mas voce tem 43. Isso gera desconfianca se alguem pesquisar.
-2. **Sem urgencia ou gatilho emocional** -- nada motiva a pessoa a criar conta agora.
-3. **Formulario "frio"** -- sem beneficio visivel perto do botao de cadastro. A pessoa nao sabe o que ganha ao se cadastrar.
-4. **CTA generico** -- "Criar Conta" nao vende. Deveria comunicar valor.
-5. **Sem garantia de risco zero** -- nao menciona "sem cartao de credito" perto do formulario.
-6. **Painel esquerdo apenas lista modulos** -- nao mostra o produto em acao (screenshot/mockup).
-7. **Sem micro-prova social** -- avatares, numeros de usuarios, ou depoimento rapido perto do formulario.
+Transformar a tela de login (`/auth`) para seguir o estilo visual e a estrutura de conversao da pagina https://focusinteligente.com.br/hub-empresarial. A tela atual usa um layout split-screen (branding esquerda + formulario direita). A nova versao sera uma pagina single-column, centrada, com hero section + formulario integrado, replicando a experiencia da landing page.
 
-### O que sera alterado
+## Elementos visuais da landing page a replicar
 
-**Arquivo: `src/components/auth/AuthBrandingPanel.tsx`**
-- Trocar "Mais de 100 empresas" por "43 empresas ja utilizam" (dado real)
-- Adicionar uma frase de beneficio mais forte: "Comece gratis. Sem cartao de credito."
-- Adicionar um mini-depoimento ficticio mas realista (ou placeholder para depoimento real)
-- Adicionar sutil animacao de contador: "43 empresas | 7 modulos | 100% gratis para comecar"
+- Fundo dark premium com gradientes sutis
+- Headline grande e impactante com destaque em gradient-text ("agencias e consultorias")
+- Badge "AO VIVO" com avatares circulares + "43 empresas ja utilizam"
+- Subtitulo descritivo dos modulos
+- Frase de preco em destaque ("Gratis para comecar. Planos a partir de R$69/mes.")
+- CTA forte ("Testar Gratis por 30 dias")
+- Linha de confianca ("Sem cartao de credito . Cancele quando quiser")
+- Badge de urgencia ("Primeiros 100 usuarios ganham acesso antecipado...")
+- Formulario de cadastro/login logo abaixo, integrado na mesma pagina
 
-**Arquivo: `src/components/auth/AuthFormPanel.tsx`**
-- Acima das tabs, adicionar headline de valor: "Comece a organizar seu negocio em 2 minutos"
-- Abaixo do logo, adicionar sub-texto: "Gratis para sempre. Sem cartao."
-- Trocar texto do botao de "Criar Conta" para "Comecar Gratis"
-- Trocar texto do botao de "Entrar" para "Acessar minha conta"
-- Adicionar badges de confianca abaixo do formulario: icone cadeado + "Dados protegidos" + "Cancele quando quiser"
-- Remover o CTA Plus do signup (distrai da conversao principal)
-- Adicionar micro-prova social abaixo do botao: "43 empresas ja confiam no AppFocus"
+## Arquivos a alterar
 
-**Arquivo: `src/components/auth/AuthHeader.tsx`**
-- Manter como esta (ja funciona bem)
+### 1. `src/pages/Auth.tsx`
+- Remover layout split-screen (flex-row com BrandingPanel + FormPanel)
+- Novo layout: coluna unica centralizada
+- Hero section no topo (headline, prova social, subtitulo)
+- Formulario abaixo do hero, centralizado
 
-### Detalhes tecnicos
+### 2. `src/components/auth/AuthBrandingPanel.tsx` → remover ou substituir
+- O conteudo do branding sera integrado diretamente na pagina Auth como hero section
+- Pode ser refatorado em um novo componente `AuthHeroSection.tsx`
 
-Alteracoes apenas em 2 arquivos de componentes React. Nenhuma mudanca de banco de dados ou backend. Apenas CSS/Tailwind e texto.
+### 3. Novo: `src/components/auth/AuthHeroSection.tsx`
+- Logo Hub Empresarial + badge
+- Headline: "O sistema de gestao feito para **agencias e consultorias** que querem escalar."
+- Indicador "AO VIVO" + avatares coloridos + "43 empresas ja utilizam"
+- Subtitulo com modulos
+- Frase de preco em primary
+- Badge de urgencia com icone sparkles
 
-- `src/components/auth/AuthBrandingPanel.tsx` -- atualizar textos e adicionar stats bar
-- `src/components/auth/AuthFormPanel.tsx` -- headline, CTAs, badges de confianca, remover CTA Plus
+### 4. `src/components/auth/AuthFormPanel.tsx`
+- Remover container glass/card externo (formulario fica integrado na pagina)
+- Manter tabs Login/Cadastrar
+- Atualizar CTA principal para "Testar Gratis por 30 dias" (signup) com seta
+- Manter badges de confianca abaixo
+- Estilo mais limpo, largura max-w-md centralizado
+- Remover headline/subtitulo duplicados (ja estao no hero)
+
+### 5. `src/components/auth/AuthHeader.tsx`
+- Simplificar: logo "Focus" a esquerda, link "Ver Precos" a direita (ja esta assim, manter)
+
+### 6. `.lovable/plan.md`
+- Atualizar plano com novo posicionamento para agencias/consultorias
+
+## O que NAO muda
+- Logica de autenticacao (signIn, signUp, Google OAuth)
+- Backend, banco de dados, edge functions
+- AuthFooter (manter como esta)
+- Funcionalidade de MFA, convites, etc.
+
+## Detalhes tecnicos
+
+- Apenas alteracoes de UI (React + Tailwind)
+- Usar classes CSS existentes: `gradient-text`, `gradient-dark`, `text-glow`, `badge-primary`, `btn-hero`, `glass`, `shadow-glow`
+- Layout responsivo: no mobile, hero compacto + formulario empilhado
+- Nenhuma dependencia nova
 
