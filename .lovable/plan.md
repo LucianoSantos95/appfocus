@@ -1,37 +1,36 @@
 
 
-# Implementar SEO para Google Search
+# Gerar Screenshots Promocionais do Hub (1920×1080)
 
-## Alterações
+## Objetivo
+Capturar screenshots de alta qualidade do Hub Empresarial em 1920×1080 pixels para uso na página de publicação do Lovable e redes sociais.
 
-### 1. `public/sitemap.xml` (novo)
-Criar sitemap com todas as rotas públicas do Hub:
-- `/` (auth/landing)
-- `/auth`
-- `/planos`
-- `/termos`
-- `/privacidade`
+## Processo
 
-### 2. `public/robots.txt` (atualizar)
-Adicionar referência ao sitemap: `Sitemap: https://appfocus.lovable.app/sitemap.xml`
+### 1. Capturar screenshots das páginas principais
+Usando o browser com viewport 1920×1080, vou navegar e capturar:
+- **Página de Login/Auth** — a landing page com o branding
+- **Painel Principal (Dashboard)** — visão geral com módulos
+- **Marketing** — gráficos e métricas (como na imagem que você mostrou)
+- **Finanças** — controle financeiro
 
-### 3. `index.html` (atualizar)
-- Melhorar meta description com palavras-chave relevantes (gestão empresarial, agências, consultorias, ERP)
-- Adicionar `<link rel="canonical">` 
-- Adicionar Schema markup JSON-LD do tipo `SoftwareApplication` com nome, descrição, categoria e oferta
-- Adicionar `<meta name="keywords">` com termos relevantes
-- Atualizar OG tags com URL absoluta da imagem
+> Será necessário que você esteja logado no preview para que eu consiga acessar as páginas internas (Dashboard, Marketing, Finanças).
 
-### 4. `src/components/seo/PageMeta.tsx` (novo)
-Componente usando `react-helmet-async` para definir `<title>` e `<meta description>` dinâmicos por página. Cada rota terá título e descrição únicos.
+### 2. Aplicar moldura premium (Product Shot)
+Cada screenshot será processada com o gerador de product shots, adicionando:
+- Moldura estilo macOS com botões de semáforo
+- Fundo com gradiente mesh premium
+- Sombra e cantos arredondados
 
-### 5. `src/main.tsx` (atualizar)
-Envolver o App com `HelmetProvider` do `react-helmet-async`.
+Preset sugerido: **midnight** (combina com o dark mode do Hub).
 
-### 6. Adicionar `PageMeta` nas páginas principais
-Cada página (Index, Financas, RH, Marketing, Projetos, Clientes, Tarefas, Processos, Guia, Auth, Planos) receberá um `<PageMeta title="..." description="..." />` com conteúdo único.
+### 3. Entrega
+Arquivos PNG salvos em `/mnt/documents/` prontos para download:
+- `hub-auth.png`
+- `hub-dashboard.png`
+- `hub-marketing.png`
+- `hub-financas.png`
 
-## Próximos passos pós-implementação
-- Conectar domínio customizado (recomendado para SEO)
-- Registrar no Google Search Console e enviar o sitemap
+## Pré-requisito
+Faça login no preview antes de eu começar, para que eu consiga capturar as páginas internas.
 
