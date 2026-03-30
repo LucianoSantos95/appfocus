@@ -26,7 +26,7 @@ const modules = [
   {
     icon: Users,
     title: "RH",
-    description: "Gerencie colaboradores e vagas",
+    description: "Gerencie sua equipe e freelancers",
     path: "/rh",
   },
   {
@@ -38,25 +38,25 @@ const modules = [
   {
     icon: FolderKanban,
     title: "Projetos",
-    description: "Acompanhe projetos e entregas",
+    description: "Acompanhe entregas e prazos dos clientes",
     path: "/projetos",
   },
   {
     icon: UserCheck,
     title: "Clientes",
-    description: "Cadastro e relacionamento",
+    description: "CRM de carteira e prospecção",
     path: "/clientes",
   },
   {
     icon: ListTodo,
     title: "Atividades",
-    description: "Tarefas e metas do negócio",
+    description: "Tarefas e metas da operação",
     path: "/atividades",
   },
   {
     icon: GitBranch,
     title: "Processos",
-    description: "Documente processos internos",
+    description: "Padronize playbooks e fluxos",
     path: "/processos",
   },
   {
