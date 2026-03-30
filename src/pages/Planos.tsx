@@ -20,7 +20,7 @@ const plans = [
     monthlyPrice: 69,
     annualPrice: 55,
     annualTotal: 660,
-    description: "Para pequenas empresas que precisam de gestão completa",
+    description: "Para agências e consultorias que precisam de gestão completa",
     features: [
       "Criar e editar dados em todos os módulos",
       "Até 5 usuários",
@@ -35,7 +35,7 @@ const plans = [
     monthlyPrice: 149,
     annualPrice: 119,
     annualTotal: 1428,
-    description: "Para empresas em crescimento com necessidades avançadas",
+    description: "Para operações em crescimento com necessidades avançadas",
     features: [
       "Tudo do Plus",
       "Exportar relatórios",
@@ -51,7 +51,7 @@ const plans = [
     monthlyPrice: 297,
     annualPrice: 237,
     annualTotal: 2844,
-    description: "Para grandes empresas com necessidades customizadas",
+    description: "Para agências com múltiplos times e clientes",
     features: [
       "Tudo do Pro",
       "Integração API/Zapier",
@@ -129,7 +129,7 @@ export default function Planos() {
 
   return (
     <div className="min-h-screen bg-background p-6 lg:p-12">
-      <PageMeta title="Planos e Preços" description="Escolha o plano ideal para sua empresa. Plus, Pro ou Enterprise. A partir de R$55/mês." />
+      <PageMeta title="Planos e Preços" description="Escolha o plano ideal para sua agência ou consultoria. Plus, Pro ou Enterprise. A partir de R$55/mês." />
       <div className="max-w-5xl mx-auto">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-8 gap-2">
           <ArrowLeft className="w-4 h-4" /> Voltar
@@ -137,7 +137,7 @@ export default function Planos() {
 
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-4">Escolha o plano ideal</h1>
-          <p className="text-muted-foreground text-lg mb-8">Desbloqueie todo o potencial do Hub Empresarial</p>
+          <p className="text-muted-foreground text-lg mb-8">Desbloqueie todo o potencial da sua operação</p>
           <div className="flex items-center justify-center gap-3">
             <span className={`text-sm ${!annual ? "text-foreground font-semibold" : "text-muted-foreground"}`}>Mensal</span>
             <Switch checked={annual} onCheckedChange={setAnnual} />

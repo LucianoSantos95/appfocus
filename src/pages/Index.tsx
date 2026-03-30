@@ -26,7 +26,7 @@ const modules = [
   {
     icon: Users,
     title: "RH",
-    description: "Gerencie colaboradores e vagas",
+    description: "Gerencie sua equipe e freelancers",
     path: "/rh",
   },
   {
@@ -38,25 +38,25 @@ const modules = [
   {
     icon: FolderKanban,
     title: "Projetos",
-    description: "Acompanhe projetos e entregas",
+    description: "Acompanhe entregas e prazos dos clientes",
     path: "/projetos",
   },
   {
     icon: UserCheck,
     title: "Clientes",
-    description: "Cadastro e relacionamento",
+    description: "CRM de carteira e prospecção",
     path: "/clientes",
   },
   {
     icon: ListTodo,
     title: "Atividades",
-    description: "Tarefas e metas do negócio",
+    description: "Tarefas e metas da operação",
     path: "/atividades",
   },
   {
     icon: GitBranch,
     title: "Processos",
-    description: "Documente processos internos",
+    description: "Padronize playbooks e fluxos",
     path: "/processos",
   },
   {
@@ -72,13 +72,13 @@ const Index = () => {
 
   return (
     <MainLayout>
-      <PageMeta title="Painel Principal" description="Visão geral do seu negócio em um só lugar. Gerencie finanças, RH, marketing, projetos e clientes." />
+      <PageMeta title="Painel Principal" description="Visão geral da sua operação em um só lugar. Gerencie finanças, equipe, marketing, entregas e clientes." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-foreground">Painel Principal</h1>
           <p className="text-muted-foreground mt-1">
-            Visão geral do seu negócio em um só lugar
+            Visão geral da sua operação em um só lugar
           </p>
         </div>
 

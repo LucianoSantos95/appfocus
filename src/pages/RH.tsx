@@ -199,7 +199,7 @@ export default function RH() {
 
   return (
     <MainLayout>
-      <PageMeta title="RH" description="Gerencie colaboradores, vagas e documentos. Gestão de recursos humanos simplificada." />
+      <PageMeta title="RH" description="Gerencie sua equipe, freelancers e documentos. Gestão de pessoas simplificada." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">

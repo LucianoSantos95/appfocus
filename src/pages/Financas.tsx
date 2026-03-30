@@ -371,7 +371,7 @@ export default function Financas() {
 
   return (
     <MainLayout>
-      <PageMeta title="Finanças" description="Controle receitas, despesas e fluxo de caixa da sua empresa. Gestão financeira completa." />
+      <PageMeta title="Finanças" description="Controle receitas, despesas e fluxo de caixa da sua operação. Gestão financeira completa." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">

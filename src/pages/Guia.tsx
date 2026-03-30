@@ -60,7 +60,7 @@ const stages: OnboardingStage[] = [
     id: "explore",
     title: "Primeiros Passos",
     icon: PlayCircle,
-    description: "Conheça a plataforma e navegue pelos módulos",
+    description: "Conheça a plataforma e veja como organizar sua operação",
     tasks: [
       { id: "explore-dashboard", label: "Explore o Painel Principal", path: "/" },
       { id: "explore-sidebar", label: "Navegue pelo menu lateral" },
@@ -69,9 +69,9 @@ const stages: OnboardingStage[] = [
   },
   {
     id: "setup",
-    title: "Configure seu Negócio",
+    title: "Configure sua Operação",
     icon: Settings,
-    description: "Cadastre as informações essenciais",
+    description: "Cadastre sua agência e primeiros clientes",
     tasks: [
       { id: "setup-bank", label: "Cadastre uma conta bancária", path: "/financas" },
       { id: "setup-client", label: "Adicione seu primeiro cliente", path: "/clientes" },
@@ -83,23 +83,23 @@ const stages: OnboardingStage[] = [
     id: "daily",
     title: "Operação Diária",
     icon: Calendar,
-    description: "Comece a usar o sistema no dia a dia",
+    description: "Gerencie entregas e finanças no dia a dia",
     tasks: [
       { id: "daily-transaction", label: "Registre uma receita ou despesa", path: "/financas" },
       { id: "daily-project", label: "Crie um projeto", path: "/projetos" },
       { id: "daily-kanban", label: "Mova uma tarefa no Kanban", path: "/tarefas" },
-      { id: "daily-employee", label: "Cadastre um colaborador", path: "/rh" },
+      { id: "daily-employee", label: "Cadastre um membro da equipe", path: "/rh" },
     ],
   },
   {
     id: "advanced",
     title: "Funcionalidades Avançadas",
     icon: Rocket,
-    description: "Explore recursos que turbinarão sua gestão",
+    description: "Explore recursos que turbinarão sua operação",
     tasks: [
       { id: "adv-import", label: "Importe dados de uma planilha", path: "/financas" },
       { id: "adv-campaign", label: "Crie uma campanha de marketing", path: "/marketing" },
-      { id: "adv-process", label: "Documente um processo", path: "/processos" },
+      { id: "adv-process", label: "Documente um playbook", path: "/processos" },
     ],
   },
   {
@@ -119,16 +119,16 @@ const stages: OnboardingStage[] = [
 const totalTasks = stages.reduce((acc, s) => acc + s.tasks.length, 0);
 
 const faqItems = [
-  { question: "Como começo a usar o Hub Empresarial?", answer: "Siga o checklist acima! Comece cadastrando uma conta bancária, um cliente e uma tarefa. Em 15 minutos você terá o básico configurado." },
+  { question: "Como começo a usar o Hub Empresarial?", answer: "Siga o checklist acima! Comece cadastrando seus clientes e projetos da agência. Em 15 minutos você terá o básico configurado." },
   { question: "Como importo meu extrato bancário?", answer: "No módulo Finanças, clique em 'Importar Extrato'. Aceita CSV e OFX. As transações são detectadas automaticamente." },
   { question: "Os dados são salvos automaticamente?", answer: "Sim! Todas as alterações são salvas instantaneamente no banco de dados." },
   { question: "Posso usar em dispositivos móveis?", answer: "Sim! O Hub é totalmente responsivo e funciona em qualquer navegador." },
-  { question: "Como funciona o Dashboard de BI?", answer: "Nos módulos Finanças, Clientes, Projetos e Marketing, clique no ícone de expandir nos gráficos para análises detalhadas." },
+  { question: "Como funciona o Dashboard de BI?", answer: "Nos módulos Finanças, Clientes, Projetos e Marketing, clique no ícone de expandir nos gráficos para análises detalhadas da sua operação." },
 ];
 
 const tips = [
   { icon: Zap, title: "Registre tudo na hora", desc: "Não deixe para depois. Registre transações assim que acontecerem." },
-  { icon: Target, title: "Atualize status dos clientes", desc: "Mantenha prospectos atualizados para não perder oportunidades." },
+  { icon: Target, title: "Atualize status da carteira", desc: "Mantenha prospectos atualizados para não perder oportunidades." },
   { icon: Clock, title: "Revisão semanal", desc: "15 min por semana para revisar indicadores e ajustar estratégias." },
   { icon: TrendingUp, title: "Explore o BI", desc: "Os dashboards de BI revelam tendências que você não veria manualmente." },
 ];
@@ -208,7 +208,7 @@ export default function Guia() {
 
   return (
     <MainLayout>
-      <PageMeta title="Guia de Uso" description="Aprenda a usar o Hub Empresarial. Tutoriais e dicas para aproveitar ao máximo." />
+      <PageMeta title="Guia de Uso" description="Aprenda a usar o Hub Empresarial. Tutoriais e dicas para organizar sua operação." />
       <GuidedTour forceRun={shouldRunTour} onTourComplete={onComplete} />
 
       <div className="space-y-8 animate-fade-in pb-10 max-w-5xl mx-auto">
@@ -390,7 +390,7 @@ export default function Guia() {
               Seu Hub está 100% configurado! 🎉
             </h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Agora é hora de usar o sistema no dia a dia e acompanhar o crescimento do seu negócio.
+              Agora é hora de usar o sistema no dia a dia e acompanhar o crescimento da sua operação.
             </p>
             <Button
               size="lg"

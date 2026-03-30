@@ -5,7 +5,7 @@ export const tourSteps: Step[] = [
     target: '[data-tour="hero"]',
     title: "🚀 Bem-vindo ao Guia!",
     content:
-      "Este é o seu ponto de partida para dominar o Hub Empresarial. Aqui você aprende tudo o que precisa para organizar seu negócio em poucos minutos.",
+      "Este é o seu ponto de partida para dominar o Hub Empresarial. Aqui você aprende tudo o que precisa para organizar sua operação em poucos minutos.",
     placement: "bottom",
     disableBeacon: true,
   },
@@ -27,7 +27,7 @@ export const tourSteps: Step[] = [
     target: '[data-tour="modules"]',
     title: "📦 Conheça os Módulos",
     content:
-      "Cada módulo cuida de uma área do seu negócio: Finanças, Clientes, Projetos, Tarefas, RH, Marketing e Processos. Clique em 'Ir para' para começar a usar.",
+      "Cada módulo cuida de uma área da sua operação: Finanças, Clientes, Projetos, Atividades, RH, Marketing e Processos. Clique em 'Ir para' para começar a usar.",
     placement: "top",
   },
   {

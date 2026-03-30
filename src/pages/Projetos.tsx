@@ -212,7 +212,7 @@ export default function Projetos() {
 
   return (
     <MainLayout>
-      <PageMeta title="Projetos" description="Acompanhe projetos, entregas e orçamentos. Gestão de projetos integrada." />
+      <PageMeta title="Projetos" description="Acompanhe entregas, prazos e orçamentos dos clientes. Gestão de projetos integrada." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">
