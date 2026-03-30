@@ -95,7 +95,7 @@ const stages: OnboardingStage[] = [
     id: "advanced",
     title: "Funcionalidades Avançadas",
     icon: Rocket,
-    description: "Explore recursos que turbinarão sua gestão",
+    description: "Explore recursos que turbinarão sua operação",
     tasks: [
       { id: "adv-import", label: "Importe dados de uma planilha", path: "/financas" },
       { id: "adv-campaign", label: "Crie uma campanha de marketing", path: "/marketing" },
