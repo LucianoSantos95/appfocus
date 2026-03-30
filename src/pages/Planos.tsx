@@ -51,7 +51,7 @@ const plans = [
     monthlyPrice: 297,
     annualPrice: 237,
     annualTotal: 2844,
-    description: "Para grandes empresas com necessidades customizadas",
+    description: "Para agências com múltiplos times e clientes",
     features: [
       "Tudo do Pro",
       "Integração API/Zapier",
