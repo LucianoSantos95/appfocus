@@ -35,7 +35,7 @@ const plans = [
     monthlyPrice: 149,
     annualPrice: 119,
     annualTotal: 1428,
-    description: "Para empresas em crescimento com necessidades avançadas",
+    description: "Para operações em crescimento com necessidades avançadas",
     features: [
       "Tudo do Plus",
       "Exportar relatórios",
