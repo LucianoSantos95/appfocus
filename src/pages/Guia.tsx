@@ -83,7 +83,7 @@ const stages: OnboardingStage[] = [
     id: "daily",
     title: "Operação Diária",
     icon: Calendar,
-    description: "Comece a usar o sistema no dia a dia",
+    description: "Gerencie entregas e finanças no dia a dia",
     tasks: [
       { id: "daily-transaction", label: "Registre uma receita ou despesa", path: "/financas" },
       { id: "daily-project", label: "Crie um projeto", path: "/projetos" },
