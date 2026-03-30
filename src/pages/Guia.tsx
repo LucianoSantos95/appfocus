@@ -60,7 +60,7 @@ const stages: OnboardingStage[] = [
     id: "explore",
     title: "Primeiros Passos",
     icon: PlayCircle,
-    description: "Conheça a plataforma e navegue pelos módulos",
+    description: "Conheça a plataforma e veja como organizar sua operação",
     tasks: [
       { id: "explore-dashboard", label: "Explore o Painel Principal", path: "/" },
       { id: "explore-sidebar", label: "Navegue pelo menu lateral" },
