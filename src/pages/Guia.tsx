@@ -69,9 +69,9 @@ const stages: OnboardingStage[] = [
   },
   {
     id: "setup",
-    title: "Configure seu Negócio",
+    title: "Configure sua Operação",
     icon: Settings,
-    description: "Cadastre as informações essenciais",
+    description: "Cadastre sua agência e primeiros clientes",
     tasks: [
       { id: "setup-bank", label: "Cadastre uma conta bancária", path: "/financas" },
       { id: "setup-client", label: "Adicione seu primeiro cliente", path: "/clientes" },
