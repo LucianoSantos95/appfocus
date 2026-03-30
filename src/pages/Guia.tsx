@@ -128,7 +128,7 @@ const faqItems = [
 
 const tips = [
   { icon: Zap, title: "Registre tudo na hora", desc: "Não deixe para depois. Registre transações assim que acontecerem." },
-  { icon: Target, title: "Atualize status dos clientes", desc: "Mantenha prospectos atualizados para não perder oportunidades." },
+  { icon: Target, title: "Atualize status da carteira", desc: "Mantenha prospectos atualizados para não perder oportunidades." },
   { icon: Clock, title: "Revisão semanal", desc: "15 min por semana para revisar indicadores e ajustar estratégias." },
   { icon: TrendingUp, title: "Explore o BI", desc: "Os dashboards de BI revelam tendências que você não veria manualmente." },
 ];
