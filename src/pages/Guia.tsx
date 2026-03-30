@@ -88,7 +88,7 @@ const stages: OnboardingStage[] = [
       { id: "daily-transaction", label: "Registre uma receita ou despesa", path: "/financas" },
       { id: "daily-project", label: "Crie um projeto", path: "/projetos" },
       { id: "daily-kanban", label: "Mova uma tarefa no Kanban", path: "/tarefas" },
-      { id: "daily-employee", label: "Cadastre um colaborador", path: "/rh" },
+      { id: "daily-employee", label: "Cadastre um membro da equipe", path: "/rh" },
     ],
   },
   {
