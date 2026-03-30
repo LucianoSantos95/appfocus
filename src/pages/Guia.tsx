@@ -119,11 +119,11 @@ const stages: OnboardingStage[] = [
 const totalTasks = stages.reduce((acc, s) => acc + s.tasks.length, 0);
 
 const faqItems = [
-  { question: "Como começo a usar o Hub Empresarial?", answer: "Siga o checklist acima! Comece cadastrando uma conta bancária, um cliente e uma tarefa. Em 15 minutos você terá o básico configurado." },
+  { question: "Como começo a usar o Hub Empresarial?", answer: "Siga o checklist acima! Comece cadastrando seus clientes e projetos da agência. Em 15 minutos você terá o básico configurado." },
   { question: "Como importo meu extrato bancário?", answer: "No módulo Finanças, clique em 'Importar Extrato'. Aceita CSV e OFX. As transações são detectadas automaticamente." },
   { question: "Os dados são salvos automaticamente?", answer: "Sim! Todas as alterações são salvas instantaneamente no banco de dados." },
   { question: "Posso usar em dispositivos móveis?", answer: "Sim! O Hub é totalmente responsivo e funciona em qualquer navegador." },
-  { question: "Como funciona o Dashboard de BI?", answer: "Nos módulos Finanças, Clientes, Projetos e Marketing, clique no ícone de expandir nos gráficos para análises detalhadas." },
+  { question: "Como funciona o Dashboard de BI?", answer: "Nos módulos Finanças, Clientes, Projetos e Marketing, clique no ícone de expandir nos gráficos para análises detalhadas da sua operação." },
 ];
 
 const tips = [
