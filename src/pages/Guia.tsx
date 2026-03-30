@@ -99,7 +99,7 @@ const stages: OnboardingStage[] = [
     tasks: [
       { id: "adv-import", label: "Importe dados de uma planilha", path: "/financas" },
       { id: "adv-campaign", label: "Crie uma campanha de marketing", path: "/marketing" },
-      { id: "adv-process", label: "Documente um processo", path: "/processos" },
+      { id: "adv-process", label: "Documente um playbook", path: "/processos" },
     ],
   },
   {
