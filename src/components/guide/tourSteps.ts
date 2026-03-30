@@ -5,7 +5,7 @@ export const tourSteps: Step[] = [
     target: '[data-tour="hero"]',
     title: "🚀 Bem-vindo ao Guia!",
     content:
-      "Este é o seu ponto de partida para dominar o Hub Empresarial. Aqui você aprende tudo o que precisa para organizar seu negócio em poucos minutos.",
+      "Este é o seu ponto de partida para dominar o Hub Empresarial. Aqui você aprende tudo o que precisa para organizar sua operação em poucos minutos.",
     placement: "bottom",
     disableBeacon: true,
   },
