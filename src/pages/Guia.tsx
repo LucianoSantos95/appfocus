@@ -390,7 +390,7 @@ export default function Guia() {
               Seu Hub está 100% configurado! 🎉
             </h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Agora é hora de usar o sistema no dia a dia e acompanhar o crescimento do seu negócio.
+              Agora é hora de usar o sistema no dia a dia e acompanhar o crescimento da sua operação.
             </p>
             <Button
               size="lg"
