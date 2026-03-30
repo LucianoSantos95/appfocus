@@ -9,27 +9,27 @@ import { HelpCircle } from "lucide-react";
 const faqs = [
   {
     question: "Como começar a usar o Hub Empresarial?",
-    answer: "Comece pelo módulo Finanças, registrando suas contas bancárias e primeiras movimentações. O sistema irá calcular automaticamente seus indicadores principais.",
+    answer: "Comece cadastrando seus clientes e projetos da agência. Depois, registre suas contas bancárias e primeiras movimentações. O sistema irá calcular automaticamente seus indicadores.",
   },
   {
     question: "Quais são as limitações da versão Free?",
-    answer: "A versão Free permite gerenciar até 50 registros por módulo, sem relatórios avançados ou automações. Ideal para validar o sistema antes de evoluir.",
+    answer: "A versão Free permite gerenciar até 50 registros por módulo, sem relatórios avançados ou automações. Ideal para validar o sistema antes de escalar sua operação.",
   },
   {
     question: "O que está incluso no Hub Empresarial Pro?",
-    answer: "Relatórios personalizados, automações, integrações com outros sistemas, suporte prioritário e limites expandidos de registros.",
+    answer: "Relatórios para apresentar a clientes, automações de operação, integrações com outros sistemas, suporte prioritário e limites expandidos de registros.",
   },
   {
     question: "Posso exportar meus dados?",
-    answer: "Sim, todos os módulos permitem exportação em CSV e Excel. A versão Pro também oferece relatórios em PDF.",
+    answer: "Sim, todos os módulos permitem exportação em CSV e Excel. A versão Pro também oferece relatórios em PDF — perfeitos para apresentar resultados a clientes.",
   },
   {
     question: "Como funciona a segurança dos dados?",
     answer: "Utilizamos criptografia de ponta a ponta e backups diários. Seus dados são armazenados em servidores seguros com certificação ISO 27001.",
   },
   {
-    question: "Posso adicionar mais usuários?",
-    answer: "Na versão Free você pode ter 1 usuário. A versão Pro permite usuários ilimitados com diferentes níveis de permissão.",
+    question: "Posso adicionar mais membros da equipe?",
+    answer: "Na versão Free você pode ter 1 usuário. A versão Pro permite membros ilimitados com diferentes níveis de permissão para sua equipe e freelancers.",
   },
 ];
 

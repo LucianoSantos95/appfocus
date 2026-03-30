@@ -72,13 +72,13 @@ const Index = () => {
 
   return (
     <MainLayout>
-      <PageMeta title="Painel Principal" description="Visão geral do seu negócio em um só lugar. Gerencie finanças, RH, marketing, projetos e clientes." />
+      <PageMeta title="Painel Principal" description="Visão geral da sua operação em um só lugar. Gerencie finanças, equipe, marketing, entregas e clientes." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-foreground">Painel Principal</h1>
           <p className="text-muted-foreground mt-1">
-            Visão geral do seu negócio em um só lugar
+            Visão geral da sua operação em um só lugar
           </p>
         </div>
 
