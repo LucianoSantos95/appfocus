@@ -1,36 +1,67 @@
 
 
-# Gerar Screenshots Promocionais do Hub (1920×1080)
+# Atualizar textos do Hub para nicho Agências e Consultorias
 
 ## Objetivo
-Capturar screenshots de alta qualidade do Hub Empresarial em 1920×1080 pixels para uso na página de publicação do Lovable e redes sociais.
+Substituir linguagem genérica ("empresas", "negócio", "PMEs") por termos específicos do nicho: agências, consultorias, operação, carteira de clientes, entregas, playbooks.
 
-## Processo
+## Arquivos e alterações
 
-### 1. Capturar screenshots das páginas principais
-Usando o browser com viewport 1920×1080, vou navegar e capturar:
-- **Página de Login/Auth** — a landing page com o branding
-- **Painel Principal (Dashboard)** — visão geral com módulos
-- **Marketing** — gráficos e métricas (como na imagem que você mostrou)
-- **Finanças** — controle financeiro
+### 1. `src/pages/Index.tsx` — Dashboard
+- Subtítulo: "Visão geral do seu negócio" → "Visão geral da sua operação"
+- Descrições dos módulos:
+  - RH: "Gerencie colaboradores e vagas" → "Gerencie sua equipe e freelancers"
+  - Projetos: "Acompanhe projetos e entregas" → "Acompanhe entregas e prazos dos clientes"
+  - Clientes: "Cadastro e relacionamento" → "CRM de carteira e prospecção"
+  - Atividades: "Tarefas e metas do negócio" → "Tarefas e metas da operação"
+  - Processos: "Documente processos internos" → "Padronize playbooks e fluxos"
+- PageMeta description atualizado
 
-> Será necessário que você esteja logado no preview para que eu consiga acessar as páginas internas (Dashboard, Marketing, Finanças).
+### 2. `src/components/layout/Sidebar.tsx`
+- Mesmas alterações de nomes nos módulos (RH permanece, mas tooltip/nomes descritivos atualizados onde aplicável)
+- Footer: manter "Hub Empresarial v1.0"
 
-### 2. Aplicar moldura premium (Product Shot)
-Cada screenshot será processada com o gerador de product shots, adicionando:
-- Moldura estilo macOS com botões de semáforo
-- Fundo com gradiente mesh premium
-- Sombra e cantos arredondados
+### 3. `src/pages/Planos.tsx` — Planos e Preços
+- Descriptions dos planos:
+  - Plus: "Para pequenas empresas..." → "Para agências e consultorias que precisam de gestão completa"
+  - Pro: "Para empresas em crescimento..." → "Para operações em crescimento com necessidades avançadas"
+  - Enterprise: "Para grandes empresas..." → "Para agências com múltiplos times e clientes"
+- Subtítulo: "Desbloqueie todo o potencial do Hub Empresarial" → "Desbloqueie todo o potencial da sua operação"
+- PageMeta description atualizado
 
-Preset sugerido: **midnight** (combina com o dark mode do Hub).
+### 4. `src/components/dashboard/FAQSection.tsx`
+- Reescrever todas as 6 FAQs com contexto de agências:
+  - "Como começar..." → focar em cadastrar clientes e projetos da agência
+  - "Limitações Free" → manter números, contextualizar para agências
+  - "Hub Pro" → mencionar relatórios para clientes, automações de operação
+  - "Exportar dados" → mencionar relatórios para apresentar a clientes
+  - "Segurança" → manter igual (universal)
+  - "Mais usuários" → contextualizar como "membros da equipe"
 
-### 3. Entrega
-Arquivos PNG salvos em `/mnt/documents/` prontos para download:
-- `hub-auth.png`
-- `hub-dashboard.png`
-- `hub-marketing.png`
-- `hub-financas.png`
+### 5. `src/pages/Guia.tsx` — Guia de Configuração
+- Descrições das etapas:
+  - "Conheça a plataforma e navegue pelos módulos" → "Conheça a plataforma e veja como organizar sua operação"
+  - "Cadastre as informações essenciais" → "Cadastre sua agência e primeiros clientes"
+  - "Comece a usar o sistema no dia a dia" → "Gerencie entregas e finanças no dia a dia"
+  - "Explore recursos que turbinarão sua gestão" → "Explore recursos que turbinarão sua operação"
+- Task labels contextualizados (ex: "Cadastre um colaborador" → "Cadastre um membro da equipe")
+- FAQ do Guia: atualizar para contexto de agências
+- Tips: "Atualize status dos clientes" → "Atualize status da carteira de clientes"
+- Textos de conclusão: "crescimento do seu negócio" → "crescimento da sua operação"
 
-## Pré-requisito
-Faça login no preview antes de eu começar, para que eu consiga capturar as páginas internas.
+### 6. `src/components/guide/tourSteps.ts`
+- Atualizar conteúdo do tour para usar "operação", "agência", "equipe" em vez de "negócio", "empresa", "colaboradores"
+
+### 7. `src/components/seo/PageMeta.tsx` — Sem alteração no componente
+- As descriptions são atualizadas nos arquivos de cada página
+
+### 8. PageMeta descriptions (nas respectivas páginas)
+- Financas: "...do seu negócio" → "...da sua operação"
+- RH: "colaboradores" → "equipe e freelancers"
+- Marketing: manter (já adequado)
+- Projetos: "...acompanhe projetos" → "...acompanhe entregas de clientes"
+- Clientes: "...cadastro e relacionamento" → "...CRM de carteira"
+
+## Princípio
+Manter a mesma estrutura visual. Apenas textos são alterados. Nenhuma funcionalidade é modificada.
 
