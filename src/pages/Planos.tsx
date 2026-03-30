@@ -20,7 +20,7 @@ const plans = [
     monthlyPrice: 69,
     annualPrice: 55,
     annualTotal: 660,
-    description: "Para pequenas empresas que precisam de gestão completa",
+    description: "Para agências e consultorias que precisam de gestão completa",
     features: [
       "Criar e editar dados em todos os módulos",
       "Até 5 usuários",
