@@ -137,7 +137,7 @@ export default function Planos() {
 
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-4">Escolha o plano ideal</h1>
-          <p className="text-muted-foreground text-lg mb-8">Desbloqueie todo o potencial do Hub Empresarial</p>
+          <p className="text-muted-foreground text-lg mb-8">Desbloqueie todo o potencial da sua operação</p>
           <div className="flex items-center justify-center gap-3">
             <span className={`text-sm ${!annual ? "text-foreground font-semibold" : "text-muted-foreground"}`}>Mensal</span>
             <Switch checked={annual} onCheckedChange={setAnnual} />
