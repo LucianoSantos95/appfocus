@@ -19,3 +19,5 @@ project_id = "hnextembswhejumvxbzd"
     verify_jwt = false
   [functions.whatsapp-scheduler]
     verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
