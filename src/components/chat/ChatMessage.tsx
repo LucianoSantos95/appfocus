@@ -14,7 +14,7 @@ export function ChatMessage({ role, content, isLoading }: ChatMessageProps) {
     return (
       <div className="flex items-start gap-2">
         <div className="h-7 w-7 rounded-full overflow-hidden shrink-0">
-          <img src={aiAgentLogo} alt="Assistente" className="h-7 w-7 object-cover" />
+          <img src={hubLogo} alt="Assistente" className="h-7 w-7 object-cover" />
         </div>
         <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%]">
           <div className="flex gap-1">
@@ -45,7 +45,7 @@ export function ChatMessage({ role, content, isLoading }: ChatMessageProps) {
   return (
     <div className="flex items-start gap-2">
       <div className="h-7 w-7 rounded-full overflow-hidden shrink-0">
-        <img src={aiAgentLogo} alt="Assistente" className="h-7 w-7 object-cover" />
+        <img src={hubLogo} alt="Assistente" className="h-7 w-7 object-cover" />
       </div>
       <div
         className={cn(

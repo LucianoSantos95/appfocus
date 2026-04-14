@@ -162,7 +162,7 @@ export function AIChatWidget() {
           className="fixed bottom-6 right-6 z-50 h-16 w-16 rounded-full shadow-glow-strong hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center overflow-hidden ring-2 ring-primary/30"
           aria-label="Abrir assistente"
         >
-          <img src={aiAgentLogo} alt="Assistente Focus" className="h-16 w-16 object-cover" />
+          <img src={hubLogo} alt="Assistente Focus" className="h-16 w-16 object-cover" />
         </button>
       )}
 
@@ -179,7 +179,7 @@ export function AIChatWidget() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
             <div className="flex items-center gap-2">
-              <img src={aiAgentLogo} alt="Assistente Focus" className="h-8 w-8 rounded-full object-cover" />
+              <img src={hubLogo} alt="Assistente Focus" className="h-8 w-8 rounded-full object-cover" />
               <div>
                 <p className="text-sm font-semibold text-foreground">Assistente Focus</p>
                 <p className="text-xs text-muted-foreground">IA do seu negócio</p>
