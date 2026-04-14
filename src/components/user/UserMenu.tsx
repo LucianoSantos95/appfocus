@@ -17,6 +17,7 @@ import {
   MessageSquare,
   HelpCircle,
   LogOut,
+  Plug,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ProfileDialog } from "./ProfileDialog";
@@ -24,6 +25,7 @@ import { AdminPanel } from "./AdminPanel";
 import { BillingPanel } from "./BillingPanel";
 import { SupportDialog } from "./SupportDialog";
 import { FeedbackDialog } from "./FeedbackDialog";
+import { IntegrationsPanel } from "@/components/settings/IntegrationsPanel";
 
 interface UserMenuProps {
   collapsed: boolean;
@@ -40,6 +42,7 @@ export function UserMenu({ collapsed }: UserMenuProps) {
   const [billingOpen, setBillingOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [integrationsOpen, setIntegrationsOpen] = useState(false);
 
   if (!user) return null;
 
@@ -101,6 +104,9 @@ export function UserMenu({ collapsed }: UserMenuProps) {
             <DropdownMenuItem onClick={() => setSupportOpen(true)}>
               <HelpCircle className="w-4 h-4 mr-2" /> Suporte
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIntegrationsOpen(true)}>
+              <Plug className="w-4 h-4 mr-2" /> Integrações
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <div className="px-2 py-1.5 text-xs text-muted-foreground">
               comercial@focusinteligente.com.br
@@ -118,6 +124,7 @@ export function UserMenu({ collapsed }: UserMenuProps) {
       <BillingPanel open={billingOpen} onOpenChange={setBillingOpen} />
       <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
       <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+      <IntegrationsPanel open={integrationsOpen} onOpenChange={setIntegrationsOpen} />
     </>
   );
 }

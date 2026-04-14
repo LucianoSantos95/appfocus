@@ -34,6 +34,7 @@ Dono ou gestor de uma agência, consultoria ou PME de serviços. Ele usa o Hub p
 1. **Consultar dados** de qualquer módulo (clientes, projetos, tarefas, transações, colaboradores, campanhas, processos, conteúdos, agenda, mural, contas bancárias).
 2. **Criar, editar e excluir registros** em qualquer módulo via linguagem natural.
 3. **Analisar dados do negócio** e dar dicas proativas — por exemplo, alertar sobre projetos atrasados, tarefas vencidas, clientes sem contato há mais de 30 dias, fluxo de caixa negativo, etc.
+4. **Enviar mensagens WhatsApp** para contatos quando o usuário solicitar (requer que WhatsApp esteja habilitado nas configurações).
 
 ## Módulos e tabelas
 | Módulo | Tabela | Campos editáveis |
@@ -92,6 +93,21 @@ const tools = [
           data: { type: "object", description: "Campos e valores para create/update" },
         },
         required: ["action", "module"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "send_whatsapp",
+      description: "Envia uma mensagem de WhatsApp para um número de telefone",
+      parameters: {
+        type: "object",
+        properties: {
+          to: { type: "string", description: "Número de telefone do destinatário (com DDD, ex: 11987654321)" },
+          message: { type: "string", description: "Texto da mensagem a enviar" },
+        },
+        required: ["to", "message"],
       },
     },
   },
@@ -278,6 +294,46 @@ async function handleBusinessInsights(
   return results;
 }
 
+// ---------- WHATSAPP HANDLER ----------
+async function handleSendWhatsApp(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  args: { to: string; message: string }
+) {
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Check if user has WhatsApp preferences enabled
+    const { data: prefs } = await supabase
+      .from("whatsapp_preferences")
+      .select("enabled")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!prefs?.enabled) {
+      return { error: "WhatsApp não está habilitado. Ative nas configurações do seu perfil." };
+    }
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-whatsapp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({ to: args.to, message: args.message }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return { error: data.error || "Falha ao enviar WhatsApp" };
+    }
+    return { success: true, sid: data.sid, message: `Mensagem enviada para ${args.to}` };
+  } catch (err: any) {
+    return { error: err.message || "Erro ao enviar WhatsApp" };
+  }
+}
+
 // ---------- TOOL EXECUTOR ----------
 async function executeTool(
   supabase: ReturnType<typeof createClient>,
@@ -292,6 +348,8 @@ async function executeTool(
       return handleCrudOperation(supabase, userId, args);
     case "business_insights":
       return handleBusinessInsights(supabase, userId, args);
+    case "send_whatsapp":
+      return handleSendWhatsApp(supabase, userId, args);
     default:
       return { error: `Ferramenta '${name}' não reconhecida` };
   }

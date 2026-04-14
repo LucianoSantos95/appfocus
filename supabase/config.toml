@@ -23,3 +23,5 @@ project_id = "hnextembswhejumvxbzd"
     verify_jwt = true
   [functions.hub-assistant]
     verify_jwt = false
+  [functions.google-integration]
+    verify_jwt = false
