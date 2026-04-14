@@ -88,7 +88,11 @@ export function ClientesBIPanel({ open, onOpenChange, clientes }: ClientesBIPane
       .sort((a, b) => b.value - a.value);
   }, [clientes]);
 
-  const totalRevenue = useMemo(() => clientes.reduce((s, c) => s + Number(c.valor_total || 0), 0), [clientes]);
+  // Receita Total somente de clientes ATIVOS
+  const totalRevenue = useMemo(
+    () => clientes.filter((c) => c.status === "ativo").reduce((s, c) => s + Number(c.valor_total || 0), 0),
+    [clientes]
+  );
   const activeCount = useMemo(() => clientes.filter((c) => c.status === "ativo").length, [clientes]);
 
   return (
@@ -123,7 +127,7 @@ export function ClientesBIPanel({ open, onOpenChange, clientes }: ClientesBIPane
               <Award className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Receita Total</p>
+              <p className="text-xs text-muted-foreground">Receita (Ativos)</p>
               <p className="text-lg font-bold text-foreground">R$ {totalRevenue.toLocaleString("pt-BR")}</p>
             </div>
           </div>

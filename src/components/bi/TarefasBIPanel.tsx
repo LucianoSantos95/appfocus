@@ -1,7 +1,7 @@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useMemo } from "react";
 import { ListTodo, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 
@@ -12,6 +12,7 @@ interface Tarefa {
   priority: string | null;
   category: string | null;
   due_date: string | null;
+  completed_at: string | null;
 }
 
 interface TarefasBIPanelProps {
@@ -36,6 +37,7 @@ export function TarefasBIPanel({ open, onOpenChange, tarefas }: TarefasBIPanelPr
 
   const total = tarefas.length;
   const pendentes = useMemo(() => tarefas.filter(t => t.status === "pendente").length, [tarefas]);
+  const emAndamento = useMemo(() => tarefas.filter(t => t.status === "em_andamento").length, [tarefas]);
   const concluidas = useMemo(() => tarefas.filter(t => t.status === "concluida").length, [tarefas]);
   const vencidas = useMemo(() => tarefas.filter(t => t.due_date && t.due_date < todayStr && t.status !== "concluida").length, [tarefas, todayStr]);
 
@@ -51,10 +53,16 @@ export function TarefasBIPanel({ open, onOpenChange, tarefas }: TarefasBIPanelPr
     return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 8);
   }, [tarefas]);
 
+  // Taxa de conclusão no prazo: compara completed_at vs due_date
   const taxaConclusao = useMemo(() => {
-    const concluidasNoPrazo = tarefas.filter(t => t.status === "concluida" && t.due_date && t.due_date >= todayStr).length;
-    return concluidas > 0 ? Math.round((concluidasNoPrazo / concluidas) * 100) : 0;
-  }, [tarefas, concluidas, todayStr]);
+    const concluidasComPrazo = tarefas.filter(t => t.status === "concluida" && t.due_date);
+    if (concluidasComPrazo.length === 0) return 0;
+    const noPrazo = concluidasComPrazo.filter(t => {
+      if (!t.completed_at) return false;
+      return t.completed_at.split("T")[0] <= t.due_date!;
+    }).length;
+    return Math.round((noPrazo / concluidasComPrazo.length) * 100);
+  }, [tarefas]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -71,8 +79,8 @@ export function TarefasBIPanel({ open, onOpenChange, tarefas }: TarefasBIPanelPr
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
             <Clock className="w-5 h-5 text-warning mx-auto mb-1" />
-            <p className="text-2xl font-bold text-warning">{pendentes}</p>
-            <p className="text-xs text-muted-foreground">Pendentes</p>
+            <p className="text-2xl font-bold text-warning">{pendentes + emAndamento}</p>
+            <p className="text-xs text-muted-foreground">Em Aberto</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
             <CheckCircle2 className="w-5 h-5 text-success mx-auto mb-1" />
