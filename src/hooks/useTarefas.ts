@@ -12,6 +12,7 @@ export interface Tarefa {
   status: string;
   category: string | null;
   responsible: string | null;
+  completed_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -24,6 +25,7 @@ export interface TarefaInput {
   status?: string;
   category?: string;
   responsible?: string;
+  completed_at?: string | null;
 }
 
 export function useTarefas() {
@@ -64,9 +66,17 @@ export function useTarefas() {
 
   const updateTarefa = async (id: string, updates: Partial<TarefaInput>): Promise<boolean> => {
     try {
-      const { error } = await supabase.from("tarefas").update(updates as never).eq("id", id);
+      // Auto-set completed_at when status changes to concluida
+      const finalUpdates = { ...updates };
+      if (updates.status === "concluida" && !updates.completed_at) {
+        (finalUpdates as Record<string, unknown>).completed_at = new Date().toISOString();
+      } else if (updates.status && updates.status !== "concluida") {
+        (finalUpdates as Record<string, unknown>).completed_at = null;
+      }
+
+      const { error } = await supabase.from("tarefas").update(finalUpdates as never).eq("id", id);
       if (error) throw error;
-      setTarefas(prev => prev.map(t => t.id === id ? { ...t, ...updates } as Tarefa : t));
+      setTarefas(prev => prev.map(t => t.id === id ? { ...t, ...finalUpdates } as Tarefa : t));
       return true;
     } catch (error) {
       console.error("Error updating tarefa:", error);

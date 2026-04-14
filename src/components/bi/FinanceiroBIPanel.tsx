@@ -77,7 +77,6 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
 
     const result = monthlyData.map((m) => ({ ...m, recProj: undefined as number | undefined, despProj: undefined as number | undefined }));
 
-    // Add 3 projected months into next year
     const nextYear = selectedYear + 1;
     for (let i = 0; i < 3; i++) {
       const yy = String(nextYear).slice(-2);
@@ -101,16 +100,13 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
     return { rec, desp, lucro: rec - desp, margem: rec > 0 ? Math.round(((rec - desp) / rec) * 100) : 0, ticketMedio: recCount > 0 ? Math.round(rec / recCount) : 0 };
   }, [monthlyData, transacoes, selectedYear]);
 
-  // DRE
+  // DRE - categorias dinâmicas
   const dre = useMemo(() => {
     const yearTxns = transacoes.filter(t => t.date?.startsWith(String(selectedYear)));
     const receitaBruta = yearTxns.filter(t => t.type === "receita").reduce((s, t) => s + Number(t.value), 0);
-    const opCats = ["Infraestrutura", "Pessoal", "Operacional"];
-    const despOp = yearTxns.filter(t => t.type === "despesa" && opCats.includes(t.category || "")).reduce((s, t) => s + Number(t.value), 0);
-    const outrasDeps = yearTxns.filter(t => t.type === "despesa" && !opCats.includes(t.category || "")).reduce((s, t) => s + Number(t.value), 0);
-    const lucroOp = receitaBruta - despOp;
-    const lucroLiq = lucroOp - outrasDeps;
-    return { receitaBruta, despOp, lucroOp, outrasDeps, lucroLiq };
+    const totalDespesas = yearTxns.filter(t => t.type === "despesa").reduce((s, t) => s + Number(t.value), 0);
+    const lucroLiq = receitaBruta - totalDespesas;
+    return { receitaBruta, totalDespesas, lucroLiq };
   }, [transacoes, selectedYear]);
 
   // Top 5 categorias de despesa
@@ -264,19 +260,17 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
               <span className="text-success font-semibold">R$ {dre.receitaBruta.toLocaleString("pt-BR")}</span>
             </div>
             <div className="flex justify-between py-1.5 border-b border-border/50 pl-4">
-              <span className="text-muted-foreground">(-) Despesas Operacionais</span>
-              <span className="text-destructive">R$ {dre.despOp.toLocaleString("pt-BR")}</span>
+              <span className="text-muted-foreground">(-) Total de Despesas</span>
+              <span className="text-destructive">R$ {dre.totalDespesas.toLocaleString("pt-BR")}</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-border/50 font-medium">
-              <span className="text-foreground">(=) Lucro Operacional</span>
-              <span className={dre.lucroOp >= 0 ? "text-success" : "text-destructive"}>R$ {dre.lucroOp.toLocaleString("pt-BR")}</span>
-            </div>
-            <div className="flex justify-between py-1.5 border-b border-border/50 pl-4">
-              <span className="text-muted-foreground">(-) Outras Despesas</span>
-              <span className="text-destructive">R$ {dre.outrasDeps.toLocaleString("pt-BR")}</span>
-            </div>
-            <div className="flex justify-between py-2 font-bold text-base">
-              <span className="text-foreground">(=) Lucro Líquido</span>
+            {topCategorias.slice(0, 3).map(cat => (
+              <div key={cat.name} className="flex justify-between py-1 pl-8 text-xs">
+                <span className="text-muted-foreground">{cat.name}</span>
+                <span className="text-muted-foreground">R$ {cat.value.toLocaleString("pt-BR")}</span>
+              </div>
+            ))}
+            <div className="flex justify-between py-2 font-bold text-base border-t border-border/50">
+              <span className="text-foreground">(=) Resultado Líquido</span>
               <span className={dre.lucroLiq >= 0 ? "text-success" : "text-destructive"}>R$ {dre.lucroLiq.toLocaleString("pt-BR")}</span>
             </div>
           </div>

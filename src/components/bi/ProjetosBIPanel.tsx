@@ -26,19 +26,24 @@ interface ProjetosBIPanelProps {
 }
 
 const statusProgress: Record<string, number> = {
-  planejamento: 10,
+  nao_iniciado: 0,
   em_andamento: 50,
-  revisao: 80,
+  pausado: 30,
   concluido: 100,
-  cancelado: 0,
+};
+
+const statusLabels: Record<string, string> = {
+  nao_iniciado: "Não Iniciado",
+  em_andamento: "Em Andamento",
+  pausado: "Pausado",
+  concluido: "Concluído",
 };
 
 const statusColors: Record<string, string> = {
-  planejamento: "text-primary",
-  em_andamento: "text-success",
-  revisao: "text-warning",
-  concluido: "text-muted-foreground",
-  cancelado: "text-destructive",
+  nao_iniciado: "text-muted-foreground",
+  em_andamento: "text-primary",
+  pausado: "text-warning",
+  concluido: "text-success",
 };
 
 export function ProjetosBIPanel({ open, onOpenChange, projetos }: ProjetosBIPanelProps) {
@@ -48,10 +53,10 @@ export function ProjetosBIPanel({ open, onOpenChange, projetos }: ProjetosBIPane
     () =>
       projetos
         .filter((p) => {
-          if (!p.end_date || p.status === "concluido" || p.status === "cancelado") return false;
+          if (!p.end_date || p.status === "concluido") return false;
           const end = new Date(p.end_date);
           const diff = (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-          return diff < 7; // within 7 days or overdue
+          return diff < 7;
         })
         .sort((a, b) => new Date(a.end_date!).getTime() - new Date(b.end_date!).getTime()),
     [projetos]
@@ -104,7 +109,7 @@ export function ProjetosBIPanel({ open, onOpenChange, projetos }: ProjetosBIPane
                   <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-background border border-border/50">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.status}</p>
+                      <p className="text-xs text-muted-foreground">{statusLabels[p.status] || p.status}</p>
                     </div>
                     <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", isOverdue ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning")}>
                       {isOverdue ? `${Math.abs(diff)}d atrasado` : `${diff}d restantes`}

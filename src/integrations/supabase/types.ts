@@ -880,6 +880,7 @@ export type Database = {
       tarefas: {
         Row: {
           category: string | null
+          completed_at: string | null
           created_at: string
           description: string | null
           due_date: string | null
@@ -893,6 +894,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
@@ -906,6 +908,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null

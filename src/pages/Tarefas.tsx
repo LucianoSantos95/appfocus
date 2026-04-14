@@ -54,10 +54,14 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useTarefas as useTarefasDB } from "@/hooks/useTarefas";
-import { Loader2 } from "lucide-react";
+import { Loader2, Maximize2 } from "lucide-react";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { TarefasBIPanel } from "@/components/bi/TarefasBIPanel";
+import { usePlan } from "@/contexts/PlanContext";
+import { useTeamPermissions } from "@/hooks/useTeamPermissions";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface SubTask {
   id: string;
@@ -99,6 +103,10 @@ export default function Tarefas() {
   const { tarefas: dbTarefas, isLoading, addTarefa, updateTarefa, deleteTarefa, refetch: refetchTarefasDB } = useTarefasDB();
   const [searchTerm, setSearchTerm] = useState("");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [biPanelOpen, setBiPanelOpen] = useState(false);
+  const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
+  const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(dbTarefas.length);
   const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
 
@@ -109,7 +117,7 @@ export default function Tarefas() {
     description: t.description || '',
     dueDate: t.due_date || new Date().toISOString().split('T')[0],
     priority: (['urgente', 'alta', 'media', 'baixa'].includes(t.priority || '') ? t.priority : 'media') as Atividade['priority'],
-    status: (t.status === 'concluida' ? 'concluida' : 'pendente') as Atividade['status'],
+    status: (t.status === 'concluida' ? 'concluida' : t.status === 'em_andamento' ? 'pendente' : 'pendente') as Atividade['status'],
     category: (t.category === 'meta' ? 'meta' : 'tarefa') as Atividade['category'],
     responsible: t.responsible || undefined,
     subtasks: [],
@@ -312,7 +320,19 @@ export default function Tarefas() {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-card rounded-xl border border-border/50 shadow-premium p-6">
-            <h3 className="font-semibold text-foreground mb-4">Status das Atividades</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-foreground">Status das Atividades</h3>
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <button onClick={() => { if (plan === "gratuito" && !isAdmin) setBiUpgradeOpen(true); else setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                      <Maximize2 className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Clique para análise detalhada</TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
+            </div>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
@@ -330,9 +350,10 @@ export default function Tarefas() {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
+                    backgroundColor: "hsl(var(--popover))",
                     border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
                     color: "#ffffff",
                   }}
                   labelStyle={{ color: "#ffffff" }}
@@ -359,10 +380,14 @@ export default function Tarefas() {
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
+                    backgroundColor: "hsl(var(--popover))",
                     border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                    color: "#ffffff",
                   }}
+                  labelStyle={{ color: "#ffffff" }}
+                  itemStyle={{ color: "#ffffff" }}
                 />
                 <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -445,6 +470,8 @@ export default function Tarefas() {
         />
       )}
       <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Atividades" />
+      <TarefasBIPanel open={biPanelOpen} onOpenChange={setBiPanelOpen} tarefas={dbTarefas.map(t => ({ id: t.id, title: t.title, status: t.status, priority: t.priority, category: t.category, due_date: t.due_date, completed_at: t.completed_at }))} />
+      <UpgradeModal open={biUpgradeOpen} onOpenChange={setBiUpgradeOpen} currentCount={0} maxCount={0} moduleName="BI de Tarefas" />
     </MainLayout>
   );
 }

@@ -27,7 +27,7 @@ const tooltipStyle = {
   color: "#ffffff",
 };
 
-const STATUS_COLORS = ["hsl(var(--success))", "hsl(var(--muted-foreground))", "hsl(var(--warning))"];
+const STATUS_COLORS = ["hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--primary))", "hsl(var(--muted-foreground))"];
 
 export function RHBIPanel({ open, onOpenChange, colaboradores }: RHBIPanelProps) {
   const ativos = useMemo(() => colaboradores.filter(c => c.status === "ativo"), [colaboradores]);
@@ -40,6 +40,7 @@ export function RHBIPanel({ open, onOpenChange, colaboradores }: RHBIPanelProps)
     return Object.entries(map).map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value }));
   }, [colaboradores]);
 
+  // Dynamic department data from actual collaborators
   const deptData = useMemo(() => {
     const map: Record<string, number> = {};
     ativos.forEach(c => { const d = c.department || "Sem departamento"; map[d] = (map[d] || 0) + 1; });
