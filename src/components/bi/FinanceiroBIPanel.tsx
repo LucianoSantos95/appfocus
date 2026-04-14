@@ -17,7 +17,7 @@ import {
   Legend,
 } from "recharts";
 import { useMemo, useState } from "react";
-import { TrendingUp, TrendingDown, Percent, ChevronLeft, ChevronRight } from "lucide-react";
+import { TrendingUp, TrendingDown, Percent, ChevronLeft, ChevronRight, AlertTriangle, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Transacao {
@@ -25,6 +25,7 @@ interface Transacao {
   type: string;
   value: number;
   status: string;
+  category?: string | null;
 }
 
 interface FinanceiroBIPanelProps {
@@ -96,8 +97,40 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
   const totals = useMemo(() => {
     const rec = monthlyData.reduce((s, m) => s + m.receitas, 0);
     const desp = monthlyData.reduce((s, m) => s + m.despesas, 0);
-    return { rec, desp, lucro: rec - desp, margem: rec > 0 ? Math.round(((rec - desp) / rec) * 100) : 0 };
-  }, [monthlyData]);
+    const recCount = transacoes.filter(t => t.type === "receita" && t.date?.startsWith(String(selectedYear))).length;
+    return { rec, desp, lucro: rec - desp, margem: rec > 0 ? Math.round(((rec - desp) / rec) * 100) : 0, ticketMedio: recCount > 0 ? Math.round(rec / recCount) : 0 };
+  }, [monthlyData, transacoes, selectedYear]);
+
+  // DRE
+  const dre = useMemo(() => {
+    const yearTxns = transacoes.filter(t => t.date?.startsWith(String(selectedYear)));
+    const receitaBruta = yearTxns.filter(t => t.type === "receita").reduce((s, t) => s + Number(t.value), 0);
+    const opCats = ["Infraestrutura", "Pessoal", "Operacional"];
+    const despOp = yearTxns.filter(t => t.type === "despesa" && opCats.includes(t.category || "")).reduce((s, t) => s + Number(t.value), 0);
+    const outrasDeps = yearTxns.filter(t => t.type === "despesa" && !opCats.includes(t.category || "")).reduce((s, t) => s + Number(t.value), 0);
+    const lucroOp = receitaBruta - despOp;
+    const lucroLiq = lucroOp - outrasDeps;
+    return { receitaBruta, despOp, lucroOp, outrasDeps, lucroLiq };
+  }, [transacoes, selectedYear]);
+
+  // Top 5 categorias de despesa
+  const topCategorias = useMemo(() => {
+    const map: Record<string, number> = {};
+    transacoes.filter(t => t.type === "despesa" && t.date?.startsWith(String(selectedYear))).forEach(t => {
+      const cat = t.category || "Outros";
+      map[cat] = (map[cat] || 0) + Number(t.value);
+    });
+    return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 5);
+  }, [transacoes, selectedYear]);
+
+  // Inadimplência
+  const inadimplencia = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const atrasadas = transacoes.filter(t => t.type === "receita" && t.status === "pendente" && t.date && t.date < today);
+    const totalAtrasado = atrasadas.reduce((s, t) => s + Number(t.value), 0);
+    const pct = totals.rec > 0 ? Math.round((totalAtrasado / totals.rec) * 100) : 0;
+    return { total: totalAtrasado, pct, count: atrasadas.length };
+  }, [transacoes, totals.rec]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
