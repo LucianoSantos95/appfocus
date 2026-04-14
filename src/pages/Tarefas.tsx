@@ -54,10 +54,14 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useTarefas as useTarefasDB } from "@/hooks/useTarefas";
-import { Loader2 } from "lucide-react";
+import { Loader2, Maximize2 } from "lucide-react";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { TarefasBIPanel } from "@/components/bi/TarefasBIPanel";
+import { usePlan } from "@/contexts/PlanContext";
+import { useTeamPermissions } from "@/hooks/useTeamPermissions";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface SubTask {
   id: string;
@@ -99,6 +103,10 @@ export default function Tarefas() {
   const { tarefas: dbTarefas, isLoading, addTarefa, updateTarefa, deleteTarefa, refetch: refetchTarefasDB } = useTarefasDB();
   const [searchTerm, setSearchTerm] = useState("");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [biPanelOpen, setBiPanelOpen] = useState(false);
+  const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
+  const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(dbTarefas.length);
   const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
 
@@ -109,7 +117,7 @@ export default function Tarefas() {
     description: t.description || '',
     dueDate: t.due_date || new Date().toISOString().split('T')[0],
     priority: (['urgente', 'alta', 'media', 'baixa'].includes(t.priority || '') ? t.priority : 'media') as Atividade['priority'],
-    status: (t.status === 'concluida' ? 'concluida' : 'pendente') as Atividade['status'],
+    status: (t.status === 'concluida' ? 'concluida' : t.status === 'em_andamento' ? 'pendente' : 'pendente') as Atividade['status'],
     category: (t.category === 'meta' ? 'meta' : 'tarefa') as Atividade['category'],
     responsible: t.responsible || undefined,
     subtasks: [],
