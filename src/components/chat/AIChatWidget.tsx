@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageSquare, SendHorizonal, X } from "lucide-react";
+import { SendHorizonal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatMessage } from "./ChatMessage";
@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import aiAgentLogo from "@/assets/ai-agent-logo.png";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
