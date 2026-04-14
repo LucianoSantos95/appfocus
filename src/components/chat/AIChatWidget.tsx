@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { SendHorizonal, X } from "lucide-react";
+import { SendHorizonal, X, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatMessage } from "./ChatMessage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import aiAgentLogo from "@/assets/ai-agent-logo.png";
@@ -26,6 +27,16 @@ export function AIChatWidget() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const pendingVoiceRef = useRef<string | null>(null);
+
+  const handleVoiceResult = useCallback((text: string) => {
+    pendingVoiceRef.current = text;
+    setInput(text);
+  }, []);
+
+  const { isListening, isSupported: micSupported, transcript, startListening, stopListening } =
+    useSpeechRecognition(handleVoiceResult);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -131,6 +142,15 @@ export function AIChatWidget() {
     [messages, session]
   );
 
+  // Auto-send voice input after recognition completes
+  useEffect(() => {
+    if (pendingVoiceRef.current && !isListening) {
+      const text = pendingVoiceRef.current;
+      pendingVoiceRef.current = null;
+      sendMessage(text);
+    }
+  }, [isListening, sendMessage]);
+
   if (!session) return null;
 
   return (
@@ -200,6 +220,11 @@ export function AIChatWidget() {
 
           {/* Input */}
           <div className="border-t p-3">
+            {isListening && transcript && (
+              <p className="text-xs text-muted-foreground mb-2 animate-pulse truncate">
+                🎙️ {transcript}...
+              </p>
+            )}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -208,12 +233,24 @@ export function AIChatWidget() {
               className="flex gap-2"
             >
               <Input
-                value={input}
+                value={isListening ? transcript : input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Digite sua mensagem..."
-                disabled={isLoading}
+                placeholder={isListening ? "Ouvindo..." : "Digite sua mensagem..."}
+                disabled={isLoading || isListening}
                 className="flex-1 text-sm"
               />
+              {micSupported && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant={isListening ? "destructive" : "outline"}
+                  onClick={isListening ? stopListening : startListening}
+                  disabled={isLoading}
+                  className={cn(isListening && "animate-pulse")}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+              )}
               <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
                 <SendHorizonal className="h-4 w-4" />
               </Button>
