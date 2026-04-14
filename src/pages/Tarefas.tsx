@@ -470,6 +470,8 @@ export default function Tarefas() {
         />
       )}
       <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Atividades" />
+      <TarefasBIPanel open={biPanelOpen} onOpenChange={setBiPanelOpen} tarefas={dbTarefas.map(t => ({ id: t.id, title: t.title, status: t.status, priority: t.priority, category: t.category, due_date: t.due_date, completed_at: t.completed_at }))} />
+      <UpgradeModal open={biUpgradeOpen} onOpenChange={setBiUpgradeOpen} currentCount={0} maxCount={0} moduleName="BI de Tarefas" />
     </MainLayout>
   );
 }

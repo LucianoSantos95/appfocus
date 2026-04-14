@@ -60,6 +60,11 @@ import { DocumentUpload } from "@/components/rh/DocumentUpload";
 import { FeriasAniversariosTimeline } from "@/components/rh/FeriasAniversariosTimeline";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { RHBIPanel } from "@/components/bi/RHBIPanel";
+import { usePlan } from "@/contexts/PlanContext";
+import { useTeamPermissions } from "@/hooks/useTeamPermissions";
+import { Maximize2 } from "lucide-react";
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface Colaborador {
   id: string;
@@ -119,6 +124,10 @@ export default function RH() {
   const { colaboradores: dbColaboradores, isLoading, addColaborador, deleteColaborador, refetch: refetchColaboradores } = useColaboradores();
   const [searchTerm, setSearchTerm] = useState("");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [biPanelOpen, setBiPanelOpen] = useState(false);
+  const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
+  const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(dbColaboradores.length);
   const [vagas, setVagas] = useState<Vaga[]>([]);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
@@ -169,19 +178,34 @@ export default function RH() {
     setSelectedVaga(null);
   };
 
-  const departmentData = [
-    { name: "Tecnologia", colaboradores: colaboradores.filter((c) => c.department === "Tecnologia").length, color: "hsl(var(--primary))" },
-    { name: "Marketing", colaboradores: colaboradores.filter((c) => c.department === "Marketing").length, color: "hsl(var(--success))" },
-    { name: "Projetos", colaboradores: colaboradores.filter((c) => c.department === "Projetos").length, color: "hsl(var(--warning))" },
-    { name: "Financeiro", colaboradores: colaboradores.filter((c) => c.department === "Financeiro").length, color: "hsl(var(--destructive))" },
-  ].filter((d) => d.colaboradores > 0);
+  // Dynamic department data from actual collaborators
+  const departmentData = useMemo(() => {
+    const map: Record<string, number> = {};
+    colaboradores.forEach(c => {
+      if (c.status === "desligado") return;
+      const dept = c.department || "Sem departamento";
+      map[dept] = (map[dept] || 0) + 1;
+    });
+    const colors = ["hsl(var(--primary))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--destructive))", "hsl(210, 70%, 55%)", "hsl(280, 60%, 55%)"];
+    return Object.entries(map)
+      .map(([name, count], i) => ({ name, colaboradores: count, color: colors[i % colors.length] }))
+      .sort((a, b) => b.colaboradores - a.colaboradores);
+  }, [colaboradores]);
 
-  const salaryData = [
-    { department: "Tecnologia", media: Math.round(colaboradores.filter((c) => c.department === "Tecnologia").reduce((sum, c) => sum + c.salary, 0) / Math.max(1, colaboradores.filter((c) => c.department === "Tecnologia").length)) },
-    { department: "Projetos", media: Math.round(colaboradores.filter((c) => c.department === "Projetos").reduce((sum, c) => sum + c.salary, 0) / Math.max(1, colaboradores.filter((c) => c.department === "Projetos").length)) },
-    { department: "Marketing", media: Math.round(colaboradores.filter((c) => c.department === "Marketing").reduce((sum, c) => sum + c.salary, 0) / Math.max(1, colaboradores.filter((c) => c.department === "Marketing").length)) },
-    { department: "Financeiro", media: Math.round(colaboradores.filter((c) => c.department === "Financeiro").reduce((sum, c) => sum + c.salary, 0) / Math.max(1, colaboradores.filter((c) => c.department === "Financeiro").length)) },
-  ].filter((d) => d.media > 0);
+  const salaryData = useMemo(() => {
+    const map: Record<string, { total: number; count: number }> = {};
+    colaboradores.forEach(c => {
+      if (c.status === "desligado" || !c.salary) return;
+      const dept = c.department || "Sem departamento";
+      if (!map[dept]) map[dept] = { total: 0, count: 0 };
+      map[dept].total += c.salary;
+      map[dept].count++;
+    });
+    return Object.entries(map)
+      .map(([department, v]) => ({ department, media: Math.round(v.total / v.count) }))
+      .filter(d => d.media > 0)
+      .sort((a, b) => b.media - a.media);
+  }, [colaboradores]);
 
   const getFilteredColaboradores = (filter: "ativo" | "ferias" | "licenca" | "todos") => {
     if (filter === "todos") return colaboradores;
