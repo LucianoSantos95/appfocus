@@ -114,6 +114,18 @@ const stages: OnboardingStage[] = [
       { id: "wpp-save", label: "Clique em 'Salvar preferências'", hint: "Pronto! Você receberá alertas diários às 8h no seu WhatsApp" },
     ],
   },
+  {
+    id: "ai-assistant",
+    title: "Assistente de IA",
+    icon: Sparkles,
+    description: "Use o assistente inteligente para agilizar tarefas",
+    tasks: [
+      { id: "ai-open", label: "Abra o Assistente Focus (ícone no canto inferior direito)", hint: "Clique no logo do Hub para abrir o chat" },
+      { id: "ai-ask", label: "Faça uma pergunta ao assistente", hint: "Experimente: 'O que está atrasado?' ou 'Resumo da minha operação'" },
+      { id: "ai-voice", label: "Use o microfone para comando por voz", hint: "Clique no ícone do microfone e fale sua pergunta" },
+      { id: "ai-crud", label: "Peça ao assistente para criar um registro", hint: "Exemplo: 'Criar tarefa revisar proposta para amanhã'" },
+    ],
+  },
 ];
 
 const totalTasks = stages.reduce((acc, s) => acc + s.tasks.length, 0);

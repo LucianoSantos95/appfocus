@@ -147,7 +147,10 @@ export function Sidebar() {
       </nav>
 
       {/* Notification Bell + User Menu */}
-      <div className="flex items-center justify-between px-3 py-2 border-t border-sidebar-border">
+      <div className={cn(
+        "border-t border-sidebar-border px-3 py-2",
+        collapsed ? "flex flex-col items-center gap-2" : "flex items-center justify-between"
+      )}>
         <NotificationBell />
         <UserMenu collapsed={collapsed} />
       </div>
