@@ -8,44 +8,54 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Sparkles, CheckCircle2, ShieldCheck, Zap, Eye } from "lucide-react";
+import { Sparkles, CheckCircle2, ShieldCheck, Zap, Eye, Bot, Mic, Globe } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const UPDATE_KEY = "focus_update_dismissed";
-const UPDATE_VERSION = "2026-03-24"; // Change this on each new release
+const UPDATE_VERSION = "2026-04-14";
 const EXPIRY_DAYS = 5;
 
 const updates = [
   {
+    icon: Bot,
+    title: "Assistente de IA com voz",
+    description: "Converse com o Hub por texto ou voz. O assistente cria registros, responde dúvidas e executa ações em todos os módulos.",
+  },
+  {
+    icon: Globe,
+    title: "Integração Google Workspace",
+    description: "Conecte Gmail e Google Calendar para sincronizar e-mails e eventos diretamente no Hub.",
+  },
+  {
     icon: Zap,
-    title: "Limite gratuito ampliado: 20 registros",
-    description: "Usuários do plano gratuito agora podem cadastrar até 20 informações por módulo — 4x mais espaço para experimentar.",
-  },
-  {
-    icon: Sparkles,
-    title: "Novos preços mais acessíveis",
-    description: "Plano Plus a partir de R$69/mês. Pro e Enterprise também com valores reduzidos para caber no seu bolso.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Integração WhatsApp",
-    description: "Receba alertas automáticos no WhatsApp sobre tarefas vencendo, clientes sem contato e transações pendentes.",
+    title: "Histórico de atividades completo",
+    description: "Veja quem fez o quê — timeline com nome do usuário e filtro por módulo, com pop-up de histórico completo.",
   },
   {
     icon: Eye,
-    title: "Guia de Uso interativo",
-    description: "Checklist com progresso real, redirecionamento automático para cada módulo e celebração ao completar etapas.",
+    title: "Guia de Uso atualizado",
+    description: "Novo estágio do Assistente de IA no guia interativo, com checklist e dicas para aproveitar ao máximo.",
   },
   {
-    icon: Zap,
-    title: "Configuração WhatsApp no perfil",
-    description: "Cadastre seu número e escolha quais notificações receber — tudo em poucos cliques nas configurações do perfil.",
+    icon: ShieldCheck,
+    title: "Botão de upgrade centralizado",
+    description: "O CTA de recursos premium agora fica centralizado na tela, sem sobrepor outros elementos.",
+  },
+  {
+    icon: Sparkles,
+    title: "Logo do Hub no chat",
+    description: "O assistente de IA agora usa a identidade visual oficial do Focus Hub para uma experiência mais integrada.",
   },
 ];
 
 export function UpdateNotification() {
   const [open, setOpen] = useState(false);
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
+    // Only show for authenticated users
+    if (isLoading || !user) return;
+
     try {
       const stored = localStorage.getItem(UPDATE_KEY);
       if (stored) {
@@ -61,7 +71,7 @@ export function UpdateNotification() {
     } catch {
       setOpen(true);
     }
-  }, []);
+  }, [user, isLoading]);
 
   const handleDismiss = () => {
     localStorage.setItem(
@@ -70,6 +80,9 @@ export function UpdateNotification() {
     );
     setOpen(false);
   };
+
+  // Don't render at all if not authenticated
+  if (!user) return null;
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleDismiss(); }}>
