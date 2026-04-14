@@ -34,6 +34,7 @@ Dono ou gestor de uma agência, consultoria ou PME de serviços. Ele usa o Hub p
 1. **Consultar dados** de qualquer módulo (clientes, projetos, tarefas, transações, colaboradores, campanhas, processos, conteúdos, agenda, mural, contas bancárias).
 2. **Criar, editar e excluir registros** em qualquer módulo via linguagem natural.
 3. **Analisar dados do negócio** e dar dicas proativas — por exemplo, alertar sobre projetos atrasados, tarefas vencidas, clientes sem contato há mais de 30 dias, fluxo de caixa negativo, etc.
+4. **Enviar mensagens WhatsApp** para contatos quando o usuário solicitar (requer que WhatsApp esteja habilitado nas configurações).
 
 ## Módulos e tabelas
 | Módulo | Tabela | Campos editáveis |
