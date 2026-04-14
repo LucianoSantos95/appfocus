@@ -659,6 +659,8 @@ export default function RH() {
         </Dialog>
       </div>
       <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="RH" />
+      <RHBIPanel open={biPanelOpen} onOpenChange={setBiPanelOpen} colaboradores={dbColaboradores.map(c => ({ id: c.id, name: c.name, department: c.department, status: c.status, salary: c.salary }))} />
+      <UpgradeModal open={biUpgradeOpen} onOpenChange={setBiUpgradeOpen} currentCount={0} maxCount={0} moduleName="BI de RH" />
     </MainLayout>
   );
 }
