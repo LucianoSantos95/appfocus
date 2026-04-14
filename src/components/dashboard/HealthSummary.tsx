@@ -81,27 +81,26 @@ export function HealthSummary() {
     <div className="space-y-3">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
-          title="Receita do Mês"
+          label="Receita do Mês"
           value={`R$ ${receitaMes.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}`}
           icon={DollarSign}
           variant="success"
         />
         <StatCard
-          title="Tarefas Vencidas"
+          label="Tarefas Vencidas"
           value={String(tarefasVencidas)}
           icon={AlertCircle}
           variant="destructive"
         />
         <StatCard
-          title="Projetos Atrasados"
+          label="Projetos Atrasados"
           value={String(projetosAtrasados)}
           icon={Clock}
           variant="warning"
         />
         <StatCard
-          title="Clientes sem Contato"
+          label="Clientes sem Contato (30d+)"
           value={String(clientesInativos)}
-          description="Há mais de 30 dias"
           icon={UserCheck}
           variant="default"
         />
