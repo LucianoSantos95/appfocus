@@ -28,7 +28,10 @@ export function AIChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const pendingVoiceRef = useRef<string | null>(null);
+
   const handleVoiceResult = useCallback((text: string) => {
+    pendingVoiceRef.current = text;
     setInput(text);
   }, []);
 
