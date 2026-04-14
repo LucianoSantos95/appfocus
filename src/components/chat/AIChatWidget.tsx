@@ -1,0 +1,227 @@
+import { useState, useRef, useEffect, useCallback } from "react";
+import { MessageSquare, SendHorizonal, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ChatMessage } from "./ChatMessage";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+type Msg = { role: "user" | "assistant"; content: string };
+
+const SUGGESTIONS = [
+  "O que está atrasado?",
+  "Resumo da minha operação",
+  "Criar tarefa",
+  "Adicionar cliente",
+];
+
+export function AIChatWidget() {
+  const { session } = useAuth();
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
+
+  const sendMessage = useCallback(
+    async (text: string) => {
+      if (!text.trim() || !session?.access_token) return;
+
+      const userMsg: Msg = { role: "user", content: text.trim() };
+      const newMessages = [...messages, userMsg];
+      setMessages(newMessages);
+      setInput("");
+      setIsLoading(true);
+
+      try {
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hub-assistant`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ messages: newMessages }),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const errMsg = errData.error || `Erro ${res.status}`;
+          toast.error(errMsg);
+          setMessages((prev) => [...prev, { role: "assistant", content: `❌ ${errMsg}` }]);
+          setIsLoading(false);
+          return;
+        }
+
+        const contentType = res.headers.get("content-type") || "";
+
+        if (contentType.includes("text/event-stream") && res.body) {
+          // SSE streaming
+          let assistantContent = "";
+          setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+          setIsLoading(false);
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            let newlineIdx: number;
+            while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
+              let line = buffer.slice(0, newlineIdx);
+              buffer = buffer.slice(newlineIdx + 1);
+              if (line.endsWith("\r")) line = line.slice(0, -1);
+              if (line.startsWith(":") || line.trim() === "") continue;
+              if (!line.startsWith("data: ")) continue;
+
+              const jsonStr = line.slice(6).trim();
+              if (jsonStr === "[DONE]") break;
+
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const delta = parsed.choices?.[0]?.delta?.content;
+                if (delta) {
+                  assistantContent += delta;
+                  setMessages((prev) => {
+                    const copy = [...prev];
+                    copy[copy.length - 1] = { role: "assistant", content: assistantContent };
+                    return copy;
+                  });
+                }
+              } catch {
+                // partial JSON, wait for more
+              }
+            }
+          }
+
+          // Check for CRUD toast
+          if (assistantContent.includes("✅")) {
+            toast.success("Ação executada com sucesso!");
+          }
+        } else {
+          // JSON fallback
+          const data = await res.json();
+          const content = data.content || data.error || "Sem resposta";
+          setMessages((prev) => [...prev, { role: "assistant", content }]);
+          setIsLoading(false);
+          if (content.includes("✅")) toast.success("Ação executada com sucesso!");
+        }
+      } catch (err) {
+        console.error("Chat error:", err);
+        toast.error("Erro ao enviar mensagem");
+        setMessages((prev) => [...prev, { role: "assistant", content: "❌ Erro de conexão. Tente novamente." }]);
+        setIsLoading(false);
+      }
+    },
+    [messages, session]
+  );
+
+  if (!session) return null;
+
+  return (
+    <>
+      {/* Floating button */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center"
+          aria-label="Abrir assistente"
+        >
+          <MessageSquare className="h-6 w-6" />
+        </button>
+      )}
+
+      {/* Chat window */}
+      {isOpen && (
+        <div
+          className={cn(
+            "z-50 flex flex-col bg-background border shadow-xl overflow-hidden",
+            isMobile
+              ? "fixed inset-0"
+              : "fixed bottom-24 right-6 w-[400px] h-[500px] rounded-2xl"
+          )}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <MessageSquare className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Assistente Focus</p>
+                <p className="text-xs text-muted-foreground">IA do seu negócio</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-8 w-8">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Messages */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+            {messages.length === 0 && !isLoading && (
+              <div className="space-y-3 pt-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  Olá! Sou o assistente do Focus Hub. Como posso ajudar?
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => sendMessage(s)}
+                      className="text-xs px-3 py-1.5 rounded-full border border-border bg-muted/50 hover:bg-muted text-foreground transition-colors"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {messages.map((m, i) => (
+              <ChatMessage key={i} role={m.role} content={m.content} />
+            ))}
+
+            {isLoading && <ChatMessage role="assistant" content="" isLoading />}
+          </div>
+
+          {/* Input */}
+          <div className="border-t p-3">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                sendMessage(input);
+              }}
+              className="flex gap-2"
+            >
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Digite sua mensagem..."
+                disabled={isLoading}
+                className="flex-1 text-sm"
+              />
+              <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+                <SendHorizonal className="h-4 w-4" />
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
