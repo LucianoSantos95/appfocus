@@ -98,6 +98,21 @@ const tools = [
   {
     type: "function",
     function: {
+      name: "send_whatsapp",
+      description: "Envia uma mensagem de WhatsApp para um número de telefone",
+      parameters: {
+        type: "object",
+        properties: {
+          to: { type: "string", description: "Número de telefone do destinatário (com DDD, ex: 11987654321)" },
+          message: { type: "string", description: "Texto da mensagem a enviar" },
+        },
+        required: ["to", "message"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "business_insights",
       description: "Analisa dados do negócio do usuário e retorna alertas, métricas e dicas proativas",
       parameters: {
@@ -278,6 +293,46 @@ async function handleBusinessInsights(
   return results;
 }
 
+// ---------- WHATSAPP HANDLER ----------
+async function handleSendWhatsApp(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  args: { to: string; message: string }
+) {
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Check if user has WhatsApp preferences enabled
+    const { data: prefs } = await supabase
+      .from("whatsapp_preferences")
+      .select("enabled")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!prefs?.enabled) {
+      return { error: "WhatsApp não está habilitado. Ative nas configurações do seu perfil." };
+    }
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-whatsapp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({ to: args.to, message: args.message }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return { error: data.error || "Falha ao enviar WhatsApp" };
+    }
+    return { success: true, sid: data.sid, message: `Mensagem enviada para ${args.to}` };
+  } catch (err: any) {
+    return { error: err.message || "Erro ao enviar WhatsApp" };
+  }
+}
+
 // ---------- TOOL EXECUTOR ----------
 async function executeTool(
   supabase: ReturnType<typeof createClient>,
@@ -292,6 +347,8 @@ async function executeTool(
       return handleCrudOperation(supabase, userId, args);
     case "business_insights":
       return handleBusinessInsights(supabase, userId, args);
+    case "send_whatsapp":
+      return handleSendWhatsApp(supabase, userId, args);
     default:
       return { error: `Ferramenta '${name}' não reconhecida` };
   }
