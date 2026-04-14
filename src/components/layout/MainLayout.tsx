@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { useSidebar } from "./SidebarContext";
 import { UpgradeCTA } from "@/components/plan/UpgradeCTA";
+import { AIChatWidget } from "@/components/chat/AIChatWidget";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -18,7 +19,9 @@ export function MainLayout({ children }: MainLayoutProps) {
           {children}
         </div>
       </main>
+      <AIChatWidget />
       <UpgradeCTA />
     </div>
   );
 }
+

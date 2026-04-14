@@ -4,6 +4,8 @@ import { OnboardingPrompt } from "@/components/guide/OnboardingPrompt";
 import { ModuleCard } from "@/components/ui/module-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
+import { HealthSummary } from "@/components/dashboard/HealthSummary";
+import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { useNavigate } from "react-router-dom";
 import {
   DollarSign,
@@ -82,6 +84,9 @@ const Index = () => {
           </p>
         </div>
 
+        {/* Health Summary */}
+        <HealthSummary />
+
         {/* Module Grid */}
         <section>
           <h2 className="text-lg font-semibold text-foreground mb-4">Módulos</h2>
@@ -103,6 +108,9 @@ const Index = () => {
           <AgendaWidget />
           <BulletinBoard />
         </div>
+
+        {/* Activity Timeline */}
+        <ActivityTimeline />
 
         <OnboardingPrompt />
       </div>

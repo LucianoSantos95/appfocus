@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
 import { UserMenu } from "@/components/user/UserMenu";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 import logo from "@/assets/logo.png";
 import {
   LayoutDashboard,
@@ -145,8 +146,11 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* User Menu */}
-      <UserMenu collapsed={collapsed} />
+      {/* Notification Bell + User Menu */}
+      <div className="flex items-center justify-between px-3 py-2 border-t border-sidebar-border">
+        <NotificationBell />
+        <UserMenu collapsed={collapsed} />
+      </div>
 
       {/* Footer */}
       {!collapsed && (

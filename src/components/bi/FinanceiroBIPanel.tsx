@@ -17,7 +17,7 @@ import {
   Legend,
 } from "recharts";
 import { useMemo, useState } from "react";
-import { TrendingUp, TrendingDown, Percent, ChevronLeft, ChevronRight } from "lucide-react";
+import { TrendingUp, TrendingDown, Percent, ChevronLeft, ChevronRight, AlertTriangle, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Transacao {
@@ -25,6 +25,7 @@ interface Transacao {
   type: string;
   value: number;
   status: string;
+  category?: string | null;
 }
 
 interface FinanceiroBIPanelProps {
@@ -96,8 +97,40 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
   const totals = useMemo(() => {
     const rec = monthlyData.reduce((s, m) => s + m.receitas, 0);
     const desp = monthlyData.reduce((s, m) => s + m.despesas, 0);
-    return { rec, desp, lucro: rec - desp, margem: rec > 0 ? Math.round(((rec - desp) / rec) * 100) : 0 };
-  }, [monthlyData]);
+    const recCount = transacoes.filter(t => t.type === "receita" && t.date?.startsWith(String(selectedYear))).length;
+    return { rec, desp, lucro: rec - desp, margem: rec > 0 ? Math.round(((rec - desp) / rec) * 100) : 0, ticketMedio: recCount > 0 ? Math.round(rec / recCount) : 0 };
+  }, [monthlyData, transacoes, selectedYear]);
+
+  // DRE
+  const dre = useMemo(() => {
+    const yearTxns = transacoes.filter(t => t.date?.startsWith(String(selectedYear)));
+    const receitaBruta = yearTxns.filter(t => t.type === "receita").reduce((s, t) => s + Number(t.value), 0);
+    const opCats = ["Infraestrutura", "Pessoal", "Operacional"];
+    const despOp = yearTxns.filter(t => t.type === "despesa" && opCats.includes(t.category || "")).reduce((s, t) => s + Number(t.value), 0);
+    const outrasDeps = yearTxns.filter(t => t.type === "despesa" && !opCats.includes(t.category || "")).reduce((s, t) => s + Number(t.value), 0);
+    const lucroOp = receitaBruta - despOp;
+    const lucroLiq = lucroOp - outrasDeps;
+    return { receitaBruta, despOp, lucroOp, outrasDeps, lucroLiq };
+  }, [transacoes, selectedYear]);
+
+  // Top 5 categorias de despesa
+  const topCategorias = useMemo(() => {
+    const map: Record<string, number> = {};
+    transacoes.filter(t => t.type === "despesa" && t.date?.startsWith(String(selectedYear))).forEach(t => {
+      const cat = t.category || "Outros";
+      map[cat] = (map[cat] || 0) + Number(t.value);
+    });
+    return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 5);
+  }, [transacoes, selectedYear]);
+
+  // Inadimplência
+  const inadimplencia = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const atrasadas = transacoes.filter(t => t.type === "receita" && t.status === "pendente" && t.date && t.date < today);
+    const totalAtrasado = atrasadas.reduce((s, t) => s + Number(t.value), 0);
+    const pct = totals.rec > 0 ? Math.round((totalAtrasado / totals.rec) * 100) : 0;
+    return { total: totalAtrasado, pct, count: atrasadas.length };
+  }, [transacoes, totals.rec]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -118,13 +151,13 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
         </DialogHeader>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-success" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Receita Total ({selectedYear})</p>
+              <p className="text-xs text-muted-foreground">Receita ({selectedYear})</p>
               <p className="text-lg font-bold text-foreground">R$ {totals.rec.toLocaleString("pt-BR")}</p>
             </div>
           </div>
@@ -133,7 +166,7 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
               <TrendingDown className="w-5 h-5 text-destructive" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Despesas Totais ({selectedYear})</p>
+              <p className="text-xs text-muted-foreground">Despesas ({selectedYear})</p>
               <p className="text-lg font-bold text-foreground">R$ {totals.desp.toLocaleString("pt-BR")}</p>
             </div>
           </div>
@@ -144,6 +177,15 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
             <div>
               <p className="text-xs text-muted-foreground">Margem de Lucro</p>
               <p className="text-lg font-bold text-foreground">{totals.margem}%</p>
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Receipt className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Ticket Médio</p>
+              <p className="text-lg font-bold text-foreground">R$ {totals.ticketMedio.toLocaleString("pt-BR")}</p>
             </div>
           </div>
         </div>
@@ -211,6 +253,69 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
               <Bar dataKey="despesas" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} name="Despesas" />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+
+        {/* DRE Simplificado */}
+        <div className="rounded-xl border border-border p-5 mb-6">
+          <h4 className="font-semibold text-foreground mb-4">DRE Simplificado ({selectedYear})</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between py-1.5 border-b border-border/50">
+              <span className="text-foreground font-medium">Receita Bruta</span>
+              <span className="text-success font-semibold">R$ {dre.receitaBruta.toLocaleString("pt-BR")}</span>
+            </div>
+            <div className="flex justify-between py-1.5 border-b border-border/50 pl-4">
+              <span className="text-muted-foreground">(-) Despesas Operacionais</span>
+              <span className="text-destructive">R$ {dre.despOp.toLocaleString("pt-BR")}</span>
+            </div>
+            <div className="flex justify-between py-1.5 border-b border-border/50 font-medium">
+              <span className="text-foreground">(=) Lucro Operacional</span>
+              <span className={dre.lucroOp >= 0 ? "text-success" : "text-destructive"}>R$ {dre.lucroOp.toLocaleString("pt-BR")}</span>
+            </div>
+            <div className="flex justify-between py-1.5 border-b border-border/50 pl-4">
+              <span className="text-muted-foreground">(-) Outras Despesas</span>
+              <span className="text-destructive">R$ {dre.outrasDeps.toLocaleString("pt-BR")}</span>
+            </div>
+            <div className="flex justify-between py-2 font-bold text-base">
+              <span className="text-foreground">(=) Lucro Líquido</span>
+              <span className={dre.lucroLiq >= 0 ? "text-success" : "text-destructive"}>R$ {dre.lucroLiq.toLocaleString("pt-BR")}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Top 5 Categorias + Inadimplência side by side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="rounded-xl border border-border p-5">
+            <h4 className="font-semibold text-foreground mb-4">Top 5 Categorias de Despesa</h4>
+            {topCategorias.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={topCategorias} layout="vertical">
+                  <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" horizontal vertical={false} />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} axisLine={false} tickLine={false} tickFormatter={(v) => `R$ ${v / 1000}k`} />
+                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={100} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`R$ ${v.toLocaleString("pt-BR")}`, "Valor"]} />
+                  <Bar dataKey="value" fill="hsl(var(--destructive))" radius={[0, 6, 6, 0]} name="Valor" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">Nenhuma despesa encontrada</p>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-border p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              <h4 className="font-semibold text-foreground">Inadimplência</h4>
+            </div>
+            <div className="space-y-4">
+              <div className="text-center py-4">
+                <p className="text-3xl font-bold text-warning">R$ {inadimplencia.total.toLocaleString("pt-BR")}</p>
+                <p className="text-sm text-muted-foreground mt-1">{inadimplencia.count} receita{inadimplencia.count !== 1 ? "s" : ""} pendente{inadimplencia.count !== 1 ? "s" : ""} e vencida{inadimplencia.count !== 1 ? "s" : ""}</p>
+              </div>
+              <div className="rounded-lg bg-warning/10 p-3 text-center">
+                <p className="text-sm font-medium text-warning">{inadimplencia.pct}% da receita total</p>
+              </div>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
