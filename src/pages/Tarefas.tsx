@@ -320,7 +320,19 @@ export default function Tarefas() {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-card rounded-xl border border-border/50 shadow-premium p-6">
-            <h3 className="font-semibold text-foreground mb-4">Status das Atividades</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-foreground">Status das Atividades</h3>
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <button onClick={() => { if (plan === "gratuito" && !isAdmin) setBiUpgradeOpen(true); else setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                      <Maximize2 className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Clique para análise detalhada</TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
+            </div>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
@@ -338,9 +350,10 @@ export default function Tarefas() {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
+                    backgroundColor: "hsl(var(--popover))",
                     border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
                     color: "#ffffff",
                   }}
                   labelStyle={{ color: "#ffffff" }}
@@ -367,10 +380,14 @@ export default function Tarefas() {
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
+                    backgroundColor: "hsl(var(--popover))",
                     border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
+                    borderRadius: "12px",
+                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                    color: "#ffffff",
                   }}
+                  labelStyle={{ color: "#ffffff" }}
+                  itemStyle={{ color: "#ffffff" }}
                 />
                 <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
