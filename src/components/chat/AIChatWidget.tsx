@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { SendHorizonal, X } from "lucide-react";
+import { SendHorizonal, X, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatMessage } from "./ChatMessage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import aiAgentLogo from "@/assets/ai-agent-logo.png";
