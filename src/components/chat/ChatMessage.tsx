@@ -1,7 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { User } from "lucide-react";
-import aiAgentLogo from "@/assets/ai-agent-logo.png";
+import hubLogo from "@/assets/logo.png";
 
 interface ChatMessageProps {
   role: "user" | "assistant" | "system";

@@ -8,7 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import aiAgentLogo from "@/assets/ai-agent-logo.png";
+import hubLogo from "@/assets/logo.png";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
