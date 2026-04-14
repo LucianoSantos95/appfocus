@@ -67,7 +67,7 @@ export function UserMenu({ collapsed }: UserMenuProps) {
 
   return (
     <>
-      <div className="px-2 py-3 border-t border-sidebar-border">
+      <div className={collapsed ? "flex justify-center" : "px-2 py-3"}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-sidebar-accent transition-colors text-left">
