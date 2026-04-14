@@ -142,6 +142,15 @@ export function AIChatWidget() {
     [messages, session]
   );
 
+  // Auto-send voice input after recognition completes
+  useEffect(() => {
+    if (pendingVoiceRef.current && !isListening) {
+      const text = pendingVoiceRef.current;
+      pendingVoiceRef.current = null;
+      sendMessage(text);
+    }
+  }, [isListening, sendMessage]);
+
   if (!session) return null;
 
   return (
