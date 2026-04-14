@@ -136,6 +136,8 @@ const faqItems = [
   { question: "Os dados são salvos automaticamente?", answer: "Sim! Todas as alterações são salvas instantaneamente no banco de dados." },
   { question: "Posso usar em dispositivos móveis?", answer: "Sim! O Hub é totalmente responsivo e funciona em qualquer navegador." },
   { question: "Como funciona o Dashboard de BI?", answer: "Nos módulos Finanças, Clientes, Projetos e Marketing, clique no ícone de expandir nos gráficos para análises detalhadas da sua operação." },
+  { question: "Como uso o Assistente de IA?", answer: "Clique no logo do Hub no canto inferior direito. Você pode digitar ou usar o microfone para fazer perguntas, criar tarefas, registrar clientes e muito mais." },
+  { question: "O assistente entende comandos por voz?", answer: "Sim! Clique no ícone do microfone dentro do chat e fale sua solicitação. O assistente transcreve e executa automaticamente." },
 ];
 
 const tips = [
