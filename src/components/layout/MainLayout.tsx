@@ -24,5 +24,4 @@ export function MainLayout({ children }: MainLayoutProps) {
     </div>
   );
 }
-  );
-}
+
