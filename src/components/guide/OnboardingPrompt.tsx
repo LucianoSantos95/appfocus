@@ -29,7 +29,7 @@ export function OnboardingPrompt() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-500">
+    <div className="fixed bottom-24 right-6 z-[49] animate-in slide-in-from-bottom-4 fade-in duration-500">
       <Card className="w-80 p-5 shadow-lg border-primary/20 bg-card">
         <button onClick={dismiss} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
           <X className="h-4 w-4" />

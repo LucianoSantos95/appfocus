@@ -114,6 +114,18 @@ const stages: OnboardingStage[] = [
       { id: "wpp-save", label: "Clique em 'Salvar preferências'", hint: "Pronto! Você receberá alertas diários às 8h no seu WhatsApp" },
     ],
   },
+  {
+    id: "ai-assistant",
+    title: "Assistente de IA",
+    icon: Sparkles,
+    description: "Use o assistente inteligente para agilizar tarefas",
+    tasks: [
+      { id: "ai-open", label: "Abra o Assistente Focus (ícone no canto inferior direito)", hint: "Clique no logo do Hub para abrir o chat" },
+      { id: "ai-ask", label: "Faça uma pergunta ao assistente", hint: "Experimente: 'O que está atrasado?' ou 'Resumo da minha operação'" },
+      { id: "ai-voice", label: "Use o microfone para comando por voz", hint: "Clique no ícone do microfone e fale sua pergunta" },
+      { id: "ai-crud", label: "Peça ao assistente para criar um registro", hint: "Exemplo: 'Criar tarefa revisar proposta para amanhã'" },
+    ],
+  },
 ];
 
 const totalTasks = stages.reduce((acc, s) => acc + s.tasks.length, 0);
@@ -124,6 +136,8 @@ const faqItems = [
   { question: "Os dados são salvos automaticamente?", answer: "Sim! Todas as alterações são salvas instantaneamente no banco de dados." },
   { question: "Posso usar em dispositivos móveis?", answer: "Sim! O Hub é totalmente responsivo e funciona em qualquer navegador." },
   { question: "Como funciona o Dashboard de BI?", answer: "Nos módulos Finanças, Clientes, Projetos e Marketing, clique no ícone de expandir nos gráficos para análises detalhadas da sua operação." },
+  { question: "Como uso o Assistente de IA?", answer: "Clique no logo do Hub no canto inferior direito. Você pode digitar ou usar o microfone para fazer perguntas, criar tarefas, registrar clientes e muito mais." },
+  { question: "O assistente entende comandos por voz?", answer: "Sim! Clique no ícone do microfone dentro do chat e fale sua solicitação. O assistente transcreve e executa automaticamente." },
 ];
 
 const tips = [
