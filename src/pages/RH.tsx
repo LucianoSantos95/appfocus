@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { StatCard } from "@/components/ui/stat-card";
