@@ -139,10 +139,10 @@ export function AIChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center overflow-hidden"
+          className="fixed bottom-6 right-6 z-50 h-16 w-16 rounded-full shadow-glow-strong hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center overflow-hidden ring-2 ring-primary/30"
           aria-label="Abrir assistente"
         >
-          <img src={aiAgentLogo} alt="Assistente Focus" className="h-14 w-14 object-cover" />
+          <img src={aiAgentLogo} alt="Assistente Focus" className="h-16 w-16 object-cover" />
         </button>
       )}
 
