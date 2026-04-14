@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
-import { Bot, User } from "lucide-react";
+import { User } from "lucide-react";
+import aiAgentLogo from "@/assets/ai-agent-logo.png";
 
 interface ChatMessageProps {
   role: "user" | "assistant" | "system";
@@ -12,8 +13,8 @@ export function ChatMessage({ role, content, isLoading }: ChatMessageProps) {
   if (isLoading) {
     return (
       <div className="flex items-start gap-2">
-        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-          <Bot className="h-4 w-4 text-primary" />
+        <div className="h-7 w-7 rounded-full overflow-hidden shrink-0">
+          <img src={aiAgentLogo} alt="Assistente" className="h-7 w-7 object-cover" />
         </div>
         <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%]">
           <div className="flex gap-1">
@@ -43,8 +44,8 @@ export function ChatMessage({ role, content, isLoading }: ChatMessageProps) {
 
   return (
     <div className="flex items-start gap-2">
-      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-        <Bot className="h-4 w-4 text-primary" />
+      <div className="h-7 w-7 rounded-full overflow-hidden shrink-0">
+        <img src={aiAgentLogo} alt="Assistente" className="h-7 w-7 object-cover" />
       </div>
       <div
         className={cn(

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageSquare, SendHorizonal, X } from "lucide-react";
+import { SendHorizonal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatMessage } from "./ChatMessage";
@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import aiAgentLogo from "@/assets/ai-agent-logo.png";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -138,10 +139,10 @@ export function AIChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center"
+          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center overflow-hidden"
           aria-label="Abrir assistente"
         >
-          <MessageSquare className="h-6 w-6" />
+          <img src={aiAgentLogo} alt="Assistente Focus" className="h-14 w-14 object-cover" />
         </button>
       )}
 
@@ -158,9 +159,7 @@ export function AIChatWidget() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <MessageSquare className="h-4 w-4 text-primary" />
-              </div>
+              <img src={aiAgentLogo} alt="Assistente Focus" className="h-8 w-8 rounded-full object-cover" />
               <div>
                 <p className="text-sm font-semibold text-foreground">Assistente Focus</p>
                 <p className="text-xs text-muted-foreground">IA do seu negócio</p>
