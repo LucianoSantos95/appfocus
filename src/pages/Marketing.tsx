@@ -725,11 +725,11 @@ export default function Marketing() {
                 {/* Client Selector */}
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1.5"><Users className="w-4 h-4" /> Clientes Vinculados</Label>
-                  <ScrollArea className="max-h-[150px] border border-border rounded-md p-2">
+                  <ScrollArea className="max-h-[250px] border border-border rounded-md p-2">
                     <div className="space-y-1">
-                      {clientes.length === 0 ? (
-                        <p className="text-xs text-muted-foreground text-center py-2">Nenhum cliente cadastrado</p>
-                      ) : clientes.map(cliente => {
+                      {clientes.filter(c => c.status === "ativo").length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">Nenhum cliente ativo cadastrado</p>
+                      ) : clientes.filter(c => c.status === "ativo").map(cliente => {
                         const isLinked = getClientesByCampanha(selectedCampanha.id).includes(cliente.id);
                         return (
                           <label key={cliente.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 cursor-pointer text-sm">
@@ -744,9 +744,7 @@ export default function Marketing() {
                               }}
                             />
                             <span className="text-foreground">{cliente.nome}</span>
-                            {cliente.status === "ativo" && (
-                              <Badge variant="outline" className="text-[10px] ml-auto bg-success/10 text-success border-success/20">Ativo</Badge>
-                            )}
+                            <Badge variant="outline" className="text-[10px] ml-auto bg-success/10 text-success border-success/20">Ativo</Badge>
                           </label>
                         );
                       })}
