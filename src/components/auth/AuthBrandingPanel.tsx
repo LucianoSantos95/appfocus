@@ -21,7 +21,7 @@ const modules = [
 ];
 
 const stats = [
-  { value: "43", label: "empresas" },
+  { value: "+50", label: "usuários" },
   { value: "7", label: "módulos" },
   { value: "100%", label: "grátis p/ começar" },
 ];
