@@ -722,6 +722,37 @@ export default function Marketing() {
                   <Label>Responsável</Label>
                   <Input value={selectedCampanha.responsible || ''} onChange={(e) => setSelectedCampanha({ ...selectedCampanha, responsible: e.target.value })} className="bg-muted border-border" />
                 </div>
+                {/* Client Selector */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1.5"><Users className="w-4 h-4" /> Clientes Vinculados</Label>
+                  <ScrollArea className="max-h-[150px] border border-border rounded-md p-2">
+                    <div className="space-y-1">
+                      {clientes.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">Nenhum cliente cadastrado</p>
+                      ) : clientes.map(cliente => {
+                        const isLinked = getClientesByCampanha(selectedCampanha.id).includes(cliente.id);
+                        return (
+                          <label key={cliente.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 cursor-pointer text-sm">
+                            <Checkbox
+                              checked={isLinked}
+                              onCheckedChange={async (checked) => {
+                                if (checked) {
+                                  await addCampanhaCliente(selectedCampanha.id, cliente.id);
+                                } else {
+                                  await removeCampanhaCliente(selectedCampanha.id, cliente.id);
+                                }
+                              }}
+                            />
+                            <span className="text-foreground">{cliente.nome}</span>
+                            {cliente.status === "ativo" && (
+                              <Badge variant="outline" className="text-[10px] ml-auto bg-success/10 text-success border-success/20">Ativo</Badge>
+                            )}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                </div>
               </div>
             )}
             <div className="flex justify-between">
