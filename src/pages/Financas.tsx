@@ -997,90 +997,143 @@ function CategoryPieChart({ data, emptyLabel }: { data: { name: string; value: n
   );
 }
 
-function TransactionTable({ transactions, type, bankAccounts, onSelect, onDelete, onUpdateStatus, statusStyles }: { transactions: Transaction[]; type: "receita" | "despesa"; bankAccounts: ContaBancaria[]; onSelect: (t: Transaction) => void; onDelete: (id: string) => void; onUpdateStatus: (id: string, status: string) => void; statusStyles: Record<string, string> }) {
+function TransactionTableRows({ transactions, type, bankAccounts, onSelect, onDelete, onUpdateStatus, statusStyles }: { transactions: Transaction[]; type: "receita" | "despesa"; bankAccounts: ContaBancaria[]; onSelect: (t: Transaction) => void; onDelete: (id: string) => void; onUpdateStatus: (id: string, status: string) => void; statusStyles: Record<string, string> }) {
   return (
-    <div className="bg-card rounded-xl border border-border/50 shadow-premium overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-border/50 hover:bg-transparent">
-            <TableHead className="text-muted-foreground">Descrição</TableHead>
-            <TableHead className="text-muted-foreground">Valor</TableHead>
-            <TableHead className="text-muted-foreground">Data</TableHead>
-            <TableHead className="text-muted-foreground">Categoria</TableHead>
-            <TableHead className="text-muted-foreground">Banco</TableHead>
-            <TableHead className="text-muted-foreground">Status</TableHead>
-            <TableHead className="text-muted-foreground w-10"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {transactions.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                Nenhuma {type === "receita" ? "receita" : "despesa"} registrada
-              </TableCell>
+    <>
+      {transactions.map((t) => (
+        <TableRow key={t.id} className="border-border/50 cursor-pointer hover:bg-muted/30" onClick={() => onSelect(t)}>
+          <TableCell>
+            <div>
+              <p className="font-medium text-foreground">{t.description}</p>
+              <p className="text-xs text-muted-foreground">{t.client || t.provider}</p>
+            </div>
+          </TableCell>
+          <TableCell className={cn("font-semibold", type === "receita" ? "text-success" : "text-destructive")}>
+            {type === "receita" ? "+" : "-"} R$ {t.value.toLocaleString("pt-BR")}
+          </TableCell>
+          <TableCell className="text-muted-foreground">{new Date(t.date).toLocaleDateString("pt-BR")}</TableCell>
+          <TableCell>
+            <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground">{t.category}</span>
+          </TableCell>
+          <TableCell>
+            <span className="text-xs text-muted-foreground">
+              {t.bank_account_id ? bankAccounts.find(a => a.id === t.bank_account_id)?.name || '-' : '-'}
+            </span>
+          </TableCell>
+          <TableCell>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <button className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize cursor-pointer hover:opacity-80 transition-opacity", statusStyles[t.status])}>
+                  {t.status}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-card border-border" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuItem onClick={() => onUpdateStatus(t.id, "pago")}>
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-success" /> Pago
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onUpdateStatus(t.id, "pendente")}>
+                  <Clock className="w-3.5 h-3.5 mr-2 text-warning" /> Pendente
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onUpdateStatus(t.id, "atrasado")}>
+                  <AlertCircle className="w-3.5 h-3.5 mr-2 text-destructive" /> Atrasado
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TableCell>
+          <TableCell>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-card border-border">
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSelect(t); }}>
+                  <Edit className="w-4 h-4 mr-2" /> Ver detalhes
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(t.id); }}>
+                  <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TableCell>
+        </TableRow>
+      ))}
+    </>
+  );
+}
+
+function TransactionTable({ transactions, type, bankAccounts, onSelect, onDelete, onUpdateStatus, statusStyles }: { transactions: Transaction[]; type: "receita" | "despesa"; bankAccounts: ContaBancaria[]; onSelect: (t: Transaction) => void; onDelete: (id: string) => void; onUpdateStatus: (id: string, status: string) => void; statusStyles: Record<string, string> }) {
+  const [showAllDialog, setShowAllDialog] = useState(false);
+  const PREVIEW_LIMIT = 5;
+  const hasMore = transactions.length > PREVIEW_LIMIT;
+  const previewItems = hasMore ? transactions.slice(0, PREVIEW_LIMIT) : transactions;
+
+  return (
+    <>
+      <div className="bg-card rounded-xl border border-border/50 shadow-premium overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border/50 hover:bg-transparent">
+              <TableHead className="text-muted-foreground">Descrição</TableHead>
+              <TableHead className="text-muted-foreground">Valor</TableHead>
+              <TableHead className="text-muted-foreground">Data</TableHead>
+              <TableHead className="text-muted-foreground">Categoria</TableHead>
+              <TableHead className="text-muted-foreground">Banco</TableHead>
+              <TableHead className="text-muted-foreground">Status</TableHead>
+              <TableHead className="text-muted-foreground w-10"></TableHead>
             </TableRow>
-          ) : transactions.map((t) => (
-            <TableRow key={t.id} className="border-border/50 cursor-pointer hover:bg-muted/30" onClick={() => onSelect(t)}>
-              <TableCell>
-                <div>
-                  <p className="font-medium text-foreground">{t.description}</p>
-                  <p className="text-xs text-muted-foreground">{t.client || t.provider}</p>
-                </div>
-              </TableCell>
-              <TableCell className={cn("font-semibold", type === "receita" ? "text-success" : "text-destructive")}>
-                {type === "receita" ? "+" : "-"} R$ {t.value.toLocaleString("pt-BR")}
-              </TableCell>
-              <TableCell className="text-muted-foreground">{new Date(t.date).toLocaleDateString("pt-BR")}</TableCell>
-              <TableCell>
-                <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground">{t.category}</span>
-              </TableCell>
-              <TableCell>
-                <span className="text-xs text-muted-foreground">
-                  {t.bank_account_id ? bankAccounts.find(a => a.id === t.bank_account_id)?.name || '-' : '-'}
-                </span>
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                    <button className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize cursor-pointer hover:opacity-80 transition-opacity", statusStyles[t.status])}>
-                      {t.status}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-card border-border" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenuItem onClick={() => onUpdateStatus(t.id, "pago")}>
-                      <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-success" /> Pago
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onUpdateStatus(t.id, "pendente")}>
-                      <Clock className="w-3.5 h-3.5 mr-2 text-warning" /> Pendente
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onUpdateStatus(t.id, "atrasado")}>
-                      <AlertCircle className="w-3.5 h-3.5 mr-2 text-destructive" /> Atrasado
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-card border-border">
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSelect(t); }}>
-                      <Edit className="w-4 h-4 mr-2" /> Ver detalhes
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(t.id); }}>
-                      <Trash2 className="w-4 h-4 mr-2" /> Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {transactions.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  Nenhuma {type === "receita" ? "receita" : "despesa"} registrada
+                </TableCell>
+              </TableRow>
+            ) : (
+              <TransactionTableRows transactions={previewItems} type={type} bankAccounts={bankAccounts} onSelect={onSelect} onDelete={onDelete} onUpdateStatus={onUpdateStatus} statusStyles={statusStyles} />
+            )}
+          </TableBody>
+        </Table>
+        {hasMore && (
+          <div className="flex justify-center py-3 border-t border-border/50">
+            <Button variant="ghost" size="sm" className="gap-2 text-primary hover:text-primary" onClick={() => setShowAllDialog(true)}>
+              Ver mais ({transactions.length - PREVIEW_LIMIT} restantes)
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <Dialog open={showAllDialog} onOpenChange={setShowAllDialog}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              Todas as {type === "receita" ? "Receitas" : "Despesas"} ({transactions.length})
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-hidden rounded-lg border border-border/50">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border/50 hover:bg-transparent">
+                  <TableHead className="text-muted-foreground">Descrição</TableHead>
+                  <TableHead className="text-muted-foreground">Valor</TableHead>
+                  <TableHead className="text-muted-foreground">Data</TableHead>
+                  <TableHead className="text-muted-foreground">Categoria</TableHead>
+                  <TableHead className="text-muted-foreground">Banco</TableHead>
+                  <TableHead className="text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-muted-foreground w-10"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TransactionTableRows transactions={transactions} type={type} bankAccounts={bankAccounts} onSelect={onSelect} onDelete={onDelete} onUpdateStatus={onUpdateStatus} statusStyles={statusStyles} />
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
