@@ -678,7 +678,7 @@ export default function Marketing() {
 
         {/* Campanha Detail Dialog */}
         <Dialog open={!!selectedCampanha} onOpenChange={() => setSelectedCampanha(null)}>
-          <DialogContent className="sm:max-w-[550px] bg-card border-border">
+          <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto bg-card border-border">
             <DialogHeader><DialogTitle className="text-foreground">Editar Campanha</DialogTitle></DialogHeader>
             {selectedCampanha && (
               <div className="grid gap-4 py-4">
