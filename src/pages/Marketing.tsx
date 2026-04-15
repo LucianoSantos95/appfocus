@@ -162,10 +162,6 @@ export default function Marketing() {
   const [funnelLevel, setFunnelLevel] = useState<"topo" | "meio" | "fundo">("topo");
   const [dragOverPriority, setDragOverPriority] = useState<string | null>(null);
   const [filterClienteId, setFilterClienteId] = useState<string | null>(null);
-  const [selectedConteudo, setSelectedConteudo] = useState<Conteudo | null>(null);
-  const [funnelDialogOpen, setFunnelDialogOpen] = useState(false);
-  const [funnelLevel, setFunnelLevel] = useState<"topo" | "meio" | "fundo">("topo");
-  const [dragOverPriority, setDragOverPriority] = useState<string | null>(null);
 
   // Map DB campanhas to local type
   const campanhas: Campanha[] = dbCampanhas.map(c => ({
