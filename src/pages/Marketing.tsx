@@ -186,7 +186,7 @@ export default function Marketing() {
     return campanhas.filter(c => campanhaIds.includes(c.id));
   }, [campanhas, filterClienteId, campanhaClienteLinks]);
 
-
+  const handleImportCampanhas = () => {
     refetchCampanhasDB();
     toast({ title: "Importação concluída", description: "Campanhas importadas e salvas no banco." });
   };
