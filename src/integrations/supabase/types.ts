@@ -110,6 +110,45 @@ export type Database = {
         }
         Relationships: []
       }
+      campanha_clientes: {
+        Row: {
+          campanha_id: string
+          cliente_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          campanha_id: string
+          cliente_id: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Update: {
+          campanha_id?: string
+          cliente_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanha_clientes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campanha_clientes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campanhas: {
         Row: {
           budget: number | null

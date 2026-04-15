@@ -35,6 +35,9 @@ import {
   Trash2,
   FileSpreadsheet,
   BarChart3,
+  Filter,
+  Users,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -54,6 +57,8 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useCampanhas as useCampanhasDB } from "@/hooks/useCampanhas";
+import { useClientes } from "@/hooks/useClientes";
+import { useCampanhaClientes } from "@/hooks/useCampanhaClientes";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
@@ -63,6 +68,10 @@ import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Campanha {
   id: string;
@@ -137,6 +146,8 @@ export default function Marketing() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { campanhas: dbCampanhas, isLoading, addCampanha, updateCampanha, deleteCampanha: deleteCampanhaDB, refetch: refetchCampanhasDB } = useCampanhasDB();
+  const { clientes } = useClientes();
+  const { links: campanhaClienteLinks, addLink: addCampanhaCliente, removeLink: removeCampanhaCliente, getClientesByCampanha } = useCampanhaClientes();
   const [conteudos, setConteudos] = useState<Conteudo[]>([]);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [biPanelOpen, setBiPanelOpen] = useState(false);
@@ -150,6 +161,7 @@ export default function Marketing() {
   const [funnelDialogOpen, setFunnelDialogOpen] = useState(false);
   const [funnelLevel, setFunnelLevel] = useState<"topo" | "meio" | "fundo">("topo");
   const [dragOverPriority, setDragOverPriority] = useState<string | null>(null);
+  const [filterClienteId, setFilterClienteId] = useState<string | null>(null);
 
   // Map DB campanhas to local type
   const campanhas: Campanha[] = dbCampanhas.map(c => ({
@@ -165,7 +177,16 @@ export default function Marketing() {
     responsible: c.responsible || undefined,
   }));
 
-  const handleImportCampanhas = () => {
+  // Filtered campanhas by client
+  const filteredCampanhas = useMemo(() => {
+    if (!filterClienteId) return campanhas;
+    const campanhaIds = campanhaClienteLinks
+      .filter(l => l.cliente_id === filterClienteId)
+      .map(l => l.campanha_id);
+    return campanhas.filter(c => campanhaIds.includes(c.id));
+  }, [campanhas, filterClienteId, campanhaClienteLinks]);
+
+
     refetchCampanhasDB();
     toast({ title: "Importação concluída", description: "Campanhas importadas e salvas no banco." });
   };
@@ -417,6 +438,50 @@ export default function Marketing() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Campanhas</h2>
             <div className="flex items-center gap-2">
+              {/* Client Filter */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn("gap-2", filterClienteId && "border-primary/50 bg-primary/5")}>
+                    <Filter className="w-4 h-4" />
+                    {filterClienteId ? clientes.find(c => c.id === filterClienteId)?.nome || "Filtro" : "Filtrar"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 bg-card border-border p-3" align="end">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-foreground">Filtrar por Cliente</p>
+                      {filterClienteId && (
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setFilterClienteId(null)}>
+                          <X className="w-3 h-3 mr-1" /> Limpar
+                        </Button>
+                      )}
+                    </div>
+                    <ScrollArea className="max-h-[200px]">
+                      <div className="space-y-1">
+                        {clientes.length === 0 ? (
+                          <p className="text-xs text-muted-foreground py-2 text-center">Nenhum cliente cadastrado</p>
+                        ) : clientes.map(cliente => (
+                          <button
+                            key={cliente.id}
+                            onClick={() => setFilterClienteId(filterClienteId === cliente.id ? null : cliente.id)}
+                            className={cn(
+                              "w-full text-left text-sm px-2 py-1.5 rounded-md transition-colors",
+                              filterClienteId === cliente.id
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                          >
+                            {cliente.nome}
+                            {cliente.empresa && cliente.empresa !== cliente.nome && (
+                              <span className="text-xs text-muted-foreground ml-1">· {cliente.empresa}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <PlanGateButton module="marketing" action="create">
                 <ImportDialog
                   config={importConfigs.marketing_campanhas}
@@ -446,9 +511,14 @@ export default function Marketing() {
             {["ativa", "planejada", "recusada", "finalizada"].map((status) => (
               <TabsContent key={status} value={status} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {campanhas.filter((c) => c.status === status).length === 0 ? (
-                    <p className="text-muted-foreground text-sm col-span-2 text-center py-8">Nenhuma campanha {statusCampanha[status as keyof typeof statusCampanha]?.label.toLowerCase()}</p>
-                  ) : campanhas.filter((c) => c.status === status).map((c) => (
+                  {filteredCampanhas.filter((c) => c.status === status).length === 0 ? (
+                    <p className="text-muted-foreground text-sm col-span-2 text-center py-8">
+                      {filterClienteId ? "Nenhuma campanha vinculada a este cliente" : `Nenhuma campanha ${statusCampanha[status as keyof typeof statusCampanha]?.label.toLowerCase()}`}
+                    </p>
+                  ) : filteredCampanhas.filter((c) => c.status === status).map((c) => {
+                    const linkedClientes = getClientesByCampanha(c.id);
+                    const linkedClienteNames = linkedClientes.map(cid => clientes.find(cl => cl.id === cid)?.nome).filter(Boolean);
+                    return (
                     <div key={c.id} onClick={() => setSelectedCampanha(c)} className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer">
                       <div className="flex items-start justify-between mb-3">
                         <div>
@@ -460,13 +530,24 @@ export default function Marketing() {
                       <div className="flex flex-wrap gap-1 mb-3">
                         {c.platforms.map((p) => (<span key={p} className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{p}</span>))}
                       </div>
+                      {linkedClienteNames.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {linkedClienteNames.map((name) => (
+                            <Badge key={name} variant="outline" className="text-xs bg-primary/5 border-primary/20 text-primary">
+                              <Users className="w-3 h-3 mr-1" />{name}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                       <div className="grid grid-cols-3 gap-2 text-sm">
                         <div><p className="text-muted-foreground text-xs">Orçamento</p><p className="text-foreground font-medium">R$ {c.budget.toLocaleString("pt-BR")}</p></div>
                         <div><p className="text-muted-foreground text-xs">Início</p><p className="text-foreground font-medium">{c.startDate ? new Date(c.startDate).toLocaleDateString("pt-BR") : "-"}</p></div>
                         <div><p className="text-muted-foreground text-xs">Responsável</p><p className="text-foreground font-medium">{c.responsible || "-"}</p></div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
+                
                 </div>
               </TabsContent>
             ))}
@@ -640,6 +721,37 @@ export default function Marketing() {
                 <div className="space-y-2">
                   <Label>Responsável</Label>
                   <Input value={selectedCampanha.responsible || ''} onChange={(e) => setSelectedCampanha({ ...selectedCampanha, responsible: e.target.value })} className="bg-muted border-border" />
+                </div>
+                {/* Client Selector */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1.5"><Users className="w-4 h-4" /> Clientes Vinculados</Label>
+                  <ScrollArea className="max-h-[150px] border border-border rounded-md p-2">
+                    <div className="space-y-1">
+                      {clientes.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">Nenhum cliente cadastrado</p>
+                      ) : clientes.map(cliente => {
+                        const isLinked = getClientesByCampanha(selectedCampanha.id).includes(cliente.id);
+                        return (
+                          <label key={cliente.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 cursor-pointer text-sm">
+                            <Checkbox
+                              checked={isLinked}
+                              onCheckedChange={async (checked) => {
+                                if (checked) {
+                                  await addCampanhaCliente(selectedCampanha.id, cliente.id);
+                                } else {
+                                  await removeCampanhaCliente(selectedCampanha.id, cliente.id);
+                                }
+                              }}
+                            />
+                            <span className="text-foreground">{cliente.nome}</span>
+                            {cliente.status === "ativo" && (
+                              <Badge variant="outline" className="text-[10px] ml-auto bg-success/10 text-success border-success/20">Ativo</Badge>
+                            )}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
                 </div>
               </div>
             )}
