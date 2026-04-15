@@ -438,6 +438,50 @@ export default function Marketing() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Campanhas</h2>
             <div className="flex items-center gap-2">
+              {/* Client Filter */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn("gap-2", filterClienteId && "border-primary/50 bg-primary/5")}>
+                    <Filter className="w-4 h-4" />
+                    {filterClienteId ? clientes.find(c => c.id === filterClienteId)?.nome || "Filtro" : "Filtrar"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 bg-card border-border p-3" align="end">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-foreground">Filtrar por Cliente</p>
+                      {filterClienteId && (
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setFilterClienteId(null)}>
+                          <X className="w-3 h-3 mr-1" /> Limpar
+                        </Button>
+                      )}
+                    </div>
+                    <ScrollArea className="max-h-[200px]">
+                      <div className="space-y-1">
+                        {clientes.length === 0 ? (
+                          <p className="text-xs text-muted-foreground py-2 text-center">Nenhum cliente cadastrado</p>
+                        ) : clientes.map(cliente => (
+                          <button
+                            key={cliente.id}
+                            onClick={() => setFilterClienteId(filterClienteId === cliente.id ? null : cliente.id)}
+                            className={cn(
+                              "w-full text-left text-sm px-2 py-1.5 rounded-md transition-colors",
+                              filterClienteId === cliente.id
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                          >
+                            {cliente.nome}
+                            {cliente.empresa && cliente.empresa !== cliente.nome && (
+                              <span className="text-xs text-muted-foreground ml-1">· {cliente.empresa}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <PlanGateButton module="marketing" action="create">
                 <ImportDialog
                   config={importConfigs.marketing_campanhas}
