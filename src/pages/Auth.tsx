@@ -196,7 +196,7 @@ export default function Auth() {
             ))}
           </div>
           <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">43 empresas</span> já utilizam
+            <span className="font-semibold text-foreground">+50 usuários</span> já utilizam
           </span>
         </div>
 
