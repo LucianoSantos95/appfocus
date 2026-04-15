@@ -495,7 +495,7 @@ export default function Marketing() {
                 />
               </PlanGateButton>
               <PlanGateButton module="marketing" action="create">
-                <AddCampanhaDialog onAdd={addCampanha} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
+                <AddCampanhaDialog onAdd={addCampanha} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} clientes={clientes.filter(c => c.status === "ativo")} addCampanhaCliente={addCampanhaCliente} />
               </PlanGateButton>
             </div>
           </div>
@@ -841,22 +841,28 @@ export default function Marketing() {
 
 // Sub-components
 
-function AddCampanhaDialog({ onAdd, disabled, onBlocked }: { onAdd: (input: { name: string; objective?: string; platforms?: string; budget?: number; start_date?: string; end_date?: string; status?: string; responsible?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
+function AddCampanhaDialog({ onAdd, disabled, onBlocked, clientes, addCampanhaCliente }: { onAdd: (input: { name: string; objective?: string; platforms?: string; budget?: number; start_date?: string; end_date?: string; status?: string; responsible?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void; clientes: { id: string; nome: string }[]; addCampanhaCliente: (campanhaId: string, clienteId: string) => Promise<boolean> }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", objective: "", platforms: [] as string[], budget: "", startDate: "", endDate: "", responsible: "" });
+  const [selectedClienteIds, setSelectedClienteIds] = useState<string[]>([]);
 
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen && disabled) { onBlocked?.(); return; }
     setOpen(newOpen);
+    if (!newOpen) setSelectedClienteIds([]);
   };
 
   const togglePlatform = (p: string) => {
     setForm(f => ({ ...f, platforms: f.platforms.includes(p) ? f.platforms.filter(x => x !== p) : [...f.platforms, p] }));
   };
 
+  const toggleCliente = (id: string) => {
+    setSelectedClienteIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
   const handleSubmit = async () => {
     if (!form.name) return;
-    await onAdd({
+    const result = await onAdd({
       name: form.name,
       objective: form.objective || undefined,
       platforms: form.platforms.join(', ') || undefined,
@@ -866,7 +872,14 @@ function AddCampanhaDialog({ onAdd, disabled, onBlocked }: { onAdd: (input: { na
       status: 'planejada',
       responsible: form.responsible || undefined,
     });
+    // Link selected clients to the new campaign
+    if (result && typeof result === 'object' && 'id' in result) {
+      for (const clienteId of selectedClienteIds) {
+        await addCampanhaCliente((result as { id: string }).id, clienteId);
+      }
+    }
     setForm({ name: "", objective: "", platforms: [], budget: "", startDate: "", endDate: "", responsible: "" });
+    setSelectedClienteIds([]);
     setOpen(false);
   };
 
@@ -875,7 +888,7 @@ function AddCampanhaDialog({ onAdd, disabled, onBlocked }: { onAdd: (input: { na
       <DialogTrigger asChild>
         <Button className="gap-2"><Plus className="w-4 h-4" />Nova Campanha</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] bg-card border-border">
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto bg-card border-border">
         <DialogHeader><DialogTitle className="text-foreground">Nova Campanha</DialogTitle></DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
@@ -915,6 +928,23 @@ function AddCampanhaDialog({ onAdd, disabled, onBlocked }: { onAdd: (input: { na
               <Label>Data Fim</Label>
               <Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} className="bg-muted border-border" />
             </div>
+          </div>
+          {/* Client Selector */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1.5"><Users className="w-4 h-4" /> Clientes Vinculados</Label>
+            <ScrollArea className="max-h-[200px] border border-border rounded-md p-2">
+              <div className="space-y-1">
+                {clientes.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-2">Nenhum cliente ativo cadastrado</p>
+                ) : clientes.map(cliente => (
+                  <label key={cliente.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 cursor-pointer text-sm">
+                    <Checkbox checked={selectedClienteIds.includes(cliente.id)} onCheckedChange={() => toggleCliente(cliente.id)} />
+                    <span className="text-foreground">{cliente.nome}</span>
+                    <Badge variant="outline" className="text-[10px] ml-auto bg-success/10 text-success border-success/20">Ativo</Badge>
+                  </label>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
         </div>
         <div className="flex justify-end gap-3">
