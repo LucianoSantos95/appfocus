@@ -511,9 +511,14 @@ export default function Marketing() {
             {["ativa", "planejada", "recusada", "finalizada"].map((status) => (
               <TabsContent key={status} value={status} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {campanhas.filter((c) => c.status === status).length === 0 ? (
-                    <p className="text-muted-foreground text-sm col-span-2 text-center py-8">Nenhuma campanha {statusCampanha[status as keyof typeof statusCampanha]?.label.toLowerCase()}</p>
-                  ) : campanhas.filter((c) => c.status === status).map((c) => (
+                  {filteredCampanhas.filter((c) => c.status === status).length === 0 ? (
+                    <p className="text-muted-foreground text-sm col-span-2 text-center py-8">
+                      {filterClienteId ? "Nenhuma campanha vinculada a este cliente" : `Nenhuma campanha ${statusCampanha[status as keyof typeof statusCampanha]?.label.toLowerCase()}`}
+                    </p>
+                  ) : filteredCampanhas.filter((c) => c.status === status).map((c) => {
+                    const linkedClientes = getClientesByCampanha(c.id);
+                    const linkedClienteNames = linkedClientes.map(cid => clientes.find(cl => cl.id === cid)?.nome).filter(Boolean);
+                    return (
                     <div key={c.id} onClick={() => setSelectedCampanha(c)} className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer">
                       <div className="flex items-start justify-between mb-3">
                         <div>
@@ -525,13 +530,24 @@ export default function Marketing() {
                       <div className="flex flex-wrap gap-1 mb-3">
                         {c.platforms.map((p) => (<span key={p} className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{p}</span>))}
                       </div>
+                      {linkedClienteNames.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {linkedClienteNames.map((name) => (
+                            <Badge key={name} variant="outline" className="text-xs bg-primary/5 border-primary/20 text-primary">
+                              <Users className="w-3 h-3 mr-1" />{name}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                       <div className="grid grid-cols-3 gap-2 text-sm">
                         <div><p className="text-muted-foreground text-xs">Orçamento</p><p className="text-foreground font-medium">R$ {c.budget.toLocaleString("pt-BR")}</p></div>
                         <div><p className="text-muted-foreground text-xs">Início</p><p className="text-foreground font-medium">{c.startDate ? new Date(c.startDate).toLocaleDateString("pt-BR") : "-"}</p></div>
                         <div><p className="text-muted-foreground text-xs">Responsável</p><p className="text-foreground font-medium">{c.responsible || "-"}</p></div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
+                
                 </div>
               </TabsContent>
             ))}
