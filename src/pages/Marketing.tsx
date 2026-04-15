@@ -177,7 +177,16 @@ export default function Marketing() {
     responsible: c.responsible || undefined,
   }));
 
-  const handleImportCampanhas = () => {
+  // Filtered campanhas by client
+  const filteredCampanhas = useMemo(() => {
+    if (!filterClienteId) return campanhas;
+    const campanhaIds = campanhaClienteLinks
+      .filter(l => l.cliente_id === filterClienteId)
+      .map(l => l.campanha_id);
+    return campanhas.filter(c => campanhaIds.includes(c.id));
+  }, [campanhas, filterClienteId, campanhaClienteLinks]);
+
+
     refetchCampanhasDB();
     toast({ title: "Importação concluída", description: "Campanhas importadas e salvas no banco." });
   };
