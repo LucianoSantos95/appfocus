@@ -495,7 +495,7 @@ export default function Marketing() {
                 />
               </PlanGateButton>
               <PlanGateButton module="marketing" action="create">
-                <AddCampanhaDialog onAdd={addCampanha} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
+                <AddCampanhaDialog onAdd={addCampanha} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} clientes={clientes.filter(c => c.status === "ativo")} addCampanhaCliente={addCampanhaCliente} />
               </PlanGateButton>
             </div>
           </div>
@@ -841,22 +841,28 @@ export default function Marketing() {
 
 // Sub-components
 
-function AddCampanhaDialog({ onAdd, disabled, onBlocked }: { onAdd: (input: { name: string; objective?: string; platforms?: string; budget?: number; start_date?: string; end_date?: string; status?: string; responsible?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
+function AddCampanhaDialog({ onAdd, disabled, onBlocked, clientes, addCampanhaCliente }: { onAdd: (input: { name: string; objective?: string; platforms?: string; budget?: number; start_date?: string; end_date?: string; status?: string; responsible?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void; clientes: { id: string; nome: string }[]; addCampanhaCliente: (campanhaId: string, clienteId: string) => Promise<boolean> }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", objective: "", platforms: [] as string[], budget: "", startDate: "", endDate: "", responsible: "" });
+  const [selectedClienteIds, setSelectedClienteIds] = useState<string[]>([]);
 
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen && disabled) { onBlocked?.(); return; }
     setOpen(newOpen);
+    if (!newOpen) setSelectedClienteIds([]);
   };
 
   const togglePlatform = (p: string) => {
     setForm(f => ({ ...f, platforms: f.platforms.includes(p) ? f.platforms.filter(x => x !== p) : [...f.platforms, p] }));
   };
 
+  const toggleCliente = (id: string) => {
+    setSelectedClienteIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
   const handleSubmit = async () => {
     if (!form.name) return;
-    await onAdd({
+    const result = await onAdd({
       name: form.name,
       objective: form.objective || undefined,
       platforms: form.platforms.join(', ') || undefined,
@@ -866,7 +872,14 @@ function AddCampanhaDialog({ onAdd, disabled, onBlocked }: { onAdd: (input: { na
       status: 'planejada',
       responsible: form.responsible || undefined,
     });
+    // Link selected clients to the new campaign
+    if (result && typeof result === 'object' && 'id' in result) {
+      for (const clienteId of selectedClienteIds) {
+        await addCampanhaCliente((result as { id: string }).id, clienteId);
+      }
+    }
     setForm({ name: "", objective: "", platforms: [], budget: "", startDate: "", endDate: "", responsible: "" });
+    setSelectedClienteIds([]);
     setOpen(false);
   };
 
