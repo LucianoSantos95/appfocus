@@ -146,6 +146,8 @@ export default function Marketing() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { campanhas: dbCampanhas, isLoading, addCampanha, updateCampanha, deleteCampanha: deleteCampanhaDB, refetch: refetchCampanhasDB } = useCampanhasDB();
+  const { clientes } = useClientes();
+  const { links: campanhaClienteLinks, addLink: addCampanhaCliente, removeLink: removeCampanhaCliente, getClientesByCampanha } = useCampanhaClientes();
   const [conteudos, setConteudos] = useState<Conteudo[]>([]);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [biPanelOpen, setBiPanelOpen] = useState(false);
@@ -155,6 +157,11 @@ export default function Marketing() {
   const freemium = useFreemiumLimit(dbCampanhas.length);
   const [funnelItems, setFunnelItems] = useState<FunnelItem[]>([]);
   const [selectedCampanha, setSelectedCampanha] = useState<Campanha | null>(null);
+  const [selectedConteudo, setSelectedConteudo] = useState<Conteudo | null>(null);
+  const [funnelDialogOpen, setFunnelDialogOpen] = useState(false);
+  const [funnelLevel, setFunnelLevel] = useState<"topo" | "meio" | "fundo">("topo");
+  const [dragOverPriority, setDragOverPriority] = useState<string | null>(null);
+  const [filterClienteId, setFilterClienteId] = useState<string | null>(null);
   const [selectedConteudo, setSelectedConteudo] = useState<Conteudo | null>(null);
   const [funnelDialogOpen, setFunnelDialogOpen] = useState(false);
   const [funnelLevel, setFunnelLevel] = useState<"topo" | "meio" | "fundo">("topo");
