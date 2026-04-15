@@ -888,7 +888,7 @@ function AddCampanhaDialog({ onAdd, disabled, onBlocked, clientes, addCampanhaCl
       <DialogTrigger asChild>
         <Button className="gap-2"><Plus className="w-4 h-4" />Nova Campanha</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] bg-card border-border">
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto bg-card border-border">
         <DialogHeader><DialogTitle className="text-foreground">Nova Campanha</DialogTitle></DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
