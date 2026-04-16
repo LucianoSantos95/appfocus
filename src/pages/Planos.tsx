@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,12 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
+import { Check, Sparkles, ArrowLeft, Loader2, Gift } from "lucide-react";
 import { usePlan } from "@/contexts/PlanContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { supabase } from "@/integrations/supabase/client";
 import { STRIPE_PLANS } from "@/lib/stripe-plans";
 import { toast } from "sonner";
+
+const ONBOARDING_COUPON_ID = "NpOu4Cxn";
 
 const plans = [
   {
@@ -89,8 +92,14 @@ export default function Planos() {
   const [annual, setAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { plan: currentPlan, isLoading: isPlanLoading, refreshSubscription } = usePlan();
-  const { session } = useAuth();
+  const { session: authSession } = useAuth();
+  const { session: onbSession } = useOnboardingSession();
   const navigate = useNavigate();
+
+  // Determine if user has an active coupon from onboarding
+  const hasCoupon = onbSession?.coupon_code &&
+    onbSession?.coupon_expires_at &&
+    new Date(onbSession.coupon_expires_at).getTime() > Date.now();
 
   // Check for success/cancel in URL
   const params = new URLSearchParams(window.location.search);
@@ -101,7 +110,7 @@ export default function Planos() {
   }
 
   const handleSubscribe = async (planId: "plus" | "pro" | "enterprise") => {
-    if (!session?.access_token) {
+    if (!authSession?.access_token) {
       toast.error("Faça login para assinar.");
       navigate("/auth");
       return;
@@ -112,9 +121,15 @@ export default function Planos() {
       const interval = annual ? "annual" : "monthly";
       const priceId = STRIPE_PLANS[planId][interval].priceId;
 
+      const body: any = { priceId };
+      // Auto-apply onboarding coupon
+      if (hasCoupon) {
+        body.couponId = ONBOARDING_COUPON_ID;
+      }
+
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId },
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        body,
+        headers: { Authorization: `Bearer ${authSession.access_token}` },
       });
 
       if (error || !data?.url) {
@@ -140,6 +155,17 @@ export default function Planos() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-4">Escolha o plano ideal</h1>
           <p className="text-muted-foreground text-lg mb-8">Desbloqueie todo o potencial da sua operação</p>
+
+          {/* Coupon banner */}
+          {hasCoupon && (
+            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-5 py-2.5 mb-6 animate-fade-in">
+              <Gift className="h-5 w-5 text-primary" />
+              <span className="text-sm font-semibold text-primary">
+                🎉 Cupom de 20% OFF aplicado automaticamente!
+              </span>
+            </div>
+          )}
+
           <div className="flex items-center justify-center gap-3">
             <span className={`text-sm ${!annual ? "text-foreground font-semibold" : "text-muted-foreground"}`}>Mensal</span>
             <Switch checked={annual} onCheckedChange={setAnnual} />
@@ -161,6 +187,11 @@ export default function Planos() {
               const isCurrent = currentPlan === p.id;
               const isLoading = loadingPlan === p.id;
 
+              // Calculate discounted prices
+              const displayMonthly = hasCoupon ? Math.round(p.monthlyPrice * 0.8) : p.monthlyPrice;
+              const displayAnnualTotal = hasCoupon ? Math.round(p.annualTotal * 0.8) : p.annualTotal;
+              const displayAnnualPrice = hasCoupon ? Math.round(p.annualPrice * 0.8) : p.annualPrice;
+
               return (
                 <Card
                   key={p.id}
@@ -181,18 +212,31 @@ export default function Planos() {
                     <div className="mt-4">
                       {annual ? (
                         <>
+                          {hasCoupon && (
+                            <span className="text-lg text-muted-foreground line-through mr-2">
+                              R${p.annualTotal.toLocaleString("pt-BR")}
+                            </span>
+                          )}
                           <span className="text-4xl font-bold text-foreground">
-                            R${p.annualTotal.toLocaleString("pt-BR")}
+                            R${displayAnnualTotal.toLocaleString("pt-BR")}
                           </span>
                           <span className="text-muted-foreground">/ano</span>
                           <p className="text-sm text-muted-foreground mt-1">
-                            equivale a R${p.annualPrice}/mês
+                            equivale a R${displayAnnualPrice}/mês
                           </p>
                         </>
                       ) : (
                         <>
-                          <span className="text-4xl font-bold text-foreground">R${p.monthlyPrice}</span>
+                          {hasCoupon && (
+                            <span className="text-lg text-muted-foreground line-through mr-2">
+                              R${p.monthlyPrice}
+                            </span>
+                          )}
+                          <span className="text-4xl font-bold text-foreground">R${displayMonthly}</span>
                           <span className="text-muted-foreground">/mês</span>
+                          {hasCoupon && (
+                            <p className="text-xs text-primary mt-1">Primeiro mês com 20% OFF</p>
+                          )}
                         </>
                       )}
                     </div>
@@ -216,6 +260,8 @@ export default function Planos() {
                         <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
                       ) : isCurrent ? (
                         "Plano Atual"
+                      ) : hasCoupon ? (
+                        <><Gift className="w-4 h-4 mr-1" /> Assinar com 20% OFF</>
                       ) : (
                         "Assinar"
                       )}

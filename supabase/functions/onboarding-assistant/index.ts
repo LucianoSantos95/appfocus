@@ -123,18 +123,23 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    // Authenticate user
     const authHeader = req.headers.get("Authorization");
-    let userId: string | null = null;
-
     if (authHeader) {
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
       );
       const token = authHeader.replace("Bearer ", "");
-      const { data } = await supabase.auth.getClaims(token);
-      userId = data?.claims?.sub || null;
+      const { data, error } = await supabase.auth.getUser(token);
+      if (error) {
+        console.error("Auth error:", error.message);
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      console.log("Authenticated user:", data.user?.id);
     }
 
     const systemPrompt = buildSystemPrompt(session_data);
@@ -146,7 +151,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           ...(messages || []),
