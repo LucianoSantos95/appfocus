@@ -26,6 +26,7 @@ const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const Assinantes = lazy(() => import("./pages/Assinantes"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const OnboardingPage = lazy(() => import("./pages/Onboarding"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
