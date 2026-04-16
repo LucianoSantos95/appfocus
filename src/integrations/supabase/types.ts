@@ -610,6 +610,57 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_sessions: {
+        Row: {
+          achievements: Json
+          completed_at: string | null
+          completed_modules: Json
+          coupon_code: string | null
+          coupon_expires_at: string | null
+          coupon_shown: boolean
+          created_at: string
+          current_step: string
+          id: string
+          priority_pain: string | null
+          segment: string | null
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achievements?: Json
+          completed_at?: string | null
+          completed_modules?: Json
+          coupon_code?: string | null
+          coupon_expires_at?: string | null
+          coupon_shown?: boolean
+          created_at?: string
+          current_step?: string
+          id?: string
+          priority_pain?: string | null
+          segment?: string | null
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achievements?: Json
+          completed_at?: string | null
+          completed_modules?: Json
+          coupon_code?: string | null
+          coupon_expires_at?: string | null
+          coupon_shown?: boolean
+          created_at?: string
+          current_step?: string
+          id?: string
+          priority_pain?: string | null
+          segment?: string | null
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plan_features: {
         Row: {
           action: string
