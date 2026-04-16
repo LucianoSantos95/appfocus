@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sparkles, CheckCircle2, ShieldCheck, Zap, Eye, Bot, Mic, Globe } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 const UPDATE_KEY = "focus_update_dismissed";
 const UPDATE_VERSION = "2026-04-14";
