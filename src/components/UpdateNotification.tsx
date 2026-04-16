@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sparkles, CheckCircle2, ShieldCheck, Zap, Eye, Bot, Mic, Globe } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 const UPDATE_KEY = "focus_update_dismissed";
 const UPDATE_VERSION = "2026-04-14";
@@ -51,10 +52,13 @@ const updates = [
 export function UpdateNotification() {
   const [open, setOpen] = useState(false);
   const { user, isLoading } = useAuth();
+  const { isOnboardingComplete, loading: onbLoading, session } = useOnboardingSession();
 
   useEffect(() => {
-    // Only show for authenticated users
-    if (isLoading || !user) return;
+    if (isLoading || onbLoading || !user) return;
+    // Hide for users who haven't completed onboarding yet
+    if (!isOnboardingComplete && session) return;
+    if (!session) return; // new user, no session yet
 
     try {
       const stored = localStorage.getItem(UPDATE_KEY);
