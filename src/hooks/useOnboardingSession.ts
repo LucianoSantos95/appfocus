@@ -39,7 +39,7 @@ export function useOnboardingSession() {
 
   const createSession = useCallback(async (segment: string, priorityPain: string) => {
     if (!user) return null;
-    const { data } = await supabase
+    const { data } = await (supabase
       .from("onboarding_sessions" as any)
       .insert({
         user_id: user.id,
@@ -48,9 +48,9 @@ export function useOnboardingSession() {
         current_step: "module_1",
       } as any)
       .select()
-      .single();
-    if (data) setSession(data as any);
-    return data as OnboardingSession | null;
+      .single() as any);
+    if (data) setSession(data as OnboardingSession);
+    return (data as OnboardingSession) || null;
   }, [user]);
 
   const updateSession = useCallback(async (updates: Partial<OnboardingSession>) => {
