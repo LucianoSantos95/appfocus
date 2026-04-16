@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/contexts/AuthContext";
 import type { OnboardingSession } from "@/hooks/useOnboardingSession";
 
 interface Message {
@@ -17,9 +18,8 @@ interface Props {
   onAchievement: (ach: string) => void;
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/onboarding-assistant`;
-
 export function OnboardingChat({ session, onModuleComplete, onAchievement }: Props) {
+  const { session: authSession } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -35,13 +35,19 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement }: Pro
   const streamChat = useCallback(async (msgs: Message[]) => {
     setIsLoading(true);
     let assistantSoFar = "";
+    // Accumulate tool call arguments across chunks
+    const toolCallAccumulator: Record<number, { name: string; arguments: string }> = {};
 
     try {
-      const resp = await fetch(CHAT_URL, {
+      const token = authSession?.access_token;
+      const chatUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/onboarding-assistant`;
+      
+      const resp = await fetch(chatUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({ messages: msgs, session_data: session }),
       });
@@ -72,6 +78,7 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement }: Pro
           try {
             const parsed = JSON.parse(jsonStr);
             const delta = parsed.choices?.[0]?.delta;
+            const finishReason = parsed.choices?.[0]?.finish_reason;
 
             // Handle text content
             if (delta?.content) {
@@ -86,27 +93,40 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement }: Pro
               scrollToBottom();
             }
 
-            // Handle tool calls
+            // Accumulate tool call chunks
             if (delta?.tool_calls) {
               for (const tc of delta.tool_calls) {
-                if (tc.function?.name === "complete_module") {
-                  try {
-                    const args = JSON.parse(tc.function.arguments);
-                    onModuleComplete(args.module);
-                  } catch {}
+                const idx = tc.index ?? 0;
+                if (!toolCallAccumulator[idx]) {
+                  toolCallAccumulator[idx] = { name: "", arguments: "" };
                 }
-                if (tc.function?.name === "show_insight") {
-                  // Insight is shown inline in the chat
+                if (tc.function?.name) {
+                  toolCallAccumulator[idx].name = tc.function.name;
+                }
+                if (tc.function?.arguments) {
+                  toolCallAccumulator[idx].arguments += tc.function.arguments;
                 }
               }
             }
 
-            // Handle finished tool calls in the message
-            const finishReason = parsed.choices?.[0]?.finish_reason;
-            if (finishReason === "tool_calls") {
-              // Process any accumulated tool calls
+            // Process tool calls when finish_reason indicates they're complete
+            if (finishReason === "tool_calls" || finishReason === "stop") {
+              for (const [, tc] of Object.entries(toolCallAccumulator)) {
+                if (tc.name === "complete_module" && tc.arguments) {
+                  try {
+                    const args = JSON.parse(tc.arguments);
+                    if (args.module) onModuleComplete(args.module);
+                  } catch (e) {
+                    console.warn("Failed to parse complete_module args:", tc.arguments);
+                  }
+                }
+                // show_insight is rendered inline by the AI text
+              }
+              // Clear accumulator after processing
+              Object.keys(toolCallAccumulator).forEach(k => delete toolCallAccumulator[Number(k)]);
             }
           } catch {
+            // Partial JSON - put back in buffer
             buffer = line + "\n" + buffer;
             break;
           }
@@ -122,7 +142,7 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement }: Pro
 
     setIsLoading(false);
     scrollToBottom();
-  }, [session, onModuleComplete]);
+  }, [session, onModuleComplete, authSession]);
 
   // Auto-start conversation
   useEffect(() => {
