@@ -52,6 +52,7 @@ const updates = [
 export function UpdateNotification() {
   const [open, setOpen] = useState(false);
   const { user, isLoading } = useAuth();
+  const { isOnboardingComplete, loading: onbLoading, session } = useOnboardingSession();
 
   useEffect(() => {
     // Only show for authenticated users
