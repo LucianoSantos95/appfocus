@@ -55,8 +55,10 @@ export function UpdateNotification() {
   const { isOnboardingComplete, loading: onbLoading, session } = useOnboardingSession();
 
   useEffect(() => {
-    // Only show for authenticated users
-    if (isLoading || !user) return;
+    if (isLoading || onbLoading || !user) return;
+    // Hide for users who haven't completed onboarding yet
+    if (!isOnboardingComplete && session) return;
+    if (!session) return; // new user, no session yet
 
     try {
       const stored = localStorage.getItem(UPDATE_KEY);
