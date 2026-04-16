@@ -46,7 +46,7 @@ export function OnboardingPrompt() {
               </p>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => { dismiss(); navigate("/guia"); }}>
+              <Button size="sm" onClick={() => { dismiss(); navigate("/onboarding"); }}>
                 Sim, me ajude
               </Button>
               <Button size="sm" variant="ghost" onClick={dismiss}>
