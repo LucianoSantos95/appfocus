@@ -1,0 +1,387 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { jsPDF } from "https://esm.sh/jspdf@2.5.1";
+import autoTable from "https://esm.sh/jspdf-autotable@3.8.2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+interface ReportSection {
+  title: string;
+  kpis?: { label: string; value: string }[];
+  rows?: { columns: string[]; data: string[][] };
+  notes?: string;
+}
+
+interface ReportPayload {
+  modulo: string;
+  secao: string;
+  titulo: string;
+  subtitulo?: string;
+  periodo?: string;
+  sections: ReportSection[];
+  formato: "pdf" | "html" | "texto";
+  canal: "email" | "whatsapp";
+  destinatario: string;
+  destinatario_nome?: string;
+  empresa?: string;
+}
+
+function generatePDF(payload: ReportPayload): Uint8Array {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  let y = 20;
+
+  // Header
+  doc.setFillColor(15, 23, 42);
+  doc.rect(0, 0, pageWidth, 30, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text(payload.titulo, 14, 18);
+  if (payload.subtitulo) {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(payload.subtitulo, 14, 25);
+  }
+  y = 40;
+
+  doc.setTextColor(30, 30, 30);
+  if (payload.periodo) {
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "italic");
+    doc.text(`Período: ${payload.periodo}`, 14, y);
+    y += 8;
+  }
+  if (payload.empresa) {
+    doc.setFontSize(10);
+    doc.text(`Empresa: ${payload.empresa}`, 14, y);
+    y += 8;
+  }
+  y += 4;
+
+  for (const section of payload.sections) {
+    if (y > 260) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(37, 99, 235);
+    doc.text(section.title, 14, y);
+    y += 7;
+    doc.setTextColor(30, 30, 30);
+
+    if (section.kpis && section.kpis.length) {
+      const cols = 2;
+      const colWidth = (pageWidth - 28) / cols;
+      section.kpis.forEach((kpi, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = 14 + col * colWidth;
+        const ky = y + row * 18;
+        doc.setDrawColor(200, 200, 200);
+        doc.setFillColor(245, 247, 250);
+        doc.roundedRect(x, ky, colWidth - 4, 14, 2, 2, "FD");
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 100, 100);
+        doc.text(kpi.label, x + 3, ky + 5);
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(15, 23, 42);
+        doc.text(kpi.value, x + 3, ky + 11);
+      });
+      y += Math.ceil(section.kpis.length / cols) * 18 + 4;
+    }
+
+    if (section.rows && section.rows.data.length) {
+      autoTable(doc, {
+        head: [section.rows.columns],
+        body: section.rows.data,
+        startY: y,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [37, 99, 235] },
+        margin: { left: 14, right: 14 },
+      });
+      // @ts-ignore
+      y = (doc as any).lastAutoTable.finalY + 8;
+    }
+
+    if (section.notes) {
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(80, 80, 80);
+      const lines = doc.splitTextToSize(section.notes, pageWidth - 28);
+      doc.text(lines, 14, y);
+      y += lines.length * 5 + 4;
+    }
+    y += 4;
+  }
+
+  // Footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Hub Empresarial • Gerado em ${new Date().toLocaleDateString("pt-BR")} • Página ${i}/${pageCount}`,
+      pageWidth / 2,
+      290,
+      { align: "center" },
+    );
+  }
+
+  return new Uint8Array(doc.output("arraybuffer"));
+}
+
+function generateHTMLSummary(payload: ReportPayload): string {
+  const kpisHtml = payload.sections
+    .map((s) => {
+      const kpis = (s.kpis || [])
+        .map(
+          (k) => `
+          <td style="padding:12px;background:#f8fafc;border-radius:8px;width:50%;">
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">${k.label}</div>
+            <div style="font-size:18px;font-weight:bold;color:#0f172a;margin-top:4px;">${k.value}</div>
+          </td>`,
+        )
+        .join("");
+      const rows = (s.rows?.data || [])
+        .slice(0, 10)
+        .map(
+          (r) => `<tr>${r.map((c) => `<td style="padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px;">${c}</td>`).join("")}</tr>`,
+        )
+        .join("");
+      const tableHead = s.rows
+        ? `<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr style="background:#2563eb;color:white;">${s.rows.columns
+            .map((c) => `<th style="padding:8px;text-align:left;font-size:12px;">${c}</th>`)
+            .join("")}</tr></thead><tbody>${rows}</tbody></table>`
+        : "";
+      return `
+        <div style="margin-bottom:24px;">
+          <h2 style="font-size:16px;color:#2563eb;margin:0 0 12px 0;border-bottom:2px solid #e2e8f0;padding-bottom:6px;">${s.title}</h2>
+          ${kpis ? `<table style="width:100%;border-spacing:8px;border-collapse:separate;"><tr>${kpis}</tr></table>` : ""}
+          ${tableHead}
+          ${s.notes ? `<p style="font-size:13px;color:#64748b;font-style:italic;margin-top:8px;">${s.notes}</p>` : ""}
+        </div>`;
+    })
+    .join("");
+
+  return `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,Segoe UI,sans-serif;">
+  <div style="max-width:640px;margin:0 auto;background:white;padding:32px;">
+    <div style="background:#0f172a;color:white;padding:24px;border-radius:8px;margin-bottom:24px;">
+      <h1 style="margin:0;font-size:22px;">${payload.titulo}</h1>
+      ${payload.subtitulo ? `<p style="margin:4px 0 0 0;opacity:0.8;font-size:14px;">${payload.subtitulo}</p>` : ""}
+      ${payload.periodo ? `<p style="margin:8px 0 0 0;font-size:13px;opacity:0.7;">📅 ${payload.periodo}</p>` : ""}
+    </div>
+    ${payload.destinatario_nome ? `<p style="font-size:14px;color:#334155;">Olá <strong>${payload.destinatario_nome}</strong>,</p>` : ""}
+    <p style="font-size:14px;color:#334155;">Segue o resumo executivo solicitado:</p>
+    ${kpisHtml}
+    <div style="border-top:1px solid #e2e8f0;margin-top:32px;padding-top:16px;font-size:12px;color:#94a3b8;text-align:center;">
+      Hub Empresarial • Relatório gerado automaticamente
+    </div>
+  </div>
+</body></html>`;
+}
+
+function generateTextSummary(payload: ReportPayload): string {
+  let text = `*${payload.titulo}*\n`;
+  if (payload.subtitulo) text += `_${payload.subtitulo}_\n`;
+  if (payload.periodo) text += `📅 ${payload.periodo}\n`;
+  text += `\n`;
+  for (const s of payload.sections) {
+    text += `*${s.title}*\n`;
+    for (const k of s.kpis || []) text += `• ${k.label}: ${k.value}\n`;
+    if (s.notes) text += `_${s.notes}_\n`;
+    text += `\n`;
+  }
+  text += `\n_Hub Empresarial — ${new Date().toLocaleDateString("pt-BR")}_`;
+  return text;
+}
+
+async function uploadPdfToStorage(
+  supabase: any,
+  userId: string,
+  pdfBytes: Uint8Array,
+  filename: string,
+): Promise<string> {
+  const path = `${userId}/${Date.now()}-${filename}`;
+  const { error } = await supabase.storage
+    .from("relatorios-pdf")
+    .upload(path, pdfBytes, { contentType: "application/pdf", upsert: false });
+  if (error) throw new Error(`Storage upload failed: ${error.message}`);
+  const { data } = supabase.storage.from("relatorios-pdf").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  pdfBytes?: Uint8Array,
+  pdfName?: string,
+) {
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
+
+  const body: any = {
+    from: "Hub Empresarial <onboarding@resend.dev>",
+    to: [to],
+    subject,
+    html,
+  };
+  if (pdfBytes && pdfName) {
+    body.attachments = [
+      { filename: pdfName, content: btoa(String.fromCharCode(...pdfBytes)) },
+    ];
+  }
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Resend error: ${err}`);
+  }
+  return await res.json();
+}
+
+async function sendWhatsApp(to: string, message: string) {
+  const sid = Deno.env.get("TWILIO_ACCOUNT_SID");
+  const token = Deno.env.get("TWILIO_AUTH_TOKEN");
+  const from = Deno.env.get("TWILIO_WHATSAPP_NUMBER");
+  if (!sid || !token || !from) throw new Error("Twilio not configured");
+
+  const cleanNumber = to.replace(/\D/g, "");
+  const whatsappTo = `whatsapp:+${cleanNumber}`;
+  const whatsappFrom = `whatsapp:${from.startsWith("+") ? from : "+" + from}`;
+
+  const res = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${btoa(`${sid}:${token}`)}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ To: whatsappTo, From: whatsappFrom, Body: message }),
+    },
+  );
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Twilio error: ${err}`);
+  }
+  return await res.json();
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const payload = (await req.json()) as ReportPayload;
+    if (!payload.canal || !payload.destinatario || !payload.formato) {
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let result: any = {};
+    let pdfUrl: string | null = null;
+
+    if (payload.canal === "email") {
+      const subject = `${payload.titulo}${payload.periodo ? ` — ${payload.periodo}` : ""}`;
+      if (payload.formato === "pdf") {
+        const pdfBytes = generatePDF(payload);
+        const html = generateHTMLSummary(payload);
+        result = await sendEmail(
+          payload.destinatario,
+          subject,
+          html,
+          pdfBytes,
+          `${payload.secao.replace(/\s+/g, "-")}.pdf`,
+        );
+      } else {
+        const html = generateHTMLSummary(payload);
+        result = await sendEmail(payload.destinatario, subject, html);
+      }
+    } else if (payload.canal === "whatsapp") {
+      if (payload.formato === "pdf") {
+        const pdfBytes = generatePDF(payload);
+        pdfUrl = await uploadPdfToStorage(
+          adminClient,
+          user.id,
+          pdfBytes,
+          `${payload.secao.replace(/\s+/g, "-")}.pdf`,
+        );
+        const msg = `📊 *${payload.titulo}*\n${payload.periodo ? `📅 ${payload.periodo}\n` : ""}\n📎 Baixe o PDF completo: ${pdfUrl}\n\n_Hub Empresarial_`;
+        result = await sendWhatsApp(payload.destinatario, msg);
+      } else {
+        const text = generateTextSummary(payload);
+        result = await sendWhatsApp(payload.destinatario, text);
+      }
+    }
+
+    // Audit log
+    await adminClient.from("relatorios_enviados").insert({
+      user_id: user.id,
+      modulo: payload.modulo,
+      secao: payload.secao,
+      formato: payload.formato,
+      canal: payload.canal,
+      destinatario: payload.destinatario,
+      destinatario_nome: payload.destinatario_nome,
+      status: "enviado",
+      pdf_url: pdfUrl,
+      metadata: { provider_response: result },
+    });
+
+    return new Response(
+      JSON.stringify({ success: true, pdf_url: pdfUrl }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  } catch (error: any) {
+    console.error("send-bi-report error:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+});
