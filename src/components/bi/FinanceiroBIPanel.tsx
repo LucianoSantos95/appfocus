@@ -17,7 +17,7 @@ import {
   Legend,
 } from "recharts";
 import { useMemo, useState } from "react";
-import { TrendingUp, TrendingDown, Percent, ChevronLeft, ChevronRight, AlertTriangle, Receipt } from "lucide-react";
+import { TrendingUp, TrendingDown, Percent, ChevronLeft, ChevronRight, AlertTriangle, Receipt, Wallet, CheckCircle2, Clock, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Transacao {
