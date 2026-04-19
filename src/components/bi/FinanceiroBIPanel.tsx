@@ -26,6 +26,7 @@ interface Transacao {
   value: number;
   status: string;
   category?: string | null;
+  description?: string | null;
 }
 
 interface FinanceiroBIPanelProps {
