@@ -19,6 +19,11 @@ import {
 import { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Percent, ChevronLeft, ChevronRight, AlertTriangle, Receipt, Wallet, CheckCircle2, Clock, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SendReportButton } from "@/components/relatorios/SendReportButton";
+import {
+  buildMonthDetailPayload, buildAnnualOverviewPayload, buildDREPayload,
+  buildTopCategoriasPayload, buildInadimplenciaPayload, buildFluxoCaixaPayload, buildCompletePayload,
+} from "@/components/relatorios/financeiroPayloads";
 
 interface Transacao {
   date: string | null;
