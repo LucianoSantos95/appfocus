@@ -508,6 +508,20 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
             </div>
           </div>
         </div>
+
+        {/* Rodapé: Relatório Completo */}
+        <div className="mt-6 pt-5 border-t border-border flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h4 className="font-semibold text-foreground">Relatório Completo</h4>
+            <p className="text-xs text-muted-foreground">Envie todos os indicadores consolidados em um único PDF.</p>
+          </div>
+          <SendReportButton
+            payload={buildCompletePayload(selectedYear, totals, monthlyData, dre, topCategorias, inadimplencia, monthDetail, monthLabel)}
+            label="Enviar Relatório Completo"
+            variant="default"
+            size="default"
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
