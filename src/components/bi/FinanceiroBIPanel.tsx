@@ -19,6 +19,11 @@ import {
 import { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Percent, ChevronLeft, ChevronRight, AlertTriangle, Receipt, Wallet, CheckCircle2, Clock, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SendReportButton } from "@/components/relatorios/SendReportButton";
+import {
+  buildMonthDetailPayload, buildAnnualOverviewPayload, buildDREPayload,
+  buildTopCategoriasPayload, buildInadimplenciaPayload, buildFluxoCaixaPayload, buildCompletePayload,
+} from "@/components/relatorios/financeiroPayloads";
 
 interface Transacao {
   date: string | null;
@@ -260,6 +265,7 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleNextMonth}>
                 <ChevronRight className="w-4 h-4" />
               </Button>
+              <SendReportButton payload={buildMonthDetailPayload(monthLabel, selectedYear, monthDetail)} />
             </div>
           </div>
 
@@ -362,7 +368,10 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
 
         {/* Lucratividade */}
         <div className="rounded-xl border border-border p-5 mb-6">
-          <h4 className="font-semibold text-foreground mb-4">Margem de Lucro Mensal (%)</h4>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-semibold text-foreground">Margem de Lucro Mensal (%)</h4>
+            <SendReportButton payload={buildAnnualOverviewPayload(selectedYear, totals, monthlyData)} label="Enviar visão anual" />
+          </div>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={monthlyData}>
               <defs>
@@ -382,8 +391,13 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
 
         {/* Fluxo de Caixa Futuro */}
         <div className="rounded-xl border border-border p-5 mb-6">
-          <h4 className="font-semibold text-foreground mb-1">Fluxo de Caixa — Projeção</h4>
-          <p className="text-xs text-muted-foreground mb-4">Ano {selectedYear} + 3 meses projetados (linha pontilhada)</p>
+          <div className="flex items-start justify-between mb-1 gap-3">
+            <div>
+              <h4 className="font-semibold text-foreground mb-1">Fluxo de Caixa — Projeção</h4>
+              <p className="text-xs text-muted-foreground mb-4">Ano {selectedYear} + 3 meses projetados (linha pontilhada)</p>
+            </div>
+            <SendReportButton payload={buildFluxoCaixaPayload(selectedYear, monthlyData)} />
+          </div>
           <ResponsiveContainer width="100%" height={240}>
             <AreaChart data={projection}>
               <defs>
@@ -427,7 +441,10 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
 
         {/* DRE Simplificado */}
         <div className="rounded-xl border border-border p-5 mb-6">
-          <h4 className="font-semibold text-foreground mb-4">DRE Simplificado ({selectedYear})</h4>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-semibold text-foreground">DRE Simplificado ({selectedYear})</h4>
+            <SendReportButton payload={buildDREPayload(selectedYear, dre, topCategorias)} />
+          </div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between py-1.5 border-b border-border/50">
               <span className="text-foreground font-medium">Receita Bruta</span>
@@ -453,7 +470,10 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
         {/* Top 5 Categorias + Inadimplência side by side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="rounded-xl border border-border p-5">
-            <h4 className="font-semibold text-foreground mb-4">Top 5 Categorias de Despesa</h4>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-semibold text-foreground">Top 5 Categorias de Despesa</h4>
+              <SendReportButton payload={buildTopCategoriasPayload(selectedYear, topCategorias)} />
+            </div>
             {topCategorias.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={topCategorias} layout="vertical">
@@ -470,9 +490,12 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
           </div>
 
           <div className="rounded-xl border border-border p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle className="w-5 h-5 text-warning" />
-              <h4 className="font-semibold text-foreground">Inadimplência</h4>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-warning" />
+                <h4 className="font-semibold text-foreground">Inadimplência</h4>
+              </div>
+              <SendReportButton payload={buildInadimplenciaPayload(selectedYear, inadimplencia, totals.rec)} />
             </div>
             <div className="space-y-4">
               <div className="text-center py-4">
@@ -484,6 +507,20 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Rodapé: Relatório Completo */}
+        <div className="mt-6 pt-5 border-t border-border flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h4 className="font-semibold text-foreground">Relatório Completo</h4>
+            <p className="text-xs text-muted-foreground">Envie todos os indicadores consolidados em um único PDF.</p>
+          </div>
+          <SendReportButton
+            payload={buildCompletePayload(selectedYear, totals, monthlyData, dre, topCategorias, inadimplencia, monthDetail, monthLabel)}
+            label="Enviar Relatório Completo"
+            variant="default"
+            size="default"
+          />
         </div>
       </DialogContent>
     </Dialog>

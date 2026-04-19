@@ -25,3 +25,5 @@ project_id = "hnextembswhejumvxbzd"
     verify_jwt = false
   [functions.google-integration]
     verify_jwt = false
+  [functions.send-bi-report]
+    verify_jwt = false
