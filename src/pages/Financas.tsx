@@ -142,6 +142,11 @@ export default function Financas() {
   const { transacoes, isLoading: isLoadingTransacoes, addTransacao, updateTransacao, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
   const { contas: bankAccounts, addConta, updateConta, updateBalance, deleteConta } = useContasBancarias();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterBank, setFilterBank] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterDateFrom, setFilterDateFrom] = useState<string>("");
+  const [filterDateTo, setFilterDateTo] = useState<string>("");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [biPanelOpen, setBiPanelOpen] = useState(false);
   const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
