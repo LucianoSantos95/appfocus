@@ -129,6 +129,63 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
     return { total: totalAtrasado, pct, count: atrasadas.length };
   }, [transacoes, totals.rec]);
 
+  // Detalhamento do mês selecionado
+  const monthDetail = useMemo(() => {
+    const monthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
+    const monthStart = `${monthKey}-01`;
+
+    // Saldo Inicial: receitas pagas − despesas pagas de TODOS os meses anteriores ao mês selecionado
+    const saldoInicial = transacoes
+      .filter(t => t.status === "pago" && t.date && t.date < monthStart)
+      .reduce((s, t) => s + (t.type === "receita" ? Number(t.value) : -Number(t.value)), 0);
+
+    const monthTxns = transacoes.filter(t => t.date?.startsWith(monthKey));
+
+    const recPagas = monthTxns.filter(t => t.type === "receita" && t.status === "pago").reduce((s, t) => s + Number(t.value), 0);
+    const despPagas = monthTxns.filter(t => t.type === "despesa" && t.status === "pago").reduce((s, t) => s + Number(t.value), 0);
+    const liquidoMes = recPagas - despPagas;
+    const saldoAtual = saldoInicial + liquidoMes;
+
+    const recPendentes = monthTxns.filter(t => t.type === "receita" && t.status === "pendente").reduce((s, t) => s + Number(t.value), 0);
+    const despPendentes = monthTxns.filter(t => t.type === "despesa" && t.status === "pendente").reduce((s, t) => s + Number(t.value), 0);
+
+    const pendentes = monthTxns
+      .filter(t => t.status === "pendente")
+      .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+    return {
+      saldoInicial,
+      recPagas,
+      despPagas,
+      liquidoMes,
+      saldoAtual,
+      recPendentes,
+      despPendentes,
+      saldoPendente: recPendentes - despPendentes,
+      pendentes,
+    };
+  }, [transacoes, selectedYear, selectedMonth]);
+
+  const monthLabel = `${monthLabels[selectedMonth]} ${selectedYear}`;
+  const fmt = (v: number) => `R$ ${Math.abs(v).toLocaleString("pt-BR", { minimumFractionDigits: 0 })}`;
+
+  const handlePrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(y => y - 1);
+    } else {
+      setSelectedMonth(m => m - 1);
+    }
+  };
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(y => y + 1);
+    } else {
+      setSelectedMonth(m => m + 1);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
