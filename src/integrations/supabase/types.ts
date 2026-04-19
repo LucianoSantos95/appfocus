@@ -832,6 +832,93 @@ export type Database = {
         }
         Relationships: []
       }
+      relatorio_contatos: {
+        Row: {
+          canais_preferidos: string[] | null
+          cargo: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          canais_preferidos?: string[] | null
+          cargo?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          canais_preferidos?: string[] | null
+          cargo?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      relatorios_enviados: {
+        Row: {
+          canal: string
+          created_at: string
+          destinatario: string
+          destinatario_nome: string | null
+          error_message: string | null
+          formato: string
+          id: string
+          metadata: Json | null
+          modulo: string
+          pdf_url: string | null
+          secao: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          canal: string
+          created_at?: string
+          destinatario: string
+          destinatario_nome?: string | null
+          error_message?: string | null
+          formato: string
+          id?: string
+          metadata?: Json | null
+          modulo: string
+          pdf_url?: string | null
+          secao: string
+          status?: string
+          user_id?: string
+        }
+        Update: {
+          canal?: string
+          created_at?: string
+          destinatario?: string
+          destinatario_nome?: string | null
+          error_message?: string | null
+          formato?: string
+          id?: string
+          metadata?: Json | null
+          modulo?: string
+          pdf_url?: string | null
+          secao?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriber_extras: {
         Row: {
           canal_aquisicao: string | null
