@@ -244,6 +244,121 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
           </div>
         </div>
 
+        {/* Detalhamento do Mês */}
+        <div className="rounded-xl border border-border p-5 mb-6">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              <h4 className="font-semibold text-foreground">Detalhamento do Mês</h4>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrevMonth}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm font-semibold min-w-[110px] text-center capitalize">{monthLabel}</span>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleNextMonth}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            {/* Saldo Inicial */}
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Wallet className="w-4 h-4 text-primary" />
+                <p className="text-xs text-muted-foreground font-medium">Saldo Inicial</p>
+              </div>
+              <p className={`text-xl font-bold ${monthDetail.saldoInicial >= 0 ? "text-primary" : "text-destructive"}`}>
+                {monthDetail.saldoInicial < 0 ? "− " : ""}{fmt(monthDetail.saldoInicial)}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1">acumulado anterior</p>
+            </div>
+
+            {/* Realizados */}
+            <div className="rounded-xl border border-success/20 bg-success/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle2 className="w-4 h-4 text-success" />
+                <p className="text-xs text-muted-foreground font-medium">Realizados</p>
+              </div>
+              <div className="space-y-0.5 text-sm">
+                <p className="text-success">+ {fmt(monthDetail.recPagas)}</p>
+                <p className="text-destructive">− {fmt(monthDetail.despPagas)}</p>
+                <div className="border-t border-border/50 pt-1 mt-1">
+                  <p className={`font-bold ${monthDetail.liquidoMes >= 0 ? "text-success" : "text-destructive"}`}>
+                    {monthDetail.liquidoMes < 0 ? "− " : ""}{fmt(monthDetail.liquidoMes)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Saldo Atual */}
+            <div className="rounded-xl border border-success/30 bg-gradient-to-br from-success/10 to-success/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 text-success" />
+                <p className="text-xs text-muted-foreground font-medium">Saldo Atual</p>
+              </div>
+              <p className={`text-2xl font-bold ${monthDetail.saldoAtual >= 0 ? "text-success" : "text-destructive"}`}>
+                {monthDetail.saldoAtual < 0 ? "− " : ""}{fmt(monthDetail.saldoAtual)}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1">inicial + líquido</p>
+            </div>
+
+            {/* A Efetuar */}
+            <div className="rounded-xl border border-warning/20 bg-warning/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-4 h-4 text-warning" />
+                <p className="text-xs text-muted-foreground font-medium">A Efetuar</p>
+              </div>
+              <div className="space-y-0.5 text-sm">
+                <p className="text-success">+ {fmt(monthDetail.recPendentes)}</p>
+                <p className="text-warning">− {fmt(monthDetail.despPendentes)}</p>
+                <div className="border-t border-border/50 pt-1 mt-1">
+                  <p className={`font-bold ${monthDetail.saldoPendente >= 0 ? "text-warning" : "text-destructive"}`}>
+                    {monthDetail.saldoPendente < 0 ? "− " : ""}{fmt(monthDetail.saldoPendente)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mini-tabela de pendências */}
+          {monthDetail.pendentes.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">
+                Pagamentos pendentes ({monthDetail.pendentes.length})
+              </p>
+              <div className="rounded-lg border border-border/60 overflow-hidden">
+                {monthDetail.pendentes.slice(0, 5).map((t, i) => {
+                  const tt = t as Transacao & { description?: string };
+                  return (
+                    <div
+                      key={i}
+                      className={`flex items-center justify-between px-3 py-2 text-xs ${i % 2 === 0 ? "bg-muted/20" : ""}`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <span className="text-muted-foreground tabular-nums w-14 shrink-0">
+                          {t.date ? t.date.substring(8, 10) + "/" + t.date.substring(5, 7) : "—"}
+                        </span>
+                        <span className="text-foreground truncate">{tt.description || "(sem descrição)"}</span>
+                        <span className="text-muted-foreground capitalize hidden sm:inline">{t.type}</span>
+                      </div>
+                      <span className={`font-semibold tabular-nums ${t.type === "receita" ? "text-success" : "text-warning"}`}>
+                        {t.type === "receita" ? "+" : "−"} {fmt(Number(t.value))}
+                      </span>
+                    </div>
+                  );
+                })}
+                {monthDetail.pendentes.length > 5 && (
+                  <div className="px-3 py-2 text-xs text-center text-muted-foreground bg-muted/10">
+                    + {monthDetail.pendentes.length - 5} pendência{monthDetail.pendentes.length - 5 > 1 ? "s" : ""}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Lucratividade */}
         <div className="rounded-xl border border-border p-5 mb-6">
           <h4 className="font-semibold text-foreground mb-4">Margem de Lucro Mensal (%)</h4>
