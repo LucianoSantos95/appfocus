@@ -17,7 +17,7 @@ import {
   Legend,
 } from "recharts";
 import { useMemo, useState } from "react";
-import { TrendingUp, TrendingDown, Percent, ChevronLeft, ChevronRight, AlertTriangle, Receipt } from "lucide-react";
+import { TrendingUp, TrendingDown, Percent, ChevronLeft, ChevronRight, AlertTriangle, Receipt, Wallet, CheckCircle2, Clock, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Transacao {
@@ -26,6 +26,7 @@ interface Transacao {
   value: number;
   status: string;
   category?: string | null;
+  description?: string | null;
 }
 
 interface FinanceiroBIPanelProps {
@@ -46,6 +47,7 @@ const monthLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Se
 
 export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: FinanceiroBIPanelProps) {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()); // 0-11
 
   const monthlyData = useMemo(() => {
     return monthLabels.map((label, i) => {
@@ -128,6 +130,63 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
     return { total: totalAtrasado, pct, count: atrasadas.length };
   }, [transacoes, totals.rec]);
 
+  // Detalhamento do mês selecionado
+  const monthDetail = useMemo(() => {
+    const monthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
+    const monthStart = `${monthKey}-01`;
+
+    // Saldo Inicial: receitas pagas − despesas pagas de TODOS os meses anteriores ao mês selecionado
+    const saldoInicial = transacoes
+      .filter(t => t.status === "pago" && t.date && t.date < monthStart)
+      .reduce((s, t) => s + (t.type === "receita" ? Number(t.value) : -Number(t.value)), 0);
+
+    const monthTxns = transacoes.filter(t => t.date?.startsWith(monthKey));
+
+    const recPagas = monthTxns.filter(t => t.type === "receita" && t.status === "pago").reduce((s, t) => s + Number(t.value), 0);
+    const despPagas = monthTxns.filter(t => t.type === "despesa" && t.status === "pago").reduce((s, t) => s + Number(t.value), 0);
+    const liquidoMes = recPagas - despPagas;
+    const saldoAtual = saldoInicial + liquidoMes;
+
+    const recPendentes = monthTxns.filter(t => t.type === "receita" && t.status === "pendente").reduce((s, t) => s + Number(t.value), 0);
+    const despPendentes = monthTxns.filter(t => t.type === "despesa" && t.status === "pendente").reduce((s, t) => s + Number(t.value), 0);
+
+    const pendentes = monthTxns
+      .filter(t => t.status === "pendente")
+      .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+    return {
+      saldoInicial,
+      recPagas,
+      despPagas,
+      liquidoMes,
+      saldoAtual,
+      recPendentes,
+      despPendentes,
+      saldoPendente: recPendentes - despPendentes,
+      pendentes,
+    };
+  }, [transacoes, selectedYear, selectedMonth]);
+
+  const monthLabel = `${monthLabels[selectedMonth]} ${selectedYear}`;
+  const fmt = (v: number) => `R$ ${Math.abs(v).toLocaleString("pt-BR", { minimumFractionDigits: 0 })}`;
+
+  const handlePrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(y => y - 1);
+    } else {
+      setSelectedMonth(m => m - 1);
+    }
+  };
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(y => y + 1);
+    } else {
+      setSelectedMonth(m => m + 1);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
@@ -184,6 +243,121 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
               <p className="text-lg font-bold text-foreground">R$ {totals.ticketMedio.toLocaleString("pt-BR")}</p>
             </div>
           </div>
+        </div>
+
+        {/* Detalhamento do Mês */}
+        <div className="rounded-xl border border-border p-5 mb-6">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              <h4 className="font-semibold text-foreground">Detalhamento do Mês</h4>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrevMonth}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm font-semibold min-w-[110px] text-center capitalize">{monthLabel}</span>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleNextMonth}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            {/* Saldo Inicial */}
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Wallet className="w-4 h-4 text-primary" />
+                <p className="text-xs text-muted-foreground font-medium">Saldo Inicial</p>
+              </div>
+              <p className={`text-xl font-bold ${monthDetail.saldoInicial >= 0 ? "text-primary" : "text-destructive"}`}>
+                {monthDetail.saldoInicial < 0 ? "− " : ""}{fmt(monthDetail.saldoInicial)}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1">acumulado anterior</p>
+            </div>
+
+            {/* Realizados */}
+            <div className="rounded-xl border border-success/20 bg-success/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle2 className="w-4 h-4 text-success" />
+                <p className="text-xs text-muted-foreground font-medium">Realizados</p>
+              </div>
+              <div className="space-y-0.5 text-sm">
+                <p className="text-success">+ {fmt(monthDetail.recPagas)}</p>
+                <p className="text-destructive">− {fmt(monthDetail.despPagas)}</p>
+                <div className="border-t border-border/50 pt-1 mt-1">
+                  <p className={`font-bold ${monthDetail.liquidoMes >= 0 ? "text-success" : "text-destructive"}`}>
+                    {monthDetail.liquidoMes < 0 ? "− " : ""}{fmt(monthDetail.liquidoMes)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Saldo Atual */}
+            <div className="rounded-xl border border-success/30 bg-gradient-to-br from-success/10 to-success/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 text-success" />
+                <p className="text-xs text-muted-foreground font-medium">Saldo Atual</p>
+              </div>
+              <p className={`text-2xl font-bold ${monthDetail.saldoAtual >= 0 ? "text-success" : "text-destructive"}`}>
+                {monthDetail.saldoAtual < 0 ? "− " : ""}{fmt(monthDetail.saldoAtual)}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1">inicial + líquido</p>
+            </div>
+
+            {/* A Efetuar */}
+            <div className="rounded-xl border border-warning/20 bg-warning/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-4 h-4 text-warning" />
+                <p className="text-xs text-muted-foreground font-medium">A Efetuar</p>
+              </div>
+              <div className="space-y-0.5 text-sm">
+                <p className="text-success">+ {fmt(monthDetail.recPendentes)}</p>
+                <p className="text-warning">− {fmt(monthDetail.despPendentes)}</p>
+                <div className="border-t border-border/50 pt-1 mt-1">
+                  <p className={`font-bold ${monthDetail.saldoPendente >= 0 ? "text-warning" : "text-destructive"}`}>
+                    {monthDetail.saldoPendente < 0 ? "− " : ""}{fmt(monthDetail.saldoPendente)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mini-tabela de pendências */}
+          {monthDetail.pendentes.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">
+                Pagamentos pendentes ({monthDetail.pendentes.length})
+              </p>
+              <div className="rounded-lg border border-border/60 overflow-hidden">
+                {monthDetail.pendentes.slice(0, 5).map((t, i) => {
+                  const tt = t as Transacao & { description?: string };
+                  return (
+                    <div
+                      key={i}
+                      className={`flex items-center justify-between px-3 py-2 text-xs ${i % 2 === 0 ? "bg-muted/20" : ""}`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <span className="text-muted-foreground tabular-nums w-14 shrink-0">
+                          {t.date ? t.date.substring(8, 10) + "/" + t.date.substring(5, 7) : "—"}
+                        </span>
+                        <span className="text-foreground truncate">{tt.description || "(sem descrição)"}</span>
+                        <span className="text-muted-foreground capitalize hidden sm:inline">{t.type}</span>
+                      </div>
+                      <span className={`font-semibold tabular-nums ${t.type === "receita" ? "text-success" : "text-warning"}`}>
+                        {t.type === "receita" ? "+" : "−"} {fmt(Number(t.value))}
+                      </span>
+                    </div>
+                  );
+                })}
+                {monthDetail.pendentes.length > 5 && (
+                  <div className="px-3 py-2 text-xs text-center text-muted-foreground bg-muted/10">
+                    + {monthDetail.pendentes.length - 5} pendência{monthDetail.pendentes.length - 5 > 1 ? "s" : ""}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Lucratividade */}
