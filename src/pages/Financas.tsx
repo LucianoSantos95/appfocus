@@ -142,6 +142,11 @@ export default function Financas() {
   const { transacoes, isLoading: isLoadingTransacoes, addTransacao, updateTransacao, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
   const { contas: bankAccounts, addConta, updateConta, updateBalance, deleteConta } = useContasBancarias();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterBank, setFilterBank] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterDateFrom, setFilterDateFrom] = useState<string>("");
+  const [filterDateTo, setFilterDateTo] = useState<string>("");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [biPanelOpen, setBiPanelOpen] = useState(false);
   const [biUpgradeOpen, setBiUpgradeOpen] = useState(false);
@@ -528,7 +533,7 @@ export default function Financas() {
 
         {/* Receitas e Despesas */}
         <Tabs defaultValue="receitas" className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <TabsList className="bg-muted">
               <TabsTrigger value="receitas">Receitas</TabsTrigger>
               <TabsTrigger value="despesas">Despesas</TabsTrigger>
@@ -541,6 +546,71 @@ export default function Financas() {
             </div>
           </div>
 
+          {/* Filtros: Data, Categoria, Banco, Status */}
+          <div className="flex flex-wrap items-end gap-3 p-4 rounded-xl border border-border/50 bg-card/50">
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">De</Label>
+              <Input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="w-[150px] bg-muted border-border" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Até</Label>
+              <Input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="w-[150px] bg-muted border-border" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Categoria</Label>
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <SelectTrigger className="w-[180px] bg-muted border-border"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {Array.from(new Set([...categories.map(c => c.name), ...transactions.map(t => t.category)])).filter(Boolean).map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Banco</Label>
+              <Select value={filterBank} onValueChange={setFilterBank}>
+                <SelectTrigger className="w-[180px] bg-muted border-border"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="all">Todos os bancos</SelectItem>
+                  <SelectItem value="none">Sem banco vinculado</SelectItem>
+                  {bankAccounts.map(acc => (
+                    <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Status</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[150px] bg-muted border-border"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="atrasado">Atrasado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {(filterCategory !== "all" || filterBank !== "all" || filterStatus !== "all" || filterDateFrom || filterDateTo) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 text-muted-foreground"
+                onClick={() => {
+                  setFilterCategory("all");
+                  setFilterBank("all");
+                  setFilterStatus("all");
+                  setFilterDateFrom("");
+                  setFilterDateTo("");
+                }}
+              >
+                <X className="w-4 h-4" /> Limpar filtros
+              </Button>
+            )}
+          </div>
+
           <TabsContent value="receitas" className="space-y-4">
             <div className="flex justify-end">
               <PlanGateButton module="financas" action="create">
@@ -548,7 +618,15 @@ export default function Financas() {
               </PlanGateButton>
             </div>
             <TransactionTable 
-              transactions={transactions.filter((t) => t.type === "receita" && (searchTerm === "" || t.description.toLowerCase().includes(searchTerm.toLowerCase())))} 
+              transactions={transactions.filter((t) =>
+                t.type === "receita" &&
+                (searchTerm === "" || t.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                (filterCategory === "all" || t.category === filterCategory) &&
+                (filterBank === "all" || (filterBank === "none" ? !t.bank_account_id : t.bank_account_id === filterBank)) &&
+                (filterStatus === "all" || t.status === filterStatus) &&
+                (!filterDateFrom || t.date >= filterDateFrom) &&
+                (!filterDateTo || t.date <= filterDateTo)
+              )} 
               type="receita" 
               bankAccounts={bankAccounts}
               onSelect={setSelectedTransaction} 
@@ -565,7 +643,15 @@ export default function Financas() {
               </PlanGateButton>
             </div>
             <TransactionTable 
-              transactions={transactions.filter((t) => t.type === "despesa" && (searchTerm === "" || t.description.toLowerCase().includes(searchTerm.toLowerCase())))} 
+              transactions={transactions.filter((t) =>
+                t.type === "despesa" &&
+                (searchTerm === "" || t.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                (filterCategory === "all" || t.category === filterCategory) &&
+                (filterBank === "all" || (filterBank === "none" ? !t.bank_account_id : t.bank_account_id === filterBank)) &&
+                (filterStatus === "all" || t.status === filterStatus) &&
+                (!filterDateFrom || t.date >= filterDateFrom) &&
+                (!filterDateTo || t.date <= filterDateTo)
+              )} 
               type="despesa" 
               bankAccounts={bankAccounts}
               onSelect={setSelectedTransaction} 
