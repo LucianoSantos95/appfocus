@@ -46,6 +46,7 @@ const monthLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Se
 
 export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: FinanceiroBIPanelProps) {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()); // 0-11
 
   const monthlyData = useMemo(() => {
     return monthLabels.map((label, i) => {
