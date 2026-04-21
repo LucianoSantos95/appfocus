@@ -11,14 +11,29 @@ const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 const TWILIO_WHATSAPP_NUMBER = Deno.env.get("TWILIO_WHATSAPP_NUMBER");
 
-function normalizeWhatsAppNumber(raw: string) {
+function normalizeRecipientWhatsAppNumber(raw: string) {
+  const hasExplicitCountryCode = raw.trim().startsWith("+") || raw.trim().startsWith("00") || raw.includes("whatsapp:");
   let cleanNumber = raw.replace(/\D/g, "");
   if (cleanNumber.startsWith("0")) cleanNumber = cleanNumber.replace(/^0+/, "");
-  if (!cleanNumber.startsWith("55") && (cleanNumber.length === 10 || cleanNumber.length === 11)) {
+  if (!hasExplicitCountryCode && !cleanNumber.startsWith("55") && (cleanNumber.length === 10 || cleanNumber.length === 11)) {
     cleanNumber = "55" + cleanNumber;
   }
 
   return cleanNumber;
+}
+
+function normalizeSenderWhatsAppNumber(raw: string) {
+  let cleanNumber = raw.replace(/\D/g, "");
+  if (cleanNumber.startsWith("00")) cleanNumber = cleanNumber.slice(2);
+  return cleanNumber;
+}
+
+function formatWhatsAppAddress(raw: string, type: "sender" | "recipient") {
+  const normalized = type === "sender"
+    ? normalizeSenderWhatsAppNumber(raw)
+    : normalizeRecipientWhatsAppNumber(raw);
+
+  return `whatsapp:+${normalized}`;
 }
 
 serve(async (req) => {
@@ -63,8 +78,8 @@ serve(async (req) => {
       });
     }
 
-    const cleanNumber = normalizeWhatsAppNumber(to);
-    const cleanFrom = normalizeWhatsAppNumber(TWILIO_WHATSAPP_NUMBER);
+    const cleanNumber = normalizeRecipientWhatsAppNumber(to);
+    const cleanFrom = normalizeSenderWhatsAppNumber(TWILIO_WHATSAPP_NUMBER);
 
     if (cleanNumber === cleanFrom) {
       return new Response(JSON.stringify({ error: "O número de destino é o mesmo número configurado para envio no WhatsApp. Use outro número para testar." }), {
@@ -73,8 +88,8 @@ serve(async (req) => {
       });
     }
 
-    const whatsappTo = `whatsapp:+${cleanNumber}`;
-    const whatsappFrom = `whatsapp:${TWILIO_WHATSAPP_NUMBER.startsWith("+") ? TWILIO_WHATSAPP_NUMBER : "+" + TWILIO_WHATSAPP_NUMBER}`;
+    const whatsappTo = formatWhatsAppAddress(to, "recipient");
+    const whatsappFrom = formatWhatsAppAddress(TWILIO_WHATSAPP_NUMBER, "sender");
 
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
     const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
@@ -96,6 +111,13 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error("Twilio error:", data);
+      if (data?.code === 63007) {
+        return new Response(JSON.stringify({ error: "O número configurado em TWILIO_WHATSAPP_NUMBER não existe como remetente de WhatsApp no Twilio. Cadastre um remetente válido no Twilio e atualize esse segredo com o número exato fornecido por lá." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       if (data?.code === 63031) {
         return new Response(JSON.stringify({ error: "O Twilio bloqueou o envio porque o número de destino é igual ao número remetente configurado. Escolha outro WhatsApp para o teste." }), {
           status: 400,
