@@ -39,6 +39,30 @@ type Canal = "email" | "whatsapp";
 type FormatoEmail = "pdf" | "html";
 type FormatoWhats = "pdf" | "texto";
 
+async function extractSendErrorMessage(err: unknown): Promise<string> {
+  const fallback = err instanceof Error ? err.message : "Falha ao enviar.";
+
+  if (typeof err === "object" && err !== null && "context" in err) {
+    const context = (err as { context?: unknown }).context;
+    if (context instanceof Response) {
+      try {
+        const data = await context.clone().json();
+        if (typeof data?.error === "string" && data.error.trim()) return data.error;
+        if (typeof data?.message === "string" && data.message.trim()) return data.message;
+      } catch {
+        try {
+          const text = await context.clone().text();
+          if (text.trim()) return text;
+        } catch {
+          return fallback;
+        }
+      }
+    }
+  }
+
+  return fallback;
+}
+
 export function SendReportDialog({ open, onOpenChange, payload }: Props) {
   const { toast } = useToast();
   const { contatos, addContato, deleteContato } = useRelatorioContatos();
@@ -125,7 +149,7 @@ export function SendReportDialog({ open, onOpenChange, payload }: Props) {
       } catch (err: any) {
         console.error("Send error:", err);
         errCount++;
-        const message = err?.message || err?.context?.error || "Falha ao enviar.";
+        const message = await extractSendErrorMessage(err);
         if (!errorMessages.includes(message)) errorMessages.push(message);
       }
     }
