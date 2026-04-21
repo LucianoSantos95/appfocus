@@ -503,6 +503,45 @@ export type Database = {
         }
         Relationships: []
       }
+      import_history: {
+        Row: {
+          created_at: string
+          error_records: number
+          file_name: string | null
+          id: string
+          imported_records: number
+          metadata: Json | null
+          module: string
+          status: string
+          total_records: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_records?: number
+          file_name?: string | null
+          id?: string
+          imported_records?: number
+          metadata?: Json | null
+          module: string
+          status?: string
+          total_records?: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          error_records?: number
+          file_name?: string | null
+          id?: string
+          imported_records?: number
+          metadata?: Json | null
+          module?: string
+          status?: string
+          total_records?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       invite_tokens: {
         Row: {
           created_at: string
