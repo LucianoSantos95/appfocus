@@ -49,6 +49,10 @@ function normalizeWhatsAppNumber(raw: string): string {
   return cleanNumber;
 }
 
+function formatWhatsAppAddress(raw: string): string {
+  return `whatsapp:+${normalizeWhatsAppNumber(raw)}`;
+}
+
 function generatePDF(payload: ReportPayload): Uint8Array {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -292,8 +296,8 @@ async function sendWhatsApp(to: string, message: string) {
     );
   }
 
-  const whatsappTo = `whatsapp:+${cleanNumber}`;
-  const whatsappFrom = `whatsapp:${from.startsWith("+") ? from : "+" + from}`;
+  const whatsappTo = formatWhatsAppAddress(cleanNumber);
+  const whatsappFrom = formatWhatsAppAddress(from);
   console.log(`[send-bi-report] WhatsApp To: ${whatsappTo} (original: ${to})`);
 
   const res = await fetch(
