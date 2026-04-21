@@ -324,6 +324,13 @@ async function sendWhatsApp(to: string, message: string) {
   );
   if (!res.ok) {
     const errorPayload = await res.json().catch(async () => ({ raw: await res.text() }));
+    if (errorPayload?.code === 63007) {
+      throw new HttpError(
+        400,
+        "O número configurado em TWILIO_WHATSAPP_NUMBER não existe como remetente de WhatsApp no Twilio. Cadastre um remetente válido no Twilio e atualize esse segredo com o número exato fornecido por lá.",
+      );
+    }
+
     if (errorPayload?.code === 63031) {
       throw new HttpError(
         400,

@@ -111,6 +111,13 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error("Twilio error:", data);
+      if (data?.code === 63007) {
+        return new Response(JSON.stringify({ error: "O número configurado em TWILIO_WHATSAPP_NUMBER não existe como remetente de WhatsApp no Twilio. Cadastre um remetente válido no Twilio e atualize esse segredo com o número exato fornecido por lá." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       if (data?.code === 63031) {
         return new Response(JSON.stringify({ error: "O Twilio bloqueou o envio porque o número de destino é igual ao número remetente configurado. Escolha outro WhatsApp para o teste." }), {
           status: 400,
