@@ -15,6 +15,7 @@ import { DataPreview } from './DataPreview';
 import { ColumnMapper } from './ColumnMapper';
 import { ImportProgress } from './ImportProgress';
 import { useDataImport } from '@/hooks/useDataImport';
+import { useImportHistory } from '@/hooks/useImportHistory';
 import { generateTemplate } from '@/lib/spreadsheet';
 import { type ImportConfig } from '@/lib/import-configs';
 
