@@ -37,6 +37,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 import {
   Wallet,
   TrendingUp,
@@ -60,6 +62,7 @@ import {
   CheckCircle2,
   Clock,
   Receipt,
+  Filter,
 } from "lucide-react";
 import {
   BarChart,
