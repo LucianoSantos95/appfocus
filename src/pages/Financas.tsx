@@ -552,120 +552,184 @@ export default function Financas() {
             </div>
           </div>
 
-          {/* Filtros: Data, Categoria, Banco, Status */}
-          <div className="flex flex-wrap items-end gap-3 p-4 rounded-xl border border-border/50 bg-card/50">
-            <div className="flex flex-col gap-1">
-              <Label className="text-xs text-muted-foreground">De</Label>
-              <Input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="w-[150px] bg-muted border-border" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-xs text-muted-foreground">Até</Label>
-              <Input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="w-[150px] bg-muted border-border" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-xs text-muted-foreground">Categoria</Label>
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[180px] bg-muted border-border"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="all">Todas as categorias</SelectItem>
-                  {Array.from(new Set([...categories.map(c => c.name), ...transactions.map(t => t.category)])).filter(Boolean).map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-xs text-muted-foreground">Banco</Label>
-              <Select value={filterBank} onValueChange={setFilterBank}>
-                <SelectTrigger className="w-[180px] bg-muted border-border"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="all">Todos os bancos</SelectItem>
-                  <SelectItem value="none">Sem banco vinculado</SelectItem>
-                  {bankAccounts.map(acc => (
-                    <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-xs text-muted-foreground">Status</Label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-[150px] bg-muted border-border"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="pago">Pago</SelectItem>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="atrasado">Atrasado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {(filterCategory !== "all" || filterBank !== "all" || filterStatus !== "all" || filterDateFrom || filterDateTo) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1 text-muted-foreground"
-                onClick={() => {
-                  setFilterCategory("all");
-                  setFilterBank("all");
-                  setFilterStatus("all");
-                  setFilterDateFrom("");
-                  setFilterDateTo("");
-                }}
-              >
-                <X className="w-4 h-4" /> Limpar filtros
-              </Button>
-            )}
-          </div>
+          {(() => {
+            const activeFilterCount =
+              (filterCategory !== "all" ? 1 : 0) +
+              (filterBank !== "all" ? 1 : 0) +
+              (filterStatus !== "all" ? 1 : 0) +
+              (filterDateFrom ? 1 : 0) +
+              (filterDateTo ? 1 : 0);
 
-          <TabsContent value="receitas" className="space-y-4">
-            <div className="flex justify-end">
-              <PlanGateButton module="financas" action="create">
-                <AddTransactionDialog type="receita" categories={categories.filter((c) => c.type === "receita")} bankAccounts={bankAccounts} onAdd={handleAddTransaction} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
-              </PlanGateButton>
-            </div>
-            <TransactionTable 
-              transactions={transactions.filter((t) =>
-                t.type === "receita" &&
-                (searchTerm === "" || t.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-                (filterCategory === "all" || t.category === filterCategory) &&
-                (filterBank === "all" || (filterBank === "none" ? !t.bank_account_id : t.bank_account_id === filterBank)) &&
-                (filterStatus === "all" || t.status === filterStatus) &&
-                (!filterDateFrom || t.date >= filterDateFrom) &&
-                (!filterDateTo || t.date <= filterDateTo)
-              )} 
-              type="receita" 
-              bankAccounts={bankAccounts}
-              onSelect={setSelectedTransaction} 
-              onDelete={handleDeleteTransaction} 
-              onUpdateStatus={handleUpdateStatus}
-              statusStyles={statusStyles} 
-            />
-          </TabsContent>
+            const FilterPopover = (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" className="relative h-10 w-10" title="Filtros">
+                    <Filter className="w-4 h-4" />
+                    {activeFilterCount > 0 && (
+                      <Badge
+                        variant="default"
+                        className="absolute -top-1.5 -right-1.5 h-5 min-w-5 px-1 text-[10px] flex items-center justify-center rounded-full"
+                      >
+                        {activeFilterCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[340px] bg-popover border-border p-4" align="end">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-semibold text-foreground">Filtros</p>
+                    {activeFilterCount > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 text-xs text-muted-foreground"
+                        onClick={() => {
+                          setFilterCategory("all");
+                          setFilterBank("all");
+                          setFilterStatus("all");
+                          setFilterDateFrom("");
+                          setFilterDateTo("");
+                        }}
+                      >
+                        <X className="w-3 h-3" /> Limpar
+                      </Button>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <Label className="text-xs text-muted-foreground">De</Label>
+                        <Input
+                          type="date"
+                          value={filterDateFrom}
+                          onChange={(e) => setFilterDateFrom(e.target.value)}
+                          className="bg-muted border-border h-9"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <Label className="text-xs text-muted-foreground">Até</Label>
+                        <Input
+                          type="date"
+                          value={filterDateTo}
+                          onChange={(e) => setFilterDateTo(e.target.value)}
+                          className="bg-muted border-border h-9"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-xs text-muted-foreground">Categoria</Label>
+                      <Select value={filterCategory} onValueChange={setFilterCategory}>
+                        <SelectTrigger className="bg-muted border-border h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-popover border-border">
+                          <SelectItem value="all">Todas as categorias</SelectItem>
+                          {Array.from(new Set([...categories.map((c) => c.name), ...transactions.map((t) => t.category)]))
+                            .filter(Boolean)
+                            .map((cat) => (
+                              <SelectItem key={cat} value={cat}>
+                                {cat}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-xs text-muted-foreground">Banco</Label>
+                      <Select value={filterBank} onValueChange={setFilterBank}>
+                        <SelectTrigger className="bg-muted border-border h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-popover border-border">
+                          <SelectItem value="all">Todos os bancos</SelectItem>
+                          <SelectItem value="none">Sem banco vinculado</SelectItem>
+                          {bankAccounts.map((acc) => (
+                            <SelectItem key={acc.id} value={acc.id}>
+                              {acc.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-xs text-muted-foreground">Status</Label>
+                      <Select value={filterStatus} onValueChange={setFilterStatus}>
+                        <SelectTrigger className="bg-muted border-border h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-popover border-border">
+                          <SelectItem value="all">Todos</SelectItem>
+                          <SelectItem value="pago">Pago</SelectItem>
+                          <SelectItem value="pendente">Pendente</SelectItem>
+                          <SelectItem value="atrasado">Atrasado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            );
 
-          <TabsContent value="despesas" className="space-y-4">
-            <div className="flex justify-end">
-              <PlanGateButton module="financas" action="create">
-                <AddTransactionDialog type="despesa" categories={categories.filter((c) => c.type === "despesa")} bankAccounts={bankAccounts} onAdd={handleAddTransaction} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
-              </PlanGateButton>
-            </div>
-            <TransactionTable 
-              transactions={transactions.filter((t) =>
-                t.type === "despesa" &&
-                (searchTerm === "" || t.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-                (filterCategory === "all" || t.category === filterCategory) &&
-                (filterBank === "all" || (filterBank === "none" ? !t.bank_account_id : t.bank_account_id === filterBank)) &&
-                (filterStatus === "all" || t.status === filterStatus) &&
-                (!filterDateFrom || t.date >= filterDateFrom) &&
-                (!filterDateTo || t.date <= filterDateTo)
-              )} 
-              type="despesa" 
-              bankAccounts={bankAccounts}
-              onSelect={setSelectedTransaction} 
-              onDelete={handleDeleteTransaction} 
-              onUpdateStatus={handleUpdateStatus}
-              statusStyles={statusStyles} 
-            />
-          </TabsContent>
+            const filterTransactions = (type: "receita" | "despesa") =>
+              transactions.filter(
+                (t) =>
+                  t.type === type &&
+                  (searchTerm === "" || t.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                  (filterCategory === "all" || t.category === filterCategory) &&
+                  (filterBank === "all" || (filterBank === "none" ? !t.bank_account_id : t.bank_account_id === filterBank)) &&
+                  (filterStatus === "all" || t.status === filterStatus) &&
+                  (!filterDateFrom || t.date >= filterDateFrom) &&
+                  (!filterDateTo || t.date <= filterDateTo)
+              );
+
+            return (
+              <>
+                <TabsContent value="receitas" className="space-y-4">
+                  <div className="flex justify-end items-center gap-2">
+                    {FilterPopover}
+                    <PlanGateButton module="financas" action="create">
+                      <AddTransactionDialog
+                        type="receita"
+                        categories={categories.filter((c) => c.type === "receita")}
+                        bankAccounts={bankAccounts}
+                        onAdd={handleAddTransaction}
+                        disabled={freemium.limitReached}
+                        onBlocked={() => setUpgradeModalOpen(true)}
+                      />
+                    </PlanGateButton>
+                  </div>
+                  <TransactionTable
+                    transactions={filterTransactions("receita")}
+                    type="receita"
+                    bankAccounts={bankAccounts}
+                    onSelect={setSelectedTransaction}
+                    onDelete={handleDeleteTransaction}
+                    onUpdateStatus={handleUpdateStatus}
+                    statusStyles={statusStyles}
+                  />
+                </TabsContent>
+
+                <TabsContent value="despesas" className="space-y-4">
+                  <div className="flex justify-end items-center gap-2">
+                    {FilterPopover}
+                    <PlanGateButton module="financas" action="create">
+                      <AddTransactionDialog
+                        type="despesa"
+                        categories={categories.filter((c) => c.type === "despesa")}
+                        bankAccounts={bankAccounts}
+                        onAdd={handleAddTransaction}
+                        disabled={freemium.limitReached}
+                        onBlocked={() => setUpgradeModalOpen(true)}
+                      />
+                    </PlanGateButton>
+                  </div>
+                  <TransactionTable
+                    transactions={filterTransactions("despesa")}
+                    type="despesa"
+                    bankAccounts={bankAccounts}
+                    onSelect={setSelectedTransaction}
+                    onDelete={handleDeleteTransaction}
+                    onUpdateStatus={handleUpdateStatus}
+                    statusStyles={statusStyles}
+                  />
+                </TabsContent>
+              </>
+            );
+          })()}
         </Tabs>
 
         {/* Contas Bancárias */}
