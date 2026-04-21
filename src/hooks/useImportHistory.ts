@@ -48,16 +48,18 @@ export function useImportHistory(module?: string) {
       if (!userData.user) return null;
       const { data, error } = await supabase
         .from("import_history")
-        .insert({
-          user_id: userData.user.id,
-          module: entry.module,
-          file_name: entry.file_name ?? null,
-          total_records: entry.total_records,
-          imported_records: entry.imported_records,
-          error_records: entry.error_records,
-          status: entry.status ?? "completo",
-          metadata: entry.metadata ?? {},
-        })
+        .insert([
+          {
+            user_id: userData.user.id,
+            module: entry.module,
+            file_name: entry.file_name ?? null,
+            total_records: entry.total_records,
+            imported_records: entry.imported_records,
+            error_records: entry.error_records,
+            status: entry.status ?? "completo",
+            metadata: (entry.metadata ?? {}) as never,
+          },
+        ])
         .select()
         .single();
       if (!error && data) {
