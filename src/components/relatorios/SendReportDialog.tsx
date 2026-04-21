@@ -3,10 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Mail, MessageSquare, FileText, FileType, Send, UserPlus } from "lucide-react";
+import { Loader2, Mail, MessageSquare, FileText, FileType, Send, Trash2, UserPlus } from "lucide-react";
 import { useRelatorioContatos } from "@/hooks/useRelatorioContatos";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -40,7 +41,7 @@ type FormatoWhats = "pdf" | "texto";
 
 export function SendReportDialog({ open, onOpenChange, payload }: Props) {
   const { toast } = useToast();
-  const { contatos, addContato } = useRelatorioContatos();
+  const { contatos, addContato, deleteContato } = useRelatorioContatos();
   const [tab, setTab] = useState<"contatos" | "manual">("contatos");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [canal, setCanal] = useState<Canal>("email");
@@ -51,6 +52,7 @@ export function SendReportDialog({ open, onOpenChange, payload }: Props) {
   const [manualTel, setManualTel] = useState("");
   const [salvarContato, setSalvarContato] = useState(true);
   const [sending, setSending] = useState(false);
+  const [contactMenuId, setContactMenuId] = useState<string | null>(null);
 
   const formato = canal === "email" ? formatoEmail : formatoWhats;
 
@@ -105,9 +107,10 @@ export function SendReportDialog({ open, onOpenChange, payload }: Props) {
     setSending(true);
     let okCount = 0;
     let errCount = 0;
+    const errorMessages: string[] = [];
     for (const d of destinatarios) {
       try {
-        const { error } = await supabase.functions.invoke("send-bi-report", {
+        const { data, error } = await supabase.functions.invoke("send-bi-report", {
           body: {
             ...payload,
             formato,
@@ -117,10 +120,13 @@ export function SendReportDialog({ open, onOpenChange, payload }: Props) {
           },
         });
         if (error) throw error;
+        if (data?.error) throw new Error(data.error);
         okCount++;
       } catch (err: any) {
         console.error("Send error:", err);
         errCount++;
+        const message = err?.message || err?.context?.error || "Falha ao enviar.";
+        if (!errorMessages.includes(message)) errorMessages.push(message);
       }
     }
     setSending(false);
@@ -128,13 +134,29 @@ export function SendReportDialog({ open, onOpenChange, payload }: Props) {
     if (okCount > 0) {
       toast({
         title: `Relatório enviado para ${okCount} ${okCount === 1 ? "destinatário" : "destinatários"}`,
-        description: errCount > 0 ? `${errCount} envio(s) falharam.` : undefined,
+        description: errCount > 0 ? errorMessages[0] || `${errCount} envio(s) falharam.` : undefined,
       });
       onOpenChange(false);
       setSelectedIds(new Set());
       setManualNome(""); setManualEmail(""); setManualTel("");
     } else {
-      toast({ title: "Falha ao enviar relatório", variant: "destructive" });
+      toast({
+        title: "Falha ao enviar relatório",
+        description: errorMessages[0] || "Verifique o destinatário e tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteContact = async (id: string) => {
+    const deleted = await deleteContato(id);
+    if (deleted) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      setContactMenuId(null);
     }
   };
 
@@ -212,10 +234,9 @@ export function SendReportDialog({ open, onOpenChange, payload }: Props) {
                   const valor = canal === "email" ? c.email : c.telefone;
                   const disabled = !valor;
                   return (
-                    <Label
+                    <div
                       key={c.id}
-                      htmlFor={`c-${c.id}`}
-                      className={`flex items-start gap-3 border rounded-lg p-3 ${disabled ? "opacity-50" : "cursor-pointer hover:bg-accent"}`}
+                      className={`flex items-start gap-3 border rounded-lg p-3 ${disabled ? "opacity-50" : "hover:bg-accent"}`}
                     >
                       <Checkbox
                         id={`c-${c.id}`}
@@ -223,13 +244,31 @@ export function SendReportDialog({ open, onOpenChange, payload }: Props) {
                         onCheckedChange={() => !disabled && toggleId(c.id)}
                         disabled={disabled}
                       />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm">{c.nome}{c.cargo ? ` • ${c.cargo}` : ""}</div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {valor || `Sem ${canal === "email" ? "e-mail" : "telefone"} cadastrado`}
-                        </div>
-                      </div>
-                    </Label>
+                      <Popover open={contactMenuId === c.id} onOpenChange={(open) => setContactMenuId(open ? c.id : null)}>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex-1 min-w-0 text-left"
+                          >
+                            <div className="font-medium text-sm">{c.nome}{c.cargo ? ` • ${c.cargo}` : ""}</div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {valor || `Sem ${canal === "email" ? "e-mail" : "telefone"} cadastrado`}
+                            </div>
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end" className="w-44 p-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteContact(c.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Excluir contato
+                          </Button>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   );
                 })
               )}
