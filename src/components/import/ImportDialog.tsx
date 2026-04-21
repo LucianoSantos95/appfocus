@@ -21,28 +21,43 @@ import { type ImportConfig } from '@/lib/import-configs';
 
 interface ImportDialogProps {
   config: ImportConfig;
+  module?: string; // module key for history (e.g., "financeiro", "clientes")
   onImportComplete?: (records: Record<string, unknown>[]) => void;
   onAnalyzeAI?: (records: Record<string, unknown>[]) => void;
   trigger?: React.ReactNode;
 }
 
-export function ImportDialog({ config, onImportComplete, onAnalyzeAI, trigger }: ImportDialogProps) {
+export function ImportDialog({ config, module, onImportComplete, onAnalyzeAI, trigger }: ImportDialogProps) {
   const [open, setOpen] = useState(false);
   const [runAIAnalysis, setRunAIAnalysis] = useState(false);
+  const [fileName, setFileName] = useState<string>('');
   const { state, parseFile, setColumnMapping, importData, reset } = useDataImport(config);
+  const { addEntry } = useImportHistory();
 
   const handleFileSelect = async (file: File) => {
+    setFileName(file.name);
     await parseFile(file);
   };
 
   const handleImport = async () => {
     try {
       const records = await importData();
-      
+
+      // Register in import history
+      await addEntry({
+        module: module || config.table || 'geral',
+        file_name: fileName || undefined,
+        total_records: state.parsedData?.totalRows || 0,
+        imported_records: records.length,
+        error_records: state.errorCount,
+        status: state.errorCount > 0 ? 'parcial' : 'completo',
+        metadata: { label: config.label },
+      });
+
       if (onImportComplete) {
         onImportComplete(records);
       }
-      
+
       if (runAIAnalysis && onAnalyzeAI && records.length > 0) {
         onAnalyzeAI(records);
       }
