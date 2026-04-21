@@ -39,18 +39,29 @@ class HttpError extends Error {
   }
 }
 
-function normalizeWhatsAppNumber(raw: string): string {
+function normalizeRecipientWhatsAppNumber(raw: string): string {
+  const hasExplicitCountryCode = raw.trim().startsWith("+") || raw.trim().startsWith("00") || raw.includes("whatsapp:");
   let cleanNumber = raw.replace(/\D/g, "");
   if (cleanNumber.startsWith("0")) cleanNumber = cleanNumber.replace(/^0+/, "");
-  if (!cleanNumber.startsWith("55") && (cleanNumber.length === 10 || cleanNumber.length === 11)) {
+  if (!hasExplicitCountryCode && !cleanNumber.startsWith("55") && (cleanNumber.length === 10 || cleanNumber.length === 11)) {
     cleanNumber = "55" + cleanNumber;
   }
 
   return cleanNumber;
 }
 
-function formatWhatsAppAddress(raw: string): string {
-  return `whatsapp:+${normalizeWhatsAppNumber(raw)}`;
+function normalizeSenderWhatsAppNumber(raw: string): string {
+  let cleanNumber = raw.replace(/\D/g, "");
+  if (cleanNumber.startsWith("00")) cleanNumber = cleanNumber.slice(2);
+  return cleanNumber;
+}
+
+function formatWhatsAppAddress(raw: string, type: "sender" | "recipient"): string {
+  const normalized = type === "sender"
+    ? normalizeSenderWhatsAppNumber(raw)
+    : normalizeRecipientWhatsAppNumber(raw);
+
+  return `whatsapp:+${normalized}`;
 }
 
 function generatePDF(payload: ReportPayload): Uint8Array {
@@ -286,8 +297,8 @@ async function sendWhatsApp(to: string, message: string) {
   const from = Deno.env.get("TWILIO_WHATSAPP_NUMBER");
   if (!sid || !token || !from) throw new Error("Twilio not configured");
 
-  const cleanNumber = normalizeWhatsAppNumber(to);
-  const cleanFrom = normalizeWhatsAppNumber(from);
+  const cleanNumber = normalizeRecipientWhatsAppNumber(to);
+  const cleanFrom = normalizeSenderWhatsAppNumber(from);
 
   if (cleanNumber === cleanFrom) {
     throw new HttpError(
@@ -296,8 +307,8 @@ async function sendWhatsApp(to: string, message: string) {
     );
   }
 
-  const whatsappTo = formatWhatsAppAddress(cleanNumber);
-  const whatsappFrom = formatWhatsAppAddress(from);
+  const whatsappTo = formatWhatsAppAddress(to, "recipient");
+  const whatsappFrom = formatWhatsAppAddress(from, "sender");
   console.log(`[send-bi-report] WhatsApp To: ${whatsappTo} (original: ${to})`);
 
   const res = await fetch(
