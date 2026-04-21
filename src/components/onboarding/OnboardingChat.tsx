@@ -75,14 +75,64 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement }: Pro
           const jsonStr = line.slice(6).trim();
           if (jsonStr === "[DONE]") { streamDone = true; break; }
 
+          let parsed: any;
           try {
-            const parsed = JSON.parse(jsonStr);
-            const delta = parsed.choices?.[0]?.delta;
-            const finishReason = parsed.choices?.[0]?.finish_reason;
+            parsed = JSON.parse(jsonStr);
+          } catch (err) {
+            console.warn("Skipping malformed SSE chunk:", jsonStr.slice(0, 120));
+            continue;
+          }
 
-            // Handle text content
-            if (delta?.content) {
-              assistantSoFar += delta.content;
+          const delta = parsed.choices?.[0]?.delta;
+          const finishReason = parsed.choices?.[0]?.finish_reason;
+
+          // Handle text content
+          if (delta?.content) {
+            assistantSoFar += delta.content;
+            setMessages(prev => {
+              const last = prev[prev.length - 1];
+              if (last?.role === "assistant") {
+                return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
+              }
+              return [...prev, { role: "assistant", content: assistantSoFar }];
+            });
+            scrollToBottom();
+          }
+
+          // Accumulate tool call chunks
+          if (delta?.tool_calls) {
+            for (const tc of delta.tool_calls) {
+              const idx = tc.index ?? 0;
+              if (!toolCallAccumulator[idx]) {
+                toolCallAccumulator[idx] = { name: "", arguments: "" };
+              }
+              if (tc.function?.name) {
+                toolCallAccumulator[idx].name = tc.function.name;
+              }
+              if (tc.function?.arguments) {
+                toolCallAccumulator[idx].arguments += tc.function.arguments;
+              }
+            }
+          }
+
+          // Process tool calls when finish_reason indicates they're complete
+          if (finishReason === "tool_calls" || finishReason === "stop") {
+            for (const [, tc] of Object.entries(toolCallAccumulator)) {
+              if (tc.name === "complete_module" && tc.arguments) {
+                try {
+                  const args = JSON.parse(tc.arguments);
+                  if (args.module) onModuleComplete(args.module);
+                } catch (e) {
+                  console.warn("Failed to parse complete_module args:", tc.arguments);
+                }
+              }
+            }
+            // Clear accumulator after processing
+            Object.keys(toolCallAccumulator).forEach(k => delete toolCallAccumulator[Number(k)]);
+
+            // If model called a tool but produced no text, prompt a continuation so it doesn't hang
+            if (finishReason === "tool_calls" && !assistantSoFar.trim()) {
+              assistantSoFar = "✅ Registrado! Vamos continuar.";
               setMessages(prev => {
                 const last = prev[prev.length - 1];
                 if (last?.role === "assistant") {
@@ -90,45 +140,7 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement }: Pro
                 }
                 return [...prev, { role: "assistant", content: assistantSoFar }];
               });
-              scrollToBottom();
             }
-
-            // Accumulate tool call chunks
-            if (delta?.tool_calls) {
-              for (const tc of delta.tool_calls) {
-                const idx = tc.index ?? 0;
-                if (!toolCallAccumulator[idx]) {
-                  toolCallAccumulator[idx] = { name: "", arguments: "" };
-                }
-                if (tc.function?.name) {
-                  toolCallAccumulator[idx].name = tc.function.name;
-                }
-                if (tc.function?.arguments) {
-                  toolCallAccumulator[idx].arguments += tc.function.arguments;
-                }
-              }
-            }
-
-            // Process tool calls when finish_reason indicates they're complete
-            if (finishReason === "tool_calls" || finishReason === "stop") {
-              for (const [, tc] of Object.entries(toolCallAccumulator)) {
-                if (tc.name === "complete_module" && tc.arguments) {
-                  try {
-                    const args = JSON.parse(tc.arguments);
-                    if (args.module) onModuleComplete(args.module);
-                  } catch (e) {
-                    console.warn("Failed to parse complete_module args:", tc.arguments);
-                  }
-                }
-                // show_insight is rendered inline by the AI text
-              }
-              // Clear accumulator after processing
-              Object.keys(toolCallAccumulator).forEach(k => delete toolCallAccumulator[Number(k)]);
-            }
-          } catch {
-            // Partial JSON - put back in buffer
-            buffer = line + "\n" + buffer;
-            break;
           }
         }
       }
