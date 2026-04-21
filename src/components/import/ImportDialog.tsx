@@ -74,6 +74,7 @@ export function ImportDialog({ config, module, onImportComplete, onAnalyzeAI, tr
     setOpen(false);
     reset();
     setRunAIAnalysis(false);
+    setFileName('');
   };
 
   const canImport = () => {
