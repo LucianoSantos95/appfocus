@@ -86,6 +86,7 @@ import {
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { ImportExtratoDialog } from "@/components/financas/ImportExtratoDialog";
+import { ImportHistoryDialog } from "@/components/import/ImportHistoryDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { useContasBancarias, ContaBancaria } from "@/hooks/useContasBancarias";
