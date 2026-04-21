@@ -21,6 +21,10 @@ function normalizeWhatsAppNumber(raw: string) {
   return cleanNumber;
 }
 
+function formatWhatsAppAddress(raw: string) {
+  return `whatsapp:+${normalizeWhatsAppNumber(raw)}`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -73,8 +77,8 @@ serve(async (req) => {
       });
     }
 
-    const whatsappTo = `whatsapp:+${cleanNumber}`;
-    const whatsappFrom = `whatsapp:${TWILIO_WHATSAPP_NUMBER.startsWith("+") ? TWILIO_WHATSAPP_NUMBER : "+" + TWILIO_WHATSAPP_NUMBER}`;
+    const whatsappTo = formatWhatsAppAddress(cleanNumber);
+    const whatsappFrom = formatWhatsAppAddress(TWILIO_WHATSAPP_NUMBER);
 
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
     const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
