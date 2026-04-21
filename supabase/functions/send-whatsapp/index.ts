@@ -53,8 +53,12 @@ serve(async (req) => {
       });
     }
 
-    // Clean number - ensure E.164 with whatsapp: prefix
-    const cleanNumber = to.replace(/\D/g, "");
+    // Clean number - ensure E.164 with whatsapp: prefix (auto-prefix BR DDI 55 if missing)
+    let cleanNumber = to.replace(/\D/g, "");
+    if (cleanNumber.startsWith("0")) cleanNumber = cleanNumber.replace(/^0+/, "");
+    if (!cleanNumber.startsWith("55") && (cleanNumber.length === 10 || cleanNumber.length === 11)) {
+      cleanNumber = "55" + cleanNumber;
+    }
     const whatsappTo = `whatsapp:+${cleanNumber}`;
     const whatsappFrom = `whatsapp:${TWILIO_WHATSAPP_NUMBER.startsWith("+") ? TWILIO_WHATSAPP_NUMBER : "+" + TWILIO_WHATSAPP_NUMBER}`;
 

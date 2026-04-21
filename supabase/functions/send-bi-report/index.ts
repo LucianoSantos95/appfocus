@@ -263,9 +263,17 @@ async function sendWhatsApp(to: string, message: string) {
   const from = Deno.env.get("TWILIO_WHATSAPP_NUMBER");
   if (!sid || !token || !from) throw new Error("Twilio not configured");
 
-  const cleanNumber = to.replace(/\D/g, "");
+  // Normaliza para E.164 com DDI Brasil (55) quando ausente
+  let cleanNumber = to.replace(/\D/g, "");
+  // Remove zero inicial de DDD (ex: 011 -> 11)
+  if (cleanNumber.startsWith("0")) cleanNumber = cleanNumber.replace(/^0+/, "");
+  // Se não começar com 55 e tiver 10 ou 11 dígitos (DDD + número BR), prefixa 55
+  if (!cleanNumber.startsWith("55") && (cleanNumber.length === 10 || cleanNumber.length === 11)) {
+    cleanNumber = "55" + cleanNumber;
+  }
   const whatsappTo = `whatsapp:+${cleanNumber}`;
   const whatsappFrom = `whatsapp:${from.startsWith("+") ? from : "+" + from}`;
+  console.log(`[send-bi-report] WhatsApp To: ${whatsappTo} (original: ${to})`);
 
   const res = await fetch(
     `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
