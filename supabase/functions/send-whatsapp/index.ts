@@ -11,6 +11,16 @@ const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 const TWILIO_WHATSAPP_NUMBER = Deno.env.get("TWILIO_WHATSAPP_NUMBER");
 
+function normalizeWhatsAppNumber(raw: string) {
+  let cleanNumber = raw.replace(/\D/g, "");
+  if (cleanNumber.startsWith("0")) cleanNumber = cleanNumber.replace(/^0+/, "");
+  if (!cleanNumber.startsWith("55") && (cleanNumber.length === 10 || cleanNumber.length === 11)) {
+    cleanNumber = "55" + cleanNumber;
+  }
+
+  return cleanNumber;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -53,12 +63,16 @@ serve(async (req) => {
       });
     }
 
-    // Clean number - ensure E.164 with whatsapp: prefix (auto-prefix BR DDI 55 if missing)
-    let cleanNumber = to.replace(/\D/g, "");
-    if (cleanNumber.startsWith("0")) cleanNumber = cleanNumber.replace(/^0+/, "");
-    if (!cleanNumber.startsWith("55") && (cleanNumber.length === 10 || cleanNumber.length === 11)) {
-      cleanNumber = "55" + cleanNumber;
+    const cleanNumber = normalizeWhatsAppNumber(to);
+    const cleanFrom = normalizeWhatsAppNumber(TWILIO_WHATSAPP_NUMBER);
+
+    if (cleanNumber === cleanFrom) {
+      return new Response(JSON.stringify({ error: "O número de destino é o mesmo número configurado para envio no WhatsApp. Use outro número para testar." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+
     const whatsappTo = `whatsapp:+${cleanNumber}`;
     const whatsappFrom = `whatsapp:${TWILIO_WHATSAPP_NUMBER.startsWith("+") ? TWILIO_WHATSAPP_NUMBER : "+" + TWILIO_WHATSAPP_NUMBER}`;
 
@@ -82,6 +96,13 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error("Twilio error:", data);
+      if (data?.code === 63031) {
+        return new Response(JSON.stringify({ error: "O Twilio bloqueou o envio porque o número de destino é igual ao número remetente configurado. Escolha outro WhatsApp para o teste." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       return new Response(JSON.stringify({ error: "Failed to send WhatsApp", details: data }), {
         status: response.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

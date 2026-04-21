@@ -30,6 +30,25 @@ interface ReportPayload {
   empresa?: string;
 }
 
+class HttpError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function normalizeWhatsAppNumber(raw: string): string {
+  let cleanNumber = raw.replace(/\D/g, "");
+  if (cleanNumber.startsWith("0")) cleanNumber = cleanNumber.replace(/^0+/, "");
+  if (!cleanNumber.startsWith("55") && (cleanNumber.length === 10 || cleanNumber.length === 11)) {
+    cleanNumber = "55" + cleanNumber;
+  }
+
+  return cleanNumber;
+}
+
 function generatePDF(payload: ReportPayload): Uint8Array {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -263,14 +282,16 @@ async function sendWhatsApp(to: string, message: string) {
   const from = Deno.env.get("TWILIO_WHATSAPP_NUMBER");
   if (!sid || !token || !from) throw new Error("Twilio not configured");
 
-  // Normaliza para E.164 com DDI Brasil (55) quando ausente
-  let cleanNumber = to.replace(/\D/g, "");
-  // Remove zero inicial de DDD (ex: 011 -> 11)
-  if (cleanNumber.startsWith("0")) cleanNumber = cleanNumber.replace(/^0+/, "");
-  // Se não começar com 55 e tiver 10 ou 11 dígitos (DDD + número BR), prefixa 55
-  if (!cleanNumber.startsWith("55") && (cleanNumber.length === 10 || cleanNumber.length === 11)) {
-    cleanNumber = "55" + cleanNumber;
+  const cleanNumber = normalizeWhatsAppNumber(to);
+  const cleanFrom = normalizeWhatsAppNumber(from);
+
+  if (cleanNumber === cleanFrom) {
+    throw new HttpError(
+      400,
+      "O número de destino é o mesmo número configurado para envio no WhatsApp. Para testar, use outro número de destinatário.",
+    );
   }
+
   const whatsappTo = `whatsapp:+${cleanNumber}`;
   const whatsappFrom = `whatsapp:${from.startsWith("+") ? from : "+" + from}`;
   console.log(`[send-bi-report] WhatsApp To: ${whatsappTo} (original: ${to})`);
@@ -287,8 +308,15 @@ async function sendWhatsApp(to: string, message: string) {
     },
   );
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Twilio error: ${err}`);
+    const errorPayload = await res.json().catch(async () => ({ raw: await res.text() }));
+    if (errorPayload?.code === 63031) {
+      throw new HttpError(
+        400,
+        "O Twilio bloqueou o envio porque o número de destino é igual ao número remetente configurado. Escolha outro WhatsApp para o teste.",
+      );
+    }
+
+    throw new Error(`Twilio error: ${JSON.stringify(errorPayload)}`);
   }
   return await res.json();
 }
@@ -389,7 +417,10 @@ serve(async (req) => {
     console.error("send-bi-report error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      {
+        status: error instanceof HttpError ? error.status : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 });
