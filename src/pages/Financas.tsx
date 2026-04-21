@@ -408,6 +408,7 @@ export default function Financas() {
             <PlanGateButton module="financas" action="create">
               <ImportDialog
                 config={importConfigs.financas_transacoes}
+                module="financeiro"
                 onImportComplete={handleImportTransactions}
                 trigger={
                   <Button variant="outline" className="gap-2">
@@ -417,6 +418,7 @@ export default function Financas() {
                 }
               />
             </PlanGateButton>
+            <ImportHistoryDialog module="financeiro" />
             <PlanGateButton module="financas" action="export">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
