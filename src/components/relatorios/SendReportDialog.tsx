@@ -68,9 +68,9 @@ export function SendReportDialog({ open, onOpenChange, payload }: Props) {
   const { contatos, addContato, deleteContato } = useRelatorioContatos();
   const [tab, setTab] = useState<"contatos" | "manual">("contatos");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [canal, setCanal] = useState<Canal>("email");
+  const canal: Canal = "email";
   const [formatoEmail, setFormatoEmail] = useState<FormatoEmail>("pdf");
-  const [formatoWhats, setFormatoWhats] = useState<FormatoWhats>("pdf");
+  const [formatoWhats] = useState<FormatoWhats>("pdf");
   const [manualNome, setManualNome] = useState("");
   const [manualEmail, setManualEmail] = useState("");
   const [manualTel, setManualTel] = useState("");
@@ -198,47 +198,29 @@ export function SendReportDialog({ open, onOpenChange, payload }: Props) {
         </DialogHeader>
 
         <div className="space-y-5">
-          {/* Canal */}
+          {/* Canal: WhatsApp temporariamente desabilitado, somente E-mail */}
           <div className="space-y-2">
             <Label>Canal de envio</Label>
-            <RadioGroup value={canal} onValueChange={(v) => setCanal(v as Canal)} className="grid grid-cols-2 gap-3">
-              <Label htmlFor="canal-email" className="flex items-center gap-2 border rounded-lg p-3 cursor-pointer hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                <RadioGroupItem value="email" id="canal-email" />
-                <Mail className="w-4 h-4" /> E-mail
-              </Label>
-              <Label htmlFor="canal-whats" className="flex items-center gap-2 border rounded-lg p-3 cursor-pointer hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                <RadioGroupItem value="whatsapp" id="canal-whats" />
-                <MessageSquare className="w-4 h-4" /> WhatsApp
-              </Label>
-            </RadioGroup>
+            <div className="flex items-center gap-2 border rounded-lg p-3 border-primary bg-primary/5">
+              <Mail className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">E-mail</span>
+              <span className="ml-auto text-xs text-muted-foreground">WhatsApp em breve</span>
+            </div>
           </div>
 
-          {/* Formato */}
+          {/* Formato (apenas e-mail) */}
           <div className="space-y-2">
             <Label>Formato</Label>
-            {canal === "email" ? (
-              <RadioGroup value={formatoEmail} onValueChange={(v) => setFormatoEmail(v as FormatoEmail)} className="grid grid-cols-2 gap-3">
-                <Label htmlFor="fmt-pdf" className="flex items-center gap-2 border rounded-lg p-3 cursor-pointer hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                  <RadioGroupItem value="pdf" id="fmt-pdf" />
-                  <FileType className="w-4 h-4" /> PDF anexo
-                </Label>
-                <Label htmlFor="fmt-html" className="flex items-center gap-2 border rounded-lg p-3 cursor-pointer hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                  <RadioGroupItem value="html" id="fmt-html" />
-                  <FileText className="w-4 h-4" /> Resumo HTML
-                </Label>
-              </RadioGroup>
-            ) : (
-              <RadioGroup value={formatoWhats} onValueChange={(v) => setFormatoWhats(v as FormatoWhats)} className="grid grid-cols-2 gap-3">
-                <Label htmlFor="fmt-wpdf" className="flex items-center gap-2 border rounded-lg p-3 cursor-pointer hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                  <RadioGroupItem value="pdf" id="fmt-wpdf" />
-                  <FileType className="w-4 h-4" /> Link p/ PDF
-                </Label>
-                <Label htmlFor="fmt-wtxt" className="flex items-center gap-2 border rounded-lg p-3 cursor-pointer hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                  <RadioGroupItem value="texto" id="fmt-wtxt" />
-                  <FileText className="w-4 h-4" /> Resumo de texto
-                </Label>
-              </RadioGroup>
-            )}
+            <RadioGroup value={formatoEmail} onValueChange={(v) => setFormatoEmail(v as FormatoEmail)} className="grid grid-cols-2 gap-3">
+              <Label htmlFor="fmt-pdf" className="flex items-center gap-2 border rounded-lg p-3 cursor-pointer hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                <RadioGroupItem value="pdf" id="fmt-pdf" />
+                <FileType className="w-4 h-4" /> PDF anexo
+              </Label>
+              <Label htmlFor="fmt-html" className="flex items-center gap-2 border rounded-lg p-3 cursor-pointer hover:bg-accent has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                <RadioGroupItem value="html" id="fmt-html" />
+                <FileText className="w-4 h-4" /> Resumo HTML
+              </Label>
+            </RadioGroup>
           </div>
 
           {/* Destinatário */}
