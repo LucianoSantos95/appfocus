@@ -1,14 +1,16 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { OnboardingWelcomeModal } from "@/components/onboarding/OnboardingWelcomeModal";
 import { OnboardingProgressBar } from "@/components/onboarding/OnboardingProgressBar";
 import { OnboardingChat } from "@/components/onboarding/OnboardingChat";
 import { OnboardingCouponBanner } from "@/components/onboarding/OnboardingCouponBanner";
+import { WowMomentCard, buildWowMoment, type WowMoment } from "@/components/onboarding/WowMomentCard";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
+import { useMilestones, formatDuration } from "@/hooks/useMilestones";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Rocket, PartyPopper, ArrowRight } from "lucide-react";
+import { Rocket, PartyPopper, ArrowRight, Timer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 
