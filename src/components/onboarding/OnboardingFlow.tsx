@@ -12,10 +12,12 @@ import { useNicheTemplate } from "@/hooks/useNicheTemplate";
 import { getNicheTemplate } from "@/lib/niche-templates";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Rocket, PartyPopper, ArrowRight, Timer } from "lucide-react";
+import { Rocket, PartyPopper, ArrowRight, Timer, SkipForward } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { toast } from "@/hooks/use-toast";
+
+const AUTO_TOUR_FLAG = "hub_auto_tour_pending";
 
 export function OnboardingFlow() {
   const {
@@ -48,6 +50,16 @@ export function OnboardingFlow() {
       });
     }
   }, [createSession, recordMilestone, applyNicheTemplate]);
+
+  const handleSkipOnboarding = useCallback(async () => {
+    await recordMilestone("onboarding_skipped");
+    localStorage.setItem(AUTO_TOUR_FLAG, "1");
+    toast({
+      title: "Sem problemas! Você pode retomar quando quiser.",
+      description: "Vamos te mostrar um tour rápido do painel.",
+    });
+    navigate("/");
+  }, [recordMilestone, navigate]);
 
   const handleModuleComplete = useCallback(async (mod: string, metadata: Record<string, any> = {}) => {
     await completeModule(mod);
@@ -99,7 +111,7 @@ export function OnboardingFlow() {
     return (
       <MainLayout>
         <PageMeta title="Onboarding" description="Configure sua operação com o Hub Empresarial" />
-        <OnboardingWelcomeModal open={true} onComplete={handleWelcomeComplete} />
+        <OnboardingWelcomeModal open={true} onComplete={handleWelcomeComplete} onSkip={handleSkipOnboarding} />
       </MainLayout>
     );
   }
@@ -137,7 +149,13 @@ export function OnboardingFlow() {
               </div>
             )}
             <div className="pt-4 flex justify-center gap-3">
-              <Button onClick={() => navigate("/")} className="gap-2">
+              <Button
+                onClick={() => {
+                  localStorage.setItem(AUTO_TOUR_FLAG, "1");
+                  navigate("/");
+                }}
+                className="gap-2"
+              >
                 <ArrowRight className="h-4 w-4" />
                 Ir para o Painel
               </Button>
@@ -161,16 +179,27 @@ export function OnboardingFlow() {
       <PageMeta title="Configurando seu Hub" description="Siga o assistente para configurar sua operação" />
       <div className="max-w-3xl mx-auto space-y-6 py-4 animate-fade-in">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="rounded-full bg-primary/20 p-2.5">
-            <Rocket className="h-6 w-6 text-primary" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-primary/20 p-2.5">
+              <Rocket className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Configurando seu Hub</h1>
+              <p className="text-sm text-muted-foreground">
+                O Focus vai te guiar para configurar tudo em poucos minutos
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Configurando seu Hub</h1>
-            <p className="text-sm text-muted-foreground">
-              O Focus vai te guiar para configurar tudo em poucos minutos
-            </p>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground gap-1.5 shrink-0"
+            onClick={handleSkipOnboarding}
+          >
+            <SkipForward className="h-3.5 w-3.5" />
+            Pular
+          </Button>
         </div>
 
         {/* Progress */}

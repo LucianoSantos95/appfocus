@@ -8,7 +8,8 @@ export type MilestoneKey =
   | "first_real_data"
   | "first_module_complete"
   | "aha_moment"
-  | "onboarding_complete";
+  | "onboarding_complete"
+  | "onboarding_skipped";
 
 export interface Milestone {
   id: string;

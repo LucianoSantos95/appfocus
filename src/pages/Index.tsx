@@ -2,6 +2,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { OnboardingPrompt } from "@/components/guide/OnboardingPrompt";
 import { OnboardingCouponBanner } from "@/components/onboarding/OnboardingCouponBanner";
+import { GuidedTour } from "@/components/guide/GuidedTour";
 import { ModuleCard } from "@/components/ui/module-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
@@ -9,7 +10,7 @@ import { HealthSummary } from "@/components/dashboard/HealthSummary";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   DollarSign,
   Users,
@@ -75,6 +76,7 @@ const modules = [
 const Index = () => {
   const navigate = useNavigate();
   const { needsOnboarding, session, loading: onbLoading } = useOnboardingSession();
+  const [forceTour, setForceTour] = useState(false);
 
   // Redirect new users to onboarding
   useEffect(() => {
@@ -82,6 +84,17 @@ const Index = () => {
       navigate("/onboarding", { replace: true });
     }
   }, [onbLoading, needsOnboarding, navigate]);
+
+  // Auto-trigger guided tour after completing/skipping onboarding
+  useEffect(() => {
+    if (onbLoading) return;
+    if (localStorage.getItem("hub_auto_tour_pending") === "1") {
+      localStorage.removeItem("hub_auto_tour_pending");
+      localStorage.removeItem("hubTourCompleted");
+      const t = setTimeout(() => setForceTour(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [onbLoading]);
 
   return (
     <MainLayout>
@@ -126,6 +139,7 @@ const Index = () => {
         <OnboardingPrompt />
         {session && <OnboardingCouponBanner session={session} />}
       </div>
+      <GuidedTour forceRun={forceTour} onTourComplete={() => setForceTour(false)} />
     </MainLayout>
   );
 };
