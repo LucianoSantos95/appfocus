@@ -24,6 +24,8 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Planos = lazy(() => import("./pages/Planos"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
+const Glossario = lazy(() => import("./pages/Glossario"));
+const Comparar = lazy(() => import("./pages/Comparar"));
 const Assinantes = lazy(() => import("./pages/Assinantes"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OnboardingPage = lazy(() => import("./pages/Onboarding"));
@@ -56,6 +58,8 @@ const App = () => (
                     <Route path="/termos" element={<Termos />} />
                     <Route path="/privacidade" element={<Privacidade />} />
                     <Route path="/planos" element={<Planos />} />
+                    <Route path="/glossario" element={<Glossario />} />
+                    <Route path="/comparar" element={<Comparar />} />
                     <Route path="/" element={<ProtectedRoute><ErrorBoundary><Index /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/financas" element={<ProtectedRoute><ErrorBoundary><Financas /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/rh" element={<ProtectedRoute><ErrorBoundary><RH /></ErrorBoundary></ProtectedRoute>} />

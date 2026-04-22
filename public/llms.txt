@@ -1,0 +1,43 @@
+# Hub Empresarial — Focus Inteligente
+
+> Sistema de gestão empresarial integrado para agências de marketing, consultorias, freelancers e pequenas empresas. Reúne em um único hub: Finanças, Clientes (CRM), Projetos, Tarefas, Marketing, RH e Processos, com automação por IA e relatórios prontos para apresentar a clientes.
+
+## Para que serve
+
+O Hub Empresarial substitui o uso fragmentado de planilhas, Trello, ferramentas financeiras e CRMs separados. Em poucos minutos, uma agência ou consultoria configura pipelines, tarefas, categorias financeiras e começa a operar de forma profissional, com indicadores, dashboards de BI e envio de relatórios por e-mail.
+
+## Para quem é
+
+- Agências de marketing digital (social media, performance, branding)
+- Consultorias (estratégia, RH, financeira, jurídica)
+- Freelancers que querem operar como empresa
+- Pequenas e médias empresas que precisam de gestão integrada
+
+## Diferenciais
+
+- Onboarding guiado por IA com personalização por nicho (Agência, Consultoria, Freelancer, PME)
+- Templates de operação pré-configurados (pipeline, tarefas, categorias) por segmento
+- Hub Assistant: assistente de IA com tool calling integrado a todos os módulos
+- Relatórios automáticos para apresentar a clientes (PDF, e-mail, WhatsApp)
+- Dashboards de BI por módulo (DRE, Inadimplência, Funil, Engajamento, Produtividade)
+- 100% em português, focado em operações brasileiras
+
+## Planos
+
+- Plus — R$69/mês — operação inicial
+- Pro — R$149/mês — relatórios avançados, automações e BI
+- Enterprise — R$297/mês — equipes, permissões e integrações
+
+## Recursos principais
+
+- [Site oficial](https://appfocus.lovable.app)
+- [Planos e preços](https://appfocus.lovable.app/planos)
+- [Glossário de gestão para agências](https://appfocus.lovable.app/glossario)
+- [Comparativo com alternativas](https://appfocus.lovable.app/comparar)
+- [Termos de uso](https://appfocus.lovable.app/termos)
+- [Política de privacidade](https://appfocus.lovable.app/privacidade)
+
+## Contato
+
+- Empresa: Focus Inteligente
+- Domínio: appfocus.lovable.app / app.focusinteligente.com.br
