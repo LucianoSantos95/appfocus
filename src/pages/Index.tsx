@@ -76,6 +76,7 @@ const modules = [
 const Index = () => {
   const navigate = useNavigate();
   const { needsOnboarding, session, loading: onbLoading } = useOnboardingSession();
+  const [forceTour, setForceTour] = useState(false);
 
   // Redirect new users to onboarding
   useEffect(() => {
@@ -83,6 +84,17 @@ const Index = () => {
       navigate("/onboarding", { replace: true });
     }
   }, [onbLoading, needsOnboarding, navigate]);
+
+  // Auto-trigger guided tour after completing/skipping onboarding
+  useEffect(() => {
+    if (onbLoading) return;
+    if (localStorage.getItem("hub_auto_tour_pending") === "1") {
+      localStorage.removeItem("hub_auto_tour_pending");
+      localStorage.removeItem("hubTourCompleted");
+      const t = setTimeout(() => setForceTour(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [onbLoading]);
 
   return (
     <MainLayout>
