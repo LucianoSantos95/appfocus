@@ -40,21 +40,25 @@ export function useMilestones() {
   const recordMilestone = useCallback(
     async (key: MilestoneKey, metadata: Record<string, any> = {}) => {
       if (!user) return null;
-      // Avoid duplicates (unique constraint also enforces this)
-      if (milestones.some((m) => m.milestone_key === key)) return null;
-
-      const { data } = await (supabase
+      const { data, error } = await (supabase
         .from("user_milestones" as any)
         .insert({ user_id: user.id, milestone_key: key, metadata } as any)
         .select()
-        .single() as any);
+        .maybeSingle() as any);
 
-      if (data) {
-        setMilestones((prev) => [...prev, data as Milestone]);
+      // 23505 = unique_violation: milestone already recorded, treat as success
+      if (error && (error as any).code !== "23505") {
+        console.warn("[useMilestones] recordMilestone failed:", key, error);
+        return null;
       }
-      return data as Milestone | null;
+      if (data) {
+        setMilestones((prev) =>
+          prev.some((m) => m.milestone_key === key) ? prev : [...prev, data as Milestone]
+        );
+      }
+      return (data as Milestone | null) ?? null;
     },
-    [user, milestones]
+    [user]
   );
 
   const getMilestone = useCallback(
