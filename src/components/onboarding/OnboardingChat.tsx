@@ -14,7 +14,7 @@ interface Message {
 
 interface Props {
   session: OnboardingSession;
-  onModuleComplete: (mod: string) => void;
+  onModuleComplete: (mod: string, metadata?: Record<string, any>) => void;
   onAchievement: (ach: string) => void;
 }
 
@@ -121,7 +121,7 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement }: Pro
               if (tc.name === "complete_module" && tc.arguments) {
                 try {
                   const args = JSON.parse(tc.arguments);
-                  if (args.module) onModuleComplete(args.module);
+                  if (args.module) onModuleComplete(args.module, args.data || {});
                 } catch (e) {
                   console.warn("Failed to parse complete_module args:", tc.arguments);
                 }
