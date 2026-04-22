@@ -19,16 +19,37 @@ export function OnboardingFlow() {
     session, loading, createSession, completeModule,
     addAchievement, needsOnboarding, isOnboardingComplete,
   } = useOnboardingSession();
+  const { recordMilestone, timeBetween, getMilestone } = useMilestones();
   const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(true);
+  const [wowMoment, setWowMoment] = useState<WowMoment | null>(null);
+
+  // Record signup milestone on first mount with a user
+  useEffect(() => {
+    recordMilestone("signup");
+  }, [recordMilestone]);
 
   const handleWelcomeComplete = useCallback(async (segment: string, pain: string) => {
     await createSession(segment, pain);
+    await recordMilestone("onboarding_started", { segment, pain });
     setShowWelcome(false);
-  }, [createSession]);
+  }, [createSession, recordMilestone]);
 
-  const handleModuleComplete = useCallback(async (mod: string) => {
+  const handleModuleComplete = useCallback(async (mod: string, metadata: Record<string, any> = {}) => {
     await completeModule(mod);
+
+    // Telemetry: first module completion is the "aha moment"
+    const isFirst = (session?.completed_modules?.length || 0) === 0;
+    if (isFirst) {
+      await recordMilestone("first_real_data", { module: mod, ...metadata });
+      await recordMilestone("aha_moment", { module: mod });
+    }
+    await recordMilestone("first_module_complete", { module: mod });
+
+    // Build personalized WOW moment
+    const ttv = timeBetween("onboarding_started", "first_real_data");
+    setWowMoment(buildWowMoment(mod, ttv, metadata));
+
     const achievementMap: Record<string, string> = {
       financas: "financial_manager",
       clientes: "networker",
@@ -36,13 +57,14 @@ export function OnboardingFlow() {
     if (achievementMap[mod]) {
       await addAchievement(achievementMap[mod]);
     }
-    // Check if all complete
+
     const newCount = (session?.completed_modules?.length || 0) + 1;
     if (newCount >= 3) {
       await addAchievement("operation_running");
+      await recordMilestone("onboarding_complete");
       confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
     }
-  }, [completeModule, addAchievement, session]);
+  }, [completeModule, addAchievement, session, recordMilestone, timeBetween]);
 
   const handleAchievement = useCallback(async (ach: string) => {
     await addAchievement(ach);
