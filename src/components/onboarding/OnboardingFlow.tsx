@@ -103,6 +103,7 @@ export function OnboardingFlow() {
 
   // Completed state
   if (isOnboardingComplete) {
+    const ttvSeconds = timeBetween("onboarding_started", "onboarding_complete");
     return (
       <MainLayout>
         <PageMeta title="Onboarding Concluído!" description="Sua operação está configurada" />
@@ -113,6 +114,14 @@ export function OnboardingFlow() {
             <p className="text-muted-foreground max-w-md mx-auto">
               Você completou o onboarding e sua operação já está pronta. Agora é só usar o Hub no dia a dia!
             </p>
+            {ttvSeconds !== null && (
+              <div className="inline-flex items-center gap-2 mx-auto rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5">
+                <Timer className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium text-foreground">
+                  Você levou apenas <span className="font-bold text-primary">{formatDuration(ttvSeconds)}</span> para configurar seu Hub
+                </span>
+              </div>
+            )}
             <div className="pt-4 flex justify-center gap-3">
               <Button onClick={() => navigate("/")} className="gap-2">
                 <ArrowRight className="h-4 w-4" />
@@ -127,6 +136,7 @@ export function OnboardingFlow() {
           <OnboardingProgressBar session={session} />
         </div>
         <OnboardingCouponBanner session={session} />
+        <WowMomentCard moment={wowMoment} onDismiss={() => setWowMoment(null)} />
       </MainLayout>
     );
   }
@@ -161,6 +171,7 @@ export function OnboardingFlow() {
           onAchievement={handleAchievement}
         />
       </div>
+      <WowMomentCard moment={wowMoment} onDismiss={() => setWowMoment(null)} />
     </MainLayout>
   );
 }
