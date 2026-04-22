@@ -111,7 +111,7 @@ export function OnboardingFlow() {
     return (
       <MainLayout>
         <PageMeta title="Onboarding" description="Configure sua operação com o Hub Empresarial" />
-        <OnboardingWelcomeModal open={true} onComplete={handleWelcomeComplete} />
+        <OnboardingWelcomeModal open={true} onComplete={handleWelcomeComplete} onSkip={handleSkipOnboarding} />
       </MainLayout>
     );
   }
@@ -173,16 +173,27 @@ export function OnboardingFlow() {
       <PageMeta title="Configurando seu Hub" description="Siga o assistente para configurar sua operação" />
       <div className="max-w-3xl mx-auto space-y-6 py-4 animate-fade-in">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="rounded-full bg-primary/20 p-2.5">
-            <Rocket className="h-6 w-6 text-primary" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-primary/20 p-2.5">
+              <Rocket className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Configurando seu Hub</h1>
+              <p className="text-sm text-muted-foreground">
+                O Focus vai te guiar para configurar tudo em poucos minutos
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Configurando seu Hub</h1>
-            <p className="text-sm text-muted-foreground">
-              O Focus vai te guiar para configurar tudo em poucos minutos
-            </p>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground gap-1.5 shrink-0"
+            onClick={handleSkipOnboarding}
+          >
+            <SkipForward className="h-3.5 w-3.5" />
+            Pular
+          </Button>
         </div>
 
         {/* Progress */}
