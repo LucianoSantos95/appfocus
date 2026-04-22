@@ -2,6 +2,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { OnboardingPrompt } from "@/components/guide/OnboardingPrompt";
 import { OnboardingCouponBanner } from "@/components/onboarding/OnboardingCouponBanner";
+import { GuidedTour } from "@/components/guide/GuidedTour";
 import { ModuleCard } from "@/components/ui/module-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
@@ -9,7 +10,7 @@ import { HealthSummary } from "@/components/dashboard/HealthSummary";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   DollarSign,
   Users,
@@ -126,6 +127,7 @@ const Index = () => {
         <OnboardingPrompt />
         {session && <OnboardingCouponBanner session={session} />}
       </div>
+      <GuidedTour forceRun={forceTour} onTourComplete={() => setForceTour(false)} />
     </MainLayout>
   );
 };

@@ -149,7 +149,13 @@ export function OnboardingFlow() {
               </div>
             )}
             <div className="pt-4 flex justify-center gap-3">
-              <Button onClick={() => navigate("/")} className="gap-2">
+              <Button
+                onClick={() => {
+                  localStorage.setItem(AUTO_TOUR_FLAG, "1");
+                  navigate("/");
+                }}
+                className="gap-2"
+              >
                 <ArrowRight className="h-4 w-4" />
                 Ir para o Painel
               </Button>
