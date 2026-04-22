@@ -6,6 +6,7 @@ import { Rocket, Building2, Briefcase, User, TrendingUp } from "lucide-react";
 interface Props {
   open: boolean;
   onComplete: (segment: string, pain: string) => void;
+  onSkip?: () => void;
 }
 
 const segments = [
@@ -22,7 +23,7 @@ const pains = [
   { id: "tarefas", label: "Atividades", desc: "Gerenciar tarefas do dia a dia" },
 ];
 
-export function OnboardingWelcomeModal({ open, onComplete }: Props) {
+export function OnboardingWelcomeModal({ open, onComplete, onSkip }: Props) {
   const [step, setStep] = useState<"segment" | "pain">("segment");
   const [selectedSegment, setSelectedSegment] = useState("");
 
@@ -80,11 +81,23 @@ export function OnboardingWelcomeModal({ open, onComplete }: Props) {
                 ))}
           </div>
 
-          {step === "pain" && (
-            <Button variant="ghost" size="sm" className="mt-4" onClick={() => setStep("segment")}>
-              ← Voltar
-            </Button>
-          )}
+          <div className="mt-4 flex items-center justify-between">
+            {step === "pain" ? (
+              <Button variant="ghost" size="sm" onClick={() => setStep("segment")}>
+                ← Voltar
+              </Button>
+            ) : <span />}
+            {onSkip && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={onSkip}
+              >
+                Pular por enquanto
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
