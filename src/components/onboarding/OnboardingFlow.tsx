@@ -12,10 +12,12 @@ import { useNicheTemplate } from "@/hooks/useNicheTemplate";
 import { getNicheTemplate } from "@/lib/niche-templates";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Rocket, PartyPopper, ArrowRight, Timer } from "lucide-react";
+import { Rocket, PartyPopper, ArrowRight, Timer, SkipForward } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { toast } from "@/hooks/use-toast";
+
+const AUTO_TOUR_FLAG = "hub_auto_tour_pending";
 
 export function OnboardingFlow() {
   const {
@@ -48,6 +50,16 @@ export function OnboardingFlow() {
       });
     }
   }, [createSession, recordMilestone, applyNicheTemplate]);
+
+  const handleSkipOnboarding = useCallback(async () => {
+    await recordMilestone("onboarding_skipped");
+    localStorage.setItem(AUTO_TOUR_FLAG, "1");
+    toast({
+      title: "Sem problemas! Você pode retomar quando quiser.",
+      description: "Vamos te mostrar um tour rápido do painel.",
+    });
+    navigate("/");
+  }, [recordMilestone, navigate]);
 
   const handleModuleComplete = useCallback(async (mod: string, metadata: Record<string, any> = {}) => {
     await completeModule(mod);
