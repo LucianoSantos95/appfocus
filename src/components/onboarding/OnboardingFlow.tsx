@@ -8,11 +8,14 @@ import { OnboardingCouponBanner } from "@/components/onboarding/OnboardingCoupon
 import { WowMomentCard, buildWowMoment, type WowMoment } from "@/components/onboarding/WowMomentCard";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useMilestones, formatDuration } from "@/hooks/useMilestones";
+import { useNicheTemplate } from "@/hooks/useNicheTemplate";
+import { getNicheTemplate } from "@/lib/niche-templates";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Rocket, PartyPopper, ArrowRight, Timer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
+import { toast } from "@/hooks/use-toast";
 
 export function OnboardingFlow() {
   const {
@@ -20,6 +23,7 @@ export function OnboardingFlow() {
     addAchievement, needsOnboarding, isOnboardingComplete,
   } = useOnboardingSession();
   const { recordMilestone, timeBetween, getMilestone } = useMilestones();
+  const { apply: applyNicheTemplate } = useNicheTemplate();
   const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(true);
   const [wowMoment, setWowMoment] = useState<WowMoment | null>(null);
@@ -33,7 +37,17 @@ export function OnboardingFlow() {
     await createSession(segment, pain);
     await recordMilestone("onboarding_started", { segment, pain });
     setShowWelcome(false);
-  }, [createSession, recordMilestone]);
+
+    // Apply niche template (pipelines, key tasks, financial categories)
+    const tpl = getNicheTemplate(segment);
+    const result = await applyNicheTemplate(segment);
+    if (result.ok && (result.created.processes + result.created.tasks + result.created.note) > 0) {
+      toast({
+        title: `Operação ${tpl.label} configurada ⚡`,
+        description: `Adicionamos ${result.created.processes} etapas de pipeline, ${result.created.tasks} tarefas-chave e categorias financeiras prontas para uso.`,
+      });
+    }
+  }, [createSession, recordMilestone, applyNicheTemplate]);
 
   const handleModuleComplete = useCallback(async (mod: string, metadata: Record<string, any> = {}) => {
     await completeModule(mod);
