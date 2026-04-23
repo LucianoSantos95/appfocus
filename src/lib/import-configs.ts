@@ -33,6 +33,7 @@ export const importConfigs: Record<string, ImportConfig> = {
   financas_transacoes: {
     label: "Transações Financeiras",
     table: "transacoes",
+    supportsAI: true,
     fields: [
       { key: "description", label: "Descrição", required: true, aliases: ["Descrição", "Descricao", "Histórico", "Historico", "Nome"] },
       { key: "value", label: "Valor", required: true, aliases: ["Valor", "Montante", "Quantia"], type: 'number' },

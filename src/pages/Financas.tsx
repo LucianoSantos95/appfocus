@@ -84,6 +84,7 @@ import {
   Cell,
 } from "recharts";
 import { ImportDialog } from "@/components/import/ImportDialog";
+import { SmartImportFinanceiroDialog } from "@/components/import/SmartImportFinanceiroDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { ImportExtratoDialog } from "@/components/financas/ImportExtratoDialog";
 import { ImportHistoryDialog } from "@/components/import/ImportHistoryDialog";
@@ -96,7 +97,7 @@ import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { FinanceiroBIPanel } from "@/components/bi/FinanceiroBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, Sparkles } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 // Types
@@ -401,6 +402,17 @@ export default function Financas() {
                   <Button variant="outline" className="gap-2">
                     <Receipt className="w-4 h-4" />
                     Importar Extrato
+                  </Button>
+                }
+              />
+            </PlanGateButton>
+            <PlanGateButton module="financas" action="create">
+              <SmartImportFinanceiroDialog
+                onImportComplete={handleImportTransactions}
+                trigger={
+                  <Button variant="outline" className="gap-2 border-primary/40 hover:bg-primary/5">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    Importar com IA
                   </Button>
                 }
               />
