@@ -264,8 +264,15 @@ async function sendEmail(
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
 
+  // Use o remetente do domínio verificado quando disponível.
+  // Defina o secret RESEND_FROM_EMAIL como ex.: "Hub Empresarial <relatorios@focusinteligente.com.br>"
+  // Sem ele, cai no sandbox do Resend (só envia para o e-mail dono da conta).
+  const fromAddress =
+    Deno.env.get("RESEND_FROM_EMAIL")?.trim() ||
+    "Hub Empresarial <onboarding@resend.dev>";
+
   const body: any = {
-    from: "Hub Empresarial <onboarding@resend.dev>",
+    from: fromAddress,
     to: [to],
     subject,
     html,
