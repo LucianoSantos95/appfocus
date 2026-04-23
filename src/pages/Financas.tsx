@@ -97,7 +97,7 @@ import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { FinanceiroBIPanel } from "@/components/bi/FinanceiroBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, Sparkles } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 // Types
