@@ -64,6 +64,17 @@ import {
   Receipt,
   Filter,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   BarChart,
   Bar,
@@ -287,6 +298,14 @@ export default function Financas() {
   const handleDeleteTransaction = (id: string) => {
     deleteTransacao(id);
   };
+
+  const handleBulkDelete = async (ids: string[]) => {
+    for (const id of ids) {
+      await deleteTransacao(id);
+    }
+    toast({ title: `${ids.length} transação(ões) excluída(s)` });
+  };
+
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     const tx = transactions.find(t => t.id === id);
@@ -710,6 +729,7 @@ export default function Financas() {
                     bankAccounts={bankAccounts}
                     onSelect={setSelectedTransaction}
                     onDelete={handleDeleteTransaction}
+                    onBulkDelete={handleBulkDelete}
                     onUpdateStatus={handleUpdateStatus}
                     statusStyles={statusStyles}
                   />
@@ -735,6 +755,7 @@ export default function Financas() {
                     bankAccounts={bankAccounts}
                     onSelect={setSelectedTransaction}
                     onDelete={handleDeleteTransaction}
+                    onBulkDelete={handleBulkDelete}
                     onUpdateStatus={handleUpdateStatus}
                     statusStyles={statusStyles}
                   />
@@ -1165,11 +1186,16 @@ function CategoryPieChart({ data, emptyLabel }: { data: { name: string; value: n
   );
 }
 
-function TransactionTableRows({ transactions, type, bankAccounts, onSelect, onDelete, onUpdateStatus, statusStyles }: { transactions: Transaction[]; type: "receita" | "despesa"; bankAccounts: ContaBancaria[]; onSelect: (t: Transaction) => void; onDelete: (id: string) => void; onUpdateStatus: (id: string, status: string) => void; statusStyles: Record<string, string> }) {
+function TransactionTableRows({ transactions, type, bankAccounts, onSelect, onDelete, onUpdateStatus, statusStyles, selectedIds, onToggleSelect }: { transactions: Transaction[]; type: "receita" | "despesa"; bankAccounts: ContaBancaria[]; onSelect: (t: Transaction) => void; onDelete: (id: string) => void; onUpdateStatus: (id: string, status: string) => void; statusStyles: Record<string, string>; selectedIds: Set<string>; onToggleSelect: (id: string) => void }) {
   return (
     <>
-      {transactions.map((t) => (
-        <TableRow key={t.id} className="border-border/50 cursor-pointer hover:bg-muted/30" onClick={() => onSelect(t)}>
+      {transactions.map((t) => {
+        const checked = selectedIds.has(t.id);
+        return (
+        <TableRow key={t.id} data-state={checked ? "selected" : undefined} className="border-border/50 cursor-pointer hover:bg-muted/30" onClick={() => onSelect(t)}>
+          <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
+            <Checkbox checked={checked} onCheckedChange={() => onToggleSelect(t.id)} aria-label="Selecionar transação" />
+          </TableCell>
           <TableCell>
             <div>
               <p className="font-medium text-foreground">{t.description}</p>
@@ -1226,41 +1252,117 @@ function TransactionTableRows({ transactions, type, bankAccounts, onSelect, onDe
             </DropdownMenu>
           </TableCell>
         </TableRow>
-      ))}
+        );
+      })}
     </>
   );
 }
 
-function TransactionTable({ transactions, type, bankAccounts, onSelect, onDelete, onUpdateStatus, statusStyles }: { transactions: Transaction[]; type: "receita" | "despesa"; bankAccounts: ContaBancaria[]; onSelect: (t: Transaction) => void; onDelete: (id: string) => void; onUpdateStatus: (id: string, status: string) => void; statusStyles: Record<string, string> }) {
+function TransactionTable({ transactions, type, bankAccounts, onSelect, onDelete, onBulkDelete, onUpdateStatus, statusStyles }: { transactions: Transaction[]; type: "receita" | "despesa"; bankAccounts: ContaBancaria[]; onSelect: (t: Transaction) => void; onDelete: (id: string) => void; onBulkDelete: (ids: string[]) => Promise<void> | void; onUpdateStatus: (id: string, status: string) => void; statusStyles: Record<string, string> }) {
   const [showAllDialog, setShowAllDialog] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const PREVIEW_LIMIT = 5;
   const hasMore = transactions.length > PREVIEW_LIMIT;
   const previewItems = hasMore ? transactions.slice(0, PREVIEW_LIMIT) : transactions;
 
+  // Clear selections that no longer exist (after delete or filter change)
+  useEffect(() => {
+    const valid = new Set(transactions.map(t => t.id));
+    setSelectedIds(prev => {
+      const next = new Set<string>();
+      prev.forEach(id => { if (valid.has(id)) next.add(id); });
+      return next.size === prev.size ? prev : next;
+    });
+  }, [transactions]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = (items: Transaction[]) => {
+    const ids = items.map(t => t.id);
+    const allSelected = ids.every(id => selectedIds.has(id));
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (allSelected) ids.forEach(id => next.delete(id));
+      else ids.forEach(id => next.add(id));
+      return next;
+    });
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    setDeleting(true);
+    try {
+      await onBulkDelete(Array.from(selectedIds));
+      setSelectedIds(new Set());
+      setConfirmOpen(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const renderHeaderRow = (items: Transaction[]) => {
+    const ids = items.map(t => t.id);
+    const allSelected = ids.length > 0 && ids.every(id => selectedIds.has(id));
+    const someSelected = ids.some(id => selectedIds.has(id)) && !allSelected;
+    return (
+      <TableRow className="border-border/50 hover:bg-transparent">
+        <TableHead className="w-10">
+          <Checkbox
+            checked={allSelected ? true : someSelected ? "indeterminate" : false}
+            onCheckedChange={() => toggleSelectAll(items)}
+            aria-label="Selecionar todas"
+          />
+        </TableHead>
+        <TableHead className="text-muted-foreground">Descrição</TableHead>
+        <TableHead className="text-muted-foreground">Valor</TableHead>
+        <TableHead className="text-muted-foreground">Data</TableHead>
+        <TableHead className="text-muted-foreground">Categoria</TableHead>
+        <TableHead className="text-muted-foreground">Banco</TableHead>
+        <TableHead className="text-muted-foreground">Status</TableHead>
+        <TableHead className="text-muted-foreground w-10"></TableHead>
+      </TableRow>
+    );
+  };
+
+  const selectionBar = selectedIds.size > 0 && (
+    <div className="flex items-center justify-between gap-3 px-4 py-2 bg-primary/5 border-b border-border/50">
+      <span className="text-sm text-foreground">
+        {selectedIds.size} selecionada{selectedIds.size > 1 ? "s" : ""}
+      </span>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+          Limpar
+        </Button>
+        <Button variant="destructive" size="sm" className="gap-2" onClick={() => setConfirmOpen(true)}>
+          <Trash2 className="w-4 h-4" />
+          Excluir selecionadas
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <div className="bg-card rounded-xl border border-border/50 shadow-premium overflow-hidden">
+        {selectionBar}
         <Table>
-          <TableHeader>
-            <TableRow className="border-border/50 hover:bg-transparent">
-              <TableHead className="text-muted-foreground">Descrição</TableHead>
-              <TableHead className="text-muted-foreground">Valor</TableHead>
-              <TableHead className="text-muted-foreground">Data</TableHead>
-              <TableHead className="text-muted-foreground">Categoria</TableHead>
-              <TableHead className="text-muted-foreground">Banco</TableHead>
-              <TableHead className="text-muted-foreground">Status</TableHead>
-              <TableHead className="text-muted-foreground w-10"></TableHead>
-            </TableRow>
-          </TableHeader>
+          <TableHeader>{renderHeaderRow(previewItems)}</TableHeader>
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Nenhuma {type === "receita" ? "receita" : "despesa"} registrada
                 </TableCell>
               </TableRow>
             ) : (
-              <TransactionTableRows transactions={previewItems} type={type} bankAccounts={bankAccounts} onSelect={onSelect} onDelete={onDelete} onUpdateStatus={onUpdateStatus} statusStyles={statusStyles} />
+              <TransactionTableRows transactions={previewItems} type={type} bankAccounts={bankAccounts} onSelect={onSelect} onDelete={onDelete} onUpdateStatus={onUpdateStatus} statusStyles={statusStyles} selectedIds={selectedIds} onToggleSelect={toggleSelect} />
             )}
           </TableBody>
         </Table>
@@ -1282,25 +1384,37 @@ function TransactionTable({ transactions, type, bankAccounts, onSelect, onDelete
             </DialogTitle>
           </DialogHeader>
           <div className="overflow-hidden rounded-lg border border-border/50">
+            {selectionBar}
             <Table>
-              <TableHeader>
-                <TableRow className="border-border/50 hover:bg-transparent">
-                  <TableHead className="text-muted-foreground">Descrição</TableHead>
-                  <TableHead className="text-muted-foreground">Valor</TableHead>
-                  <TableHead className="text-muted-foreground">Data</TableHead>
-                  <TableHead className="text-muted-foreground">Categoria</TableHead>
-                  <TableHead className="text-muted-foreground">Banco</TableHead>
-                  <TableHead className="text-muted-foreground">Status</TableHead>
-                  <TableHead className="text-muted-foreground w-10"></TableHead>
-                </TableRow>
-              </TableHeader>
+              <TableHeader>{renderHeaderRow(transactions)}</TableHeader>
               <TableBody>
-                <TransactionTableRows transactions={transactions} type={type} bankAccounts={bankAccounts} onSelect={onSelect} onDelete={onDelete} onUpdateStatus={onUpdateStatus} statusStyles={statusStyles} />
+                <TransactionTableRows transactions={transactions} type={type} bankAccounts={bankAccounts} onSelect={onSelect} onDelete={onDelete} onUpdateStatus={onUpdateStatus} statusStyles={statusStyles} selectedIds={selectedIds} onToggleSelect={toggleSelect} />
               </TableBody>
             </Table>
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Excluir {selectedIds.size} transação(ões)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. As transações selecionadas serão removidas permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(e) => { e.preventDefault(); handleConfirmBulkDelete(); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
