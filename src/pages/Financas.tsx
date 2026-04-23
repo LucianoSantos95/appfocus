@@ -84,6 +84,7 @@ import {
   Cell,
 } from "recharts";
 import { ImportDialog } from "@/components/import/ImportDialog";
+import { SmartImportFinanceiroDialog } from "@/components/import/SmartImportFinanceiroDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { ImportExtratoDialog } from "@/components/financas/ImportExtratoDialog";
 import { ImportHistoryDialog } from "@/components/import/ImportHistoryDialog";
