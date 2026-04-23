@@ -299,6 +299,14 @@ export default function Financas() {
     deleteTransacao(id);
   };
 
+  const handleBulkDelete = async (ids: string[]) => {
+    for (const id of ids) {
+      await deleteTransacao(id);
+    }
+    toast({ title: `${ids.length} transação(ões) excluída(s)` });
+  };
+
+
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     const tx = transactions.find(t => t.id === id);
     if (!tx) return;
