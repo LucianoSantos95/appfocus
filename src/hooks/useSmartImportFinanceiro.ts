@@ -30,13 +30,22 @@ export function useSmartImportFinanceiro() {
       const XLSX = await import("xlsx");
       const buf = await file.arrayBuffer();
       const wb = XLSX.read(buf, { type: "array" });
-      const sheets = wb.SheetNames.map((name) => {
+      const sheets = wb.SheetNames.slice(0, 6).map((name) => {
         const ws = wb.Sheets[name];
-        const rows = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+        const rawRows = XLSX.utils.sheet_to_json<unknown[]>(ws, {
           header: 1,
           raw: false,
           defval: "",
         });
+        // Remove linhas vazias e limita células no client p/ reduzir payload
+        const rows = rawRows
+          .map((r) =>
+            (r as unknown[]).map((c) =>
+              c == null ? "" : String(c).trim().slice(0, 60)
+            )
+          )
+          .filter((r) => r.some((c) => c !== ""))
+          .slice(0, 150);
         return { sheetName: name, rows };
       });
 

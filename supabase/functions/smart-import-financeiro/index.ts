@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface SheetData {
   sheetName: string;
-  rows: unknown[][]; // matriz crua (linhas × colunas)
+  rows: unknown[][];
 }
 
 interface RequestBody {
@@ -17,16 +17,29 @@ interface RequestBody {
   defaultYear?: number;
 }
 
-const SYSTEM_PROMPT = `Você é um especialista em contabilidade brasileira que converte planilhas financeiras (DRE, Fluxo de Caixa, projeções, balancetes, extratos) em uma lista plana de transações.
+const SYSTEM_PROMPT = `Você converte planilhas financeiras brasileiras (DRE, Fluxo de Caixa, projeções, extratos) em transações.
 
 REGRAS:
-- Cada transação deve ter: description, value (number), type ("receita" ou "despesa"), date (YYYY-MM-DD), category (opcional), status ("confirmado" ou "pendente"), notes (opcional, ex.: "DRE Março 2026").
-- Para DRE matricial (colunas = meses, linhas = categorias): gere UMA transação por (categoria × mês) com valor não nulo. Use o último dia do mês como date. Categorias com sinal negativo são "despesa", positivo são "receita".
-- Para fluxo de caixa projetado: marque entradas futuras como status "pendente"; passadas como "confirmado".
-- Para resumos/saldos (ex.: "Saldo Inicial", "Caixa Mês Anterior", subtotais como "Lucro Bruto", "Total"): IGNORE — só extraia movimentações reais.
-- Valores em formato brasileiro (R$ 1.234,56 ou -R$ 1.234,56): converta para number positivo (o sinal vai em type).
-- Se a planilha tiver várias mini-tabelas, processe todas.
-- Retorne no máximo 500 transações na chamada da ferramenta.`;
+- Cada transação: description, value (number positivo), type ("receita"|"despesa"), date (YYYY-MM-DD), category, status ("confirmado"|"pendente"), notes.
+- DRE matricial (colunas=meses, linhas=categorias): UMA transação por (categoria × mês) com valor não-zero. Use último dia do mês como date.
+- Categorias negativas → "despesa". Positivas → "receita".
+- Projeções futuras → status "pendente". Realizado/passado → "confirmado".
+- IGNORE: "Saldo Inicial", "Caixa Mês Anterior", "Lucro Bruto", "Total", "Subtotal", "Resultado".
+- Valores BR (R$ 1.234,56) → number positivo (sinal vai em type).
+- Máximo 300 transações.`;
+
+function compactRows(rows: unknown[][]): string[][] {
+  // Remove linhas totalmente vazias e limita células
+  return rows
+    .map((r) =>
+      r.map((c) => {
+        if (c == null) return "";
+        const s = String(c).trim().slice(0, 60);
+        return s;
+      })
+    )
+    .filter((r) => r.some((c) => c !== ""));
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -64,22 +77,26 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Compacta sheets em texto markdown (limita a 200 linhas por aba para caber no contexto)
-    const sheetsText = body.sheets
+    // LIMITES AGRESSIVOS: máx 4 abas, 120 linhas úteis por aba
+    const limitedSheets = body.sheets.slice(0, 4).map((s) => {
+      const compact = compactRows(s.rows).slice(0, 120);
+      return { sheetName: s.sheetName.slice(0, 40), rows: compact };
+    });
+
+    const sheetsText = limitedSheets
       .map((s) => {
-        const rows = s.rows.slice(0, 200);
-        const tsv = rows
-          .map((r) =>
-            r
-              .map((c) => (c == null ? "" : String(c).slice(0, 80)))
-              .join("\t")
-          )
-          .join("\n");
-        return `### Aba: ${s.sheetName}\n${tsv}`;
+        const tsv = s.rows.map((r) => r.join("\t")).join("\n");
+        return `### ${s.sheetName}\n${tsv}`;
       })
       .join("\n\n");
 
-    const userPrompt = `Arquivo: ${body.fileName}\nAno padrão: ${body.defaultYear ?? new Date().getFullYear()}\n\n${sheetsText}`;
+    // Hard cap: 40k chars no prompt total
+    const truncatedSheets =
+      sheetsText.length > 40000
+        ? sheetsText.slice(0, 40000) + "\n[truncado]"
+        : sheetsText;
+
+    const userPrompt = `Arquivo: ${body.fileName}\nAno: ${body.defaultYear ?? new Date().getFullYear()}\n\n${truncatedSheets}`;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -98,7 +115,7 @@ Deno.serve(async (req: Request) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-pro",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
             { role: "user", content: userPrompt },
@@ -108,14 +125,11 @@ Deno.serve(async (req: Request) => {
               type: "function",
               function: {
                 name: "emit_transactions",
-                description: "Devolve a lista de transações extraídas",
+                description: "Devolve transações extraídas",
                 parameters: {
                   type: "object",
                   properties: {
-                    summary: {
-                      type: "string",
-                      description: "Resumo curto do que foi detectado",
-                    },
+                    summary: { type: "string" },
                     transactions: {
                       type: "array",
                       items: {
@@ -124,10 +138,7 @@ Deno.serve(async (req: Request) => {
                           description: { type: "string" },
                           value: { type: "number" },
                           type: { type: "string", enum: ["receita", "despesa"] },
-                          date: {
-                            type: "string",
-                            description: "YYYY-MM-DD",
-                          },
+                          date: { type: "string" },
                           category: { type: "string" },
                           status: {
                             type: "string",
@@ -154,7 +165,7 @@ Deno.serve(async (req: Request) => {
 
     if (!aiResp.ok) {
       const txt = await aiResp.text();
-      console.error("AI error", aiResp.status, txt);
+      console.error("AI error", aiResp.status, txt.slice(0, 500));
       if (aiResp.status === 429) {
         return new Response(
           JSON.stringify({ error: "Limite de requisições. Aguarde um momento." }),
@@ -169,7 +180,7 @@ Deno.serve(async (req: Request) => {
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      return new Response(JSON.stringify({ error: "Falha na IA" }), {
+      return new Response(JSON.stringify({ error: `IA falhou (${aiResp.status})` }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -178,6 +189,7 @@ Deno.serve(async (req: Request) => {
     const aiJson = await aiResp.json();
     const toolCall = aiJson.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
+      console.error("No tool call", JSON.stringify(aiJson).slice(0, 500));
       return new Response(
         JSON.stringify({ error: "IA não retornou transações estruturadas" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -187,7 +199,7 @@ Deno.serve(async (req: Request) => {
     const parsed = JSON.parse(toolCall.function.arguments);
     return new Response(
       JSON.stringify({
-        summary: parsed.summary,
+        summary: parsed.summary ?? "",
         transactions: parsed.transactions ?? [],
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
