@@ -293,6 +293,11 @@ async function sendEmail(
   });
   if (!res.ok) {
     const err = await res.text();
+    if (err.includes("verify a domain") || err.includes("testing emails")) {
+      throw new Error(
+        "Para enviar para e-mails externos/corporativos, verifique seu domínio no Resend (https://resend.com/domains) e configure o secret RESEND_FROM_EMAIL com um remetente do seu domínio (ex.: relatorios@focusinteligente.com.br).",
+      );
+    }
     throw new Error(`Resend error: ${err}`);
   }
   return await res.json();
