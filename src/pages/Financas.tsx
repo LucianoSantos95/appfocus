@@ -729,6 +729,7 @@ export default function Financas() {
                     bankAccounts={bankAccounts}
                     onSelect={setSelectedTransaction}
                     onDelete={handleDeleteTransaction}
+                    onBulkDelete={handleBulkDelete}
                     onUpdateStatus={handleUpdateStatus}
                     statusStyles={statusStyles}
                   />
@@ -754,6 +755,7 @@ export default function Financas() {
                     bankAccounts={bankAccounts}
                     onSelect={setSelectedTransaction}
                     onDelete={handleDeleteTransaction}
+                    onBulkDelete={handleBulkDelete}
                     onUpdateStatus={handleUpdateStatus}
                     statusStyles={statusStyles}
                   />
