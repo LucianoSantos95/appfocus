@@ -407,6 +407,17 @@ export default function Financas() {
               />
             </PlanGateButton>
             <PlanGateButton module="financas" action="create">
+              <SmartImportFinanceiroDialog
+                onImportComplete={handleImportTransactions}
+                trigger={
+                  <Button variant="outline" className="gap-2 border-primary/40 hover:bg-primary/5">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    Importar com IA
+                  </Button>
+                }
+              />
+            </PlanGateButton>
+            <PlanGateButton module="financas" action="create">
               <ImportDialog
                 config={importConfigs.financas_transacoes}
                 module="financeiro"
