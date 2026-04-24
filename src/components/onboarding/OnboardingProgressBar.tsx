@@ -33,6 +33,8 @@ export function OnboardingProgressBar({ session }: Props) {
   const percent = session.current_step === "welcome" ? 10 :
     session.current_step === "completed" ? 100 :
     Math.round((completed.length / total) * 80 + 20);
+  const currentModule = route[completed.length] || route[route.length - 1];
+  const remaining = Math.max(total - completed.length, 0);
 
   return (
     <div className="space-y-4">
@@ -41,6 +43,21 @@ export function OnboardingProgressBar({ session }: Props) {
         <span className="text-sm text-primary font-bold">{percent}%</span>
       </div>
       <Progress value={percent} className="h-3" />
+
+      <div className="grid gap-3 rounded-lg border border-border/60 bg-card/40 p-4 md:grid-cols-3">
+        <div>
+          <p className="text-xs text-muted-foreground">Etapa atual</p>
+          <p className="text-sm font-semibold text-foreground">{MODULE_LABELS[currentModule] || currentModule}</p>
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Checklist concluído</p>
+          <p className="text-sm font-semibold text-foreground">{completed.length} de {total} passos</p>
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Faltam</p>
+          <p className="text-sm font-semibold text-foreground">{remaining} {remaining === 1 ? "etapa" : "etapas"}</p>
+        </div>
+      </div>
 
       {/* Module steps */}
       <div className="flex justify-between">
