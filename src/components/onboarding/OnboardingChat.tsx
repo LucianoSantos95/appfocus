@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import type { OnboardingSession } from "@/hooks/useOnboardingSession";
 
 const QUICK_REPLIES = [
@@ -17,6 +18,20 @@ const QUICK_REPLIES = [
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+interface ApiMessage {
+  role: "user" | "assistant" | "tool";
+  content: string;
+  tool_call_id?: string;
+  tool_calls?: Array<{
+    id: string;
+    type: "function";
+    function: {
+      name: string;
+      arguments: string;
+    };
+  }>;
 }
 
 interface Props {
@@ -40,11 +55,137 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
     }, 100);
   };
 
-  const streamChat = useCallback(async (msgs: Message[]) => {
+  const createRecordFromTool = useCallback(async (module: string, data: Record<string, any>) => {
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth.user;
+    if (!user) throw new Error("Usuário não autenticado");
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowIso = tomorrow.toISOString().split("T")[0];
+
+    switch (module) {
+      case "tarefas": {
+        const payload = {
+          title: data.nome || data.title || "Nova tarefa",
+          description: data.descricao || data.description || null,
+          due_date: data.vencimento === "amanhã" || data.vencimento === "amanha" ? tomorrowIso : (data.due_date || data.vencimento || null),
+          priority: data.prioridade || data.priority || "media",
+          status: data.status || "pendente",
+          user_id: user.id,
+        };
+        const { data: created, error } = await supabase.from("tarefas").insert(payload as never).select().single();
+        if (error) throw error;
+        return created;
+      }
+      case "clientes": {
+        const payload = {
+          nome: data.nome || data.name || "Novo cliente",
+          email: data.email || null,
+          telefone: data.telefone || data.phone || null,
+          segmento: data.segmento || null,
+          status: data.status || "prospecto",
+          valor_total: Number(data.valor_total || data.value || 0),
+          tipo_contrato: data.tipo_contrato || null,
+          anexo_url: null,
+          empresa: data.empresa || data.nome || data.name || "Novo cliente",
+          ultima_interacao: new Date().toISOString().split("T")[0],
+          user_id: user.id,
+        };
+        const { data: created, error } = await supabase.from("clientes").insert(payload as never).select().single();
+        if (error) throw error;
+        return created;
+      }
+      case "transacoes": {
+        const payload = {
+          description: data.descricao || data.description || "Nova transação",
+          value: Number(data.valor || data.value || 0),
+          date: data.date || new Date().toISOString().split("T")[0],
+          category: data.categoria || data.category || null,
+          type: data.tipo || data.type || "receita",
+          status: data.status || "pendente",
+          payment_method: data.payment_method || null,
+          client: data.cliente || data.client || null,
+          provider: data.provider || null,
+          notes: data.notes || null,
+          bank_account_id: null,
+          user_id: user.id,
+        };
+        const { data: created, error } = await supabase.from("transacoes").insert(payload as never).select().single();
+        if (error) throw error;
+        return created;
+      }
+      case "projetos": {
+        const payload = {
+          name: data.nome || data.name || "Novo projeto",
+          status: data.status || "planejamento",
+          priority: data.prioridade || data.priority || "media",
+          start_date: data.start_date || new Date().toISOString().split("T")[0],
+          end_date: data.end_date || data.prazo || null,
+          budget: data.orcamento ? Number(data.orcamento) : null,
+          responsible: data.responsavel || data.responsible || null,
+          description: data.descricao || data.description || null,
+          user_id: user.id,
+        };
+        const { data: created, error } = await supabase.from("projetos").insert(payload as never).select().single();
+        if (error) throw error;
+        return created;
+      }
+      case "processos": {
+        const payload = {
+          name: data.nome || data.name || "Novo processo",
+          description: data.descricao || data.description || null,
+          department: data.departamento || data.department || null,
+          owner: data.responsavel || data.owner || null,
+          status: data.status || "ativo",
+          user_id: user.id,
+        };
+        const { data: created, error } = await supabase.from("processos").insert(payload as never).select().single();
+        if (error) throw error;
+        return created;
+      }
+      case "campanhas": {
+        const payload = {
+          name: data.nome || data.name || "Nova campanha",
+          objective: data.objetivo || data.objective || null,
+          platforms: data.plataformas || data.platforms || null,
+          budget: data.orcamento ? Number(data.orcamento) : null,
+          start_date: data.start_date || new Date().toISOString().split("T")[0],
+          end_date: data.end_date || null,
+          status: data.status || "planejada",
+          responsible: data.responsavel || data.responsible || null,
+          user_id: user.id,
+        };
+        const { data: created, error } = await supabase.from("campanhas").insert(payload as never).select().single();
+        if (error) throw error;
+        return created;
+      }
+      case "colaboradores": {
+        const payload = {
+          name: data.nome || data.name || "Novo colaborador",
+          role: data.cargo || data.role || null,
+          department: data.departamento || data.department || null,
+          salary: data.salario ? Number(data.salario) : null,
+          start_date: data.start_date || new Date().toISOString().split("T")[0],
+          email: data.email || null,
+          phone: data.telefone || data.phone || null,
+          status: data.status || "ativo",
+          manager: data.gestor || data.manager || null,
+          user_id: user.id,
+        };
+        const { data: created, error } = await supabase.from("colaboradores").insert(payload as never).select().single();
+        if (error) throw error;
+        return created;
+      }
+      default:
+        throw new Error(`Módulo não suportado no onboarding: ${module}`);
+    }
+  }, []);
+
+  const streamChat = useCallback(async (msgs: ApiMessage[], depth = 0) => {
     setIsLoading(true);
     let assistantSoFar = "";
-    // Accumulate tool call arguments across chunks
-    const toolCallAccumulator: Record<number, { name: string; arguments: string }> = {};
+    const toolCallAccumulator: Record<number, { id?: string; name: string; arguments: string }> = {};
 
     try {
       const token = authSession?.access_token;
@@ -114,7 +255,10 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
               if (!toolCallAccumulator[idx]) {
                 toolCallAccumulator[idx] = { name: "", arguments: "" };
               }
-              if (tc.function?.name) {
+               if (tc.id) {
+                 toolCallAccumulator[idx].id = tc.id;
+               }
+               if (tc.function?.name) {
                 toolCallAccumulator[idx].name = tc.function.name;
               }
               if (tc.function?.arguments) {
@@ -125,7 +269,26 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
 
           // Process tool calls when finish_reason indicates they're complete
           if (finishReason === "tool_calls" || finishReason === "stop") {
+            const pendingToolMessages: ApiMessage[] = [];
             for (const [, tc] of Object.entries(toolCallAccumulator)) {
+              if (tc.name === "create_record" && tc.arguments) {
+                try {
+                  const args = JSON.parse(tc.arguments);
+                  const created = await createRecordFromTool(args.module, args.data || {});
+                  pendingToolMessages.push({
+                    role: "tool",
+                    tool_call_id: tc.id,
+                    content: JSON.stringify({ ok: true, module: args.module, record: created }),
+                  });
+                } catch (error) {
+                  pendingToolMessages.push({
+                    role: "tool",
+                    tool_call_id: tc.id,
+                    content: JSON.stringify({ ok: false, error: error instanceof Error ? error.message : "Erro ao criar registro" }),
+                  });
+                }
+              }
+
               if (tc.name === "show_insight" && tc.arguments) {
                 try {
                   const args = JSON.parse(tc.arguments);
@@ -162,6 +325,31 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
                 return [...prev, { role: "assistant", content: assistantSoFar }];
               });
             }
+
+            if (finishReason === "tool_calls" && pendingToolMessages.length > 0 && depth < 2) {
+              const assistantToolCalls = Object.values(toolCallAccumulator).map((call) => ({
+                id: call.id || crypto.randomUUID(),
+                type: "function" as const,
+                function: {
+                  name: call.name,
+                  arguments: call.arguments,
+                },
+              }));
+
+              const continuationMessages: ApiMessage[] = [
+                ...msgs,
+                {
+                  role: "assistant",
+                  content: assistantSoFar,
+                  tool_calls: assistantToolCalls,
+                },
+                ...pendingToolMessages,
+              ];
+
+              setIsLoading(false);
+              await streamChat(continuationMessages, depth + 1);
+              return;
+            }
           }
         }
       }
@@ -175,14 +363,14 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
 
     setIsLoading(false);
     scrollToBottom();
-  }, [session, onModuleComplete, authSession]);
+  }, [session, onModuleComplete, authSession, onInsight, createRecordFromTool]);
 
   // Auto-start conversation
   useEffect(() => {
     if (initializedRef.current || !session) return;
     initializedRef.current = true;
 
-    const greeting: Message = {
+    const greeting: ApiMessage = {
       role: "user",
       content: session.current_step === "welcome"
         ? "Olá! Acabei de configurar meu perfil. Me ajude a começar!"
