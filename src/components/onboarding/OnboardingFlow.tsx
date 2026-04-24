@@ -36,6 +36,16 @@ export function OnboardingFlow() {
     recordMilestone("signup");
   }, [recordMilestone]);
 
+  useEffect(() => {
+    if (!session?.started_at || session.current_step === "welcome") return;
+    void recordMilestone("onboarding_started", {
+      segment: session.segment,
+      pain: session.priority_pain,
+      source: "session_backfill",
+      started_at: session.started_at,
+    });
+  }, [session?.started_at, session?.current_step, session?.segment, session?.priority_pain, recordMilestone]);
+
   const handleWelcomeComplete = useCallback(async (segment: string, pain: string) => {
     await createSession(segment, pain);
     await recordMilestone("onboarding_started", { segment, pain });
