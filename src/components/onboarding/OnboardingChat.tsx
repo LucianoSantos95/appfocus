@@ -270,6 +270,15 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
           // Process tool calls when finish_reason indicates they're complete
           if (finishReason === "tool_calls" || finishReason === "stop") {
             const pendingToolMessages: ApiMessage[] = [];
+            const completedToolCalls = Object.values(toolCallAccumulator).map((call) => ({
+              id: call.id || crypto.randomUUID(),
+              type: "function" as const,
+              function: {
+                name: call.name,
+                arguments: call.arguments,
+              },
+            }));
+
             for (const [, tc] of Object.entries(toolCallAccumulator)) {
               if (tc.name === "create_record" && tc.arguments) {
                 try {
@@ -327,21 +336,12 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
             }
 
             if (finishReason === "tool_calls" && pendingToolMessages.length > 0 && depth < 2) {
-              const assistantToolCalls = Object.values(toolCallAccumulator).map((call) => ({
-                id: call.id || crypto.randomUUID(),
-                type: "function" as const,
-                function: {
-                  name: call.name,
-                  arguments: call.arguments,
-                },
-              }));
-
               const continuationMessages: ApiMessage[] = [
                 ...msgs,
                 {
                   role: "assistant",
                   content: assistantSoFar,
-                  tool_calls: assistantToolCalls,
+                  tool_calls: completedToolCalls,
                 },
                 ...pendingToolMessages,
               ];
@@ -370,7 +370,7 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
     if (initializedRef.current || !session) return;
     initializedRef.current = true;
 
-    const greeting: ApiMessage = {
+    const greeting: Message = {
       role: "user",
       content: session.current_step === "welcome"
         ? "Olá! Acabei de configurar meu perfil. Me ajude a começar!"
