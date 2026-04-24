@@ -3,6 +3,7 @@ import { Sidebar } from "./Sidebar";
 import { useSidebar } from "./SidebarContext";
 import { UpgradeCTA } from "@/components/plan/UpgradeCTA";
 import { AIChatWidget } from "@/components/chat/AIChatWidget";
+import { useLocation } from "react-router-dom";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -10,6 +11,8 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { collapsed } = useSidebar();
+  const location = useLocation();
+  const isOnboardingRoute = location.pathname === "/onboarding";
 
   return (
     <div className="min-h-screen bg-background">
@@ -19,8 +22,8 @@ export function MainLayout({ children }: MainLayoutProps) {
           {children}
         </div>
       </main>
-      <AIChatWidget />
-      <UpgradeCTA />
+      {!isOnboardingRoute && <AIChatWidget />}
+      {!isOnboardingRoute && <UpgradeCTA />}
     </div>
   );
 }
