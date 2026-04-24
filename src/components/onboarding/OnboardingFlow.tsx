@@ -29,6 +29,7 @@ export function OnboardingFlow() {
   const navigate = useNavigate();
   const [showWelcome, setShowWelcome] = useState(true);
   const [wowMoment, setWowMoment] = useState<WowMoment | null>(null);
+  const [pendingInsight, setPendingInsight] = useState<{ insight: string; emoji?: string } | null>(null);
 
   // Record signup milestone on first mount with a user
   useEffect(() => {
@@ -74,7 +75,11 @@ export function OnboardingFlow() {
 
     // Build personalized WOW moment
     const ttv = timeBetween("onboarding_started", "first_real_data");
-    setWowMoment(buildWowMoment(mod, ttv, metadata));
+    const insightPayload = pendingInsight
+      ? { insight: pendingInsight.insight, emoji: pendingInsight.emoji }
+      : {};
+    setWowMoment(buildWowMoment(mod, ttv, { ...metadata, ...insightPayload }));
+    setPendingInsight(null);
 
     const achievementMap: Record<string, string> = {
       financas: "financial_manager",
@@ -90,11 +95,15 @@ export function OnboardingFlow() {
       await recordMilestone("onboarding_complete");
       confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
     }
-  }, [completeModule, addAchievement, session, recordMilestone, timeBetween]);
+  }, [completeModule, addAchievement, session, recordMilestone, timeBetween, pendingInsight]);
 
   const handleAchievement = useCallback(async (ach: string) => {
     await addAchievement(ach);
   }, [addAchievement]);
+
+  const handleInsight = useCallback((payload: { insight: string; emoji?: string }) => {
+    setPendingInsight(payload);
+  }, []);
 
   if (loading) {
     return (
@@ -212,6 +221,7 @@ export function OnboardingFlow() {
           session={session}
           onModuleComplete={handleModuleComplete}
           onAchievement={handleAchievement}
+          onInsight={handleInsight}
         />
       </div>
       <WowMomentCard moment={wowMoment} onDismiss={() => setWowMoment(null)} />
