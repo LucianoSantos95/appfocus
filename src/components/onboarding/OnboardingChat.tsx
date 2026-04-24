@@ -58,6 +58,7 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
+  const pendingModuleCompletionRef = useRef<{ module: string; metadata: Record<string, any> } | null>(null);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -198,7 +199,6 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
     setIsLoading(true);
     let assistantSoFar = "";
     const toolCallAccumulator: Record<number, { id?: string; name: string; arguments: string }> = {};
-    let fallbackModuleCompletion: { module: string; metadata: Record<string, any> } | null = null;
 
     try {
       const token = authSession?.access_token;
@@ -298,7 +298,7 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
                   const args = JSON.parse(tc.arguments);
                   const created = await createRecordFromTool(args.module, args.data || {});
                   const onboardingModule = MODULE_TO_ONBOARDING_STEP[args.module] || args.module;
-                  fallbackModuleCompletion = {
+                  pendingModuleCompletionRef.current = {
                     module: onboardingModule,
                     metadata: {
                       ...(args.data || {}),
@@ -327,13 +327,13 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
                     emoji: args.emoji,
                     module: session.completed_modules?.[session.completed_modules.length] || undefined,
                   });
-                  if (fallbackModuleCompletion) {
-                    onModuleComplete(fallbackModuleCompletion.module, {
-                      ...fallbackModuleCompletion.metadata,
+                  if (pendingModuleCompletionRef.current) {
+                    onModuleComplete(pendingModuleCompletionRef.current.module, {
+                      ...pendingModuleCompletionRef.current.metadata,
                       insight: args.insight,
                       emoji: args.emoji,
                     });
-                    fallbackModuleCompletion = null;
+                    pendingModuleCompletionRef.current = null;
                   }
                   pendingToolMessages.push({
                     role: "tool",
