@@ -2,10 +2,17 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/contexts/AuthContext";
 import type { OnboardingSession } from "@/hooks/useOnboardingSession";
+
+const QUICK_REPLIES = [
+  "Quero começar pelo mais rápido",
+  "Pode me guiar passo a passo",
+  "Já tenho alguns dados para lançar",
+];
 
 interface Message {
   role: "user" | "assistant";
@@ -182,6 +189,15 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement }: Pro
     await streamChat(newMsgs);
   };
 
+  const handleQuickReply = async (reply: string) => {
+    if (isLoading) return;
+    const userMsg: Message = { role: "user", content: reply };
+    const newMsgs = [...messages, userMsg];
+    setMessages(newMsgs);
+    scrollToBottom();
+    await streamChat(newMsgs);
+  };
+
   return (
     <div className="flex flex-col h-full border border-border/50 rounded-xl overflow-hidden bg-card/50">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50 bg-primary/5">
@@ -192,6 +208,24 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement }: Pro
 
       <ScrollArea ref={scrollRef} className="flex-1 p-4 max-h-[400px]">
         <div className="space-y-4">
+          {messages.length <= 2 && (
+            <div className="flex flex-wrap gap-2">
+              {QUICK_REPLIES.map((reply) => (
+                <Button
+                  key={reply}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-full"
+                  onClick={() => handleQuickReply(reply)}
+                  disabled={isLoading}
+                >
+                  {reply}
+                </Button>
+              ))}
+            </div>
+          )}
+
           {messages.map((msg, i) => (
             <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               {msg.role === "assistant" && (
@@ -223,6 +257,11 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement }: Pro
       </ScrollArea>
 
       <div className="p-3 border-t border-border/50">
+        <div className="mb-3 flex flex-wrap gap-2">
+          <Badge variant="secondary">1 cliente/dado real</Badge>
+          <Badge variant="secondary">1 módulo concluído</Badge>
+          <Badge variant="secondary">valor percebido em minutos</Badge>
+        </div>
         <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex gap-2">
           <Input
             value={input}
