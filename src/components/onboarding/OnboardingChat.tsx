@@ -23,9 +23,10 @@ interface Props {
   session: OnboardingSession;
   onModuleComplete: (mod: string, metadata?: Record<string, any>) => void;
   onAchievement: (ach: string) => void;
+  onInsight?: (payload: { insight: string; emoji?: string; module?: string }) => void;
 }
 
-export function OnboardingChat({ session, onModuleComplete, onAchievement }: Props) {
+export function OnboardingChat({ session, onModuleComplete, onAchievement, onInsight }: Props) {
   const { session: authSession } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -125,6 +126,19 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement }: Pro
           // Process tool calls when finish_reason indicates they're complete
           if (finishReason === "tool_calls" || finishReason === "stop") {
             for (const [, tc] of Object.entries(toolCallAccumulator)) {
+              if (tc.name === "show_insight" && tc.arguments) {
+                try {
+                  const args = JSON.parse(tc.arguments);
+                  if (args.insight) onInsight?.({
+                    insight: args.insight,
+                    emoji: args.emoji,
+                    module: session.completed_modules?.[session.completed_modules.length] || undefined,
+                  });
+                } catch {
+                  console.warn("Failed to parse show_insight args:", tc.arguments);
+                }
+              }
+
               if (tc.name === "complete_module" && tc.arguments) {
                 try {
                   const args = JSON.parse(tc.arguments);
