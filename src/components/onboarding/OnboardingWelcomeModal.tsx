@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Rocket, Building2, Briefcase, User, TrendingUp } from "lucide-react";
 
 interface Props {
@@ -40,6 +41,12 @@ export function OnboardingWelcomeModal({ open, onComplete, onSkip }: Props) {
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-border/50 [&>button]:hidden">
         <div className="bg-gradient-to-br from-primary/10 via-background to-background p-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Badge variant={step === "segment" ? "default" : "secondary"}>1. Perfil</Badge>
+            <Badge variant={step === "pain" ? "default" : "secondary"}>2. Prioridade</Badge>
+            <Badge variant="outline">3. Hub pronto</Badge>
+          </div>
+
           <div className="flex items-center gap-3 mb-6">
             <div className="rounded-full bg-primary/20 p-3">
               <Rocket className="h-6 w-6 text-primary" />
@@ -48,9 +55,18 @@ export function OnboardingWelcomeModal({ open, onComplete, onSkip }: Props) {
               <h2 className="text-xl font-bold text-foreground">Bem-vindo ao Hub Empresarial! 🚀</h2>
               <p className="text-sm text-muted-foreground">
                 {step === "segment"
-                  ? "Qual o perfil da sua operação?"
-                  : "Qual é sua maior necessidade hoje?"}
+                  ? "Escolha o perfil da sua operação para eu montar um caminho único de configuração."
+                  : "Agora escolha sua prioridade para eu te levar ao primeiro resultado mais rápido."}
               </p>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border/60 bg-card/50 px-4 py-3 mb-5">
+            <p className="text-sm font-medium text-foreground">Você vai sair daqui com 3 coisas prontas:</p>
+            <div className="mt-2 grid gap-1.5 text-xs text-muted-foreground">
+              <span>• um fluxo inicial configurado para o seu perfil</span>
+              <span>• seu primeiro dado real lançado no Hub</span>
+              <span>• uma visão clara do próximo passo operacional</span>
             </div>
           </div>
 
