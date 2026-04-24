@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search, Activity, TrendingUp, Gauge } from "lucide-react";
 
 interface AdminPanelProps {
   open: boolean;
@@ -59,6 +59,16 @@ interface SubscriptionRecord {
   email: string | null;
 }
 
+interface FunnelMetrics {
+  signup: number;
+  onboarding_started: number;
+  first_real_data: number;
+  onboarding_complete: number;
+  plan_page_viewed: number;
+  checkout_started: number;
+  upgrade_completed: number;
+}
+
 export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const { user } = useAuth();
   const { isAdmin } = useTeamPermissions();
@@ -76,13 +86,53 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const [subResults, setSubResults] = useState<SubscriptionRecord[]>([]);
   const [subLoading, setSubLoading] = useState(false);
   const [updatingSubId, setUpdatingSubId] = useState<string | null>(null);
+  const [funnelMetrics, setFunnelMetrics] = useState<FunnelMetrics | null>(null);
+  const [funnelLoading, setFunnelLoading] = useState(false);
 
   const limit = planLimits[plan] || 1;
 
   useEffect(() => {
     if (!open || !user) return;
     fetchMembers();
+    if (isAdmin) fetchFunnelMetrics();
   }, [open, user]);
+
+  const fetchFunnelMetrics = async () => {
+    setFunnelLoading(true);
+    const trackedKeys = [
+      "signup",
+      "onboarding_started",
+      "first_real_data",
+      "onboarding_complete",
+      "plan_page_viewed",
+      "checkout_started",
+      "upgrade_completed",
+    ];
+
+    const { data } = await supabase
+      .from("user_milestones" as any)
+      .select("user_id, milestone_key")
+      .in("milestone_key", trackedKeys as any);
+
+    const metrics = trackedKeys.reduce((acc, key) => ({ ...acc, [key]: 0 }), {} as FunnelMetrics);
+    const uniqueByStep = new Map<string, Set<string>>();
+
+    trackedKeys.forEach((key) => uniqueByStep.set(key, new Set<string>()));
+    (data || []).forEach((row: any) => {
+      uniqueByStep.get(row.milestone_key)?.add(row.user_id);
+    });
+    trackedKeys.forEach((key) => {
+      metrics[key as keyof FunnelMetrics] = uniqueByStep.get(key)?.size || 0;
+    });
+
+    setFunnelMetrics(metrics);
+    setFunnelLoading(false);
+  };
+
+  const conversionRate = (from: number, to: number) => {
+    if (!from) return "—";
+    return `${Math.round((to / from) * 100)}%`;
+  };
 
   const fetchMembers = async () => {
     if (!user) return;
@@ -255,6 +305,64 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
         {/* Subscription Management - only for system admin */}
         {isAdmin && (
           <div className="space-y-3 mt-2">
+            <div className="p-4 rounded-xl border border-border bg-card/50 space-y-4">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Métricas do Funil</span>
+              </div>
+
+              {funnelLoading || !funnelMetrics ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="rounded-lg border border-border bg-card/30 p-3">
+                      <div className="h-4 w-20 animate-pulse rounded bg-secondary mb-2" />
+                      <div className="h-6 w-12 animate-pulse rounded bg-secondary" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-border bg-card/30 p-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">Signups</p>
+                      <p className="text-2xl font-semibold">{funnelMetrics.signup}</p>
+                    </div>
+                    <div className="rounded-lg border border-border bg-card/30 p-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">Onboarding iniciado</p>
+                      <p className="text-2xl font-semibold">{funnelMetrics.onboarding_started}</p>
+                    </div>
+                    <div className="rounded-lg border border-border bg-card/30 p-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">1º valor</p>
+                      <p className="text-2xl font-semibold">{funnelMetrics.first_real_data}</p>
+                    </div>
+                    <div className="rounded-lg border border-border bg-card/30 p-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">Upgrade concluído</p>
+                      <p className="text-2xl font-semibold">{funnelMetrics.upgrade_completed}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2 text-sm">
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-card/30 px-3 py-2">
+                      <span className="inline-flex items-center gap-2 text-muted-foreground"><TrendingUp className="w-4 h-4" /> Signup → onboarding</span>
+                      <span className="font-medium">{conversionRate(funnelMetrics.signup, funnelMetrics.onboarding_started)}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-card/30 px-3 py-2">
+                      <span className="inline-flex items-center gap-2 text-muted-foreground"><Gauge className="w-4 h-4" /> Onboarding → 1º valor</span>
+                      <span className="font-medium">{conversionRate(funnelMetrics.onboarding_started, funnelMetrics.first_real_data)}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-card/30 px-3 py-2">
+                      <span className="inline-flex items-center gap-2 text-muted-foreground"><CreditCard className="w-4 h-4" /> Planos → checkout</span>
+                      <span className="font-medium">{conversionRate(funnelMetrics.plan_page_viewed, funnelMetrics.checkout_started)}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-card/30 px-3 py-2">
+                      <span className="inline-flex items-center gap-2 text-muted-foreground"><CreditCard className="w-4 h-4" /> Checkout → upgrade</span>
+                      <span className="font-medium">{conversionRate(funnelMetrics.checkout_started, funnelMetrics.upgrade_completed)}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
             <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
               <div className="flex items-center gap-2 mb-1">
                 <CreditCard className="w-4 h-4 text-primary" />
