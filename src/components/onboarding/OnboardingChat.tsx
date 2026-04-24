@@ -34,6 +34,16 @@ interface ApiMessage {
   }>;
 }
 
+const MODULE_TO_ONBOARDING_STEP: Record<string, string> = {
+  tarefas: "tarefas",
+  transacoes: "financas",
+  clientes: "clientes",
+  projetos: "projetos",
+  processos: "processos",
+  campanhas: "marketing",
+  colaboradores: "rh",
+};
+
 interface Props {
   session: OnboardingSession;
   onModuleComplete: (mod: string, metadata?: Record<string, any>) => void;
@@ -188,6 +198,7 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
     setIsLoading(true);
     let assistantSoFar = "";
     const toolCallAccumulator: Record<number, { id?: string; name: string; arguments: string }> = {};
+    let fallbackModuleCompletion: { module: string; metadata: Record<string, any> } | null = null;
 
     try {
       const token = authSession?.access_token;
@@ -286,6 +297,14 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
                 try {
                   const args = JSON.parse(tc.arguments);
                   const created = await createRecordFromTool(args.module, args.data || {});
+                  const onboardingModule = MODULE_TO_ONBOARDING_STEP[args.module] || args.module;
+                  fallbackModuleCompletion = {
+                    module: onboardingModule,
+                    metadata: {
+                      ...(args.data || {}),
+                      ...created,
+                    },
+                  };
                   pendingToolMessages.push({
                     role: "tool",
                     tool_call_id: tc.id,
@@ -308,6 +327,14 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
                     emoji: args.emoji,
                     module: session.completed_modules?.[session.completed_modules.length] || undefined,
                   });
+                  if (fallbackModuleCompletion) {
+                    onModuleComplete(fallbackModuleCompletion.module, {
+                      ...fallbackModuleCompletion.metadata,
+                      insight: args.insight,
+                      emoji: args.emoji,
+                    });
+                    fallbackModuleCompletion = null;
+                  }
                   pendingToolMessages.push({
                     role: "tool",
                     tool_call_id: tc.id,
