@@ -9,6 +9,8 @@ export interface WowMoment {
   headline: string;
   metric?: string;
   subline?: string;
+  insight?: string;
+  emoji?: string;
 }
 
 interface Props {
@@ -81,6 +83,11 @@ export function WowMomentCard({ moment, onDismiss }: Props) {
             {moment.subline && (
               <p className="text-xs text-muted-foreground leading-relaxed">{moment.subline}</p>
             )}
+            {moment.insight && (
+              <div className="rounded-lg border border-border/60 bg-card/60 px-3 py-2 text-xs text-foreground/90">
+                <span className="font-medium">{moment.emoji || "✨"} Insight imediato:</span> {moment.insight}
+              </div>
+            )}
             <Button size="sm" variant="ghost" onClick={handleClose} className="h-7 px-2 text-xs mt-1">
               Continuar
             </Button>
@@ -108,6 +115,8 @@ export function buildWowMoment(
         headline: "Você acabou de mapear sua primeira receita 💰",
         metric: metadata.value ? `R$ ${Number(metadata.value).toLocaleString("pt-BR")}` : "Finanças ativas",
         subline: `Seu fluxo de caixa começou a ganhar vida ${timeStr}. Continue para liberar relatórios automáticos.`,
+        insight: metadata.insight,
+        emoji: metadata.emoji,
       };
     case "clientes":
       return {
@@ -115,6 +124,8 @@ export function buildWowMoment(
         headline: "Seu primeiro cliente está no Hub 🤝",
         metric: metadata.nome ? `${metadata.nome}` : "CRM iniciado",
         subline: `A partir daqui, a IA já consegue sugerir próximas ações ${timeStr}.`,
+        insight: metadata.insight,
+        emoji: metadata.emoji,
       };
     case "projetos":
       return {
@@ -122,6 +133,8 @@ export function buildWowMoment(
         headline: "Operação saindo do papel 🚀",
         metric: "Projeto criado",
         subline: `Prazos, orçamento e responsáveis prontos para acompanhar ${timeStr}.`,
+        insight: metadata.insight,
+        emoji: metadata.emoji,
       };
     case "tarefas":
       return {
@@ -129,6 +142,8 @@ export function buildWowMoment(
         headline: "Sua execução já tem foco ✅",
         metric: "Primeira tarefa",
         subline: `Você acabou de transformar caos em prioridade ${timeStr}.`,
+        insight: metadata.insight,
+        emoji: metadata.emoji,
       };
     case "rh":
       return {
@@ -136,6 +151,8 @@ export function buildWowMoment(
         headline: "Time mapeado, gestão liberada 👥",
         metric: "Equipe no Hub",
         subline: `Documentos, férias e onboarding centralizados ${timeStr}.`,
+        insight: metadata.insight,
+        emoji: metadata.emoji,
       };
     case "marketing":
       return {
@@ -143,6 +160,8 @@ export function buildWowMoment(
         headline: "Sua máquina de marketing começou 📣",
         metric: "Campanha ativa",
         subline: `Calendário de conteúdo e métricas a um clique ${timeStr}.`,
+        insight: metadata.insight,
+        emoji: metadata.emoji,
       };
     default:
       return {
@@ -150,6 +169,8 @@ export function buildWowMoment(
         headline: "Mais um passo conquistado 🎯",
         metric: "Módulo configurado",
         subline: `Você está construindo sua operação ${timeStr}.`,
+        insight: metadata.insight,
+        emoji: metadata.emoji,
       };
   }
 }
