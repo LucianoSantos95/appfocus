@@ -34,6 +34,16 @@ interface ApiMessage {
   }>;
 }
 
+const MODULE_TO_ONBOARDING_STEP: Record<string, string> = {
+  tarefas: "tarefas",
+  transacoes: "financas",
+  clientes: "clientes",
+  projetos: "projetos",
+  processos: "processos",
+  campanhas: "marketing",
+  colaboradores: "rh",
+};
+
 interface Props {
   session: OnboardingSession;
   onModuleComplete: (mod: string, metadata?: Record<string, any>) => void;
@@ -48,6 +58,7 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
+  const pendingModuleCompletionRef = useRef<{ module: string; metadata: Record<string, any> } | null>(null);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -286,6 +297,14 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
                 try {
                   const args = JSON.parse(tc.arguments);
                   const created = await createRecordFromTool(args.module, args.data || {});
+                  const onboardingModule = MODULE_TO_ONBOARDING_STEP[args.module] || args.module;
+                  pendingModuleCompletionRef.current = {
+                    module: onboardingModule,
+                    metadata: {
+                      ...(args.data || {}),
+                      ...created,
+                    },
+                  };
                   pendingToolMessages.push({
                     role: "tool",
                     tool_call_id: tc.id,
@@ -308,6 +327,14 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
                     emoji: args.emoji,
                     module: session.completed_modules?.[session.completed_modules.length] || undefined,
                   });
+                  if (pendingModuleCompletionRef.current) {
+                    onModuleComplete(pendingModuleCompletionRef.current.module, {
+                      ...pendingModuleCompletionRef.current.metadata,
+                      insight: args.insight,
+                      emoji: args.emoji,
+                    });
+                    pendingModuleCompletionRef.current = null;
+                  }
                   pendingToolMessages.push({
                     role: "tool",
                     tool_call_id: tc.id,
