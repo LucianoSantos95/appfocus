@@ -69,7 +69,9 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
         const payload = {
           title: data.nome || data.title || "Nova tarefa",
           description: data.descricao || data.description || null,
-          due_date: data.vencimento === "amanhã" || data.vencimento === "amanha" ? tomorrowIso : (data.due_date || data.vencimento || null),
+          due_date: data.vencimento === "amanhã" || data.vencimento === "amanha" || data.data_vencimento === "amanhã" || data.data_vencimento === "amanha"
+            ? tomorrowIso
+            : (data.due_date || data.vencimento || data.data_vencimento || null),
           priority: data.prioridade || data.priority || "media",
           status: data.status || "pendente",
           user_id: user.id,
@@ -306,6 +308,11 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
                     emoji: args.emoji,
                     module: session.completed_modules?.[session.completed_modules.length] || undefined,
                   });
+                  pendingToolMessages.push({
+                    role: "tool",
+                    tool_call_id: tc.id,
+                    content: JSON.stringify({ ok: true, shown: true, insight: args.insight }),
+                  });
                 } catch {
                   console.warn("Failed to parse show_insight args:", tc.arguments);
                 }
@@ -314,7 +321,14 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
               if (tc.name === "complete_module" && tc.arguments) {
                 try {
                   const args = JSON.parse(tc.arguments);
-                  if (args.module) onModuleComplete(args.module, args.data || {});
+                  if (args.module) {
+                    onModuleComplete(args.module, args.data || {});
+                    pendingToolMessages.push({
+                      role: "tool",
+                      tool_call_id: tc.id,
+                      content: JSON.stringify({ ok: true, completed: true, module: args.module }),
+                    });
+                  }
                 } catch (e) {
                   console.warn("Failed to parse complete_module args:", tc.arguments);
                 }
