@@ -10,6 +10,7 @@ import { Check, Sparkles, ArrowLeft, Loader2, Gift } from "lucide-react";
 import { usePlan } from "@/contexts/PlanContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
+import { useMilestones } from "@/hooks/useMilestones";
 import { supabase } from "@/integrations/supabase/client";
 import { STRIPE_PLANS } from "@/lib/stripe-plans";
 import { toast } from "sonner";
@@ -94,6 +95,7 @@ export default function Planos() {
   const { plan: currentPlan, isLoading: isPlanLoading, refreshSubscription } = usePlan();
   const { session: authSession } = useAuth();
   const { session: onbSession } = useOnboardingSession();
+  const { recordMilestone } = useMilestones();
   const navigate = useNavigate();
 
   // Determine if user has an active coupon from onboarding
@@ -105,9 +107,14 @@ export default function Planos() {
   const params = new URLSearchParams(window.location.search);
   if (params.get("success") === "true") {
     toast.success("Assinatura realizada com sucesso!");
+    void recordMilestone("upgrade_completed", { source: "plan_page" });
     refreshSubscription();
     window.history.replaceState({}, "", "/planos");
   }
+
+  useEffect(() => {
+    void recordMilestone("plan_page_viewed", { from: window.location.pathname });
+  }, [recordMilestone]);
 
   const handleSubscribe = async (planId: "plus" | "pro" | "enterprise") => {
     if (!authSession?.access_token) {
@@ -118,6 +125,12 @@ export default function Planos() {
 
     setLoadingPlan(planId);
     try {
+      await recordMilestone("checkout_started", {
+        plan: planId,
+        billing_cycle: annual ? "annual" : "monthly",
+        has_coupon: Boolean(hasCoupon),
+      });
+
       const interval = annual ? "annual" : "monthly";
       const priceId = STRIPE_PLANS[planId][interval].priceId;
 
