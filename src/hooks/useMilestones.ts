@@ -9,7 +9,10 @@ export type MilestoneKey =
   | "first_module_complete"
   | "aha_moment"
   | "onboarding_complete"
-  | "onboarding_skipped";
+  | "onboarding_skipped"
+  | "plan_page_viewed"
+  | "checkout_started"
+  | "upgrade_completed";
 
 export interface Milestone {
   id: string;
