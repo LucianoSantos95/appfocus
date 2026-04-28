@@ -45,7 +45,7 @@ const tooltipStyle = {
   border: "1px solid hsl(var(--border))",
   borderRadius: "12px",
   boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-  color: "#ffffff",
+  color: "hsl(var(--popover-foreground))",
 };
 
 const monthLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
