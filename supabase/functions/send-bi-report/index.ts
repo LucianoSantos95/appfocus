@@ -264,12 +264,30 @@ async function sendEmail(
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
 
-  // Use o remetente do domínio verificado quando disponível.
-  // Defina o secret RESEND_FROM_EMAIL como ex.: "Hub Empresarial <relatorios@focusinteligente.com.br>"
-  // Sem ele, cai no sandbox do Resend (só envia para o e-mail dono da conta).
-  const fromAddress =
-    Deno.env.get("RESEND_FROM_EMAIL")?.trim() ||
-    "Hub Empresarial <onboarding@resend.dev>";
+  // Domínio verificado no Resend para esta aplicação.
+  const VERIFIED_FROM = "Hub Empresarial <noreply@app.focusinteligente.com.br>";
+
+  // Domínios públicos que NUNCA podem aparecer no "from" (Resend rejeita).
+  const PUBLIC_DOMAINS = [
+    "gmail.com", "googlemail.com", "hotmail.com", "outlook.com",
+    "live.com", "yahoo.com", "yahoo.com.br", "icloud.com",
+    "me.com", "uol.com.br", "bol.com.br", "terra.com.br",
+  ];
+
+  const rawFrom = Deno.env.get("RESEND_FROM_EMAIL")?.trim();
+  // Extrai o domínio do formato "Nome <email@dominio>" ou "email@dominio".
+  const match = rawFrom?.match(/<?([^<>\s@]+@([^<>\s]+))>?$/);
+  const domain = match?.[2]?.toLowerCase();
+  const isPublic = domain ? PUBLIC_DOMAINS.includes(domain) : false;
+
+  // Usa o secret só se for um domínio próprio verificado; caso contrário, usa o padrão.
+  const fromAddress = rawFrom && !isPublic ? rawFrom : VERIFIED_FROM;
+
+  if (rawFrom && isPublic) {
+    console.warn(
+      `[send-bi-report] RESEND_FROM_EMAIL ignorado (domínio público "${domain}"). Usando remetente verificado.`,
+    );
+  }
 
   const body: any = {
     from: fromAddress,
