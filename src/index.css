@@ -78,38 +78,96 @@
     --chart-5: 0 65% 50%;
   }
 
-  /* Light mode - keeping dark as default */
+  /* Light mode - High contrast for full legibility */
   .light {
-    --background: 210 20% 96%;
-    --background-secondary: 210 15% 92%;
+    /* Backgrounds - clean off-white */
+    --background: 210 25% 98%;
+    --background-secondary: 210 20% 94%;
     --background-elevated: 0 0% 100%;
-    
-    --foreground: 210 15% 8%;
-    --foreground-muted: 210 15% 40%;
-    
+
+    /* Foreground - near-black for max contrast */
+    --foreground: 215 30% 12%;
+    --foreground-muted: 215 18% 32%;
+
+    /* Cards */
     --card: 0 0% 100%;
-    --card-foreground: 210 15% 8%;
-    --card-border: 210 20% 88%;
-    
+    --card-foreground: 215 30% 12%;
+    --card-border: 215 20% 86%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 210 15% 8%;
-    
-    --primary: 213 94% 55%;
-    --primary-glow: 213 100% 70%;
-    --primary-foreground: 210 40% 98%;
-    
-    --secondary: 210 15% 92%;
-    --secondary-foreground: 210 15% 15%;
-    
-    --muted: 210 15% 94%;
-    --muted-foreground: 210 15% 45%;
-    
-    --accent: 213 94% 55%;
-    --accent-foreground: 210 40% 98%;
-    
-    --border: 210 20% 88%;
-    --input: 210 20% 88%;
-    --ring: 213 94% 55%;
+    --popover-foreground: 215 30% 12%;
+
+    /* Primary - deeper blue for contrast on white */
+    --primary: 215 90% 48%;
+    --primary-glow: 213 95% 62%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - light neutral */
+    --secondary: 215 25% 92%;
+    --secondary-foreground: 215 30% 15%;
+
+    /* Muted */
+    --muted: 215 20% 94%;
+    --muted-foreground: 215 16% 38%;
+
+    /* Accent */
+    --accent: 215 90% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Semantic - darker tones to keep readable on light bg */
+    --success: 145 65% 32%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 32 95% 42%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* UI Elements */
+    --border: 215 20% 86%;
+    --input: 215 20% 90%;
+    --ring: 215 90% 48%;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 18%;
+    --sidebar-primary: 215 90% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 25% 94%;
+    --sidebar-accent-foreground: 215 30% 12%;
+    --sidebar-border: 215 20% 88%;
+    --sidebar-ring: 215 90% 48%;
+
+    /* Charts - vivid but readable on light bg */
+    --chart-1: 215 90% 48%;
+    --chart-2: 145 65% 35%;
+    --chart-3: 32 95% 45%;
+    --chart-4: 280 65% 48%;
+    --chart-5: 0 72% 48%;
+  }
+
+  /* Light mode shadow & glow overrides for proper depth on white */
+  .light .shadow-elegant {
+    box-shadow: 0 10px 25px -5px hsl(215 30% 15% / 0.12),
+                0 4px 10px -3px hsl(215 30% 15% / 0.08);
+  }
+  .light .shadow-premium {
+    box-shadow: 0 2px 12px -2px hsl(215 30% 15% / 0.08),
+                0 0 0 1px hsl(215 20% 86%);
+  }
+  .light .shadow-glow {
+    box-shadow: 0 0 30px hsl(215 90% 48% / 0.15);
+  }
+  .light .glass {
+    background: hsl(0 0% 100% / 0.85);
+    border: 1px solid hsl(215 20% 86%);
+  }
+  .light .gradient-dark {
+    background: linear-gradient(180deg, hsl(210 25% 98%) 0%, hsl(210 20% 94%) 100%);
+  }
+  .light .gradient-card {
+    background: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 20% 97%) 100%);
   }
 }
 
