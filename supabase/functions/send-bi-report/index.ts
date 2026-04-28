@@ -264,12 +264,30 @@ async function sendEmail(
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
 
-  // Use o remetente do domínio verificado quando disponível.
-  // Defina o secret RESEND_FROM_EMAIL como ex.: "Hub Empresarial <relatorios@focusinteligente.com.br>"
-  // Sem ele, cai no sandbox do Resend (só envia para o e-mail dono da conta).
-  const fromAddress =
-    Deno.env.get("RESEND_FROM_EMAIL")?.trim() ||
-    "Hub Empresarial <onboarding@resend.dev>";
+  // Domínio verificado no Resend para esta aplicação.
+  const VERIFIED_FROM = "Hub Empresarial <noreply@app.focusinteligente.com.br>";
+
+  // Domínios públicos que NUNCA podem aparecer no "from" (Resend rejeita).
+  const PUBLIC_DOMAINS = [
+    "gmail.com", "googlemail.com", "hotmail.com", "outlook.com",
+    "live.com", "yahoo.com", "yahoo.com.br", "icloud.com",
+    "me.com", "uol.com.br", "bol.com.br", "terra.com.br",
+  ];
+
+  const rawFrom = Deno.env.get("RESEND_FROM_EMAIL")?.trim();
+  // Extrai o domínio do formato "Nome <email@dominio>" ou "email@dominio".
+  const match = rawFrom?.match(/<?([^<>\s@]+@([^<>\s]+))>?$/);
+  const domain = match?.[2]?.toLowerCase();
+  const isPublic = domain ? PUBLIC_DOMAINS.includes(domain) : false;
+
+  // Usa o secret só se for um domínio próprio verificado; caso contrário, usa o padrão.
+  const fromAddress = rawFrom && !isPublic ? rawFrom : VERIFIED_FROM;
+
+  if (rawFrom && isPublic) {
+    console.warn(
+      `[send-bi-report] RESEND_FROM_EMAIL ignorado (domínio público "${domain}"). Usando remetente verificado.`,
+    );
+  }
 
   const body: any = {
     from: fromAddress,
@@ -293,9 +311,13 @@ async function sendEmail(
   });
   if (!res.ok) {
     const err = await res.text();
-    if (err.includes("verify a domain") || err.includes("testing emails")) {
+    if (
+      err.includes("verify a domain") ||
+      err.includes("testing emails") ||
+      err.includes("is not verified")
+    ) {
       throw new Error(
-        "Para enviar para e-mails externos/corporativos, verifique seu domínio no Resend (https://resend.com/domains) e configure o secret RESEND_FROM_EMAIL com um remetente do seu domínio (ex.: relatorios@focusinteligente.com.br).",
+        "Não foi possível enviar o relatório: o remetente não está em um domínio verificado. Verifique o domínio no Resend ou ajuste o secret RESEND_FROM_EMAIL para um endereço do seu domínio (ex.: relatorios@app.focusinteligente.com.br).",
       );
     }
     throw new Error(`Resend error: ${err}`);
