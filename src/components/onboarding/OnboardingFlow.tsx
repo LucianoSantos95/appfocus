@@ -160,6 +160,9 @@ export function OnboardingFlow() {
             <p className="text-muted-foreground max-w-md mx-auto">
               Você completou o onboarding e sua operação já está pronta. Agora é só usar o Hub no dia a dia!
             </p>
+            <div className="mx-auto max-w-md rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm text-foreground">
+              🎁 Seu cupom <span className="font-mono font-bold text-primary">FOCUS20</span> (20% OFF) será aplicado <span className="font-semibold">automaticamente</span> ao clicar em <span className="font-semibold">Assinar</span> em qualquer plano. Não precisa digitar nada!
+            </div>
             {ttvSeconds !== null && (
               <div className="inline-flex items-center gap-2 mx-auto rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5">
                 <Timer className="h-4 w-4 text-primary" />

@@ -59,7 +59,7 @@ export function OnboardingCouponBanner({ session }: Props) {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Parabéns! Use o código <span className="font-semibold text-foreground">{session.coupon_code || "FOCUS20"}</span> ou clique em Assinar para aplicar automaticamente.
+              Parabéns! Clique em <span className="font-semibold text-foreground">Assinar</span> e o cupom <span className="font-semibold text-foreground">{session.coupon_code || "FOCUS20"}</span> será aplicado <span className="font-semibold text-foreground">automaticamente</span> no checkout.
             </p>
           </div>
           <Button size="sm" onClick={() => navigate("/planos")} className="gap-1 shrink-0">
