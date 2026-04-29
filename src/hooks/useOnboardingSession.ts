@@ -17,7 +17,7 @@ export interface OnboardingSession {
   completed_at: string | null;
 }
 
-const COUPON_CODE = "NpOu4Cxn";
+const COUPON_CODE = "FOCUS20";
 
 export function useOnboardingSession() {
   const { user } = useAuth();
