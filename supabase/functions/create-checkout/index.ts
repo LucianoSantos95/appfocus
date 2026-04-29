@@ -25,7 +25,7 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated");
 
-    const { priceId, couponId } = await req.json();
+    const { priceId, couponId, promotionCode } = await req.json();
     if (!priceId) throw new Error("priceId is required");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -49,9 +49,14 @@ serve(async (req) => {
       cancel_url: `${origin}/planos?canceled=true`,
     };
 
-    // Apply coupon if provided
-    if (couponId) {
+    // Apply discount: prefer promotion_code (friendly named code), fallback to raw coupon
+    if (promotionCode) {
+      sessionParams.discounts = [{ promotion_code: promotionCode }];
+    } else if (couponId) {
       sessionParams.discounts = [{ coupon: couponId }];
+    } else {
+      // Allow customer to type a code (e.g. FOCUS20) at checkout
+      sessionParams.allow_promotion_codes = true;
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);

@@ -15,7 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { STRIPE_PLANS } from "@/lib/stripe-plans";
 import { toast } from "sonner";
 
-const ONBOARDING_COUPON_ID = "NpOu4Cxn";
+// Stripe Promotion Code ID (friendly code: FOCUS20)
+const ONBOARDING_PROMO_CODE_ID = "promo_1RdXbNH7IRFB6gqOUt0wCGqb";
 
 const plans = [
   {
@@ -135,9 +136,9 @@ export default function Planos() {
       const priceId = STRIPE_PLANS[planId][interval].priceId;
 
       const body: any = { priceId };
-      // Auto-apply onboarding coupon
+      // Auto-apply onboarding coupon (FOCUS20)
       if (hasCoupon) {
-        body.couponId = ONBOARDING_COUPON_ID;
+        body.promotionCode = ONBOARDING_PROMO_CODE_ID;
       }
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
