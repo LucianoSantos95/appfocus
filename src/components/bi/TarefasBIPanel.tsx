@@ -4,6 +4,8 @@ import {
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useMemo } from "react";
 import { ListTodo, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { SendReportButton } from "@/components/relatorios/SendReportButton";
+import { buildTarefasPayload } from "@/components/relatorios/genericPayloads";
 
 interface Tarefa {
   id: string;
@@ -68,7 +70,10 @@ export function TarefasBIPanel({ open, onOpenChange, tarefas }: TarefasBIPanelPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Análise de Tarefas</DialogTitle>
+          <DialogTitle className="text-xl font-bold flex items-center justify-between gap-3">
+            <span>Análise de Tarefas</span>
+            <SendReportButton payload={buildTarefasPayload(tarefas)} label="Enviar por e-mail" />
+          </DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">

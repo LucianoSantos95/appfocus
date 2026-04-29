@@ -19,6 +19,8 @@ import {
 import { useMemo } from "react";
 import { Users, TrendingUp, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SendReportButton } from "@/components/relatorios/SendReportButton";
+import { buildClientesPayload } from "@/components/relatorios/genericPayloads";
 
 interface Cliente {
   id: string;
@@ -99,7 +101,10 @@ export function ClientesBIPanel({ open, onOpenChange, clientes }: ClientesBIPane
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Análise de Clientes Detalhada</DialogTitle>
+          <DialogTitle className="text-xl font-bold flex items-center justify-between gap-3">
+            <span>Análise de Clientes Detalhada</span>
+            <SendReportButton payload={buildClientesPayload(clientes)} label="Enviar por e-mail" />
+          </DialogTitle>
         </DialogHeader>
 
         {/* KPIs */}

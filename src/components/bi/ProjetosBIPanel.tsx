@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { useMemo } from "react";
 import { AlertTriangle, CheckCircle2, Clock, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SendReportButton } from "@/components/relatorios/SendReportButton";
+import { buildProjetosPayload } from "@/components/relatorios/genericPayloads";
 
 interface Projeto {
   id: string;
@@ -70,7 +72,10 @@ export function ProjetosBIPanel({ open, onOpenChange, projetos }: ProjetosBIPane
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Análise de Projetos Detalhada</DialogTitle>
+          <DialogTitle className="text-xl font-bold flex items-center justify-between gap-3">
+            <span>Análise de Projetos Detalhada</span>
+            <SendReportButton payload={buildProjetosPayload(projetos)} label="Enviar por e-mail" />
+          </DialogTitle>
         </DialogHeader>
 
         {/* KPIs */}

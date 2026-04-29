@@ -17,6 +17,8 @@ import {
 import { useMemo } from "react";
 import { Target, DollarSign, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SendReportButton } from "@/components/relatorios/SendReportButton";
+import { buildMarketingPayload } from "@/components/relatorios/genericPayloads";
 
 interface Campanha {
   id: string;
@@ -79,7 +81,10 @@ export function MarketingBIPanel({ open, onOpenChange, campanhas }: MarketingBIP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Análise de Marketing Detalhada</DialogTitle>
+          <DialogTitle className="text-xl font-bold flex items-center justify-between gap-3">
+            <span>Análise de Marketing Detalhada</span>
+            <SendReportButton payload={buildMarketingPayload(campanhas)} label="Enviar por e-mail" />
+          </DialogTitle>
         </DialogHeader>
 
         {/* KPIs */}

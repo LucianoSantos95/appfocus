@@ -4,6 +4,8 @@ import {
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useMemo } from "react";
 import { Users, DollarSign, TrendingUp } from "lucide-react";
+import { SendReportButton } from "@/components/relatorios/SendReportButton";
+import { buildRHPayload } from "@/components/relatorios/genericPayloads";
 
 interface Colaborador {
   id: string;
@@ -51,7 +53,10 @@ export function RHBIPanel({ open, onOpenChange, colaboradores }: RHBIPanelProps)
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Análise de RH</DialogTitle>
+          <DialogTitle className="text-xl font-bold flex items-center justify-between gap-3">
+            <span>Análise de RH</span>
+            <SendReportButton payload={buildRHPayload(colaboradores)} label="Enviar por e-mail" />
+          </DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
