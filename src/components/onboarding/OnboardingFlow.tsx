@@ -222,6 +222,9 @@ export function OnboardingFlow() {
           </Button>
         </div>
 
+        {/* Coupon preview — creates anticipation early */}
+        <OnboardingCouponPreview session={session} />
+
         {/* Progress */}
         <Card className="p-5">
           <OnboardingProgressBar session={session} />
