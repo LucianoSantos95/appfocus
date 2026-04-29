@@ -48,15 +48,18 @@ export function OnboardingCouponBanner({ session }: Props) {
             <Gift className="h-6 w-6 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="font-bold text-foreground">20% OFF</span>
+              <Badge variant="outline" className="font-mono text-xs border-primary/40 text-primary">
+                {session.coupon_code || "FOCUS20"}
+              </Badge>
               <Badge variant="secondary" className="gap-1 text-xs">
                 <Clock className="h-3 w-3" />
                 {timeLeft}
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Parabéns por completar o onboarding! Use seu desconto exclusivo.
+              Parabéns! Use o código <span className="font-semibold text-foreground">{session.coupon_code || "FOCUS20"}</span> ou clique em Assinar para aplicar automaticamente.
             </p>
           </div>
           <Button size="sm" onClick={() => navigate("/planos")} className="gap-1 shrink-0">
