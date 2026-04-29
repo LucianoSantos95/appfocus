@@ -436,19 +436,6 @@ export default function Financas() {
                 }
               />
             </PlanGateButton>
-            <PlanGateButton module="financas" action="create">
-              <ImportDialog
-                config={importConfigs.financas_transacoes}
-                module="financeiro"
-                onImportComplete={handleImportTransactions}
-                trigger={
-                  <Button variant="outline" className="gap-2">
-                    <FileSpreadsheet className="w-4 h-4" />
-                    Importar Planilha
-                  </Button>
-                }
-              />
-            </PlanGateButton>
             <ImportHistoryDialog module="financeiro" />
             <PlanGateButton module="financas" action="export">
               <DropdownMenu>
