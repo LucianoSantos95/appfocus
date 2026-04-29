@@ -5,6 +5,7 @@ import { OnboardingWelcomeModal } from "@/components/onboarding/OnboardingWelcom
 import { OnboardingProgressBar } from "@/components/onboarding/OnboardingProgressBar";
 import { OnboardingChat } from "@/components/onboarding/OnboardingChat";
 import { OnboardingCouponBanner } from "@/components/onboarding/OnboardingCouponBanner";
+import { OnboardingCouponPreview } from "@/components/onboarding/OnboardingCouponPreview";
 import { WowMomentCard, buildWowMoment, type WowMoment } from "@/components/onboarding/WowMomentCard";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useMilestones, formatDuration } from "@/hooks/useMilestones";
@@ -220,6 +221,9 @@ export function OnboardingFlow() {
             Pular
           </Button>
         </div>
+
+        {/* Coupon preview — creates anticipation early */}
+        <OnboardingCouponPreview session={session} />
 
         {/* Progress */}
         <Card className="p-5">
