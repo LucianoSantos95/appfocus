@@ -54,6 +54,8 @@ import { useProcessos as useProcessosDB } from "@/hooks/useProcessos";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { SendReportButton } from "@/components/relatorios/SendReportButton";
+import { buildProcessoPayload } from "@/components/relatorios/genericPayloads";
 
 interface ProcessoStep {
   id: string;
@@ -338,7 +340,8 @@ export default function Processos() {
                       </div>
 
                       {/* Export Button */}
-                      <div className="flex justify-end pt-4 gap-2">
+                      <div className="flex justify-end pt-4 gap-2 flex-wrap">
+                        <SendReportButton payload={buildProcessoPayload(p)} label="Enviar por e-mail" />
                         <PlanGateButton module="processos" action="export">
                           <Button
                             variant="outline"
