@@ -97,7 +97,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex flex-col gradient-dark relative overflow-hidden">
-      <PageMeta title="Login" description="Acesse o Hub Empresarial. Sistema de gestão integrado para agências, consultorias e pequenas empresas." />
+      <PageMeta path="/auth" title="Login" description="Acesse o Hub Empresarial. Sistema de gestão integrado para agências, consultorias e pequenas empresas." />
       {/* Background pattern */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Grid principal */}

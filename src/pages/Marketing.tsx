@@ -296,7 +296,7 @@ export default function Marketing() {
 
   return (
     <MainLayout>
-      <PageMeta title="Marketing" description="Gerencie campanhas, conteúdos e ideias de marketing para sua empresa." />
+      <PageMeta path="/marketing" title="Marketing" description="Gerencie campanhas, conteúdos e ideias de marketing para sua empresa." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center gap-4">

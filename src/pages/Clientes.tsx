@@ -297,7 +297,7 @@ export default function Clientes() {
 
   return (
     <MainLayout>
-      <PageMeta title="Clientes" description="CRM de carteira e prospecção. Gerencie o relacionamento com seus clientes." />
+      <PageMeta path="/clientes" title="Clientes" description="CRM de carteira e prospecção. Gerencie o relacionamento com seus clientes." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">

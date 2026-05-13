@@ -267,7 +267,7 @@ export default function Tarefas() {
 
   return (
     <MainLayout>
-      <PageMeta title="Atividades" description="Gerencie tarefas e metas da sua operação. Organize as atividades da equipe." />
+      <PageMeta path="/atividades" title="Atividades" description="Gerencie tarefas e metas da sua operação. Organize as atividades da equipe." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">

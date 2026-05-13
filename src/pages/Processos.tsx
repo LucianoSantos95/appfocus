@@ -176,7 +176,7 @@ export default function Processos() {
 
   return (
     <MainLayout>
-      <PageMeta title="Processos" description="Padronize playbooks e fluxos da sua operação. Documente processos internos." />
+      <PageMeta path="/processos" title="Processos" description="Padronize playbooks e fluxos da sua operação. Documente processos internos." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">

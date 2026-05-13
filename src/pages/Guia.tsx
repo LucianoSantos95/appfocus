@@ -222,7 +222,7 @@ export default function Guia() {
 
   return (
     <MainLayout>
-      <PageMeta title="Guia de Uso" description="Aprenda a usar o Hub Empresarial. Tutoriais e dicas para organizar sua operação." />
+      <PageMeta path="/guia" title="Guia de Uso" description="Aprenda a usar o Hub Empresarial. Tutoriais e dicas para organizar sua operação." />
       <GuidedTour forceRun={shouldRunTour} onTourComplete={onComplete} />
 
       <div className="space-y-8 animate-fade-in pb-10 max-w-5xl mx-auto">
