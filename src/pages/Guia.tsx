@@ -224,6 +224,17 @@ export default function Guia() {
   return (
     <MainLayout>
       <PageMeta path="/guia" title="Guia de Uso" description="Aprenda a usar o Hub Empresarial. Tutoriais e dicas para organizar sua operação." />
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqItems.map((item) => ({
+            "@type": "Question",
+            name: item.question,
+            acceptedAnswer: { "@type": "Answer", text: item.answer },
+          })),
+        })}</script>
+      </Helmet>
       <GuidedTour forceRun={shouldRunTour} onTourComplete={onComplete} />
 
       <div className="space-y-8 animate-fade-in pb-10 max-w-5xl mx-auto">
