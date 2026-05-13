@@ -111,6 +111,7 @@ export default function Assinantes() {
 
   return (
     <MainLayout>
+      <PageMeta path="/assinantes" title="Assinantes" description="Painel administrativo de assinantes do Hub Empresarial." />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
