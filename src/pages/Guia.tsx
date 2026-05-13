@@ -1,5 +1,6 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageMeta } from "@/components/seo/PageMeta";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
