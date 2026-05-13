@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
+import { PageMeta } from "@/components/seo/PageMeta";
 
 export default function Privacidade() {
   return (
     <div className="min-h-screen bg-background p-8 max-w-3xl mx-auto">
+      <PageMeta path="/privacidade" title="Política de Privacidade" description="Como o Hub Empresarial coleta, usa e protege os dados dos usuários." />
       <Link to="/auth" className="text-primary hover:underline text-sm mb-8 inline-block">← Voltar</Link>
       <h1 className="text-3xl font-bold text-foreground mb-6">Política de Privacidade</h1>
       <div className="prose prose-invert max-w-none space-y-4 text-muted-foreground">
