@@ -28,7 +28,7 @@ export default function Glossario() {
   return (
     <div className="min-h-screen gradient-dark text-foreground">
       <Helmet>
-        <title>Glossário de Gestão para Agências e Consultorias | Hub Empresarial</title>
+        <title>Glossário de Gestão | Hub Empresarial</title>
         <meta name="description" content="Glossário completo com termos de gestão, CRM, finanças, marketing e operação para agências, consultorias, freelancers e pequenas empresas." />
         <link rel="canonical" href="https://appfocus.lovable.app/glossario" />
         <script type="application/ld+json">{JSON.stringify({
