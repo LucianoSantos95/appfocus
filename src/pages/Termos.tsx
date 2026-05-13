@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
+import { PageMeta } from "@/components/seo/PageMeta";
 
 export default function Termos() {
   return (
     <div className="min-h-screen bg-background p-8 max-w-3xl mx-auto">
+      <PageMeta path="/termos" title="Termos de Uso" description="Termos de uso do Hub Empresarial da Focus Inteligente." />
       <Link to="/auth" className="text-primary hover:underline text-sm mb-8 inline-block">← Voltar</Link>
       <h1 className="text-3xl font-bold text-foreground mb-6">Termos de Uso</h1>
       <div className="prose prose-invert max-w-none space-y-4 text-muted-foreground">

@@ -98,7 +98,7 @@ const Index = () => {
 
   return (
     <MainLayout>
-      <PageMeta title="Painel Principal" description="Visão geral da sua operação em um só lugar. Gerencie finanças, equipe, marketing, entregas e clientes." />
+      <PageMeta path="/" title="Painel Principal" description="Visão geral da sua operação em um só lugar. Gerencie finanças, equipe, marketing, entregas e clientes." />
       <div className="space-y-8 animate-fade-in">
         {/* Header */}
         <div>

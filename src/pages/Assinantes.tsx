@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { PageMeta } from "@/components/seo/PageMeta";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
@@ -110,6 +111,7 @@ export default function Assinantes() {
 
   return (
     <MainLayout>
+      <PageMeta path="/assinantes" title="Assinantes" description="Painel administrativo de assinantes do Hub Empresarial." />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">

@@ -40,4 +40,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://appfocus.lovable.app/sitemap.xml
+Sitemap: https://app.focusinteligente.com.br/sitemap.xml
