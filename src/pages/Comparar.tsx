@@ -28,7 +28,11 @@ export default function Comparar() {
       <Helmet>
         <title>Hub Empresarial vs Planilhas, Trello e ERPs | Comparativo</title>
         <meta name="description" content="Compare o Hub Empresarial com planilhas, Trello/Notion e ERPs tradicionais. Veja por que agências, consultorias e PMEs escolhem o Hub para gestão integrada." />
-        <link rel="canonical" href="https://appfocus.lovable.app/comparar" />
+        <link rel="canonical" href="https://app.focusinteligente.com.br/comparar" />
+        <meta property="og:title" content="Hub Empresarial vs Planilhas, Trello e ERPs | Comparativo" />
+        <meta property="og:description" content="Compare o Hub Empresarial com planilhas, Trello/Notion e ERPs tradicionais. Veja por que agências, consultorias e PMEs escolhem o Hub." />
+        <meta property="og:url" content="https://app.focusinteligente.com.br/comparar" />
+        <meta property="og:type" content="website" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Article",
