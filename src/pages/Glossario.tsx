@@ -30,7 +30,11 @@ export default function Glossario() {
       <Helmet>
         <title>Glossário de Gestão | Hub Empresarial</title>
         <meta name="description" content="Glossário completo com termos de gestão, CRM, finanças, marketing e operação para agências, consultorias, freelancers e pequenas empresas." />
-        <link rel="canonical" href="https://appfocus.lovable.app/glossario" />
+        <link rel="canonical" href="https://app.focusinteligente.com.br/glossario" />
+        <meta property="og:title" content="Glossário de Gestão | Hub Empresarial" />
+        <meta property="og:description" content="Glossário com termos de gestão, CRM, finanças, marketing e operação para agências, consultorias, freelancers e pequenas empresas." />
+        <meta property="og:url" content="https://app.focusinteligente.com.br/glossario" />
+        <meta property="og:type" content="website" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "DefinedTermSet",
