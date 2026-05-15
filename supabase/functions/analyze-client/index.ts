@@ -315,7 +315,8 @@ Sugestões de ação devem ser específicas e acionáveis, mencionando o nome do
         proxima_acao_sugerida: analysis.proxima_acao_sugerida,
         analisado_em: new Date().toISOString(),
       })
-      .eq("id", clienteId);
+      .eq("id", clienteId)
+      .eq("user_id", userId);
 
     if (updateError) {
       console.error("Error updating client:", updateError);
