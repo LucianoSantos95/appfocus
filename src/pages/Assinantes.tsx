@@ -55,15 +55,18 @@ export default function Assinantes() {
   const [filtroPlano, setFiltroPlano] = useState("todos");
   const [filtroStatus, setFiltroStatus] = useState("todos");
 
-  useEffect(() => {
-    if (!permLoading && !isAdmin) {
-      navigate("/");
-      toast.error("Acesso restrito a administradores.");
-    }
-  }, [isAdmin, permLoading, navigate]);
+  const OWNER_EMAIL = "oluciano.dosantos@gmail.com";
+  const isOwner = (user?.email || "").toLowerCase() === OWNER_EMAIL;
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!permLoading && !isOwner) {
+      navigate("/");
+      toast.error("Acesso restrito.");
+    }
+  }, [isOwner, permLoading, navigate]);
+
+  useEffect(() => {
+    if (!isOwner) return;
 
     const fetchAssinantes = async () => {
       setLoading(true);
