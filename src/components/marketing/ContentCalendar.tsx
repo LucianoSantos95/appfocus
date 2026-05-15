@@ -206,11 +206,14 @@ export function ContentCalendar() {
                               "text-[10px] px-2 py-1 rounded-md cursor-pointer truncate flex items-center gap-1 border font-medium",
                               pColor
                             )}
-                            title={`${c.title} (${c.platform || "sem plataforma"}) — ${style.label}`}
+                            title={`${c.title} (${c.platform || "sem plataforma"}) — ${style.label}${c.approval_status ? ` • ${c.approval_status}` : ''}`}
                           >
                             <GripVertical className="w-2.5 h-2.5 flex-shrink-0 opacity-40" />
                             <div className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", style.dot)} />
                             <span className="truncate">{c.title}</span>
+                            {c.approval_status === 'aprovado' && <CheckCircle2 className="w-2.5 h-2.5 text-success flex-shrink-0" />}
+                            {c.approval_status === 'recusado' && <XCircle className="w-2.5 h-2.5 text-destructive flex-shrink-0" />}
+                            {c.approval_status === 'pendente' && <Clock className="w-2.5 h-2.5 text-warning flex-shrink-0" />}
                           </div>
                         );
                       })}
