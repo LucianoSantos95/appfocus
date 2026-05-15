@@ -9,11 +9,23 @@ const corsHeaders = {
 };
 
 const SITE_URL = "https://app.focusinteligente.com.br";
-const FROM_EMAIL =
-  Deno.env.get("RESEND_FROM_EMAIL") ||
-  "Hub Empresarial <noreply@app.focusinteligente.com.br>";
+const VERIFIED_FROM_EMAIL = "Hub Empresarial <noreply@app.focusinteligente.com.br>";
 const COUPON_ID = "LkKmwwQE"; // Stripe coupon: 20% off por 3 meses
 const COUPON_LABEL = "20% OFF por 3 meses";
+const PUBLIC_EMAIL_DOMAINS = [
+  "gmail.com",
+  "googlemail.com",
+  "hotmail.com",
+  "outlook.com",
+  "live.com",
+  "yahoo.com",
+  "yahoo.com.br",
+  "icloud.com",
+  "me.com",
+  "uol.com.br",
+  "bol.com.br",
+  "terra.com.br",
+];
 
 const TEMPLATES = {
   engaged: {
@@ -132,6 +144,21 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
+function resolveFromEmail() {
+  const rawFrom = Deno.env.get("RESEND_FROM_EMAIL")?.trim();
+  const match = rawFrom?.match(/<?([^<>\s@]+@([^<>\s]+))>?$/);
+  const domain = match?.[2]?.toLowerCase();
+  const isPublicDomain = domain ? PUBLIC_EMAIL_DOMAINS.includes(domain) : false;
+
+  if (rawFrom && isPublicDomain) {
+    console.warn(
+      `[send-promo-campaign] RESEND_FROM_EMAIL ignorado (domínio público "${domain}"). Usando remetente verificado.`,
+    );
+  }
+
+  return rawFrom && !isPublicDomain ? rawFrom : VERIFIED_FROM_EMAIL;
+}
+
 interface Body {
   segment: "engaged" | "inactive";
   dryRun?: boolean;
@@ -204,6 +231,7 @@ Deno.serve(async (req) => {
     }
 
     if (!resendKey) return json({ error: "RESEND_API_KEY missing" }, 500);
+    const fromEmail = resolveFromEmail();
 
     // Idempotency: skip recipients already sent this template
     const emails = recipients.map((r) => r.email);
@@ -222,7 +250,7 @@ Deno.serve(async (req) => {
         const resp = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: FROM_EMAIL, to: [r.email], subject: tpl.subject, html }),
+          body: JSON.stringify({ from: fromEmail, to: [r.email], subject: tpl.subject, html }),
         });
         const data = await resp.json();
         if (!resp.ok) {
