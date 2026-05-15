@@ -110,30 +110,6 @@ export type Database = {
         }
         Relationships: []
       }
-      campanha_clientes: {
-        Row: {
-          campanha_id: string
-          cliente_id: string
-          created_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          campanha_id: string
-          cliente_id: string
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Update: {
-          campanha_id?: string
-          cliente_id?: string
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       campanhas: {
         Row: {
           budget: number | null
