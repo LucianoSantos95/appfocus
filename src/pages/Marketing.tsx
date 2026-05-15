@@ -178,6 +178,9 @@ export default function Marketing() {
     status: (['ativa', 'planejada', 'recusada', 'finalizada'].includes(c.status) ? c.status : 'planejada') as Campanha['status'],
     expectedResult: '',
     responsible: c.responsible || undefined,
+    leads_gerados: c.leads_gerados || 0,
+    conversoes: c.conversoes || 0,
+    receita_atribuida: Number(c.receita_atribuida) || 0,
   }));
 
   // Filtered campanhas by client
