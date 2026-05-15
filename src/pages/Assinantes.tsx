@@ -111,7 +111,7 @@ export default function Assinantes() {
     );
   }
 
-  if (!isAdmin) return null;
+  if (!isOwner) return null;
 
   return (
     <MainLayout>
