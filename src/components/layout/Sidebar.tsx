@@ -129,7 +129,7 @@ export function Sidebar() {
           })}
 
           {/* Admin-only: Assinantes */}
-          {isAdmin && (
+          {isOwnerEmail && (
             <li>
               <NavLink
                 to="/assinantes"
