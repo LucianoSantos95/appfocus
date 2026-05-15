@@ -269,6 +269,9 @@ export default function Marketing() {
       end_date: selectedCampanha.endDate,
       status: selectedCampanha.status,
       responsible: selectedCampanha.responsible,
+      leads_gerados: selectedCampanha.leads_gerados,
+      conversoes: selectedCampanha.conversoes,
+      receita_atribuida: selectedCampanha.receita_atribuida,
     });
     setSelectedCampanha(null);
   };
