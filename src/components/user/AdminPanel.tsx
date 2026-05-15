@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search, Activity, TrendingUp, Gauge } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search, Activity, TrendingUp, Gauge, Users } from "lucide-react";
 
 interface AdminPanelProps {
   open: boolean;
@@ -88,14 +88,36 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const [updatingSubId, setUpdatingSubId] = useState<string | null>(null);
   const [funnelMetrics, setFunnelMetrics] = useState<FunnelMetrics | null>(null);
   const [funnelLoading, setFunnelLoading] = useState(false);
+  const [engagement, setEngagement] = useState<Array<{ user_id: string; display_name: string | null; email: string | null; plan: string | null; total_actions_30d: number; active_days_30d: number; last_active_at: string | null; classificacao: string }>>([]);
+  const [engagementLoading, setEngagementLoading] = useState(false);
 
   const limit = planLimits[plan] || 1;
 
   useEffect(() => {
     if (!open || !user) return;
     fetchMembers();
-    if (isAdmin) fetchFunnelMetrics();
+    if (isAdmin) {
+      fetchFunnelMetrics();
+      fetchEngagement();
+    }
   }, [open, user]);
+
+  const fetchEngagement = async () => {
+    setEngagementLoading(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any).rpc("get_user_engagement");
+    const rows = (data || []) as typeof engagement;
+    rows.sort((a, b) => (b.active_days_30d || 0) - (a.active_days_30d || 0));
+    setEngagement(rows);
+    setEngagementLoading(false);
+  };
+
+  const classBadge = (c: string) => {
+    if (c === "power") return <Badge className="bg-success text-success-foreground">Power</Badge>;
+    if (c === "recorrente") return <Badge className="bg-primary text-primary-foreground">Recorrente</Badge>;
+    if (c === "casual") return <Badge variant="secondary">Casual</Badge>;
+    return <Badge variant="outline" className="text-muted-foreground">Inativo</Badge>;
+  };
 
   const fetchFunnelMetrics = async () => {
     setFunnelLoading(true);
