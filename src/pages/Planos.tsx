@@ -104,6 +104,9 @@ export default function Planos() {
     onbSession?.coupon_expires_at &&
     new Date(onbSession.coupon_expires_at).getTime() > Date.now();
 
+  // Campaign coupon from URL (?coupon=XXXX) — overrides onboarding coupon
+  const urlCoupon = new URLSearchParams(window.location.search).get("coupon");
+
   // Check for success/cancel in URL
   const params = new URLSearchParams(window.location.search);
   if (params.get("success") === "true") {
@@ -136,8 +139,10 @@ export default function Planos() {
       const priceId = STRIPE_PLANS[planId][interval].priceId;
 
       const body: any = { priceId };
-      // Auto-apply onboarding coupon (FOCUS20)
-      if (hasCoupon) {
+      // Priority: URL coupon (campaign) > onboarding coupon
+      if (urlCoupon) {
+        body.couponId = urlCoupon;
+      } else if (hasCoupon) {
         body.promotionCode = ONBOARDING_PROMO_CODE_ID;
       }
 
