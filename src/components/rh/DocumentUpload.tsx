@@ -46,9 +46,11 @@ export function DocumentUpload({ colaboradorId, documents, onDocumentsChange }: 
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: signed, error: signedErr } = await supabase.storage
         .from("colaborador-docs")
-        .getPublicUrl(path);
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (signedErr || !signed?.signedUrl) throw signedErr || new Error("signed url failed");
+      const publicUrl = signed.signedUrl;
 
       const newDoc: DocumentItem = {
         name: file.name,
