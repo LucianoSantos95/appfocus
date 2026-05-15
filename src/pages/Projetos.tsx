@@ -410,7 +410,7 @@ export default function Projetos() {
               />
             </PlanGateButton>
             <PlanGateButton module="projetos" action="create">
-              <AddProjetoDialog onAdd={addProjeto} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
+              <AddProjetoDialog onAdd={addProjeto} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} clientes={clientes.map(c => ({ id: c.id, nome: c.nome }))} />
             </PlanGateButton>
           </div>
         </div>
