@@ -509,6 +509,8 @@ export default function Projetos() {
           onOpenChange={(open) => !open && setSelectedProjeto(null)}
           onUpdate={handleUpdateProjeto}
           onDelete={handleDeleteProjeto}
+          clientes={clientes.map(c => ({ id: c.id, nome: c.nome }))}
+          margin={projectMargin(selectedProjeto)}
         />
       )}
       <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Projetos" />
