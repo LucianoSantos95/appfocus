@@ -581,6 +581,7 @@ export default function Marketing() {
                 <AddConteudoDialog onAdd={(c) => setConteudos([c, ...conteudos])} />
               </PlanGateButton>
             </div>
+          </div>
 
           {/* Priority Columns */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
