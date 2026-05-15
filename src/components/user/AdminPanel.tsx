@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search, Activity, TrendingUp, Gauge } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search, Activity, TrendingUp, Gauge, Users } from "lucide-react";
 
 interface AdminPanelProps {
   open: boolean;
@@ -88,14 +88,36 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const [updatingSubId, setUpdatingSubId] = useState<string | null>(null);
   const [funnelMetrics, setFunnelMetrics] = useState<FunnelMetrics | null>(null);
   const [funnelLoading, setFunnelLoading] = useState(false);
+  const [engagement, setEngagement] = useState<Array<{ user_id: string; display_name: string | null; email: string | null; plan: string | null; total_actions_30d: number; active_days_30d: number; last_active_at: string | null; classificacao: string }>>([]);
+  const [engagementLoading, setEngagementLoading] = useState(false);
 
   const limit = planLimits[plan] || 1;
 
   useEffect(() => {
     if (!open || !user) return;
     fetchMembers();
-    if (isAdmin) fetchFunnelMetrics();
+    if (isAdmin) {
+      fetchFunnelMetrics();
+      fetchEngagement();
+    }
   }, [open, user]);
+
+  const fetchEngagement = async () => {
+    setEngagementLoading(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any).rpc("get_user_engagement");
+    const rows = (data || []) as typeof engagement;
+    rows.sort((a, b) => (b.active_days_30d || 0) - (a.active_days_30d || 0));
+    setEngagement(rows);
+    setEngagementLoading(false);
+  };
+
+  const classBadge = (c: string) => {
+    if (c === "power") return <Badge className="bg-success text-success-foreground">Power</Badge>;
+    if (c === "recorrente") return <Badge className="bg-primary text-primary-foreground">Recorrente</Badge>;
+    if (c === "casual") return <Badge variant="secondary">Casual</Badge>;
+    return <Badge variant="outline" className="text-muted-foreground">Inativo</Badge>;
+  };
 
   const fetchFunnelMetrics = async () => {
     setFunnelLoading(true);
@@ -360,6 +382,34 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                     </div>
                   </div>
                 </>
+              )}
+            </div>
+
+            {/* Engajamento de usuários */}
+            <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Users className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Usuários que mais voltam (30d)</span>
+              </div>
+              {engagementLoading ? (
+                <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+              ) : engagement.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-2">Sem dados de atividade ainda.</p>
+              ) : (
+                <ul className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {engagement.slice(0, 20).map((u) => (
+                    <li key={u.user_id} className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border bg-card/30">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{u.display_name || u.email || "—"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {u.active_days_30d} dias ativos · {u.total_actions_30d} ações
+                          {u.last_active_at && ` · último: ${new Date(u.last_active_at).toLocaleDateString("pt-BR")}`}
+                        </p>
+                      </div>
+                      {classBadge(u.classificacao)}
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
 
