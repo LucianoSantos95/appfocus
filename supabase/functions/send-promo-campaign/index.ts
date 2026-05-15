@@ -164,8 +164,8 @@ Deno.serve(async (req) => {
     }
     const tpl = TEMPLATES[body.segment];
 
-    // Segment from vw_user_engagement
-    let query = supabase.from("vw_user_engagement" as any).select("user_id, display_name, email, plan, classificacao");
+    // Segment from vw_user_engagement (without email — view can't expose auth.users to service_role)
+    let query = supabase.from("vw_user_engagement" as any).select("user_id, display_name, plan, classificacao");
     if (body.segment === "engaged") {
       query = query.eq("classificacao", "casual").eq("plan", "gratuito");
     } else {
@@ -174,7 +174,24 @@ Deno.serve(async (req) => {
     const { data: targets, error: tErr } = await query;
     if (tErr) throw tErr;
 
-    const recipients = ((targets as any[]) || []).filter((t) => t.email);
+    // Resolve emails via auth admin API
+    const targetIds = new Set(((targets as any[]) || []).map((t) => t.user_id));
+    const emailMap = new Map<string, string>();
+    let page = 1;
+    while (true) {
+      const { data: list, error: lErr } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
+      if (lErr) throw lErr;
+      for (const u of list.users) {
+        if (targetIds.has(u.id) && u.email) emailMap.set(u.id, u.email);
+      }
+      if (list.users.length < 1000) break;
+      page++;
+      if (page > 20) break; // safety
+    }
+
+    const recipients = ((targets as any[]) || [])
+      .map((t) => ({ ...t, email: emailMap.get(t.user_id) }))
+      .filter((t) => t.email);
 
     if (body.dryRun) {
       return json({
