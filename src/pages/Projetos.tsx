@@ -103,6 +103,7 @@ interface Projeto {
   progress: number;
   description?: string;
   sprints: Sprint[];
+  cliente_id?: string | null;
 }
 
 
