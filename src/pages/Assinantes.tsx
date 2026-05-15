@@ -167,6 +167,12 @@ export default function Assinantes() {
           </Card>
         </div>
 
+        {/* Campanhas Promocionais */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CampanhaPromoCard segment="engaged" />
+          <CampanhaPromoCard segment="inactive" />
+        </div>
+
         {/* Filters */}
         <Card>
           <CardContent className="p-4">
