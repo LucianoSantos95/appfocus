@@ -3,13 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Bold, Italic, List, Link2, Save, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { MeetingRecorder } from "./MeetingRecorder";
 
 interface MeetingNotesEditorProps {
   initialContent: string;
   onSave: (content: string) => Promise<void>;
+  clienteId?: string;
+  onRecordingDone?: () => void;
 }
 
-export function MeetingNotesEditor({ initialContent, onSave }: MeetingNotesEditorProps) {
+export function MeetingNotesEditor({ initialContent, onSave, clienteId, onRecordingDone }: MeetingNotesEditorProps) {
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -40,18 +43,21 @@ export function MeetingNotesEditor({ initialContent, onSave }: MeetingNotesEdito
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-sm font-medium text-foreground">Anotações de Reunião</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          onClick={handleSave}
-          disabled={saving || !hasChanges}
-        >
-          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-          Salvar
-        </Button>
+        <div className="flex items-center gap-2">
+          {clienteId && <MeetingRecorder clienteId={clienteId} onTranscribed={onRecordingDone} />}
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={handleSave}
+            disabled={saving || !hasChanges}
+          >
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            Salvar
+          </Button>
+        </div>
       </div>
 
       {/* Toolbar */}
