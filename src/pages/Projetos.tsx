@@ -209,8 +209,23 @@ export default function Projetos() {
       budget: updated.budget,
       responsible: updated.responsible,
       description: updated.description,
+      cliente_id: updated.cliente_id ?? null,
     });
     setSelectedProjeto(updated);
+  };
+
+  // Margem por projeto (receita do cliente vinculado - gastos ligados ao projeto)
+  const projectMargin = (p: Projeto) => {
+    const clienteNome = clienteName(p.cliente_id);
+    const receitas = clienteNome
+      ? transacoes
+          .filter(t => t.type === 'receita' && t.client === clienteNome && t.status === 'confirmado')
+          .reduce((s, t) => s + Number(t.value || 0), 0)
+      : 0;
+    const despesas = transacoes
+      .filter(t => t.type === 'despesa' && (t.notes?.includes(p.id) || t.category === p.name))
+      .reduce((s, t) => s + Number(t.value || 0), 0);
+    return { receitas, despesas, margem: receitas - despesas - p.spent };
   };
 
   const handleDeleteProjeto = (id: string) => {
