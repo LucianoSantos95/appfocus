@@ -581,7 +581,44 @@ export default function Marketing() {
                 <AddConteudoDialog onAdd={(c) => setConteudos([c, ...conteudos])} />
               </PlanGateButton>
             </div>
-          </div>
+                </div>
+
+                {/* Performance / ROI */}
+                <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-3">
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Performance</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Leads gerados</Label>
+                      <Input type="number" value={selectedCampanha.leads_gerados} onChange={(e) => setSelectedCampanha({ ...selectedCampanha, leads_gerados: parseInt(e.target.value) || 0 })} className="bg-muted border-border" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Conversões</Label>
+                      <Input type="number" value={selectedCampanha.conversoes} onChange={(e) => setSelectedCampanha({ ...selectedCampanha, conversoes: parseInt(e.target.value) || 0 })} className="bg-muted border-border" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Receita atribuída</Label>
+                      <Input type="number" value={selectedCampanha.receita_atribuida} onChange={(e) => setSelectedCampanha({ ...selectedCampanha, receita_atribuida: parseFloat(e.target.value) || 0 })} className="bg-muted border-border" />
+                    </div>
+                  </div>
+                  {selectedCampanha.budget > 0 && (
+                    <div className="grid grid-cols-3 gap-3 pt-2 border-t border-border/40 text-xs">
+                      <div>
+                        <p className="text-muted-foreground">CAC</p>
+                        <p className="font-semibold text-foreground">{selectedCampanha.conversoes > 0 ? `R$ ${(selectedCampanha.budget / selectedCampanha.conversoes).toFixed(2)}` : '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Taxa conversão</p>
+                        <p className="font-semibold text-foreground">{selectedCampanha.leads_gerados > 0 ? `${((selectedCampanha.conversoes / selectedCampanha.leads_gerados) * 100).toFixed(1)}%` : '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">ROI</p>
+                        <p className={cn("font-semibold", selectedCampanha.receita_atribuida >= selectedCampanha.budget ? "text-success" : "text-destructive")}>
+                          {`${(((selectedCampanha.receita_atribuida - selectedCampanha.budget) / selectedCampanha.budget) * 100).toFixed(0)}%`}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
           {/* Priority Columns */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
