@@ -643,6 +643,39 @@ function ProjectDetailDialog({
           </TabsList>
 
           <TabsContent value="geral" className="space-y-4 mt-4">
+            <div className="grid grid-cols-3 gap-3 p-3 rounded-lg bg-muted/50 border border-border/50">
+              <div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="w-3 h-3" /> Receita do cliente</p>
+                <p className="text-sm font-semibold text-success">R$ {margin.receitas.toLocaleString("pt-BR")}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Despesas vinculadas</p>
+                <p className="text-sm font-semibold text-destructive">R$ {margin.despesas.toLocaleString("pt-BR")}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Margem estimada</p>
+                <p className={cn("text-sm font-semibold", margin.margem >= 0 ? "text-success" : "text-destructive")}>R$ {margin.margem.toLocaleString("pt-BR")}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Cliente vinculado</Label>
+              <Select
+                value={editedProjeto.cliente_id || "none"}
+                onValueChange={(v) => setEditedProjeto({ ...editedProjeto, cliente_id: v === "none" ? null : v })}
+              >
+                <SelectTrigger className="bg-muted border-border">
+                  <SelectValue placeholder="Sem cliente" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border max-h-60">
+                  <SelectItem value="none">Sem cliente</SelectItem>
+                  {clientes.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Nome do Projeto</Label>
