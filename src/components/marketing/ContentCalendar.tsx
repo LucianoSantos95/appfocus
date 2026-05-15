@@ -318,6 +318,32 @@ export function ContentCalendar() {
                 <Label>Descrição</Label>
                 <Textarea value={editConteudo.description || ""} onChange={(e) => setEditConteudo({ ...editConteudo, description: e.target.value })} className="bg-muted border-border" />
               </div>
+
+              {/* Workflow de aprovação */}
+              <div className="space-y-2 rounded-lg border border-border/50 bg-muted/30 p-3">
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Aprovação</Label>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className={cn(
+                    editConteudo.approval_status === 'aprovado' && 'bg-success/10 text-success border-success/30',
+                    editConteudo.approval_status === 'recusado' && 'bg-destructive/10 text-destructive border-destructive/30',
+                    (!editConteudo.approval_status || editConteudo.approval_status === 'pendente') && 'bg-warning/10 text-warning border-warning/30',
+                  )}>
+                    {editConteudo.approval_status === 'aprovado' ? 'Aprovado' : editConteudo.approval_status === 'recusado' ? 'Recusado' : 'Pendente'}
+                  </Badge>
+                  <Button size="sm" variant="outline" onClick={() => setApproval('aprovado')} className="h-7 gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-success" /> Aprovar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setApproval('recusado')} className="h-7 gap-1">
+                    <XCircle className="w-3 h-3 text-destructive" /> Recusar
+                  </Button>
+                </div>
+                <Textarea
+                  value={editConteudo.approval_feedback || ""}
+                  onChange={(e) => setEditConteudo({ ...editConteudo, approval_feedback: e.target.value })}
+                  placeholder="Feedback / observações do revisor"
+                  className="bg-muted border-border text-xs min-h-[60px]"
+                />
+              </div>
             </div>
           )}
           <div className="flex justify-between">
