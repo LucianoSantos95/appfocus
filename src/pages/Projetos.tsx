@@ -65,6 +65,8 @@ import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { ProjetosBIPanel } from "@/components/bi/ProjetosBIPanel";
 import { ProjetoAnexos } from "@/components/projetos/ProjetoAnexos";
+import { ProjetosKanban } from "@/components/projetos/ProjetosKanban";
+import { LayoutGrid, KanbanSquare } from "lucide-react";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2, TrendingUp } from "lucide-react";
@@ -151,6 +153,7 @@ export default function Projetos() {
   const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(dbProjetos.length);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
+  const [viewMode, setViewMode] = useState<"cards" | "kanban">("cards");
 
   // Map DB projetos to local type
   const projetos: Projeto[] = dbProjetos.map(p => ({
