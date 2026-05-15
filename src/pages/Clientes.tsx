@@ -99,6 +99,7 @@ export default function Clientes() {
     deleteCliente,
     analyzeAllClientes,
     convertToAtivo,
+    refetch,
   } = useClientes();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -774,6 +775,8 @@ function EditClienteDialog({
             {/* Meeting Notes Rich Text Editor */}
             <MeetingNotesEditor
               initialContent={(cliente as any).meeting_notes || ""}
+              clienteId={cliente.id}
+              onRecordingDone={refetch}
               onSave={async (content) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const sb = (await import("@/integrations/supabase/client")).supabase as any;
