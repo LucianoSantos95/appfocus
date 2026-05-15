@@ -430,7 +430,7 @@ export default function Projetos() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <p className="font-semibold text-foreground">{p.name}</p>
-                    <p className="text-sm text-muted-foreground">{p.currentSprint} • {p.responsible}</p>
+                    <p className="text-sm text-muted-foreground">{clienteName(p.cliente_id) || p.currentSprint} • {p.responsible}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
