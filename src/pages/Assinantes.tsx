@@ -89,7 +89,7 @@ export default function Assinantes() {
     };
 
     fetchAssinantes();
-  }, [isAdmin]);
+  }, [isOwner]);
 
   const filtered = assinantes.filter((a) => {
     const matchSearch =
