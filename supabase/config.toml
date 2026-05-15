@@ -29,3 +29,5 @@ project_id = "hnextembswhejumvxbzd"
     verify_jwt = false
   [functions.transcribe-meeting]
     verify_jwt = false
+  [functions.send-promo-campaign]
+    verify_jwt = false
