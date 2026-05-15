@@ -53,7 +53,7 @@ export function ClienteTimeline({ clienteId, clienteNome }: Props) {
         date: r.created_at,
         type: "recording",
         title: "Reunião gravada",
-        description: r.summary || (r.status === "pendente" ? "Transcrevendo…" : undefined),
+        description: r.summary || (r.status === "erro" ? "Falha na transcrição" : (r.status !== "concluido" ? "Transcrevendo…" : undefined)),
         meta: r.duration_sec ? `${Math.round(r.duration_sec / 60)} min` : undefined,
       }));
       (projRes.data || []).forEach((p: any) => list.push({
