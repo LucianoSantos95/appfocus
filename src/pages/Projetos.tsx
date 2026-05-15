@@ -58,6 +58,8 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useProjetos as useProjetosDB } from "@/hooks/useProjetos";
+import { useClientes } from "@/hooks/useClientes";
+import { useTransacoes } from "@/hooks/useTransacoes";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
@@ -65,7 +67,7 @@ import { ProjetosBIPanel } from "@/components/bi/ProjetosBIPanel";
 import { ProjetoAnexos } from "@/components/projetos/ProjetoAnexos";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, TrendingUp } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface SubTask {
