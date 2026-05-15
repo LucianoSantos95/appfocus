@@ -10,6 +10,8 @@ export interface Conteudo {
   platform: string | null;
   scheduled_date: string | null;
   status: string;
+  approval_status: string;
+  approval_feedback: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,6 +22,8 @@ export interface ConteudoInput {
   platform?: string;
   scheduled_date?: string;
   status?: string;
+  approval_status?: string;
+  approval_feedback?: string | null;
 }
 
 export function useConteudos() {
