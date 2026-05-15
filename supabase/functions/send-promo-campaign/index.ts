@@ -233,12 +233,13 @@ Deno.serve(async (req) => {
     if (!resendKey) return json({ error: "RESEND_API_KEY missing" }, 500);
     const fromEmail = resolveFromEmail();
 
-    // Idempotency: skip recipients already sent this template
+    // Idempotency: skip only recipients with a successful prior send for this template
     const emails = recipients.map((r) => r.email);
     const { data: prior } = await supabase
       .from("email_send_log")
-      .select("recipient_email")
+      .select("recipient_email, status")
       .eq("template_name", tpl.template_name)
+      .eq("status", "sent")
       .in("recipient_email", emails);
     const alreadySent = new Set((prior || []).map((p: any) => p.recipient_email));
     const toSend = recipients.filter((r) => !alreadySent.has(r.email));
