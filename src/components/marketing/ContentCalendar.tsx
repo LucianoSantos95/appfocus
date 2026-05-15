@@ -92,8 +92,15 @@ export function ContentCalendar() {
       scheduled_date: editConteudo.scheduled_date,
       status: editConteudo.status,
       description: editConteudo.description,
+      approval_status: editConteudo.approval_status,
+      approval_feedback: editConteudo.approval_feedback,
     });
     setEditConteudo(null);
+  };
+
+  const setApproval = async (status: "aprovado" | "recusado" | "pendente") => {
+    if (!editConteudo) return;
+    setEditConteudo({ ...editConteudo, approval_status: status });
   };
 
   const handleDrop = async (day: number, e: React.DragEvent) => {
