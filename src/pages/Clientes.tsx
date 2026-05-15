@@ -531,6 +531,7 @@ export default function Clientes() {
           onOpenChange={(open) => !open && setSelectedCliente(null)}
           onUpdate={handleUpdateCliente}
           onDelete={handleDeleteCliente}
+          onRecordingDone={refetch}
         />
       )}
 
@@ -612,12 +613,14 @@ function EditClienteDialog({
   onOpenChange,
   onUpdate,
   onDelete,
+  onRecordingDone,
 }: {
   cliente: Cliente;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate: (c: Partial<ClienteInput> & { id: string }) => void;
   onDelete: (id: string) => void;
+  onRecordingDone?: () => void;
 }) {
   const [editedCliente, setEditedCliente] = useState({
     nome: cliente.nome,
@@ -776,7 +779,7 @@ function EditClienteDialog({
             <MeetingNotesEditor
               initialContent={(cliente as any).meeting_notes || ""}
               clienteId={cliente.id}
-              onRecordingDone={refetch}
+              onRecordingDone={onRecordingDone}
               onSave={async (content) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const sb = (await import("@/integrations/supabase/client")).supabase as any;
