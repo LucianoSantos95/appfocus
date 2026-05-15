@@ -16,7 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight, Plus, GripVertical } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, GripVertical, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useConteudos, type Conteudo, type ConteudoInput } from "@/hooks/useConteudos";
 import { useToast } from "@/hooks/use-toast";
