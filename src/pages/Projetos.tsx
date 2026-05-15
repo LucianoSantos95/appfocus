@@ -390,14 +390,32 @@ export default function Projetos() {
 
         {/* Search */}
         <div className="flex items-center justify-between">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar projetos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 w-80 bg-muted border-border"
-            />
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar projetos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 w-80 bg-muted border-border"
+              />
+            </div>
+            <div className="flex items-center bg-muted rounded-lg p-1 border border-border">
+              <button
+                onClick={() => setViewMode("cards")}
+                className={cn("p-1.5 rounded-md transition-colors", viewMode === "cards" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                title="Visualização em cards"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("kanban")}
+                className={cn("p-1.5 rounded-md transition-colors", viewMode === "kanban" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                title="Visualização Kanban"
+              >
+                <KanbanSquare className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <PlanGateButton module="projetos" action="create">
