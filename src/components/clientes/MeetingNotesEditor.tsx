@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Bold, Italic, List, Link2, Save, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,16 @@ export function MeetingNotesEditor({ initialContent, onSave, clienteId, onRecord
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
+
+  // Sync external updates (e.g. after recording transcription) into the contentEditable DOM
+  useEffect(() => {
+    if (!editorRef.current) return;
+    if (hasChanges) return; // don't overwrite user's unsaved edits
+    const next = sanitizeHtml(initialContent || "");
+    if (editorRef.current.innerHTML !== next) {
+      editorRef.current.innerHTML = next;
+    }
+  }, [initialContent, hasChanges]);
 
   const execCommand = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
