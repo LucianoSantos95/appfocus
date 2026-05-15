@@ -16,7 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight, Plus, GripVertical } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, GripVertical, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useConteudos, type Conteudo, type ConteudoInput } from "@/hooks/useConteudos";
 import { useToast } from "@/hooks/use-toast";
@@ -91,8 +92,15 @@ export function ContentCalendar() {
       scheduled_date: editConteudo.scheduled_date,
       status: editConteudo.status,
       description: editConteudo.description,
+      approval_status: editConteudo.approval_status,
+      approval_feedback: editConteudo.approval_feedback,
     });
     setEditConteudo(null);
+  };
+
+  const setApproval = async (status: "aprovado" | "recusado" | "pendente") => {
+    if (!editConteudo) return;
+    setEditConteudo({ ...editConteudo, approval_status: status });
   };
 
   const handleDrop = async (day: number, e: React.DragEvent) => {
@@ -198,11 +206,14 @@ export function ContentCalendar() {
                               "text-[10px] px-2 py-1 rounded-md cursor-pointer truncate flex items-center gap-1 border font-medium",
                               pColor
                             )}
-                            title={`${c.title} (${c.platform || "sem plataforma"}) — ${style.label}`}
+                            title={`${c.title} (${c.platform || "sem plataforma"}) — ${style.label}${c.approval_status ? ` • ${c.approval_status}` : ''}`}
                           >
                             <GripVertical className="w-2.5 h-2.5 flex-shrink-0 opacity-40" />
                             <div className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", style.dot)} />
                             <span className="truncate">{c.title}</span>
+                            {c.approval_status === 'aprovado' && <CheckCircle2 className="w-2.5 h-2.5 text-success flex-shrink-0" />}
+                            {c.approval_status === 'recusado' && <XCircle className="w-2.5 h-2.5 text-destructive flex-shrink-0" />}
+                            {c.approval_status === 'pendente' && <Clock className="w-2.5 h-2.5 text-warning flex-shrink-0" />}
                           </div>
                         );
                       })}
@@ -306,6 +317,32 @@ export function ContentCalendar() {
               <div className="space-y-2">
                 <Label>Descrição</Label>
                 <Textarea value={editConteudo.description || ""} onChange={(e) => setEditConteudo({ ...editConteudo, description: e.target.value })} className="bg-muted border-border" />
+              </div>
+
+              {/* Workflow de aprovação */}
+              <div className="space-y-2 rounded-lg border border-border/50 bg-muted/30 p-3">
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Aprovação</Label>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className={cn(
+                    editConteudo.approval_status === 'aprovado' && 'bg-success/10 text-success border-success/30',
+                    editConteudo.approval_status === 'recusado' && 'bg-destructive/10 text-destructive border-destructive/30',
+                    (!editConteudo.approval_status || editConteudo.approval_status === 'pendente') && 'bg-warning/10 text-warning border-warning/30',
+                  )}>
+                    {editConteudo.approval_status === 'aprovado' ? 'Aprovado' : editConteudo.approval_status === 'recusado' ? 'Recusado' : 'Pendente'}
+                  </Badge>
+                  <Button size="sm" variant="outline" onClick={() => setApproval('aprovado')} className="h-7 gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-success" /> Aprovar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setApproval('recusado')} className="h-7 gap-1">
+                    <XCircle className="w-3 h-3 text-destructive" /> Recusar
+                  </Button>
+                </div>
+                <Textarea
+                  value={editConteudo.approval_feedback || ""}
+                  onChange={(e) => setEditConteudo({ ...editConteudo, approval_feedback: e.target.value })}
+                  placeholder="Feedback / observações do revisor"
+                  className="bg-muted border-border text-xs min-h-[60px]"
+                />
               </div>
             </div>
           )}

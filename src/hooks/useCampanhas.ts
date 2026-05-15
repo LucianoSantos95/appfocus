@@ -13,6 +13,9 @@ export interface Campanha {
   end_date: string | null;
   status: string;
   responsible: string | null;
+  leads_gerados: number;
+  conversoes: number;
+  receita_atribuida: number;
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +29,9 @@ export interface CampanhaInput {
   end_date?: string;
   status?: string;
   responsible?: string;
+  leads_gerados?: number;
+  conversoes?: number;
+  receita_atribuida?: number;
 }
 
 export function useCampanhas() {

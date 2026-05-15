@@ -58,6 +58,8 @@ import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useProjetos as useProjetosDB } from "@/hooks/useProjetos";
+import { useClientes } from "@/hooks/useClientes";
+import { useTransacoes } from "@/hooks/useTransacoes";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
@@ -65,7 +67,7 @@ import { ProjetosBIPanel } from "@/components/bi/ProjetosBIPanel";
 import { ProjetoAnexos } from "@/components/projetos/ProjetoAnexos";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, TrendingUp } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface SubTask {
@@ -103,6 +105,7 @@ interface Projeto {
   progress: number;
   description?: string;
   sprints: Sprint[];
+  cliente_id?: string | null;
 }
 
 
@@ -138,6 +141,8 @@ export default function Projetos() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { projetos: dbProjetos, isLoading, addProjeto, updateProjeto, deleteProjeto: deleteProjetoDB, refetch: refetchProjetosDB } = useProjetosDB();
+  const { clientes } = useClientes();
+  const { transacoes } = useTransacoes();
   const [searchTerm, setSearchTerm] = useState("");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [biPanelOpen, setBiPanelOpen] = useState(false);
@@ -163,7 +168,10 @@ export default function Projetos() {
     progress: p.status === 'concluido' ? 100 : 0,
     description: p.description || undefined,
     sprints: [],
+    cliente_id: p.cliente_id,
   }));
+
+  const clienteName = (id?: string | null) => clientes.find(c => c.id === id)?.nome || null;
 
   const handleImportProjetos = () => {
     refetchProjetosDB();
@@ -201,8 +209,23 @@ export default function Projetos() {
       budget: updated.budget,
       responsible: updated.responsible,
       description: updated.description,
+      cliente_id: updated.cliente_id ?? null,
     });
     setSelectedProjeto(updated);
+  };
+
+  // Margem por projeto (receita do cliente vinculado - gastos ligados ao projeto)
+  const projectMargin = (p: Projeto) => {
+    const clienteNome = clienteName(p.cliente_id);
+    const receitas = clienteNome
+      ? transacoes
+          .filter(t => t.type === 'receita' && t.client === clienteNome && t.status === 'confirmado')
+          .reduce((s, t) => s + Number(t.value || 0), 0)
+      : 0;
+    const despesas = transacoes
+      .filter(t => t.type === 'despesa' && (t.notes?.includes(p.id) || t.category === p.name))
+      .reduce((s, t) => s + Number(t.value || 0), 0);
+    return { receitas, despesas, margem: receitas - despesas - p.spent };
   };
 
   const handleDeleteProjeto = (id: string) => {
@@ -387,7 +410,7 @@ export default function Projetos() {
               />
             </PlanGateButton>
             <PlanGateButton module="projetos" action="create">
-              <AddProjetoDialog onAdd={addProjeto} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} />
+              <AddProjetoDialog onAdd={addProjeto} disabled={freemium.limitReached} onBlocked={() => setUpgradeModalOpen(true)} clientes={clientes.map(c => ({ id: c.id, nome: c.nome }))} />
             </PlanGateButton>
           </div>
         </div>
@@ -407,7 +430,7 @@ export default function Projetos() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <p className="font-semibold text-foreground">{p.name}</p>
-                    <p className="text-sm text-muted-foreground">{p.currentSprint} • {p.responsible}</p>
+                    <p className="text-sm text-muted-foreground">{clienteName(p.cliente_id) || p.currentSprint} • {p.responsible}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
@@ -486,6 +509,8 @@ export default function Projetos() {
           onOpenChange={(open) => !open && setSelectedProjeto(null)}
           onUpdate={handleUpdateProjeto}
           onDelete={handleDeleteProjeto}
+          clientes={clientes.map(c => ({ id: c.id, nome: c.nome }))}
+          margin={projectMargin(selectedProjeto)}
         />
       )}
       <UpgradeModal open={upgradeModalOpen} onOpenChange={setUpgradeModalOpen} currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Projetos" />
@@ -501,12 +526,16 @@ function ProjectDetailDialog({
   onOpenChange,
   onUpdate,
   onDelete,
+  clientes,
+  margin,
 }: {
   projeto: Projeto;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate: (p: Projeto) => void;
   onDelete: (id: string) => void;
+  clientes: { id: string; nome: string }[];
+  margin: { receitas: number; despesas: number; margem: number };
 }) {
   const [editedProjeto, setEditedProjeto] = useState(projeto);
   const [newMember, setNewMember] = useState("");
@@ -614,6 +643,39 @@ function ProjectDetailDialog({
           </TabsList>
 
           <TabsContent value="geral" className="space-y-4 mt-4">
+            <div className="grid grid-cols-3 gap-3 p-3 rounded-lg bg-muted/50 border border-border/50">
+              <div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="w-3 h-3" /> Receita do cliente</p>
+                <p className="text-sm font-semibold text-success">R$ {margin.receitas.toLocaleString("pt-BR")}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Despesas vinculadas</p>
+                <p className="text-sm font-semibold text-destructive">R$ {margin.despesas.toLocaleString("pt-BR")}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Margem estimada</p>
+                <p className={cn("text-sm font-semibold", margin.margem >= 0 ? "text-success" : "text-destructive")}>R$ {margin.margem.toLocaleString("pt-BR")}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Cliente vinculado</Label>
+              <Select
+                value={editedProjeto.cliente_id || "none"}
+                onValueChange={(v) => setEditedProjeto({ ...editedProjeto, cliente_id: v === "none" ? null : v })}
+              >
+                <SelectTrigger className="bg-muted border-border">
+                  <SelectValue placeholder="Sem cliente" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border max-h-60">
+                  <SelectItem value="none">Sem cliente</SelectItem>
+                  {clientes.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Nome do Projeto</Label>
@@ -867,7 +929,7 @@ function ProjectDetailDialog({
   );
 }
 
-function AddProjetoDialog({ onAdd, disabled, onBlocked }: { onAdd: (p: { name: string; status?: string; priority?: string; start_date?: string; end_date?: string; budget?: number; responsible?: string; description?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
+function AddProjetoDialog({ onAdd, disabled, onBlocked, clientes }: { onAdd: (p: { name: string; status?: string; priority?: string; start_date?: string; end_date?: string; budget?: number; responsible?: string; description?: string; cliente_id?: string | null }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void; clientes: { id: string; nome: string }[] }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -876,6 +938,7 @@ function AddProjetoDialog({ onAdd, disabled, onBlocked }: { onAdd: (p: { name: s
     startDate: "",
     endDate: "",
     priority: "media" as "alta" | "media" | "baixa",
+    cliente_id: "" as string,
   });
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -894,9 +957,10 @@ function AddProjetoDialog({ onAdd, disabled, onBlocked }: { onAdd: (p: { name: s
       end_date: form.endDate || undefined,
       budget: parseFloat(form.budget) || undefined,
       responsible: form.responsible,
+      cliente_id: form.cliente_id || null,
     });
 
-    setForm({ name: "", responsible: "", budget: "", startDate: "", endDate: "", priority: "media" });
+    setForm({ name: "", responsible: "", budget: "", startDate: "", endDate: "", priority: "media", cliente_id: "" });
     setOpen(false);
   };
 
@@ -973,6 +1037,20 @@ function AddProjetoDialog({ onAdd, disabled, onBlocked }: { onAdd: (p: { name: s
                 <SelectItem value="alta">Alta</SelectItem>
                 <SelectItem value="media">Média</SelectItem>
                 <SelectItem value="baixa">Baixa</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Cliente vinculado (opcional)</Label>
+            <Select value={form.cliente_id || "none"} onValueChange={(v) => setForm({ ...form, cliente_id: v === "none" ? "" : v })}>
+              <SelectTrigger className="bg-muted border-border">
+                <SelectValue placeholder="Sem cliente" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border max-h-60">
+                <SelectItem value="none">Sem cliente</SelectItem>
+                {clientes.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

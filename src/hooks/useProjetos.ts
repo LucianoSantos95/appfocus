@@ -13,6 +13,7 @@ export interface Projeto {
   budget: number | null;
   responsible: string | null;
   description: string | null;
+  cliente_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +27,7 @@ export interface ProjetoInput {
   budget?: number;
   responsible?: string;
   description?: string;
+  cliente_id?: string | null;
 }
 
 export function useProjetos() {
