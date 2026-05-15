@@ -47,10 +47,23 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const CRON_SECRET = Deno.env.get("CRON_SECRET");
+  const authHeader = req.headers.get("Authorization")?.replace("Bearer ", "");
+  const isAuthorized =
+    (authHeader && authHeader === SERVICE_ROLE_KEY) ||
+    (CRON_SECRET && authHeader === CRON_SECRET);
+  if (!isAuthorized) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      SERVICE_ROLE_KEY
     );
 
     // Get all users with WhatsApp enabled

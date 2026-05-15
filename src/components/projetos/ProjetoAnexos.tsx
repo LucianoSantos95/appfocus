@@ -41,9 +41,11 @@ export function ProjetoAnexos({ projetoId, attachments, onAttachmentsChange }: P
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: signed, error: signedErr } = await supabase.storage
         .from("projeto-anexos")
-        .getPublicUrl(path);
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (signedErr || !signed?.signedUrl) throw signedErr || new Error("signed url failed");
+      const publicUrl = signed.signedUrl;
 
       const newAttachment: AttachmentItem = {
         name: file.name,

@@ -11,6 +11,65 @@ const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GMAIL_API = "https://gmail.googleapis.com/gmail/v1/users/me";
 const CALENDAR_API = "https://www.googleapis.com/calendar/v3";
 
+// ---------- HMAC-signed state helpers ----------
+
+const STATE_SECRET =
+  Deno.env.get("GOOGLE_OAUTH_STATE_SECRET") ||
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
+  "";
+
+function toBase64Url(bytes: Uint8Array): string {
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+function fromBase64Url(s: string): Uint8Array {
+  const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
+  const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + pad;
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function hmacSign(payload: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(STATE_SECRET),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(payload)));
+  return toBase64Url(sig);
+}
+
+async function signState(data: { userId: string; redirect: string }): Promise<string> {
+  const payload = toBase64Url(new TextEncoder().encode(JSON.stringify(data)));
+  const sig = await hmacSign(payload);
+  return `${payload}.${sig}`;
+}
+
+async function verifyState(state: string): Promise<{ userId: string; redirect: string } | null> {
+  const parts = state.split(".");
+  if (parts.length !== 2) return null;
+  const [payload, sig] = parts;
+  const expected = await hmacSign(payload);
+  // constant-time compare
+  if (expected.length !== sig.length) return null;
+  let diff = 0;
+  for (let i = 0; i < sig.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
+  if (diff !== 0) return null;
+  try {
+    return JSON.parse(new TextDecoder().decode(fromBase64Url(payload)));
+  } catch {
+    return null;
+  }
+}
+
 // ---------- HELPERS ----------
 
 async function getValidToken(
@@ -146,7 +205,12 @@ serve(async (req) => {
       const errorParam = url.searchParams.get("error");
 
       if (errorParam) {
-        const redirectUrl = state ? JSON.parse(atob(state)).redirect : "/";
+        const fallbackRedirect = "/";
+        let redirectUrl = fallbackRedirect;
+        if (state) {
+          const verified = await verifyState(state);
+          redirectUrl = verified?.redirect || fallbackRedirect;
+        }
         return Response.redirect(`${redirectUrl}?google_error=${errorParam}`, 302);
       }
 
@@ -157,11 +221,9 @@ serve(async (req) => {
         });
       }
 
-      let stateData: { userId: string; redirect: string };
-      try {
-        stateData = JSON.parse(atob(state));
-      } catch {
-        return new Response(JSON.stringify({ error: "Invalid state" }), {
+      const stateData = await verifyState(state);
+      if (!stateData) {
+        return new Response(JSON.stringify({ error: "Invalid or tampered state" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -258,7 +320,7 @@ serve(async (req) => {
       case "auth_url": {
         const functionUrl = `${SUPABASE_URL}/functions/v1/google-integration`;
         const redirectUrl = params.redirect_url || "/";
-        const state = btoa(JSON.stringify({ userId, redirect: redirectUrl }));
+        const state = await signState({ userId, redirect: redirectUrl });
         const url = buildAuthUrl(GOOGLE_CLIENT_ID, functionUrl, state);
         return new Response(JSON.stringify({ url }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

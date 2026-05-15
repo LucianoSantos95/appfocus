@@ -146,18 +146,26 @@ serve(async (req) => {
     // Create Supabase client with service role for database operations
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Fetch client data
+    // Fetch client data — scoped to requesting user (RLS bypass guard)
     const { data: cliente, error: fetchError } = await supabase
       .from("clientes")
       .select("*")
       .eq("id", clienteId)
-      .single();
+      .eq("user_id", userId)
+      .maybeSingle();
 
     if (fetchError || !cliente) {
       console.error("Error fetching client:", fetchError);
       return new Response(
         JSON.stringify({ error: "Cliente não encontrado" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (cliente.user_id !== userId) {
+      return new Response(
+        JSON.stringify({ error: "Acesso negado" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -307,7 +315,8 @@ Sugestões de ação devem ser específicas e acionáveis, mencionando o nome do
         proxima_acao_sugerida: analysis.proxima_acao_sugerida,
         analisado_em: new Date().toISOString(),
       })
-      .eq("id", clienteId);
+      .eq("id", clienteId)
+      .eq("user_id", userId);
 
     if (updateError) {
       console.error("Error updating client:", updateError);
