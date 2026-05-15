@@ -66,6 +66,9 @@ import { useClientes, type Cliente, type ClienteInput } from "@/hooks/useCliente
 import { ClienteInsightsCard } from "@/components/clientes/ClienteInsightsCard";
 import { ClienteAIBadge } from "@/components/clientes/ClienteAIBadge";
 import { MeetingNotesEditor } from "@/components/clientes/MeetingNotesEditor";
+import { ClienteTimeline } from "@/components/clientes/ClienteTimeline";
+import { ClientesKanban } from "@/components/clientes/ClientesKanban";
+import { LayoutGrid, KanbanSquare } from "lucide-react";
 import { SugestoesPainel } from "@/components/clientes/SugestoesPainel";
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
@@ -110,6 +113,7 @@ export default function Clientes() {
   const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(clientes.length);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
+  const [viewMode, setViewMode] = useState<"cards" | "kanban">("cards");
   const [showConversionDialog, setShowConversionDialog] = useState(false);
   const [clienteToConvert, setClienteToConvert] = useState<Cliente | null>(null);
   const [showSugestoes, setShowSugestoes] = useState(false);
@@ -458,14 +462,32 @@ export default function Clientes() {
 
         {/* Search */}
         <div className="flex items-center justify-between">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar clientes..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 w-80 bg-muted border-border"
-            />
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar clientes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 w-80 bg-muted border-border"
+              />
+            </div>
+            <div className="flex items-center bg-muted rounded-lg p-1 border border-border">
+              <button
+                onClick={() => setViewMode("cards")}
+                className={cn("p-1.5 rounded-md transition-colors", viewMode === "cards" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                title="Visualização em cards"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("kanban")}
+                className={cn("p-1.5 rounded-md transition-colors", viewMode === "kanban" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                title="Pipeline Kanban"
+              >
+                <KanbanSquare className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <PlanGateButton module="clientes" action="create">
@@ -492,7 +514,25 @@ export default function Clientes() {
           </div>
         </div>
 
-        {/* Clients Tabs */}
+        {viewMode === "kanban" ? (
+          <ClientesKanban
+            clientes={filteredClientes.map(c => ({
+              id: c.id,
+              nome: c.nome,
+              status: c.status,
+              email: c.email,
+              telefone: c.telefone,
+              segmento: c.segmento,
+              valor_total: c.valor_total,
+              classificacao: c.classificacao,
+            }))}
+            onStatusChange={(id, status) => updateCliente(id, { status })}
+            onCardClick={(id) => {
+              const c = clientes.find(x => x.id === id);
+              if (c) setSelectedCliente(c);
+            }}
+          />
+        ) : (
         <Tabs defaultValue="prospectos" className="w-full">
           <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="prospectos">Prospectos ({prospectosClientes.length})</TabsTrigger>
@@ -521,6 +561,7 @@ export default function Clientes() {
             )}
           </TabsContent>
         </Tabs>
+        )}
       </div>
 
       {/* Edit Client Dialog */}
@@ -652,14 +693,14 @@ function EditClienteDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px] bg-card border-border max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
-              Editar Cliente
+              {cliente.nome}
               <ClienteAIBadge classificacao={cliente.classificacao} />
             </DialogTitle>
           </DialogHeader>
-          
+
           {cliente.proxima_acao_sugerida && (
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-sm">
               <p className="font-medium text-primary mb-1">💡 Sugestão da IA:</p>
@@ -667,142 +708,155 @@ function EditClienteDialog({
             </div>
           )}
 
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Nome / Empresa</Label>
-              <Input
-                value={editedCliente.nome}
-                onChange={(e) => setEditedCliente({ ...editedCliente, nome: e.target.value })}
-                className="bg-muted border-border"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={editedCliente.email}
-                  onChange={(e) => setEditedCliente({ ...editedCliente, email: e.target.value })}
-                  className="bg-muted border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Telefone</Label>
-                <Input
-                  value={editedCliente.telefone}
-                  onChange={(e) => setEditedCliente({ ...editedCliente, telefone: e.target.value })}
-                  className="bg-muted border-border"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Segmento</Label>
-                <Select
-                  value={editedCliente.segmento}
-                  onValueChange={(v) => setEditedCliente({ ...editedCliente, segmento: v })}
-                >
-                  <SelectTrigger className="bg-muted border-border">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border">
-                    {segments.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select
-                  value={editedCliente.status}
-                  onValueChange={(v) => setEditedCliente({ ...editedCliente, status: v })}
-                >
-                  <SelectTrigger className="bg-muted border-border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border">
-                    <SelectItem value="prospecto">Prospecto</SelectItem>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tipo de Contrato</Label>
-                <Input
-                  value={editedCliente.tipo_contrato}
-                  onChange={(e) => setEditedCliente({ ...editedCliente, tipo_contrato: e.target.value })}
-                  placeholder="Ex: Consultoria, Serviços..."
-                  className="bg-muted border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Valor Total (R$)</Label>
-                <Input
-                  type="number"
-                  value={editedCliente.valor_total}
-                  onChange={(e) => setEditedCliente({ ...editedCliente, valor_total: parseFloat(e.target.value) || 0 })}
-                  className="bg-muted border-border"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Link Contrato/Comprovante</Label>
-              <Input
-                value={editedCliente.anexo_url}
-                onChange={(e) => setEditedCliente({ ...editedCliente, anexo_url: e.target.value })}
-                placeholder="https://drive.google.com/... ou link do documento"
-                className="bg-muted border-border"
-              />
-              {editedCliente.anexo_url && isValidHttpUrl(editedCliente.anexo_url) && (
-                <a
-                  href={editedCliente.anexo_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-primary hover:underline flex items-center gap-1"
-                >
-                  <FileText className="w-3 h-3" />
-                  Visualizar anexo
-                </a>
-              )}
-              {editedCliente.anexo_url && !isValidHttpUrl(editedCliente.anexo_url) && (
-                <span className="text-sm text-destructive">
-                  URL inválida (deve começar com http:// ou https://)
-                </span>
-              )}
-            </div>
+          <Tabs defaultValue="detalhes" className="w-full">
+            <TabsList className="w-full grid grid-cols-2">
+              <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
+              <TabsTrigger value="timeline">Linha do tempo</TabsTrigger>
+            </TabsList>
 
-            {/* Meeting Notes Rich Text Editor */}
-            <MeetingNotesEditor
-              initialContent={(cliente as any).meeting_notes || ""}
-              clienteId={cliente.id}
-              onRecordingDone={onRecordingDone}
-              onSave={async (content) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const sb = (await import("@/integrations/supabase/client")).supabase as any;
-                await sb.from("clientes").update({ meeting_notes: content }).eq("id", cliente.id);
-              }}
-            />
-
-            {cliente.palavras_chave && cliente.palavras_chave.length > 0 && (
-              <div className="space-y-2">
-                <Label>Palavras-chave (IA)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {cliente.palavras_chave.map((keyword, i) => (
-                    <span
-                      key={i}
-                      className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
+            <TabsContent value="detalhes" className="mt-4">
+              <div className="grid gap-4 py-2">
+                <div className="space-y-2">
+                  <Label>Nome / Empresa</Label>
+                  <Input
+                    value={editedCliente.nome}
+                    onChange={(e) => setEditedCliente({ ...editedCliente, nome: e.target.value })}
+                    className="bg-muted border-border"
+                  />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input
+                      type="email"
+                      value={editedCliente.email}
+                      onChange={(e) => setEditedCliente({ ...editedCliente, email: e.target.value })}
+                      className="bg-muted border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Telefone</Label>
+                    <Input
+                      value={editedCliente.telefone}
+                      onChange={(e) => setEditedCliente({ ...editedCliente, telefone: e.target.value })}
+                      className="bg-muted border-border"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Segmento</Label>
+                    <Select
+                      value={editedCliente.segmento}
+                      onValueChange={(v) => setEditedCliente({ ...editedCliente, segmento: v })}
+                    >
+                      <SelectTrigger className="bg-muted border-border">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        {segments.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select
+                      value={editedCliente.status}
+                      onValueChange={(v) => setEditedCliente({ ...editedCliente, status: v })}
+                    >
+                      <SelectTrigger className="bg-muted border-border">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        <SelectItem value="prospecto">Prospecto</SelectItem>
+                        <SelectItem value="ativo">Ativo</SelectItem>
+                        <SelectItem value="inativo">Inativo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tipo de Contrato</Label>
+                    <Input
+                      value={editedCliente.tipo_contrato}
+                      onChange={(e) => setEditedCliente({ ...editedCliente, tipo_contrato: e.target.value })}
+                      placeholder="Ex: Consultoria, Serviços..."
+                      className="bg-muted border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valor Total (R$)</Label>
+                    <Input
+                      type="number"
+                      value={editedCliente.valor_total}
+                      onChange={(e) => setEditedCliente({ ...editedCliente, valor_total: parseFloat(e.target.value) || 0 })}
+                      className="bg-muted border-border"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Link Contrato/Comprovante</Label>
+                  <Input
+                    value={editedCliente.anexo_url}
+                    onChange={(e) => setEditedCliente({ ...editedCliente, anexo_url: e.target.value })}
+                    placeholder="https://drive.google.com/... ou link do documento"
+                    className="bg-muted border-border"
+                  />
+                  {editedCliente.anexo_url && isValidHttpUrl(editedCliente.anexo_url) && (
+                    <a
+                      href={editedCliente.anexo_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline flex items-center gap-1"
+                    >
+                      <FileText className="w-3 h-3" />
+                      Visualizar anexo
+                    </a>
+                  )}
+                  {editedCliente.anexo_url && !isValidHttpUrl(editedCliente.anexo_url) && (
+                    <span className="text-sm text-destructive">
+                      URL inválida (deve começar com http:// ou https://)
+                    </span>
+                  )}
+                </div>
+
+                {/* Meeting Notes Rich Text Editor */}
+                <MeetingNotesEditor
+                  initialContent={(cliente as any).meeting_notes || ""}
+                  clienteId={cliente.id}
+                  onRecordingDone={onRecordingDone}
+                  onSave={async (content) => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const sb = (await import("@/integrations/supabase/client")).supabase as any;
+                    await sb.from("clientes").update({ meeting_notes: content }).eq("id", cliente.id);
+                  }}
+                />
+
+                {cliente.palavras_chave && cliente.palavras_chave.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Palavras-chave (IA)</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {cliente.palavras_chave.map((keyword, i) => (
+                        <span
+                          key={i}
+                          className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground"
+                        >
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </TabsContent>
+
+            <TabsContent value="timeline" className="mt-4">
+              <ClienteTimeline clienteId={cliente.id} clienteNome={cliente.nome} />
+            </TabsContent>
+          </Tabs>
           <div className="flex justify-between">
             <Button
               variant="destructive"

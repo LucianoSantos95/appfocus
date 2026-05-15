@@ -65,6 +65,8 @@ import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { ProjetosBIPanel } from "@/components/bi/ProjetosBIPanel";
 import { ProjetoAnexos } from "@/components/projetos/ProjetoAnexos";
+import { ProjetosKanban } from "@/components/projetos/ProjetosKanban";
+import { LayoutGrid, KanbanSquare } from "lucide-react";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2, TrendingUp } from "lucide-react";
@@ -151,6 +153,7 @@ export default function Projetos() {
   const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(dbProjetos.length);
   const [selectedProjeto, setSelectedProjeto] = useState<Projeto | null>(null);
+  const [viewMode, setViewMode] = useState<"cards" | "kanban">("cards");
 
   // Map DB projetos to local type
   const projetos: Projeto[] = dbProjetos.map(p => ({
@@ -387,14 +390,32 @@ export default function Projetos() {
 
         {/* Search */}
         <div className="flex items-center justify-between">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar projetos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 w-80 bg-muted border-border"
-            />
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar projetos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 w-80 bg-muted border-border"
+              />
+            </div>
+            <div className="flex items-center bg-muted rounded-lg p-1 border border-border">
+              <button
+                onClick={() => setViewMode("cards")}
+                className={cn("p-1.5 rounded-md transition-colors", viewMode === "cards" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                title="Visualização em cards"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("kanban")}
+                className={cn("p-1.5 rounded-md transition-colors", viewMode === "kanban" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                title="Visualização Kanban"
+              >
+                <KanbanSquare className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <PlanGateButton module="projetos" action="create">
@@ -415,9 +436,32 @@ export default function Projetos() {
           </div>
         </div>
 
-        {/* Projects Cards */}
+        {/* Projects view */}
+        {viewMode === "kanban" ? (
+          <ProjetosKanban
+            projetos={projetos
+              .filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map(p => ({
+                id: p.id,
+                name: p.name,
+                status: p.status,
+                priority: p.priority,
+                responsible: p.responsible,
+                end_date: p.endDate,
+                budget: p.budget,
+                cliente_nome: clienteName(p.cliente_id),
+              }))}
+            onStatusChange={(id, status) => updateProjeto(id, { status })}
+            onCardClick={(id) => {
+              const p = projetos.find(x => x.id === id);
+              if (p) setSelectedProjeto(p);
+            }}
+          />
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {projetos.map((p) => {
+          {projetos
+            .filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .map((p) => {
             const deadlineStatus = getProjectDeadlineStatus(p.endDate, p.progress);
             const DeadlineIcon = deadlineStatus.icon;
             
@@ -499,6 +543,7 @@ export default function Projetos() {
             );
           })}
         </div>
+        )}
       </div>
 
       {/* Project Detail Dialog */}
