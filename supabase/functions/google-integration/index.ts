@@ -320,7 +320,7 @@ serve(async (req) => {
       case "auth_url": {
         const functionUrl = `${SUPABASE_URL}/functions/v1/google-integration`;
         const redirectUrl = params.redirect_url || "/";
-        const state = btoa(JSON.stringify({ userId, redirect: redirectUrl }));
+        const state = await signState({ userId, redirect: redirectUrl });
         const url = buildAuthUrl(GOOGLE_CLIENT_ID, functionUrl, state);
         return new Response(JSON.stringify({ url }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -250,8 +250,14 @@ async function uploadPdfToStorage(
     .from("relatorios-pdf")
     .upload(path, pdfBytes, { contentType: "application/pdf", upsert: false });
   if (error) throw new Error(`Storage upload failed: ${error.message}`);
-  const { data } = supabase.storage.from("relatorios-pdf").getPublicUrl(path);
-  return data.publicUrl;
+  // Bucket is private — return a short-lived signed URL (7 days) instead of a public URL.
+  const { data, error: signedErr } = await supabase.storage
+    .from("relatorios-pdf")
+    .createSignedUrl(path, 60 * 60 * 24 * 7);
+  if (signedErr || !data?.signedUrl) {
+    throw new Error(`Signed URL failed: ${signedErr?.message || "unknown"}`);
+  }
+  return data.signedUrl;
 }
 
 async function sendEmail(
