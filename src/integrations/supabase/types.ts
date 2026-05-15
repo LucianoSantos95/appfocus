@@ -1458,7 +1458,6 @@ export type Database = {
           active_days_30d: number | null
           classificacao: string | null
           display_name: string | null
-          email: string | null
           first_seen_at: string | null
           last_active_at: string | null
           plan: string | null
@@ -1487,7 +1486,6 @@ export type Database = {
           active_days_30d: number | null
           classificacao: string | null
           display_name: string | null
-          email: string | null
           first_seen_at: string | null
           last_active_at: string | null
           plan: string | null
