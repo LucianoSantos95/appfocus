@@ -91,8 +91,15 @@ serve(async (req) => {
         const content = aiJson.choices?.[0]?.message?.content || "{}";
         const m = content.match(/\{[\s\S]*\}/);
         const parsed = JSON.parse(m ? m[0] : content);
-        summary = parsed.summary || "";
-        nextActions = parsed.next_actions || "";
+        const toText = (v: unknown): string => {
+          if (!v) return "";
+          if (typeof v === "string") return v;
+          if (Array.isArray(v)) return v.map((x) => (typeof x === "string" ? x : `- ${JSON.stringify(x)}`)).join("\n");
+          if (typeof v === "object") return Object.entries(v as Record<string, unknown>).map(([k, val]) => `- **${k}:** ${typeof val === "string" ? val : JSON.stringify(val)}`).join("\n");
+          return String(v);
+        };
+        summary = toText(parsed.summary);
+        nextActions = toText(parsed.next_actions);
       }
     } catch (e) {
       console.error("Resumo IA falhou:", e);
