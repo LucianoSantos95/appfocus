@@ -693,14 +693,14 @@ function EditClienteDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px] bg-card border-border max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
-              Editar Cliente
+              {cliente.nome}
               <ClienteAIBadge classificacao={cliente.classificacao} />
             </DialogTitle>
           </DialogHeader>
-          
+
           {cliente.proxima_acao_sugerida && (
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-sm">
               <p className="font-medium text-primary mb-1">💡 Sugestão da IA:</p>
@@ -708,142 +708,155 @@ function EditClienteDialog({
             </div>
           )}
 
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Nome / Empresa</Label>
-              <Input
-                value={editedCliente.nome}
-                onChange={(e) => setEditedCliente({ ...editedCliente, nome: e.target.value })}
-                className="bg-muted border-border"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={editedCliente.email}
-                  onChange={(e) => setEditedCliente({ ...editedCliente, email: e.target.value })}
-                  className="bg-muted border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Telefone</Label>
-                <Input
-                  value={editedCliente.telefone}
-                  onChange={(e) => setEditedCliente({ ...editedCliente, telefone: e.target.value })}
-                  className="bg-muted border-border"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Segmento</Label>
-                <Select
-                  value={editedCliente.segmento}
-                  onValueChange={(v) => setEditedCliente({ ...editedCliente, segmento: v })}
-                >
-                  <SelectTrigger className="bg-muted border-border">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border">
-                    {segments.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select
-                  value={editedCliente.status}
-                  onValueChange={(v) => setEditedCliente({ ...editedCliente, status: v })}
-                >
-                  <SelectTrigger className="bg-muted border-border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border">
-                    <SelectItem value="prospecto">Prospecto</SelectItem>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tipo de Contrato</Label>
-                <Input
-                  value={editedCliente.tipo_contrato}
-                  onChange={(e) => setEditedCliente({ ...editedCliente, tipo_contrato: e.target.value })}
-                  placeholder="Ex: Consultoria, Serviços..."
-                  className="bg-muted border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Valor Total (R$)</Label>
-                <Input
-                  type="number"
-                  value={editedCliente.valor_total}
-                  onChange={(e) => setEditedCliente({ ...editedCliente, valor_total: parseFloat(e.target.value) || 0 })}
-                  className="bg-muted border-border"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Link Contrato/Comprovante</Label>
-              <Input
-                value={editedCliente.anexo_url}
-                onChange={(e) => setEditedCliente({ ...editedCliente, anexo_url: e.target.value })}
-                placeholder="https://drive.google.com/... ou link do documento"
-                className="bg-muted border-border"
-              />
-              {editedCliente.anexo_url && isValidHttpUrl(editedCliente.anexo_url) && (
-                <a
-                  href={editedCliente.anexo_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-primary hover:underline flex items-center gap-1"
-                >
-                  <FileText className="w-3 h-3" />
-                  Visualizar anexo
-                </a>
-              )}
-              {editedCliente.anexo_url && !isValidHttpUrl(editedCliente.anexo_url) && (
-                <span className="text-sm text-destructive">
-                  URL inválida (deve começar com http:// ou https://)
-                </span>
-              )}
-            </div>
+          <Tabs defaultValue="detalhes" className="w-full">
+            <TabsList className="w-full grid grid-cols-2">
+              <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
+              <TabsTrigger value="timeline">Linha do tempo</TabsTrigger>
+            </TabsList>
 
-            {/* Meeting Notes Rich Text Editor */}
-            <MeetingNotesEditor
-              initialContent={(cliente as any).meeting_notes || ""}
-              clienteId={cliente.id}
-              onRecordingDone={onRecordingDone}
-              onSave={async (content) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const sb = (await import("@/integrations/supabase/client")).supabase as any;
-                await sb.from("clientes").update({ meeting_notes: content }).eq("id", cliente.id);
-              }}
-            />
-
-            {cliente.palavras_chave && cliente.palavras_chave.length > 0 && (
-              <div className="space-y-2">
-                <Label>Palavras-chave (IA)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {cliente.palavras_chave.map((keyword, i) => (
-                    <span
-                      key={i}
-                      className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
+            <TabsContent value="detalhes" className="mt-4">
+              <div className="grid gap-4 py-2">
+                <div className="space-y-2">
+                  <Label>Nome / Empresa</Label>
+                  <Input
+                    value={editedCliente.nome}
+                    onChange={(e) => setEditedCliente({ ...editedCliente, nome: e.target.value })}
+                    className="bg-muted border-border"
+                  />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input
+                      type="email"
+                      value={editedCliente.email}
+                      onChange={(e) => setEditedCliente({ ...editedCliente, email: e.target.value })}
+                      className="bg-muted border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Telefone</Label>
+                    <Input
+                      value={editedCliente.telefone}
+                      onChange={(e) => setEditedCliente({ ...editedCliente, telefone: e.target.value })}
+                      className="bg-muted border-border"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Segmento</Label>
+                    <Select
+                      value={editedCliente.segmento}
+                      onValueChange={(v) => setEditedCliente({ ...editedCliente, segmento: v })}
+                    >
+                      <SelectTrigger className="bg-muted border-border">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        {segments.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select
+                      value={editedCliente.status}
+                      onValueChange={(v) => setEditedCliente({ ...editedCliente, status: v })}
+                    >
+                      <SelectTrigger className="bg-muted border-border">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-border">
+                        <SelectItem value="prospecto">Prospecto</SelectItem>
+                        <SelectItem value="ativo">Ativo</SelectItem>
+                        <SelectItem value="inativo">Inativo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tipo de Contrato</Label>
+                    <Input
+                      value={editedCliente.tipo_contrato}
+                      onChange={(e) => setEditedCliente({ ...editedCliente, tipo_contrato: e.target.value })}
+                      placeholder="Ex: Consultoria, Serviços..."
+                      className="bg-muted border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valor Total (R$)</Label>
+                    <Input
+                      type="number"
+                      value={editedCliente.valor_total}
+                      onChange={(e) => setEditedCliente({ ...editedCliente, valor_total: parseFloat(e.target.value) || 0 })}
+                      className="bg-muted border-border"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Link Contrato/Comprovante</Label>
+                  <Input
+                    value={editedCliente.anexo_url}
+                    onChange={(e) => setEditedCliente({ ...editedCliente, anexo_url: e.target.value })}
+                    placeholder="https://drive.google.com/... ou link do documento"
+                    className="bg-muted border-border"
+                  />
+                  {editedCliente.anexo_url && isValidHttpUrl(editedCliente.anexo_url) && (
+                    <a
+                      href={editedCliente.anexo_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline flex items-center gap-1"
+                    >
+                      <FileText className="w-3 h-3" />
+                      Visualizar anexo
+                    </a>
+                  )}
+                  {editedCliente.anexo_url && !isValidHttpUrl(editedCliente.anexo_url) && (
+                    <span className="text-sm text-destructive">
+                      URL inválida (deve começar com http:// ou https://)
+                    </span>
+                  )}
+                </div>
+
+                {/* Meeting Notes Rich Text Editor */}
+                <MeetingNotesEditor
+                  initialContent={(cliente as any).meeting_notes || ""}
+                  clienteId={cliente.id}
+                  onRecordingDone={onRecordingDone}
+                  onSave={async (content) => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const sb = (await import("@/integrations/supabase/client")).supabase as any;
+                    await sb.from("clientes").update({ meeting_notes: content }).eq("id", cliente.id);
+                  }}
+                />
+
+                {cliente.palavras_chave && cliente.palavras_chave.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Palavras-chave (IA)</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {cliente.palavras_chave.map((keyword, i) => (
+                        <span
+                          key={i}
+                          className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground"
+                        >
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </TabsContent>
+
+            <TabsContent value="timeline" className="mt-4">
+              <ClienteTimeline clienteId={cliente.id} clienteNome={cliente.nome} />
+            </TabsContent>
+          </Tabs>
           <div className="flex justify-between">
             <Button
               variant="destructive"
