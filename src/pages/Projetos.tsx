@@ -890,7 +890,7 @@ function ProjectDetailDialog({
   );
 }
 
-function AddProjetoDialog({ onAdd, disabled, onBlocked }: { onAdd: (p: { name: string; status?: string; priority?: string; start_date?: string; end_date?: string; budget?: number; responsible?: string; description?: string }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void }) {
+function AddProjetoDialog({ onAdd, disabled, onBlocked, clientes }: { onAdd: (p: { name: string; status?: string; priority?: string; start_date?: string; end_date?: string; budget?: number; responsible?: string; description?: string; cliente_id?: string | null }) => Promise<unknown>; disabled?: boolean; onBlocked?: () => void; clientes: { id: string; nome: string }[] }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -899,6 +899,7 @@ function AddProjetoDialog({ onAdd, disabled, onBlocked }: { onAdd: (p: { name: s
     startDate: "",
     endDate: "",
     priority: "media" as "alta" | "media" | "baixa",
+    cliente_id: "" as string,
   });
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -917,9 +918,10 @@ function AddProjetoDialog({ onAdd, disabled, onBlocked }: { onAdd: (p: { name: s
       end_date: form.endDate || undefined,
       budget: parseFloat(form.budget) || undefined,
       responsible: form.responsible,
+      cliente_id: form.cliente_id || null,
     });
 
-    setForm({ name: "", responsible: "", budget: "", startDate: "", endDate: "", priority: "media" });
+    setForm({ name: "", responsible: "", budget: "", startDate: "", endDate: "", priority: "media", cliente_id: "" });
     setOpen(false);
   };
 
