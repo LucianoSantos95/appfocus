@@ -1001,6 +1001,20 @@ function AddProjetoDialog({ onAdd, disabled, onBlocked, clientes }: { onAdd: (p:
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2">
+            <Label>Cliente vinculado (opcional)</Label>
+            <Select value={form.cliente_id || "none"} onValueChange={(v) => setForm({ ...form, cliente_id: v === "none" ? "" : v })}>
+              <SelectTrigger className="bg-muted border-border">
+                <SelectValue placeholder="Sem cliente" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border max-h-60">
+                <SelectItem value="none">Sem cliente</SelectItem>
+                {clientes.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <div className="flex justify-end gap-3">
           <DialogClose asChild>
