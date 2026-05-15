@@ -141,6 +141,8 @@ export default function Projetos() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { projetos: dbProjetos, isLoading, addProjeto, updateProjeto, deleteProjeto: deleteProjetoDB, refetch: refetchProjetosDB } = useProjetosDB();
+  const { clientes } = useClientes();
+  const { transacoes } = useTransacoes();
   const [searchTerm, setSearchTerm] = useState("");
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [biPanelOpen, setBiPanelOpen] = useState(false);
@@ -166,7 +168,10 @@ export default function Projetos() {
     progress: p.status === 'concluido' ? 100 : 0,
     description: p.description || undefined,
     sprints: [],
+    cliente_id: p.cliente_id,
   }));
+
+  const clienteName = (id?: string | null) => clientes.find(c => c.id === id)?.nome || null;
 
   const handleImportProjetos = () => {
     refetchProjetosDB();
