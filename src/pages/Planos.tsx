@@ -139,8 +139,10 @@ export default function Planos() {
       const priceId = STRIPE_PLANS[planId][interval].priceId;
 
       const body: any = { priceId };
-      // Auto-apply onboarding coupon (FOCUS20)
-      if (hasCoupon) {
+      // Priority: URL coupon (campaign) > onboarding coupon
+      if (urlCoupon) {
+        body.couponId = urlCoupon;
+      } else if (hasCoupon) {
         body.promotionCode = ONBOARDING_PROMO_CODE_ID;
       }
 
