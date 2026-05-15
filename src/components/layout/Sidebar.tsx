@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/AuthContext";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
@@ -38,6 +39,8 @@ export function Sidebar() {
   const { collapsed, toggle } = useSidebar();
   const location = useLocation();
   const { isAdmin, isTeamMember, allowedPages, isLoading } = useTeamPermissions();
+  const { user } = useAuth();
+  const isOwnerEmail = (user?.email || "").toLowerCase() === "oluciano.dosantos@gmail.com";
 
   const hasAccess = (slug: string) => {
     if (slug === "" || slug === "guia") return true; // Painel and Guia always accessible
@@ -126,7 +129,7 @@ export function Sidebar() {
           })}
 
           {/* Admin-only: Assinantes */}
-          {isAdmin && (
+          {isOwnerEmail && (
             <li>
               <NavLink
                 to="/assinantes"
