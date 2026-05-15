@@ -66,6 +66,9 @@ import { useClientes, type Cliente, type ClienteInput } from "@/hooks/useCliente
 import { ClienteInsightsCard } from "@/components/clientes/ClienteInsightsCard";
 import { ClienteAIBadge } from "@/components/clientes/ClienteAIBadge";
 import { MeetingNotesEditor } from "@/components/clientes/MeetingNotesEditor";
+import { ClienteTimeline } from "@/components/clientes/ClienteTimeline";
+import { ClientesKanban } from "@/components/clientes/ClientesKanban";
+import { LayoutGrid, KanbanSquare } from "lucide-react";
 import { SugestoesPainel } from "@/components/clientes/SugestoesPainel";
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { importConfigs } from "@/lib/import-configs";
@@ -110,6 +113,7 @@ export default function Clientes() {
   const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(clientes.length);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
+  const [viewMode, setViewMode] = useState<"cards" | "kanban">("cards");
   const [showConversionDialog, setShowConversionDialog] = useState(false);
   const [clienteToConvert, setClienteToConvert] = useState<Cliente | null>(null);
   const [showSugestoes, setShowSugestoes] = useState(false);
