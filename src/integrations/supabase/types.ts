@@ -110,54 +110,18 @@ export type Database = {
         }
         Relationships: []
       }
-      campanha_clientes: {
-        Row: {
-          campanha_id: string
-          cliente_id: string
-          created_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          campanha_id: string
-          cliente_id: string
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Update: {
-          campanha_id?: string
-          cliente_id?: string
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "campanha_clientes_campanha_id_fkey"
-            columns: ["campanha_id"]
-            isOneToOne: false
-            referencedRelation: "campanhas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campanha_clientes_cliente_id_fkey"
-            columns: ["cliente_id"]
-            isOneToOne: false
-            referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       campanhas: {
         Row: {
           budget: number | null
+          conversoes: number
           created_at: string
           end_date: string | null
           id: string
+          leads_gerados: number
           name: string
           objective: string | null
           platforms: string | null
+          receita_atribuida: number
           responsible: string | null
           start_date: string | null
           status: string
@@ -166,12 +130,15 @@ export type Database = {
         }
         Insert: {
           budget?: number | null
+          conversoes?: number
           created_at?: string
           end_date?: string | null
           id?: string
+          leads_gerados?: number
           name: string
           objective?: string | null
           platforms?: string | null
+          receita_atribuida?: number
           responsible?: string | null
           start_date?: string | null
           status?: string
@@ -180,15 +147,63 @@ export type Database = {
         }
         Update: {
           budget?: number | null
+          conversoes?: number
           created_at?: string
           end_date?: string | null
           id?: string
+          leads_gerados?: number
           name?: string
           objective?: string | null
           platforms?: string | null
+          receita_atribuida?: number
           responsible?: string | null
           start_date?: string | null
           status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      client_recordings: {
+        Row: {
+          audio_url: string
+          cliente_id: string
+          created_at: string
+          duration_sec: number | null
+          id: string
+          next_actions: string | null
+          status: string
+          storage_path: string
+          summary: string | null
+          transcript: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_url: string
+          cliente_id: string
+          created_at?: string
+          duration_sec?: number | null
+          id?: string
+          next_actions?: string | null
+          status?: string
+          storage_path: string
+          summary?: string | null
+          transcript?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          audio_url?: string
+          cliente_id?: string
+          created_at?: string
+          duration_sec?: number | null
+          id?: string
+          next_actions?: string | null
+          status?: string
+          storage_path?: string
+          summary?: string | null
+          transcript?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -352,6 +367,8 @@ export type Database = {
       }
       conteudos: {
         Row: {
+          approval_feedback: string | null
+          approval_status: string
           created_at: string
           description: string | null
           id: string
@@ -363,6 +380,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approval_feedback?: string | null
+          approval_status?: string
           created_at?: string
           description?: string | null
           id?: string
@@ -374,6 +393,8 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          approval_feedback?: string | null
+          approval_status?: string
           created_at?: string
           description?: string | null
           id?: string
@@ -806,6 +827,7 @@ export type Database = {
         Row: {
           attachments: Json | null
           budget: number | null
+          cliente_id: string | null
           created_at: string
           description: string | null
           end_date: string | null
@@ -821,6 +843,7 @@ export type Database = {
         Insert: {
           attachments?: Json | null
           budget?: number | null
+          cliente_id?: string | null
           created_at?: string
           description?: string | null
           end_date?: string | null
@@ -836,6 +859,7 @@ export type Database = {
         Update: {
           attachments?: Json | null
           budget?: number | null
+          cliente_id?: string | null
           created_at?: string
           description?: string | null
           end_date?: string | null
@@ -1404,6 +1428,22 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_user_engagement: {
+        Row: {
+          actions_by_module: Json | null
+          active_days_30d: number | null
+          classificacao: string | null
+          display_name: string | null
+          email: string | null
+          first_seen_at: string | null
+          last_active_at: string | null
+          plan: string | null
+          total_actions_30d: number | null
+          total_actions_90d: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_login_rate_limit: { Args: { p_email: string }; Returns: Json }
@@ -1415,6 +1455,28 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_user_engagement: {
+        Args: never
+        Returns: {
+          actions_by_module: Json | null
+          active_days_30d: number | null
+          classificacao: string | null
+          display_name: string | null
+          email: string | null
+          first_seen_at: string | null
+          last_active_at: string | null
+          plan: string | null
+          total_actions_30d: number | null
+          total_actions_90d: number | null
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "vw_user_engagement"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       has_role: {
         Args: {
