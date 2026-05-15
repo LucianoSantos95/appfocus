@@ -526,12 +526,16 @@ function ProjectDetailDialog({
   onOpenChange,
   onUpdate,
   onDelete,
+  clientes,
+  margin,
 }: {
   projeto: Projeto;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate: (p: Projeto) => void;
   onDelete: (id: string) => void;
+  clientes: { id: string; nome: string }[];
+  margin: { receitas: number; despesas: number; margem: number };
 }) {
   const [editedProjeto, setEditedProjeto] = useState(projeto);
   const [newMember, setNewMember] = useState("");
