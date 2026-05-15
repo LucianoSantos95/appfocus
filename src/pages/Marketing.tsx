@@ -88,6 +88,9 @@ interface Campanha {
   clicks?: number;
   conversions?: number;
   responsible?: string;
+  leads_gerados: number;
+  conversoes: number;
+  receita_atribuida: number;
 }
 
 interface Conteudo {
