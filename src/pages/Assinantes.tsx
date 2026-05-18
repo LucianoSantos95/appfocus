@@ -330,6 +330,40 @@ export default function Assinantes() {
                             ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(a.ltv)
                             : "—"}
                         </TableCell>
+                        <TableCell className="text-center">
+                          {(() => {
+                            const fs = followupStateFor(a.user_id);
+                            if (fs.openDraft) {
+                              return (
+                                <Button size="sm" variant="secondary" onClick={() => setFollowupTarget(a)}>
+                                  <Sparkles className="h-3 w-3 mr-1" />
+                                  Rascunho #{fs.openDraft.sequence_step}
+                                </Button>
+                              );
+                            }
+                            if (fs.sequenceCompleted) {
+                              return (
+                                <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" /> Sequência concluída
+                                </span>
+                              );
+                            }
+                            if (!fs.canGenerate && fs.nextAvailableAt) {
+                              return (
+                                <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  Em {formatDistanceToNowStrict(fs.nextAvailableAt, { locale: ptBR })}
+                                </span>
+                              );
+                            }
+                            return (
+                              <Button size="sm" onClick={() => setFollowupTarget(a)}>
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                {fs.lastStep === 0 ? "Gerar follow-up" : `Gerar #${fs.lastStep + 1}`}
+                              </Button>
+                            );
+                          })()}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
