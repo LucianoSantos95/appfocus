@@ -13,9 +13,13 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const FROM_EMAIL =
-  Deno.env.get("RESEND_FROM_EMAIL") ||
-  "Focus Gestão Inteligente <noreply@app.focusinteligente.com.br>";
+// Resend só aceita 'from' em domínios verificados. Ignoramos RESEND_FROM_EMAIL
+// se estiver apontando para um domínio público (gmail/hotmail/outlook/yahoo),
+// para evitar 403 "domain is not verified".
+const RAW_FROM = Deno.env.get("RESEND_FROM_EMAIL") || "";
+const FALLBACK_FROM = "Focus Gestão Inteligente <noreply@focusinteligente.com.br>";
+const PUBLIC_DOMAINS = /@(gmail|hotmail|outlook|live|yahoo|icloud|proton(?:mail)?)\.[a-z.]+>?\s*$/i;
+const FROM_EMAIL = RAW_FROM && !PUBLIC_DOMAINS.test(RAW_FROM) ? RAW_FROM : FALLBACK_FROM;
 
 type Audience = "all" | "free";
 
