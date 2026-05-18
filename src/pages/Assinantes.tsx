@@ -294,6 +294,7 @@ export default function Assinantes() {
                       <TableHead>Origem</TableHead>
                       <TableHead>Canal</TableHead>
                       <TableHead className="text-right">LTV</TableHead>
+                      <TableHead className="text-center">Follow-up</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
