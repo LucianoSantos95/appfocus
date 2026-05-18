@@ -412,6 +412,14 @@ export default function Assinantes() {
           existingDraft={followupStateFor(followupTarget.user_id).openDraft}
         />
       )}
+
+      {broadcastAudience && (
+        <BroadcastDialog
+          open={!!broadcastAudience}
+          onOpenChange={(o) => !o && setBroadcastAudience(null)}
+          audience={broadcastAudience}
+        />
+      )}
     </MainLayout>
   );
 }
