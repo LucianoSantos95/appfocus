@@ -10,9 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Search, ShieldAlert } from "lucide-react";
+import { Users, Search, ShieldAlert, Sparkles, Clock, CheckCircle2 } from "lucide-react";
 import { CampanhaPromoCard } from "@/components/admin/CampanhaPromoCard";
-import { format } from "date-fns";
+import { FollowupComposerDialog } from "@/components/admin/FollowupComposerDialog";
+import { useSubscriberFollowups } from "@/hooks/useSubscriberFollowups";
+import { Button } from "@/components/ui/button";
+import { format, formatDistanceToNowStrict } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
