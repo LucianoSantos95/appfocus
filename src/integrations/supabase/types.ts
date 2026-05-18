@@ -1045,6 +1045,60 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriber_followups: {
+        Row: {
+          ai_rationale: string | null
+          body_html: string
+          body_text: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          next_followup_at: string | null
+          recipient_email: string
+          sent_at: string | null
+          sequence_step: number
+          status: string
+          subject: string
+          suggested_next_days: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_rationale?: string | null
+          body_html: string
+          body_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          next_followup_at?: string | null
+          recipient_email: string
+          sent_at?: string | null
+          sequence_step?: number
+          status?: string
+          subject: string
+          suggested_next_days?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_rationale?: string | null
+          body_html?: string
+          body_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          next_followup_at?: string | null
+          recipient_email?: string
+          sent_at?: string | null
+          sequence_step?: number
+          status?: string
+          subject?: string
+          suggested_next_days?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
