@@ -10,9 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Search, ShieldAlert } from "lucide-react";
+import { Users, Search, ShieldAlert, Sparkles, Clock, CheckCircle2 } from "lucide-react";
 import { CampanhaPromoCard } from "@/components/admin/CampanhaPromoCard";
-import { format } from "date-fns";
+import { FollowupComposerDialog } from "@/components/admin/FollowupComposerDialog";
+import { useSubscriberFollowups } from "@/hooks/useSubscriberFollowups";
+import { Button } from "@/components/ui/button";
+import { format, formatDistanceToNowStrict } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
@@ -54,6 +57,7 @@ export default function Assinantes() {
   const [search, setSearch] = useState("");
   const [filtroPlano, setFiltroPlano] = useState("todos");
   const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [followupTarget, setFollowupTarget] = useState<Assinante | null>(null);
 
   const OWNER_EMAIL = "oluciano.dosantos@gmail.com";
   const isOwner = (user?.email || "").toLowerCase() === OWNER_EMAIL;
@@ -131,6 +135,9 @@ export default function Assinantes() {
       supabase.removeChannel(channel);
     };
   }, [isOwner, fetchAssinantes]);
+
+  const allUserIds = useMemo(() => assinantes.map((a) => a.user_id), [assinantes]);
+  const { stateFor: followupStateFor } = useSubscriberFollowups(allUserIds);
 
   const filtered = assinantes.filter((a) => {
     const matchSearch =
@@ -287,6 +294,7 @@ export default function Assinantes() {
                       <TableHead>Origem</TableHead>
                       <TableHead>Canal</TableHead>
                       <TableHead className="text-right">LTV</TableHead>
+                      <TableHead className="text-center">Follow-up</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -322,6 +330,40 @@ export default function Assinantes() {
                             ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(a.ltv)
                             : "—"}
                         </TableCell>
+                        <TableCell className="text-center">
+                          {(() => {
+                            const fs = followupStateFor(a.user_id);
+                            if (fs.openDraft) {
+                              return (
+                                <Button size="sm" variant="secondary" onClick={() => setFollowupTarget(a)}>
+                                  <Sparkles className="h-3 w-3 mr-1" />
+                                  Rascunho #{fs.openDraft.sequence_step}
+                                </Button>
+                              );
+                            }
+                            if (fs.sequenceCompleted) {
+                              return (
+                                <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" /> Sequência concluída
+                                </span>
+                              );
+                            }
+                            if (!fs.canGenerate && fs.nextAvailableAt) {
+                              return (
+                                <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  Em {formatDistanceToNowStrict(fs.nextAvailableAt, { locale: ptBR })}
+                                </span>
+                              );
+                            }
+                            return (
+                              <Button size="sm" onClick={() => setFollowupTarget(a)}>
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                {fs.lastStep === 0 ? "Gerar follow-up" : `Gerar #${fs.lastStep + 1}`}
+                              </Button>
+                            );
+                          })()}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -331,6 +373,16 @@ export default function Assinantes() {
           </CardContent>
         </Card>
       </div>
+
+      {followupTarget && (
+        <FollowupComposerDialog
+          open={!!followupTarget}
+          onOpenChange={(o) => !o && setFollowupTarget(null)}
+          userId={followupTarget.user_id}
+          subscriberName={followupTarget.display_name || followupTarget.company_name}
+          existingDraft={followupStateFor(followupTarget.user_id).openDraft}
+        />
+      )}
     </MainLayout>
   );
 }
