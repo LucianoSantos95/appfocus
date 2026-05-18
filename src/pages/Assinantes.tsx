@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageMeta } from "@/components/seo/PageMeta";
@@ -46,7 +46,7 @@ const planColors: Record<string, string> = {
 };
 
 export default function Assinantes() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { isAdmin, isLoading: permLoading } = useTeamPermissions();
   const navigate = useNavigate();
   const [assinantes, setAssinantes] = useState<Assinante[]>([]);
@@ -58,6 +58,44 @@ export default function Assinantes() {
   const OWNER_EMAIL = "oluciano.dosantos@gmail.com";
   const isOwner = (user?.email || "").toLowerCase() === OWNER_EMAIL;
 
+  const fetchAssinantes = useCallback(async (options?: { sync?: boolean; silent?: boolean }) => {
+    if (!isOwner) return;
+
+    const shouldSync = options?.sync && session?.access_token;
+
+    if (!options?.silent) {
+      setLoading(true);
+    }
+
+    try {
+      if (shouldSync) {
+        const { error: syncError } = await supabase.functions.invoke("sync-subscribers", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+
+        if (syncError) {
+          console.warn("Falha ao sincronizar assinantes", syncError);
+        }
+      }
+
+      const { data, error } = await supabase
+        .from("vw_assinantes" as any)
+        .select("*")
+        .order("cadastro_em", { ascending: false });
+
+      if (error) throw error;
+
+      setAssinantes(((data ?? []) as unknown) as Assinante[]);
+    } catch (err) {
+      console.error("Erro ao buscar assinantes:", err);
+      toast.error("Erro ao carregar assinantes.");
+    } finally {
+      if (!options?.silent) {
+        setLoading(false);
+      }
+    }
+  }, [isOwner, session?.access_token]);
+
   useEffect(() => {
     if (!permLoading && !isOwner) {
       navigate("/");
@@ -67,29 +105,32 @@ export default function Assinantes() {
 
   useEffect(() => {
     if (!isOwner) return;
+    void fetchAssinantes({ sync: true });
+  }, [isOwner, fetchAssinantes]);
 
-    const fetchAssinantes = async () => {
-      setLoading(true);
-      try {
-        // Query the view
-        const { data, error } = await supabase
-          .from("vw_assinantes" as any)
-          .select("*");
+  useEffect(() => {
+    if (!isOwner) return;
 
-        if (error) throw error;
-
-        // Get emails from profiles + auth (admin only via edge function or just show what we have)
-        setAssinantes((data as any[]) || []);
-      } catch (err) {
-        console.error("Erro ao buscar assinantes:", err);
-        toast.error("Erro ao carregar assinantes.");
-      } finally {
-        setLoading(false);
-      }
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const queueRefresh = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        void fetchAssinantes({ silent: true });
+      }, 500);
     };
 
-    fetchAssinantes();
-  }, [isOwner]);
+    const channel = supabase
+      .channel("assinantes-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, queueRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "subscriptions" }, queueRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "subscriber_extras" }, queueRefresh)
+      .subscribe();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      supabase.removeChannel(channel);
+    };
+  }, [isOwner, fetchAssinantes]);
 
   const filtered = assinantes.filter((a) => {
     const matchSearch =
@@ -100,6 +141,19 @@ export default function Assinantes() {
     const matchStatus = filtroStatus === "todos" || a.status_assinatura === filtroStatus;
     return matchSearch && matchPlano && matchStatus;
   });
+
+  const stats = useMemo(() => {
+    const pagantesAtivos = assinantes.filter((a) => a.plano !== "gratuito" && a.status_assinatura === "active");
+    const gratuitos = assinantes.filter((a) => a.plano === "gratuito");
+    const ltvTotal = assinantes.reduce((sum, a) => sum + (a.ltv || 0), 0);
+
+    return {
+      total: assinantes.length,
+      pagantesAtivos: pagantesAtivos.length,
+      gratuitos: gratuitos.length,
+      ltvTotal,
+    };
+  }, [assinantes]);
 
   if (permLoading) {
     return (
@@ -139,32 +193,26 @@ export default function Assinantes() {
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Total</p>
-              <p className="text-2xl font-bold text-foreground">{assinantes.length}</p>
+              <p className="text-2xl font-bold text-foreground">{stats.total}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Pagantes</p>
-              <p className="text-2xl font-bold text-primary">
-                {assinantes.filter((a) => a.plano !== "gratuito").length}
-              </p>
+              <p className="text-2xl font-bold text-primary">{stats.pagantesAtivos}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Gratuitos</p>
-              <p className="text-2xl font-bold text-muted-foreground">
-                {assinantes.filter((a) => a.plano === "gratuito").length}
-              </p>
+              <p className="text-2xl font-bold text-muted-foreground">{stats.gratuitos}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">LTV Total</p>
               <p className="text-2xl font-bold text-emerald-500">
-                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
-                  assinantes.reduce((sum, a) => sum + (a.ltv || 0), 0)
-                )}
+                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(stats.ltvTotal)}
               </p>
             </CardContent>
           </Card>
