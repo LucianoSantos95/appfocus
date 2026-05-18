@@ -85,7 +85,7 @@ export default function Assinantes() {
 
       if (error) throw error;
 
-      setAssinantes((data as Assinante[]) || []);
+      setAssinantes(((data ?? []) as unknown) as Assinante[]);
     } catch (err) {
       console.error("Erro ao buscar assinantes:", err);
       toast.error("Erro ao carregar assinantes.");
