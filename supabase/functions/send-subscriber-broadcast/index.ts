@@ -17,7 +17,8 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 // se estiver apontando para um domínio público (gmail/hotmail/outlook/yahoo),
 // para evitar 403 "domain is not verified".
 const RAW_FROM = Deno.env.get("RESEND_FROM_EMAIL") || "";
-const FALLBACK_FROM = "Focus Gestão Inteligente <noreply@focusinteligente.com.br>";
+// Subdomínio verificado no Resend (mesmo usado por send-followup-email).
+const FALLBACK_FROM = "Focus Gestão Inteligente <noreply@app.focusinteligente.com.br>";
 const PUBLIC_DOMAINS = /@(gmail|hotmail|outlook|live|yahoo|icloud|proton(?:mail)?)\.[a-z.]+>?\s*$/i;
 const FROM_EMAIL = RAW_FROM && !PUBLIC_DOMAINS.test(RAW_FROM) ? RAW_FROM : FALLBACK_FROM;
 
