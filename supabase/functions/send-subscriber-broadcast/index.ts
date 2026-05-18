@@ -1,7 +1,10 @@
 // Admin-only broadcast email to all subscribers or only free-plan ones.
+// Personaliza por destinatário (nome) e usa o mesmo template visual dos
+// e-mails de Reativação / 20% OFF (send-promo-campaign).
+//
 // Actions:
-//   - { action: "preview", audience: "all"|"free", topic? }      -> AI drafts subject + body and returns recipient count
-//   - { action: "send",    audience, subject, body_html, body_text? } -> sends to filtered recipients via Resend
+//   - { action: "preview", audience, topic? }      -> IA gera body modular + retorna contagem
+//   - { action: "send",    audience, subject, intro_html, blocks_html, cta_label, cta_url, body_text? }
 import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
@@ -13,12 +16,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-// Resend só aceita 'from' em domínios verificados. Ignoramos RESEND_FROM_EMAIL
-// se estiver apontando para um domínio público (gmail/hotmail/outlook/yahoo),
-// para evitar 403 "domain is not verified".
+const SITE_URL = "https://app.focusinteligente.com.br";
+
 const RAW_FROM = Deno.env.get("RESEND_FROM_EMAIL") || "";
-// Subdomínio verificado no Resend (mesmo usado por send-followup-email).
-const FALLBACK_FROM = "Focus Gestão Inteligente <noreply@app.focusinteligente.com.br>";
+const FALLBACK_FROM = "Hub Empresarial <noreply@app.focusinteligente.com.br>";
 const PUBLIC_DOMAINS = /@(gmail|hotmail|outlook|live|yahoo|icloud|proton(?:mail)?)\.[a-z.]+>?\s*$/i;
 const FROM_EMAIL = RAW_FROM && !PUBLIC_DOMAINS.test(RAW_FROM) ? RAW_FROM : FALLBACK_FROM;
 
@@ -31,27 +32,89 @@ function json(status: number, body: unknown) {
   });
 }
 
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
+function firstName(name: string | null | undefined): string | null {
+  if (!name) return null;
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.includes("@")) return null;
+  return trimmed.split(/\s+/)[0];
+}
+
+// Mesma identidade visual de send-promo-campaign
+function renderTemplate(opts: {
+  displayName: string | null;
+  greetingTone: "welcome" | "reengage";
+  introHtml: string; // <p>...</p>
+  blocksHtml: string; // cards/listas/destaques
+  ctaLabel: string;
+  ctaUrl: string;
+  footerNote?: string;
+}) {
+  const name = firstName(opts.displayName);
+  const greeting = opts.greetingTone === "reengage"
+    ? (name ? `${escapeHtml(name)}, temos novidades para você` : "Temos novidades para você")
+    : (name ? `Olá, ${escapeHtml(name)}!` : "Olá!");
+
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#0a0e1a;font-family:Inter,Arial,sans-serif;color:#e8ecf3">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0e1a"><tr><td align="center" style="padding:40px 20px">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:linear-gradient(180deg,#111827 0%,#0a0e1a 100%);border:1px solid #1f2937;border-radius:16px;overflow:hidden">
+<tr><td style="padding:32px 36px 0">
+  <div style="font-size:13px;letter-spacing:2px;color:#3b82f6;font-weight:700;text-transform:uppercase">FOCUS · Hub Empresarial</div>
+</td></tr>
+<tr><td style="padding:28px 36px 8px">
+  <h1 style="margin:0;font-size:28px;line-height:1.2;color:#fff;font-weight:800">${greeting}</h1>
+  <div style="margin:14px 0 0;font-size:16px;color:#cbd5e1;line-height:1.6">${opts.introHtml}</div>
+</td></tr>
+<tr><td style="padding:20px 36px 8px">
+  ${opts.blocksHtml}
+</td></tr>
+<tr><td align="center" style="padding:20px 36px 32px">
+  <a href="${opts.ctaUrl}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:16px 36px;border-radius:12px;box-shadow:0 8px 24px rgba(59,130,246,.4)">
+    ${escapeHtml(opts.ctaLabel)} →
+  </a>
+</td></tr>
+<tr><td style="padding:24px 36px;border-top:1px solid #1f2937">
+  <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6">
+    ${opts.footerNote || "Você está recebendo este e-mail porque tem uma conta no Hub Empresarial."}<br/>
+    Dúvidas? Responda este e-mail — estamos aqui para ajudar.<br/>
+    <span style="color:#4b5563">— Equipe Focus</span>
+  </p>
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
 async function listRecipients(admin: any, audience: Audience) {
-  // Get user_ids matching audience from subscriptions
   let q = admin.from("subscriptions").select("user_id, plan");
   if (audience === "free") q = q.eq("plan", "gratuito");
   const { data: subs, error } = await q;
   if (error) throw error;
   const userIds: string[] = (subs ?? []).map((s: any) => s.user_id);
 
-  // Resolve emails via auth.admin (page through up to 1000 users; matches existing app scale)
-  const recipients: Array<{ user_id: string; email: string }> = [];
+  const recipients: Array<{ user_id: string; email: string; display_name: string | null }> = [];
   const { data: usersPage } = await admin.auth.admin.listUsers({ perPage: 1000 });
-  const map = new Map<string, string>();
+  const emailMap = new Map<string, string>();
   for (const u of usersPage?.users ?? []) {
-    if (u.email) map.set(u.id, u.email);
-  }
-  for (const uid of userIds) {
-    const email = map.get(uid);
-    if (email) recipients.push({ user_id: uid, email });
+    if (u.email) emailMap.set(u.id, u.email);
   }
 
-  // Filter suppressed
+  // Buscar nomes dos profiles para personalização
+  const nameMap = new Map<string, string | null>();
+  if (userIds.length > 0) {
+    const { data: profs } = await admin
+      .from("profiles")
+      .select("user_id, display_name")
+      .in("user_id", userIds);
+    for (const p of profs ?? []) nameMap.set(p.user_id, p.display_name);
+  }
+
+  for (const uid of userIds) {
+    const email = emailMap.get(uid);
+    if (email) recipients.push({ user_id: uid, email, display_name: nameMap.get(uid) ?? null });
+  }
+
   const emails = recipients.map((r) => r.email);
   if (emails.length === 0) return [];
   const { data: suppressed } = await admin
@@ -93,21 +156,30 @@ Deno.serve(async (req) => {
       const recipients = await listRecipients(admin, audience);
       const topic = (body?.topic as string) || "";
 
-      const prompt = `Você é um copywriter sênior de B2B SaaS. Escreva um e-mail de broadcast em português para ${
-        audience === "free"
-          ? "usuários do plano GRATUITO do Focus (Hub Empresarial), incentivando-os a upgrade para o plano Plus"
-          : "TODA a base de assinantes do Focus (Hub Empresarial - gestão para agências, freelancers e PMEs), comunicando novidades e reforçando valor"
-      }.
+      const audienceBrief = audience === "free"
+        ? "usuários do plano GRATUITO do Focus (Hub Empresarial). Reforce valor e incentive upgrade para o plano Plus."
+        : "TODA a base de assinantes do Focus (Hub Empresarial — gestão para agências, freelancers e PMEs). Comunique novidades e reforce relacionamento.";
 
-${topic ? `Tópico/ângulo desejado pelo admin: "${topic}"` : "Sem tópico específico — proponha um ângulo relevante e atual."}
+      const defaultCta = audience === "free"
+        ? `${SITE_URL}/planos`
+        : `${SITE_URL}/`;
 
-Tom humano, direto, no máximo 180 palavras. Assinatura: "Equipe Focus". NÃO inclua rodapé de unsubscribe.
+      const prompt = `Você é um copywriter sênior B2B SaaS em PT-BR. Escreva um e-mail de broadcast personalizado para ${audienceBrief}
 
-Responda APENAS um JSON válido, sem markdown:
+${topic ? `Tópico/ângulo do admin: "${topic}"` : "Sem tópico específico — proponha algo relevante."}
+
+Tom humano, direto, brasileiro. NÃO inclua saudação ("Olá") nem assinatura — o template já cuida disso.
+NÃO escreva o nome do destinatário no corpo (já é tratado pelo template).
+
+Responda APENAS JSON válido (sem markdown), no formato:
 {
-  "subject": "linha de assunto curta e clara",
-  "body_html": "HTML simples com <p>, <strong>, <a href>",
-  "body_text": "versão texto puro equivalente"
+  "subject": "linha de assunto curta com emoji opcional",
+  "greeting_tone": "welcome" | "reengage",
+  "intro_html": "<p>1-2 parágrafos curtos abrindo a conversa, sem mencionar o nome</p>",
+  "blocks_html": "HTML com até 3 cards no padrão: <div style=\\"background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:18px;margin-bottom:10px\\"><strong style=\\"color:#3b82f6;font-size:14px\\">🎯 Título</strong><p style=\\"margin:6px 0 0;color:#cbd5e1;font-size:14px;line-height:1.5\\">descrição</p></div>. Opcionalmente inclua um destaque de oferta com gradiente.",
+  "cta_label": "texto curto do botão (sem seta)",
+  "cta_url": "${defaultCta}",
+  "body_text": "versão texto puro equivalente, sem HTML"
 }`;
 
       const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -139,21 +211,41 @@ Responda APENAS um JSON válido, sem markdown:
         return json(500, { error: "AI returned invalid JSON", raw: content });
       }
 
+      // Preview HTML usando primeiro destinatário (para o admin ver como fica personalizado)
+      const sampleRecipient = recipients[0];
+      const previewHtml = renderTemplate({
+        displayName: sampleRecipient?.display_name ?? null,
+        greetingTone: parsed.greeting_tone === "reengage" ? "reengage" : "welcome",
+        introHtml: String(parsed.intro_html || ""),
+        blocksHtml: String(parsed.blocks_html || ""),
+        ctaLabel: String(parsed.cta_label || "Acessar o Hub"),
+        ctaUrl: String(parsed.cta_url || defaultCta),
+      });
+
       return json(200, {
         audience,
         total_recipients: recipients.length,
         sample: recipients.slice(0, 5).map((r) => r.email),
         subject: String(parsed.subject || ""),
-        body_html: String(parsed.body_html || ""),
+        greeting_tone: parsed.greeting_tone === "reengage" ? "reengage" : "welcome",
+        intro_html: String(parsed.intro_html || ""),
+        blocks_html: String(parsed.blocks_html || ""),
+        cta_label: String(parsed.cta_label || "Acessar o Hub"),
+        cta_url: String(parsed.cta_url || defaultCta),
         body_text: String(parsed.body_text || ""),
+        preview_html: previewHtml,
       });
     }
 
     if (action === "send") {
       const subject = String(body?.subject || "").trim();
-      const bodyHtml = String(body?.body_html || "").trim();
+      const introHtml = String(body?.intro_html || "").trim();
+      const blocksHtml = String(body?.blocks_html || "").trim();
+      const ctaLabel = String(body?.cta_label || "Acessar o Hub").trim();
+      const ctaUrl = String(body?.cta_url || `${SITE_URL}/`).trim();
+      const greetingTone = body?.greeting_tone === "reengage" ? "reengage" : "welcome";
       const bodyText = String(body?.body_text || "").trim();
-      if (!subject || !bodyHtml) return json(400, { error: "subject and body_html required" });
+      if (!subject || !introHtml) return json(400, { error: "subject and intro_html required" });
 
       const recipients = await listRecipients(admin, audience);
       let sent = 0;
@@ -161,6 +253,19 @@ Responda APENAS um JSON válido, sem markdown:
 
       for (const r of recipients) {
         try {
+          // Render personalizado por destinatário
+          const html = renderTemplate({
+            displayName: r.display_name,
+            greetingTone,
+            introHtml,
+            blocksHtml,
+            ctaLabel,
+            ctaUrl,
+          });
+          const personalizedText = (firstName(r.display_name)
+            ? `Olá, ${firstName(r.display_name)}!\n\n`
+            : "") + bodyText;
+
           const resendRes = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
@@ -171,8 +276,8 @@ Responda APENAS um JSON válido, sem markdown:
               from: FROM_EMAIL,
               to: [r.email],
               subject,
-              html: bodyHtml,
-              text: bodyText || undefined,
+              html,
+              text: personalizedText || undefined,
             }),
           });
           const data = await resendRes.json();
@@ -195,7 +300,6 @@ Responda APENAS um JSON válido, sem markdown:
               metadata: { audience },
             });
           }
-          // small delay to be gentle with Resend
           await new Promise((res) => setTimeout(res, 150));
         } catch (e) {
           failed++;
