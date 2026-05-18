@@ -217,7 +217,7 @@ export default function Auth() {
           <Sparkles className="w-4 h-4" />
           Primeiros 100 usuários ganham acesso antecipado a recursos premium
         </div>
-      </div>
+      </main>
 
       <AuthFooter />
 
