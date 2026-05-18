@@ -121,7 +121,7 @@ export default function Auth() {
       <AuthHeader />
 
       {/* Hero Section */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
 
         {/* Headline with rotating word */}
         <h1 className="text-4xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-4 text-center max-w-4xl">
