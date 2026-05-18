@@ -59,6 +59,7 @@ export default function Assinantes() {
   const [filtroPlano, setFiltroPlano] = useState("todos");
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [followupTarget, setFollowupTarget] = useState<Assinante | null>(null);
+  const [broadcastAudience, setBroadcastAudience] = useState<"all" | "free" | null>(null);
 
   const OWNER_EMAIL = "oluciano.dosantos@gmail.com";
   const isOwner = (user?.email || "").toLowerCase() === OWNER_EMAIL;
