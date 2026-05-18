@@ -136,6 +136,9 @@ export default function Assinantes() {
     };
   }, [isOwner, fetchAssinantes]);
 
+  const allUserIds = useMemo(() => assinantes.map((a) => a.user_id), [assinantes]);
+  const { stateFor: followupStateFor } = useSubscriberFollowups(allUserIds);
+
   const filtered = assinantes.filter((a) => {
     const matchSearch =
       !search ||
