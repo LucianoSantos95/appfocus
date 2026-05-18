@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Search, ShieldAlert, Sparkles, Clock, CheckCircle2 } from "lucide-react";
+import { Users, Search, ShieldAlert, Sparkles, Clock, CheckCircle2, Send, Megaphone } from "lucide-react";
 import { CampanhaPromoCard } from "@/components/admin/CampanhaPromoCard";
 import { FollowupComposerDialog } from "@/components/admin/FollowupComposerDialog";
+import { BroadcastDialog } from "@/components/admin/BroadcastDialog";
 import { useSubscriberFollowups } from "@/hooks/useSubscriberFollowups";
 import { Button } from "@/components/ui/button";
 import { format, formatDistanceToNowStrict } from "date-fns";
@@ -58,6 +59,7 @@ export default function Assinantes() {
   const [filtroPlano, setFiltroPlano] = useState("todos");
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [followupTarget, setFollowupTarget] = useState<Assinante | null>(null);
+  const [broadcastAudience, setBroadcastAudience] = useState<"all" | "free" | null>(null);
 
   const OWNER_EMAIL = "oluciano.dosantos@gmail.com";
   const isOwner = (user?.email || "").toLowerCase() === OWNER_EMAIL;
@@ -231,6 +233,33 @@ export default function Assinantes() {
           <CampanhaPromoCard segment="inactive" />
         </div>
 
+        {/* Broadcast */}
+        <Card className="border-primary/20">
+          <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-3">
+            <div className="flex items-start gap-3 flex-1">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Megaphone className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Broadcast por e-mail</p>
+                <p className="text-sm text-muted-foreground">
+                  IA gera um e-mail e envia em massa. Escolha o público alvo.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" onClick={() => setBroadcastAudience("free")}>
+                <Send className="h-4 w-4 mr-2" />
+                Enviar para gratuitos
+              </Button>
+              <Button onClick={() => setBroadcastAudience("all")}>
+                <Send className="h-4 w-4 mr-2" />
+                Enviar para todos
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Filters */}
         <Card>
           <CardContent className="p-4">
@@ -381,6 +410,14 @@ export default function Assinantes() {
           userId={followupTarget.user_id}
           subscriberName={followupTarget.display_name || followupTarget.company_name}
           existingDraft={followupStateFor(followupTarget.user_id).openDraft}
+        />
+      )}
+
+      {broadcastAudience && (
+        <BroadcastDialog
+          open={!!broadcastAudience}
+          onOpenChange={(o) => !o && setBroadcastAudience(null)}
+          audience={broadcastAudience}
         />
       )}
     </MainLayout>
