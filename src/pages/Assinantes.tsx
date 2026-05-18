@@ -373,6 +373,16 @@ export default function Assinantes() {
           </CardContent>
         </Card>
       </div>
+
+      {followupTarget && (
+        <FollowupComposerDialog
+          open={!!followupTarget}
+          onOpenChange={(o) => !o && setFollowupTarget(null)}
+          userId={followupTarget.user_id}
+          subscriberName={followupTarget.display_name || followupTarget.company_name}
+          existingDraft={followupStateFor(followupTarget.user_id).openDraft}
+        />
+      )}
     </MainLayout>
   );
 }
