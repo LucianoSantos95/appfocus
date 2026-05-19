@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search, Activity, TrendingUp, Gauge, Users } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search, Activity, TrendingUp, Gauge, Users, Rocket } from "lucide-react";
 
 interface AdminPanelProps {
   open: boolean;
@@ -90,6 +90,9 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const [funnelLoading, setFunnelLoading] = useState(false);
   const [engagement, setEngagement] = useState<Array<{ user_id: string; display_name: string | null; email: string | null; plan: string | null; total_actions_30d: number; active_days_30d: number; last_active_at: string | null; classificacao: string }>>([]);
   const [engagementLoading, setEngagementLoading] = useState(false);
+  const [onboardingRows, setOnboardingRows] = useState<Array<{ id: string; user_id: string; segment: string | null; priority_pain: string | null; current_step: string; completed_modules: any; started_at: string; completed_at: string | null; display_name: string | null; company_name: string | null }>>([]);
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
+  const [onboardingOrder, setOnboardingOrder] = useState<"desc" | "asc">("desc");
 
   const limit = planLimits[plan] || 1;
 
@@ -99,8 +102,42 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     if (isAdmin) {
       fetchFunnelMetrics();
       fetchEngagement();
+      fetchOnboardingSessions(onboardingOrder);
     }
   }, [open, user]);
+
+  const fetchOnboardingSessions = async (order: "desc" | "asc" = "desc") => {
+    setOnboardingLoading(true);
+    const { data: sessions } = await supabase
+      .from("onboarding_sessions" as any)
+      .select("id, user_id, segment, priority_pain, current_step, completed_modules, started_at, completed_at")
+      .order("started_at", { ascending: order === "asc" })
+      .limit(200);
+    const rows = (sessions || []) as any[];
+    const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
+    let profilesMap = new Map<string, { display_name: string | null; company_name: string | null }>();
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, company_name")
+        .in("user_id", userIds);
+      (profiles || []).forEach((p: any) => profilesMap.set(p.user_id, { display_name: p.display_name, company_name: p.company_name }));
+    }
+    setOnboardingRows(
+      rows.map((r) => ({
+        ...r,
+        display_name: profilesMap.get(r.user_id)?.display_name || null,
+        company_name: profilesMap.get(r.user_id)?.company_name || null,
+      })),
+    );
+    setOnboardingLoading(false);
+  };
+
+  const toggleOnboardingOrder = () => {
+    const next = onboardingOrder === "desc" ? "asc" : "desc";
+    setOnboardingOrder(next);
+    fetchOnboardingSessions(next);
+  };
 
   const fetchEngagement = async () => {
     setEngagementLoading(true);
@@ -412,6 +449,50 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                 </ul>
               )}
             </div>
+
+            {/* Base de Onboarding */}
+            <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Rocket className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Base de Onboarding</span>
+                <Badge variant="secondary" className="ml-auto text-xs">{onboardingRows.length}</Badge>
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={toggleOnboardingOrder}>
+                  {onboardingOrder === "desc" ? "Mais recentes" : "Mais antigos"}
+                </Button>
+              </div>
+              {onboardingLoading ? (
+                <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+              ) : onboardingRows.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-2">Nenhuma sessão de onboarding registrada.</p>
+              ) : (
+                <ul className="space-y-2 max-h-[320px] overflow-y-auto">
+                  {onboardingRows.map((o) => {
+                    const completedCount = Array.isArray(o.completed_modules) ? o.completed_modules.length : 0;
+                    const isComplete = !!o.completed_at;
+                    return (
+                      <li key={o.id} className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border bg-card/30">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">
+                            {o.display_name || o.company_name || `Usuário ${o.user_id.slice(0, 8)}`}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {o.segment || "—"} · {completedCount}/3 módulos · iniciado em {new Date(o.started_at).toLocaleString("pt-BR")}
+                            {o.completed_at && ` · concluído em ${new Date(o.completed_at).toLocaleString("pt-BR")}`}
+                          </p>
+                        </div>
+                        {isComplete ? (
+                          <Badge className="bg-success text-success-foreground">Concluído</Badge>
+                        ) : (
+                          <Badge variant="secondary">{o.current_step}</Badge>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+
 
             <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
               <div className="flex items-center gap-2 mb-1">
