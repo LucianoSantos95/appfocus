@@ -90,6 +90,9 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const [funnelLoading, setFunnelLoading] = useState(false);
   const [engagement, setEngagement] = useState<Array<{ user_id: string; display_name: string | null; email: string | null; plan: string | null; total_actions_30d: number; active_days_30d: number; last_active_at: string | null; classificacao: string }>>([]);
   const [engagementLoading, setEngagementLoading] = useState(false);
+  const [onboardingRows, setOnboardingRows] = useState<Array<{ id: string; user_id: string; segment: string | null; priority_pain: string | null; current_step: string; completed_modules: any; started_at: string; completed_at: string | null; display_name: string | null; company_name: string | null }>>([]);
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
+  const [onboardingOrder, setOnboardingOrder] = useState<"desc" | "asc">("desc");
 
   const limit = planLimits[plan] || 1;
 
