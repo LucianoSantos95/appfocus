@@ -102,8 +102,42 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     if (isAdmin) {
       fetchFunnelMetrics();
       fetchEngagement();
+      fetchOnboardingSessions(onboardingOrder);
     }
   }, [open, user]);
+
+  const fetchOnboardingSessions = async (order: "desc" | "asc" = "desc") => {
+    setOnboardingLoading(true);
+    const { data: sessions } = await supabase
+      .from("onboarding_sessions" as any)
+      .select("id, user_id, segment, priority_pain, current_step, completed_modules, started_at, completed_at")
+      .order("started_at", { ascending: order === "asc" })
+      .limit(200);
+    const rows = (sessions || []) as any[];
+    const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
+    let profilesMap = new Map<string, { display_name: string | null; company_name: string | null }>();
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, company_name")
+        .in("user_id", userIds);
+      (profiles || []).forEach((p: any) => profilesMap.set(p.user_id, { display_name: p.display_name, company_name: p.company_name }));
+    }
+    setOnboardingRows(
+      rows.map((r) => ({
+        ...r,
+        display_name: profilesMap.get(r.user_id)?.display_name || null,
+        company_name: profilesMap.get(r.user_id)?.company_name || null,
+      })),
+    );
+    setOnboardingLoading(false);
+  };
+
+  const toggleOnboardingOrder = () => {
+    const next = onboardingOrder === "desc" ? "asc" : "desc";
+    setOnboardingOrder(next);
+    fetchOnboardingSessions(next);
+  };
 
   const fetchEngagement = async () => {
     setEngagementLoading(true);
