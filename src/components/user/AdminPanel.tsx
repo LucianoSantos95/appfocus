@@ -450,6 +450,50 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
               )}
             </div>
 
+            {/* Base de Onboarding */}
+            <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Rocket className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Base de Onboarding</span>
+                <Badge variant="secondary" className="ml-auto text-xs">{onboardingRows.length}</Badge>
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={toggleOnboardingOrder}>
+                  {onboardingOrder === "desc" ? "Mais recentes" : "Mais antigos"}
+                </Button>
+              </div>
+              {onboardingLoading ? (
+                <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+              ) : onboardingRows.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-2">Nenhuma sessão de onboarding registrada.</p>
+              ) : (
+                <ul className="space-y-2 max-h-[320px] overflow-y-auto">
+                  {onboardingRows.map((o) => {
+                    const completedCount = Array.isArray(o.completed_modules) ? o.completed_modules.length : 0;
+                    const isComplete = !!o.completed_at;
+                    return (
+                      <li key={o.id} className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border bg-card/30">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">
+                            {o.display_name || o.company_name || `Usuário ${o.user_id.slice(0, 8)}`}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {o.segment || "—"} · {completedCount}/3 módulos · iniciado em {new Date(o.started_at).toLocaleString("pt-BR")}
+                            {o.completed_at && ` · concluído em ${new Date(o.completed_at).toLocaleString("pt-BR")}`}
+                          </p>
+                        </div>
+                        {isComplete ? (
+                          <Badge className="bg-success text-success-foreground">Concluído</Badge>
+                        ) : (
+                          <Badge variant="secondary">{o.current_step}</Badge>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+
+
             <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
               <div className="flex items-center gap-2 mb-1">
                 <CreditCard className="w-4 h-4 text-primary" />
