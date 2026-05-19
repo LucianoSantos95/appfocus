@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search, Activity, TrendingUp, Gauge, Users } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search, Activity, TrendingUp, Gauge, Users, Rocket } from "lucide-react";
 
 interface AdminPanelProps {
   open: boolean;
