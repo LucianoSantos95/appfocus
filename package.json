@@ -7,11 +7,28 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "postbuild": "react-snap || echo 'react-snap skipped (no chromium available)'",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "reactSnap": {
+    "source": "dist",
+    "include": [
+      "/auth",
+      "/planos",
+      "/termos",
+      "/privacidade",
+      "/glossario",
+      "/comparar"
+    ],
+    "inlineCss": false,
+    "skipThirdPartyRequests": true,
+    "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"],
+    "crawl": false
+  },
+
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@lovable.dev/cloud-auth-js": "^1.0.0",
