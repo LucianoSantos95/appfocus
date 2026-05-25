@@ -95,10 +95,15 @@ serve(async (req) => {
       // non-fatal — let Stripe create one via customer_email
     }
 
-    const origin =
-      req.headers.get("origin") ||
-      req.headers.get("referer")?.replace(/\/$/, "") ||
-      "https://app.focusinteligente.com.br";
+    const ALLOWED_ORIGINS = [
+      "https://app.focusinteligente.com.br",
+      "https://appfocus.lovable.app",
+      "https://id-preview--7b5ec06c-73e1-4b8a-b8c6-b0355f0a1aa9.lovable.app",
+    ];
+    const requestOrigin = req.headers.get("origin") ?? "";
+    const origin = ALLOWED_ORIGINS.includes(requestOrigin)
+      ? requestOrigin
+      : ALLOWED_ORIGINS[0];
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
