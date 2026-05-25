@@ -8,39 +8,99 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const log = (step: string, details?: unknown) => {
+  const extra = details ? ` - ${JSON.stringify(details)}` : "";
+  console.log(`[CREATE-CHECKOUT] ${step}${extra}`);
+};
+
+const json = (body: unknown, status: number) =>
+  new Response(JSON.stringify(body), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status,
+  });
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-  );
-
   try {
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated");
+    log("Function started");
 
-    const { priceId, couponId, promotionCode } = await req.json();
-    if (!priceId) throw new Error("priceId is required");
-
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-08-27.basil",
-    });
-
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      log("Missing STRIPE_SECRET_KEY");
+      return json({ error: "Configuração de pagamento ausente. Contate o suporte." }, 500);
     }
 
-    const origin = req.headers.get("origin") || "https://id-preview--7b5ec06c-73e1-4b8a-b8c6-b0355f0a1aa9.lovable.app";
+    const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization");
+    if (!authHeader) {
+      log("Missing Authorization header");
+      return json({ error: "Sessão expirada. Faça login novamente para continuar." }, 401);
+    }
+    const token = authHeader.replace("Bearer ", "").trim();
+    if (!token) {
+      return json({ error: "Sessão inválida. Faça login novamente." }, 401);
+    }
 
-    const sessionParams: any = {
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    const { data: userData, error: userErr } = await supabaseClient.auth.getUser(token);
+    if (userErr) {
+      log("Auth error", { message: userErr.message });
+      return json({ error: "Não foi possível validar sua sessão. Faça login novamente." }, 401);
+    }
+    const user = userData.user;
+    if (!user?.email) {
+      return json({ error: "Usuário sem e-mail válido." }, 400);
+    }
+    log("User authenticated", { userId: user.id, email: user.email });
+
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch {
+      return json({ error: "Body JSON inválido." }, 400);
+    }
+
+    const { priceId, couponId, promotionCode } = body ?? {};
+    if (!priceId || typeof priceId !== "string") {
+      return json({ error: "priceId é obrigatório." }, 400);
+    }
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+
+    // Validate price exists and is active before creating the session
+    try {
+      const price = await stripe.prices.retrieve(priceId);
+      if (!price.active) {
+        log("Inactive price", { priceId });
+        return json({ error: "Este plano está temporariamente indisponível. Tente outro." }, 400);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      log("Price retrieve error", { priceId, msg });
+      return json({ error: "Plano inválido. Recarregue a página e tente novamente." }, 400);
+    }
+
+    let customerId: string | undefined;
+    try {
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length > 0) customerId = customers.data[0].id;
+    } catch (e) {
+      log("Customer list error", { msg: e instanceof Error ? e.message : String(e) });
+      // non-fatal — let Stripe create one via customer_email
+    }
+
+    const origin =
+      req.headers.get("origin") ||
+      req.headers.get("referer")?.replace(/\/$/, "") ||
+      "https://app.focusinteligente.com.br";
+
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
@@ -49,27 +109,26 @@ serve(async (req) => {
       cancel_url: `${origin}/planos?canceled=true`,
     };
 
-    // Apply discount: prefer promotion_code (friendly named code), fallback to raw coupon
-    if (promotionCode) {
+    if (promotionCode && typeof promotionCode === "string") {
       sessionParams.discounts = [{ promotion_code: promotionCode }];
-    } else if (couponId) {
+    } else if (couponId && typeof couponId === "string") {
       sessionParams.discounts = [{ coupon: couponId }];
     } else {
-      // Allow customer to type a code (e.g. FOCUS20) at checkout
       sessionParams.allow_promotion_codes = true;
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
-
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    try {
+      const session = await stripe.checkout.sessions.create(sessionParams);
+      log("Checkout session created", { id: session.id });
+      return json({ url: session.url }, 200);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      log("Stripe session create error", { msg });
+      return json({ error: `Erro do provedor de pagamento: ${msg}` }, 502);
+    }
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    return new Response(JSON.stringify({ error: msg }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    log("Unhandled error", { msg });
+    return json({ error: msg }, 500);
   }
 });
