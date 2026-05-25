@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { SubscriberFollowup } from "@/hooks/useSubscriberFollowups";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface Props {
   open: boolean;
