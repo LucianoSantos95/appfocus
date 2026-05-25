@@ -121,7 +121,11 @@ export default function Planos() {
   }, [recordMilestone]);
 
   const handleSubscribe = async (planId: "plus" | "pro" | "enterprise") => {
-    if (!authSession?.access_token) {
+    // Refresh session so the token sent to the edge function is always valid
+    const { data: { session: freshSession } } = await supabase.auth.getSession();
+    const accessToken = freshSession?.access_token ?? authSession?.access_token;
+
+    if (!accessToken) {
       toast.error("Faça login para assinar.");
       navigate("/auth");
       return;
@@ -148,17 +152,34 @@ export default function Planos() {
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body,
-        headers: { Authorization: `Bearer ${authSession.access_token}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
 
-      if (error || !data?.url) {
-        throw new Error(error?.message || "Erro ao criar sessão de pagamento");
+      // Edge function may return { error } in the body even on non-2xx
+      const serverMsg = (data as any)?.error;
+      if (serverMsg) throw new Error(serverMsg);
+
+      if (error) {
+        // Try to extract a readable message from the FunctionsHttpError response
+        let detail = "";
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx && typeof ctx.json === "function") {
+            const j = await ctx.json();
+            detail = j?.error || "";
+          } else if (ctx && typeof ctx.text === "function") {
+            detail = await ctx.text();
+          }
+        } catch { /* ignore */ }
+        throw new Error(detail || error.message || "Erro ao criar sessão de pagamento");
       }
 
-      // Redireciona na mesma aba para evitar bloqueio de popup
-      // (após awaits, browsers perdem o "user gesture" e bloqueiam window.open)
+      if (!data?.url) throw new Error("Resposta inválida do servidor de pagamento.");
+
+      // Same-tab redirect to avoid popup blockers after awaits
       window.location.href = data.url;
     } catch (err: any) {
+      console.error("[create-checkout]", err);
       toast.error(err.message || "Erro ao iniciar checkout");
       setLoadingPlan(null);
     }
