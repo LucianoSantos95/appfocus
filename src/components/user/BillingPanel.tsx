@@ -38,10 +38,10 @@ export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error || !data?.url) throw new Error("Erro ao abrir portal");
-      window.open(data.url, "_blank");
+      // Mesma aba evita bloqueio de popup após await
+      window.location.href = data.url;
     } catch (err: any) {
       toast.error(err.message || "Erro ao abrir portal de gerenciamento");
-    } finally {
       setPortalLoading(false);
     }
   };
