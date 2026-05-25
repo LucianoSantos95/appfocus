@@ -190,7 +190,7 @@ export function FollowupComposerDialog({
               <p className="text-xs text-muted-foreground mb-2">Pré-visualização:</p>
               <div
                 className="prose prose-sm dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: bodyHtml }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml) }}
               />
             </div>
           </div>
