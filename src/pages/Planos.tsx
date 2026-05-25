@@ -155,10 +155,11 @@ export default function Planos() {
         throw new Error(error?.message || "Erro ao criar sessão de pagamento");
       }
 
-      window.open(data.url, "_blank");
+      // Redireciona na mesma aba para evitar bloqueio de popup
+      // (após awaits, browsers perdem o "user gesture" e bloqueiam window.open)
+      window.location.href = data.url;
     } catch (err: any) {
       toast.error(err.message || "Erro ao iniciar checkout");
-    } finally {
       setLoadingPlan(null);
     }
   };
