@@ -4,13 +4,17 @@ import { createClient } from 'npm:@supabase/supabase-js@2.49.4'
 import { FollowupWelcomeEmail } from '../_shared/email-templates/followup-welcome.tsx'
 import { FollowupReengagementEmail } from '../_shared/email-templates/followup-reengagement.tsx'
 import { FollowupUpgradeEmail } from '../_shared/email-templates/followup-upgrade.tsx'
+import { OnboardingReengagementD1Email } from '../_shared/email-templates/onboarding-reengagement-d1.tsx'
+import { OnboardingReengagementD3Email } from '../_shared/email-templates/onboarding-reengagement-d3.tsx'
+import { OnboardingReengagementD7Email } from '../_shared/email-templates/onboarding-reengagement-d7.tsx'
+import { PowerUserUpgradeDigestEmail } from '../_shared/email-templates/power-user-upgrade-digest.tsx'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
-const SITE_URL = 'https://appfocus.lovable.app'
+const SITE_URL = 'https://app.focusinteligente.com.br'
 const PLANS_URL = `${SITE_URL}/planos`
 const FROM_EMAIL = 'Focus Gestão Inteligente <noreply@app.focusinteligente.com.br>'
 
@@ -26,6 +30,22 @@ const EMAIL_TEMPLATES: Record<string, { component: React.ComponentType<any>, sub
   upgrade: {
     component: FollowupUpgradeEmail,
     subject: 'Desbloqueie todo o potencial do Focus ✨',
+  },
+  'onboarding-reengagement-d1': {
+    component: OnboardingReengagementD1Email,
+    subject: 'Você está a poucos passos do seu cupom de 20% OFF',
+  },
+  'onboarding-reengagement-d3': {
+    component: OnboardingReengagementD3Email,
+    subject: '⏰ Seu cupom de 20% OFF expira em 5 dias',
+  },
+  'onboarding-reengagement-d7': {
+    component: OnboardingReengagementD7Email,
+    subject: '❌ Última chance: cupom expira em 48h',
+  },
+  'power-user-upgrade-digest': {
+    component: PowerUserUpgradeDigestEmail,
+    subject: 'Sua operação está crescendo no Focus 🚀',
   },
 }
 
