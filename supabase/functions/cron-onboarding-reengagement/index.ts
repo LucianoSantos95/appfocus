@@ -25,15 +25,16 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const cronSecret = Deno.env.get('CRON_SECRET')
   const auth = req.headers.get('Authorization')?.replace('Bearer ', '')
-  if (!(auth === serviceKey || (cronSecret && auth === cronSecret))) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
   const supabase = createClient(supabaseUrl, serviceKey)
+  if (auth !== serviceKey) {
+    const { data: valid } = await supabase.rpc('verify_cron_token', { p_token: auth ?? '' })
+    if (!valid) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+  }
   const results: any[] = []
 
   try {
