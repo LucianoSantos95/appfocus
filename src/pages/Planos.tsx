@@ -15,8 +15,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { STRIPE_PLANS } from "@/lib/stripe-plans";
 import { toast } from "sonner";
 
-// Stripe Promotion Code ID (friendly code: FOCUS20)
-const ONBOARDING_PROMO_CODE_ID = "promo_1RdXbNH7IRFB6gqOUt0wCGqb";
+// Stripe Coupon ID for onboarding reward (ONBOARDING20 — 20% off, once, no restrictions)
+// We pass the coupon ID directly instead of a promotion code wrapper to avoid
+// "coupon does not apply to anything in this order" errors caused by promotion-code restrictions.
+const ONBOARDING_COUPON_ID = "NpOu4Cxn";
 
 const plans = [
   {
@@ -147,7 +149,7 @@ export default function Planos() {
       if (urlCoupon) {
         body.couponId = urlCoupon;
       } else if (hasCoupon) {
-        body.promotionCode = ONBOARDING_PROMO_CODE_ID;
+        body.couponId = ONBOARDING_COUPON_ID;
       }
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
