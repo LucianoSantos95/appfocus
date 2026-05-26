@@ -1633,6 +1633,7 @@ export type Database = {
         }[]
       }
       record_login_attempt: { Args: { p_email: string }; Returns: undefined }
+      verify_cron_token: { Args: { p_token: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
