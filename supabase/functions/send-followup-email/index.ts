@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { to, type, displayName } = await req.json()
+    const { to, type, displayName, templateData } = await req.json()
 
     if (!to || !type) {
       return new Response(JSON.stringify({ error: 'Missing required fields: to, type' }), {
@@ -91,9 +91,10 @@ Deno.serve(async (req) => {
       })
     }
 
-    const templateProps: Record<string, string> = {
+    const templateProps: Record<string, any> = {
       siteUrl: SITE_URL,
       plansUrl: PLANS_URL,
+      ...(templateData && typeof templateData === 'object' ? templateData : {}),
     }
     if (displayName) templateProps.displayName = displayName
 
