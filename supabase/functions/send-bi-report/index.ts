@@ -173,7 +173,17 @@ function generatePDF(payload: ReportPayload): Uint8Array {
   return new Uint8Array(doc.output("arraybuffer"));
 }
 
+function escapeHtml(v: unknown): string {
+  return String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function generateHTMLSummary(payload: ReportPayload): string {
+  const e = escapeHtml;
   const kpisHtml = payload.sections
     .map((s) => {
       const kpis = (s.kpis || [])
