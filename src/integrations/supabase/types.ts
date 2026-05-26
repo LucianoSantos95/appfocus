@@ -527,6 +527,7 @@ export type Database = {
           mensagem: string
           nome: string | null
           pagina: string | null
+          user_id: string | null
         }
         Insert: {
           avaliacao?: number | null
@@ -536,6 +537,7 @@ export type Database = {
           mensagem: string
           nome?: string | null
           pagina?: string | null
+          user_id?: string | null
         }
         Update: {
           avaliacao?: number | null
@@ -545,6 +547,7 @@ export type Database = {
           mensagem?: string
           nome?: string | null
           pagina?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
