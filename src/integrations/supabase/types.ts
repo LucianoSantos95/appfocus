@@ -431,6 +431,45 @@ export type Database = {
         }
         Relationships: []
       }
+      email_automation_log: {
+        Row: {
+          automation_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          sent_at: string
+          sequence_step: number
+          status: string
+          template_name: string
+          user_id: string
+        }
+        Insert: {
+          automation_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          sent_at?: string
+          sequence_step?: number
+          status?: string
+          template_name: string
+          user_id: string
+        }
+        Update: {
+          automation_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          sent_at?: string
+          sequence_step?: number
+          status?: string
+          template_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -708,6 +747,7 @@ export type Database = {
           created_at: string
           current_step: string
           id: string
+          last_reengagement_step: number
           priority_pain: string | null
           segment: string | null
           started_at: string
@@ -724,6 +764,7 @@ export type Database = {
           created_at?: string
           current_step?: string
           id?: string
+          last_reengagement_step?: number
           priority_pain?: string | null
           segment?: string | null
           started_at?: string
@@ -740,6 +781,7 @@ export type Database = {
           created_at?: string
           current_step?: string
           id?: string
+          last_reengagement_step?: number
           priority_pain?: string | null
           segment?: string | null
           started_at?: string

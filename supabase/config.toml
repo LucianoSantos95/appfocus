@@ -31,3 +31,7 @@ project_id = "hnextembswhejumvxbzd"
     verify_jwt = false
   [functions.send-promo-campaign]
     verify_jwt = false
+  [functions.cron-onboarding-reengagement]
+    verify_jwt = false
+  [functions.cron-power-user-upgrade]
+    verify_jwt = false
