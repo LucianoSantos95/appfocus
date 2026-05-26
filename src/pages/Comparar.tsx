@@ -19,7 +19,7 @@ const rows = [
 const Cell = ({ value }: { value: boolean }) => (
   value
     ? <Check className="w-5 h-5 text-primary mx-auto" />
-    : <X className="w-5 h-5 text-muted-foreground/50 mx-auto" />
+    : <X className="w-5 h-5 text-muted-foreground mx-auto" aria-label="Não disponível" />
 );
 
 export default function Comparar() {
