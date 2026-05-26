@@ -173,35 +173,45 @@ function generatePDF(payload: ReportPayload): Uint8Array {
   return new Uint8Array(doc.output("arraybuffer"));
 }
 
+function escapeHtml(v: unknown): string {
+  return String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function generateHTMLSummary(payload: ReportPayload): string {
+  const e = escapeHtml;
   const kpisHtml = payload.sections
     .map((s) => {
       const kpis = (s.kpis || [])
         .map(
           (k) => `
           <td style="padding:12px;background:#f8fafc;border-radius:8px;width:50%;">
-            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">${k.label}</div>
-            <div style="font-size:18px;font-weight:bold;color:#0f172a;margin-top:4px;">${k.value}</div>
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">${e(k.label)}</div>
+            <div style="font-size:18px;font-weight:bold;color:#0f172a;margin-top:4px;">${e(k.value)}</div>
           </td>`,
         )
         .join("");
       const rows = (s.rows?.data || [])
         .slice(0, 10)
         .map(
-          (r) => `<tr>${r.map((c) => `<td style="padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px;">${c}</td>`).join("")}</tr>`,
+          (r) => `<tr>${r.map((c) => `<td style="padding:8px;border-bottom:1px solid #e2e8f0;font-size:13px;">${e(c)}</td>`).join("")}</tr>`,
         )
         .join("");
       const tableHead = s.rows
         ? `<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead><tr style="background:#2563eb;color:white;">${s.rows.columns
-            .map((c) => `<th style="padding:8px;text-align:left;font-size:12px;">${c}</th>`)
+            .map((c) => `<th style="padding:8px;text-align:left;font-size:12px;">${e(c)}</th>`)
             .join("")}</tr></thead><tbody>${rows}</tbody></table>`
         : "";
       return `
         <div style="margin-bottom:24px;">
-          <h2 style="font-size:16px;color:#2563eb;margin:0 0 12px 0;border-bottom:2px solid #e2e8f0;padding-bottom:6px;">${s.title}</h2>
+          <h2 style="font-size:16px;color:#2563eb;margin:0 0 12px 0;border-bottom:2px solid #e2e8f0;padding-bottom:6px;">${e(s.title)}</h2>
           ${kpis ? `<table style="width:100%;border-spacing:8px;border-collapse:separate;"><tr>${kpis}</tr></table>` : ""}
           ${tableHead}
-          ${s.notes ? `<p style="font-size:13px;color:#64748b;font-style:italic;margin-top:8px;">${s.notes}</p>` : ""}
+          ${s.notes ? `<p style="font-size:13px;color:#64748b;font-style:italic;margin-top:8px;">${e(s.notes)}</p>` : ""}
         </div>`;
     })
     .join("");
@@ -210,11 +220,11 @@ function generateHTMLSummary(payload: ReportPayload): string {
 <html><body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,Segoe UI,sans-serif;">
   <div style="max-width:640px;margin:0 auto;background:white;padding:32px;">
     <div style="background:#0f172a;color:white;padding:24px;border-radius:8px;margin-bottom:24px;">
-      <h1 style="margin:0;font-size:22px;">${payload.titulo}</h1>
-      ${payload.subtitulo ? `<p style="margin:4px 0 0 0;opacity:0.8;font-size:14px;">${payload.subtitulo}</p>` : ""}
-      ${payload.periodo ? `<p style="margin:8px 0 0 0;font-size:13px;opacity:0.7;">📅 ${payload.periodo}</p>` : ""}
+      <h1 style="margin:0;font-size:22px;">${e(payload.titulo)}</h1>
+      ${payload.subtitulo ? `<p style="margin:4px 0 0 0;opacity:0.8;font-size:14px;">${e(payload.subtitulo)}</p>` : ""}
+      ${payload.periodo ? `<p style="margin:8px 0 0 0;font-size:13px;opacity:0.7;">📅 ${e(payload.periodo)}</p>` : ""}
     </div>
-    ${payload.destinatario_nome ? `<p style="font-size:14px;color:#334155;">Olá <strong>${payload.destinatario_nome}</strong>,</p>` : ""}
+    ${payload.destinatario_nome ? `<p style="font-size:14px;color:#334155;">Olá <strong>${e(payload.destinatario_nome)}</strong>,</p>` : ""}
     <p style="font-size:14px;color:#334155;">Segue o resumo executivo solicitado:</p>
     ${kpisHtml}
     <div style="border-top:1px solid #e2e8f0;margin-top:32px;padding-top:16px;font-size:12px;color:#94a3b8;text-align:center;">
