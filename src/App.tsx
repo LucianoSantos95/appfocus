@@ -9,7 +9,7 @@ import { PlanProvider } from "@/contexts/PlanContext";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { UpdateNotification } from "@/components/UpdateNotification";
+
 
 const Index = lazy(() => import("./pages/Index"));
 const Financas = lazy(() => import("./pages/Financas"));
@@ -51,7 +51,6 @@ const App = () => (
           <PlanProvider>
             <SidebarProvider>
               <ErrorBoundary>
-                <UpdateNotification />
                 <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
                   <Routes>
                     <Route path="/auth" element={<Auth />} />
