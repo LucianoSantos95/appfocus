@@ -71,9 +71,9 @@ export function OnboardingProgressBar({ session }: Props) {
               ) : isCurrent ? (
                 <Circle className="h-5 w-5 text-primary animate-pulse" />
               ) : (
-                <Circle className="h-5 w-5 text-muted-foreground/40" />
+                <Circle className="h-5 w-5 text-muted-foreground" />
               )}
-              <span className={`text-xs ${isDone ? "text-green-500" : isCurrent ? "text-primary" : "text-muted-foreground/60"}`}>
+              <span className={`text-xs ${isDone ? "text-green-500" : isCurrent ? "text-primary" : "text-muted-foreground"}`}>
                 {MODULE_LABELS[mod] || mod}
               </span>
             </div>
