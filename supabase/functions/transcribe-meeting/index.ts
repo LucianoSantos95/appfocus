@@ -31,13 +31,23 @@ serve(async (req) => {
     if (claimsErr || !claims?.claims?.sub) return json({ error: "Invalid token" }, 401);
     const userId = claims.claims.sub as string;
 
-    const { recording_id, cliente_id, storage_path } = await req.json();
-    if (!recording_id || !storage_path) return json({ error: "recording_id e storage_path obrigatórios" }, 400);
+    const { recording_id, cliente_id } = await req.json();
+    if (!recording_id) return json({ error: "recording_id obrigatório" }, 400);
 
     const service = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // 1) Download audio from private bucket
-    const { data: file, error: dlErr } = await service.storage.from("client-recordings").download(storage_path);
+    // Verify ownership and derive storage_path from DB — never trust client input
+    const { data: rec, error: recErr } = await service
+      .from("client_recordings")
+      .select("storage_path, user_id")
+      .eq("id", recording_id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (recErr || !rec) return json({ error: "Gravação não encontrada" }, 404);
+    const safePath = rec.storage_path;
+
+    // 1) Download audio from private bucket using the validated path
+    const { data: file, error: dlErr } = await service.storage.from("client-recordings").download(safePath);
     if (dlErr || !file) {
       await service.from("client_recordings").update({ status: "erro" }).eq("id", recording_id);
       return json({ error: "Falha ao ler áudio: " + (dlErr?.message || "desconhecido") }, 500);
