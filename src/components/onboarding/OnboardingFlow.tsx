@@ -30,6 +30,7 @@ export function OnboardingFlow() {
   const { recordMilestone, timeBetween, getMilestone } = useMilestones();
   const { apply: applyNicheTemplate } = useNicheTemplate();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showWelcome, setShowWelcome] = useState(true);
   const [wowMoment, setWowMoment] = useState<WowMoment | null>(null);
   const [pendingInsight, setPendingInsight] = useState<{ insight: string; emoji?: string } | null>(null);
