@@ -51,7 +51,17 @@ export function OnboardingFlow() {
   }, [session?.started_at, session?.current_step, session?.segment, session?.priority_pain, recordMilestone]);
 
   const handleWelcomeComplete = useCallback(async (segment: string, pain: string) => {
-    await createSession(segment, pain);
+    // Fetch display name from profile (fallback: metadata / email)
+    let userName: string | null = null;
+    if (user) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      userName = prof?.display_name ?? (user.user_metadata as any)?.full_name ?? user.email ?? null;
+    }
+    await createSession(segment, pain, userName);
     await recordMilestone("onboarding_started", { segment, pain });
     setShowWelcome(false);
 
