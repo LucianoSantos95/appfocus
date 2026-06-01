@@ -448,6 +448,19 @@ export function OnboardingChat({ session, onModuleComplete, onAchievement, onIns
         <span className="text-sm font-semibold text-foreground">Assistente Focus</span>
         {isLoading && <Loader2 className="h-4 w-4 animate-spin text-primary ml-auto" />}
       </div>
+      {(() => {
+        const done = session.completed_modules?.length || 0;
+        const remaining = Math.max(3 - done, 0);
+        if (remaining === 0) return null;
+        const label = remaining === 1
+          ? "🔥 Falta só 1 etapa para destravar 20% OFF no 1º mês"
+          : `🎁 Faltam ${remaining} etapas para destravar 20% OFF no 1º mês`;
+        return (
+          <div className="px-4 py-2 border-b border-primary/20 bg-gradient-to-r from-primary/15 via-primary/10 to-transparent">
+            <span className="text-xs font-semibold text-foreground">{label}</span>
+          </div>
+        );
+      })()}
 
       <ScrollArea ref={scrollRef} className="flex-1 p-4 max-h-[400px]">
         <div className="space-y-4">
