@@ -1,6 +1,6 @@
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, CheckCircle2, Circle } from "lucide-react";
+import { Trophy, CheckCircle2, Circle, Gift, Sparkles } from "lucide-react";
 import type { OnboardingSession } from "@/hooks/useOnboardingSession";
 
 const SEGMENT_ROUTES: Record<string, string[]> = {
@@ -43,6 +43,49 @@ export function OnboardingProgressBar({ session }: Props) {
         <span className="text-sm text-primary font-bold">{percent}%</span>
       </div>
       <Progress value={percent} className="h-3" />
+
+      {/* Reward card — incentivo visível entre módulos */}
+      {remaining > 0 ? (
+        <div className="rounded-lg border border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-4">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-primary/20 p-2 shrink-0">
+              <Gift className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <p className="text-sm font-semibold text-foreground">
+                {remaining === 1
+                  ? "Falta só 1 etapa para destravar seu cupom!"
+                  : `Faltam ${remaining} etapas para destravar 20% OFF`}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Complete o onboarding e ganhe <span className="font-bold text-primary">20% OFF no 1º mês</span> de qualquer plano (válido por 48h).
+              </p>
+              <div className="flex items-center gap-1.5 pt-1">
+                {route.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 flex-1 rounded-full ${
+                      i < completed.length ? "bg-primary" : "bg-primary/20"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-green-500/30 bg-gradient-to-br from-green-500/15 via-green-500/5 to-transparent p-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-green-500/20 p-2 shrink-0">
+              <Sparkles className="h-5 w-5 text-green-500" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-foreground">Cupom FOCUS20 destravado! 🎉</p>
+              <p className="text-xs text-muted-foreground">20% OFF aplicado automaticamente ao assinar.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-3 rounded-lg border border-border/60 bg-card/40 p-4 md:grid-cols-3">
         <div>

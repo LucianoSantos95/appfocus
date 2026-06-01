@@ -17,6 +17,8 @@ import { Rocket, PartyPopper, ArrowRight, Timer, SkipForward } from "lucide-reac
 import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const AUTO_TOUR_FLAG = "hub_auto_tour_pending";
 
@@ -28,6 +30,7 @@ export function OnboardingFlow() {
   const { recordMilestone, timeBetween, getMilestone } = useMilestones();
   const { apply: applyNicheTemplate } = useNicheTemplate();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showWelcome, setShowWelcome] = useState(true);
   const [wowMoment, setWowMoment] = useState<WowMoment | null>(null);
   const [pendingInsight, setPendingInsight] = useState<{ insight: string; emoji?: string } | null>(null);
@@ -48,7 +51,17 @@ export function OnboardingFlow() {
   }, [session?.started_at, session?.current_step, session?.segment, session?.priority_pain, recordMilestone]);
 
   const handleWelcomeComplete = useCallback(async (segment: string, pain: string) => {
-    await createSession(segment, pain);
+    // Fetch display name from profile (fallback: metadata / email)
+    let userName: string | null = null;
+    if (user) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      userName = prof?.display_name ?? (user.user_metadata as any)?.full_name ?? user.email ?? null;
+    }
+    await createSession(segment, pain, userName);
     await recordMilestone("onboarding_started", { segment, pain });
     setShowWelcome(false);
 
@@ -61,7 +74,7 @@ export function OnboardingFlow() {
         description: `Adicionamos ${result.created.processes} etapas de pipeline, ${result.created.tasks} tarefas-chave e categorias financeiras prontas para uso.`,
       });
     }
-  }, [createSession, recordMilestone, applyNicheTemplate]);
+  }, [createSession, recordMilestone, applyNicheTemplate, user]);
 
   const handleSkipOnboarding = useCallback(async () => {
     await recordMilestone("onboarding_skipped");
