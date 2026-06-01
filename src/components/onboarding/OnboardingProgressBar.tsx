@@ -1,6 +1,6 @@
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, CheckCircle2, Circle } from "lucide-react";
+import { Trophy, CheckCircle2, Circle, Gift, Sparkles } from "lucide-react";
 import type { OnboardingSession } from "@/hooks/useOnboardingSession";
 
 const SEGMENT_ROUTES: Record<string, string[]> = {
