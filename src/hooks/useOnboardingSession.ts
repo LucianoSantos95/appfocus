@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export interface OnboardingSession {
   id: string;
   user_id: string;
+  user_name: string | null;
   segment: string | null;
   priority_pain: string | null;
   current_step: string;
