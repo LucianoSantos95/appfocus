@@ -753,6 +753,7 @@ export type Database = {
           started_at: string
           updated_at: string
           user_id: string
+          user_name: string | null
         }
         Insert: {
           achievements?: Json
@@ -770,6 +771,7 @@ export type Database = {
           started_at?: string
           updated_at?: string
           user_id: string
+          user_name?: string | null
         }
         Update: {
           achievements?: Json
@@ -787,6 +789,7 @@ export type Database = {
           started_at?: string
           updated_at?: string
           user_id?: string
+          user_name?: string | null
         }
         Relationships: []
       }
