@@ -74,7 +74,7 @@ export function OnboardingFlow() {
         description: `Adicionamos ${result.created.processes} etapas de pipeline, ${result.created.tasks} tarefas-chave e categorias financeiras prontas para uso.`,
       });
     }
-  }, [createSession, recordMilestone, applyNicheTemplate]);
+  }, [createSession, recordMilestone, applyNicheTemplate, user]);
 
   const handleSkipOnboarding = useCallback(async () => {
     await recordMilestone("onboarding_skipped");
