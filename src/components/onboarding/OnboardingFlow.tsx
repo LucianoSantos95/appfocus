@@ -17,6 +17,8 @@ import { Rocket, PartyPopper, ArrowRight, Timer, SkipForward } from "lucide-reac
 import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const AUTO_TOUR_FLAG = "hub_auto_tour_pending";
 
