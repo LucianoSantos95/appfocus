@@ -38,12 +38,13 @@ export function useOnboardingSession() {
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
 
-  const createSession = useCallback(async (segment: string, priorityPain: string) => {
+  const createSession = useCallback(async (segment: string, priorityPain: string, userName?: string | null) => {
     if (!user) return null;
     const { data } = await (supabase
       .from("onboarding_sessions" as any)
       .insert({
         user_id: user.id,
+        user_name: userName ?? user.user_metadata?.full_name ?? user.email ?? null,
         segment,
         priority_pain: priorityPain,
         current_step: "module_1",
