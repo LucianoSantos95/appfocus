@@ -1,23 +1,61 @@
-## Mudanças
+# Cancelamento de Plano com Feedback
 
-**1. Migration (já aprovada e executada)**
-- Coluna `user_name text` em `onboarding_sessions`, com backfill via `profiles.display_name`.
+Hoje, no painel **Faturamento** (`BillingPanel.tsx`), usuários com plano ativo só veem **"Gerenciar Assinatura"** (portal Stripe). Não há botão de cancelamento direto nem captura do motivo. Vamos adicionar isso.
 
-**2. Reward visível no chat (`OnboardingChat.tsx`)**
-Banner fino logo abaixo do header do assistente, sempre visível durante a conversa:
-- 0 completos → "Faltam 3 etapas para destravar 20% OFF 🎁"
-- 1 completo → "Faltam 2 etapas para destravar 20% OFF 🎁"
-- 2 completos → "Falta só 1 etapa para destravar 20% OFF 🔥"
-- 3 completos → some
+## O que será feito
 
-**3. Reward card na barra de progresso (`OnboardingProgressBar.tsx`)**
-Card destacado abaixo da barra:
-- Em andamento: gift icon + "Faltam X para destravar **20% OFF no 1º mês**" + mini steps `●●○`
-- Concluído: check + "Cupom FOCUS20 destravado!"
+### 1. Nova tabela `cancellation_feedback`
+Armazena feedbacks de cancelamento para análise.
 
-**4. Captura do nome (`useOnboardingSession.ts` + `OnboardingFlow.tsx`)**
-- Interface `OnboardingSession` ganha `user_name: string | null`.
-- `createSession(segment, pain, userName?)` grava `user_name` no insert.
-- `OnboardingFlow.handleWelcomeComplete` busca `profiles.display_name` (fallback `user.email`) e passa para `createSession`.
+Campos:
+- `user_id`, `nome`, `email`
+- `plano_anterior` (plus/pro/enterprise)
+- `motivo` (categoria: ex. "muito caro", "não uso", "faltam recursos", "encontrei alternativa", "outro")
+- `comentario` (texto livre opcional)
+- `created_at`
 
-Sem mudanças em business logic, edge functions ou outras telas.
+Acesso:
+- Usuário pode inserir o próprio feedback
+- Apenas **admins** podem visualizar todos os registros (para análise)
+
+### 2. Botão "Cancelar Plano" no BillingPanel
+- Aparece somente quando `plan !== 'gratuito'`
+- Posicionado abaixo de "Gerenciar Assinatura", com estilo discreto (variant `ghost` em vermelho suave) para não competir com o upgrade
+
+### 3. Modal de Cancelamento
+Ao clicar em "Cancelar Plano", abre um dialog com:
+- Mensagem empática ("Sentimos muito em ver você ir...")
+- **Select obrigatório** com motivo (categorias acima)
+- **Textarea opcional** para detalhar
+- Botões: "Manter assinatura" / "Confirmar cancelamento"
+
+Ao confirmar:
+1. Salva feedback em `cancellation_feedback`
+2. Cancela assinatura no Stripe via edge function `cancel-subscription` (nova)
+3. Atualiza `subscriptions` para `gratuito` / `ends_at = now()`
+4. Mostra toast de confirmação e fecha o modal
+5. Chama `refreshSubscription()` para atualizar UI
+
+### 4. Edge function `cancel-subscription`
+Recebe JWT do usuário, busca customer Stripe pelo e-mail, cancela a subscription ativa (`stripe.subscriptions.cancel`), e atualiza a tabela `subscriptions` local via service role.
+
+## Arquivos afetados
+
+- **Novo:** `supabase/migrations/...` — cria `cancellation_feedback` com GRANTs e RLS
+- **Novo:** `supabase/functions/cancel-subscription/index.ts`
+- **Novo:** `src/components/user/CancelSubscriptionDialog.tsx`
+- **Editado:** `src/components/user/BillingPanel.tsx` — adicionar botão e abrir o dialog
+- **Editado:** `supabase/config.toml` — registrar a nova função com `verify_jwt = false`
+
+## Pergunta antes de implementar
+
+As categorias de motivo que vou usar no select:
+1. Muito caro para o meu momento
+2. Não estou usando o suficiente
+3. Faltam recursos que preciso
+4. Encontrei uma alternativa melhor
+5. Problemas técnicos / bugs
+6. Apenas testei, não era para mim
+7. Outro (descrever)
+
+Posso seguir com essa lista, ou prefere ajustar?

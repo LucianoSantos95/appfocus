@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Sparkles, ExternalLink, Loader2 } from "lucide-react";
+import { CreditCard, Sparkles, ExternalLink, Loader2, XCircle } from "lucide-react";
+import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
   const navigate = useNavigate();
   const details = planDetails[plan] || planDetails.gratuito;
   const [portalLoading, setPortalLoading] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const handleManageSubscription = async () => {
     if (!session?.access_token) return;
@@ -84,22 +86,33 @@ export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
           )}
 
           {plan !== "gratuito" && (
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              onClick={handleManageSubscription}
-              disabled={portalLoading}
-            >
-              {portalLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <ExternalLink className="w-4 h-4" />
-              )}
-              Gerenciar Assinatura
-            </Button>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={handleManageSubscription}
+                disabled={portalLoading}
+              >
+                {portalLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-4 h-4" />
+                )}
+                Gerenciar Assinatura
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setCancelOpen(true)}
+              >
+                <XCircle className="w-4 h-4" />
+                Cancelar Plano
+              </Button>
+            </div>
           )}
         </div>
       </DialogContent>
+      <CancelSubscriptionDialog open={cancelOpen} onOpenChange={setCancelOpen} />
     </Dialog>
   );
 }
