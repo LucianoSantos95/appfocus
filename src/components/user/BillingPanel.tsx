@@ -30,6 +30,7 @@ export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
   const navigate = useNavigate();
   const details = planDetails[plan] || planDetails.gratuito;
   const [portalLoading, setPortalLoading] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const handleManageSubscription = async () => {
     if (!session?.access_token) return;
