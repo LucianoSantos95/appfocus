@@ -67,8 +67,12 @@ serve(async (req) => {
     });
     if (!whisperRes.ok) {
       const errTxt = await whisperRes.text();
+      console.error("[transcribe-meeting] Whisper failed:", whisperRes.status, errTxt);
       await service.from("client_recordings").update({ status: "erro" }).eq("id", recording_id);
-      return json({ error: "Whisper falhou: " + errTxt }, whisperRes.status === 429 ? 429 : 500);
+      const safe = whisperRes.status === 429
+        ? "Limite de transcrição atingido. Tente novamente em instantes."
+        : "Transcrição indisponível. Tente novamente.";
+      return json({ error: safe }, whisperRes.status === 429 ? 429 : 500);
     }
     const transcript = (await whisperRes.text()).trim();
 

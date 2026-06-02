@@ -327,6 +327,7 @@ async function sendEmail(
   });
   if (!res.ok) {
     const err = await res.text();
+    console.error("[send-bi-report] Resend error:", res.status, err);
     if (
       err.includes("verify a domain") ||
       err.includes("testing emails") ||
@@ -336,7 +337,7 @@ async function sendEmail(
         "Não foi possível enviar o relatório: o remetente não está em um domínio verificado. Verifique o domínio no Resend ou ajuste o secret RESEND_FROM_EMAIL para um endereço do seu domínio (ex.: relatorios@app.focusinteligente.com.br).",
       );
     }
-    throw new Error(`Resend error: ${err}`);
+    throw new Error("Falha ao enviar o e-mail do relatório.");
   }
   return await res.json();
 }
@@ -374,6 +375,7 @@ async function sendWhatsApp(to: string, message: string) {
   );
   if (!res.ok) {
     const errorPayload = await res.json().catch(async () => ({ raw: await res.text() }));
+    console.error("[send-bi-report] Twilio error:", res.status, errorPayload);
     if (errorPayload?.code === 63007) {
       throw new HttpError(
         400,
@@ -388,7 +390,7 @@ async function sendWhatsApp(to: string, message: string) {
       );
     }
 
-    throw new Error(`Twilio error: ${JSON.stringify(errorPayload)}`);
+    throw new Error("Falha ao enviar mensagem por WhatsApp.");
   }
   return await res.json();
 }
