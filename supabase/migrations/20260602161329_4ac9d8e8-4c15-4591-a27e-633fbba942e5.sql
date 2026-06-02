@@ -1,0 +1,2 @@
+UPDATE public.subscriptions SET plan='gratuito', status='active', ends_at=now(), updated_at=now() WHERE user_id='7dd0eb92-eb0f-432e-bb94-5b0e5ff6fcc9';
+UPDATE public.support_tickets SET status='resolvido', updated_at=now() WHERE id='8d81a6bd-cac7-4c59-b84e-b8cd09b6ea5f';
