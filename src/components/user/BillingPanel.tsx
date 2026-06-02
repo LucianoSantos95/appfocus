@@ -86,20 +86,36 @@ export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
           )}
 
           {plan !== "gratuito" && (
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              onClick={handleManageSubscription}
-              disabled={portalLoading}
-            >
-              {portalLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <ExternalLink className="w-4 h-4" />
-              )}
-              Gerenciar Assinatura
-            </Button>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={handleManageSubscription}
+                disabled={portalLoading}
+              >
+                {portalLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-4 h-4" />
+                )}
+                Gerenciar Assinatura
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setCancelOpen(true)}
+              >
+                <XCircle className="w-4 h-4" />
+                Cancelar Plano
+              </Button>
+            </div>
           )}
+        </div>
+      </DialogContent>
+      <CancelSubscriptionDialog open={cancelOpen} onOpenChange={setCancelOpen} />
+    </Dialog>
+  );
+}
         </div>
       </DialogContent>
     </Dialog>
