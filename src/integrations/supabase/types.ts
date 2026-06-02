@@ -188,6 +188,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cancellation_feedback: {
+        Row: {
+          comentario: string | null
+          created_at: string
+          email: string
+          id: string
+          motivo: string
+          nome: string
+          plano_anterior: string
+          user_id: string
+        }
+        Insert: {
+          comentario?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          motivo: string
+          nome: string
+          plano_anterior: string
+          user_id: string
+        }
+        Update: {
+          comentario?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          motivo?: string
+          nome?: string
+          plano_anterior?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_recordings: {
         Row: {
           audio_url: string
