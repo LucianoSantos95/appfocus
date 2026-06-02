@@ -116,8 +116,3 @@ export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
     </Dialog>
   );
 }
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
