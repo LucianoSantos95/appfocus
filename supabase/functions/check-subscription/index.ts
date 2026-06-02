@@ -88,9 +88,10 @@ serve(async (req) => {
     );
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: msg });
+    console.error("[CHECK-SUBSCRIPTION] ERROR", msg);
     const isAuthError = msg.includes("Auth error") || msg.includes("JWT") || msg.includes("token");
-    return new Response(JSON.stringify({ error: msg, subscribed: false }), {
+    const safe = isAuthError ? "Sessão inválida" : "Não foi possível verificar a assinatura";
+    return new Response(JSON.stringify({ error: safe, subscribed: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: isAuthError ? 401 : 500,
     });

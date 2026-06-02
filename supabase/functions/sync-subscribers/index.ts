@@ -8,7 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const OWNER_EMAIL = "oluciano.dosantos@gmail.com";
+
 
 const PRODUCT_TO_PLAN: Record<string, string> = {
   prod_UCvvAhvb6yV5Is: "plus",
@@ -70,10 +70,9 @@ serve(async (req) => {
 
     if (roleError) throw roleError;
 
-    const isOwner = currentUser.email.toLowerCase() === OWNER_EMAIL;
     const isAdmin = (roleRows?.length ?? 0) > 0;
 
-    if (!isOwner && !isAdmin) {
+    if (!isAdmin) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 403,
@@ -209,7 +208,7 @@ serve(async (req) => {
     logStep("ERROR", { message });
     const isAuthError = message.includes("Auth error") || message.includes("JWT") || message.includes("token");
 
-    return new Response(JSON.stringify({ error: message }), {
+    return new Response(JSON.stringify({ error: isAuthError ? "Sessão inválida" : "Erro ao sincronizar assinantes" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: isAuthError ? 401 : 500,
     });

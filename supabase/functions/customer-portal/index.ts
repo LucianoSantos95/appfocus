@@ -53,9 +53,12 @@ serve(async (req) => {
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    return new Response(JSON.stringify({ error: msg }), {
+    console.error("[CUSTOMER-PORTAL] ERROR", msg);
+    const isAuthError = msg.includes("Auth error") || msg.includes("JWT") || msg.includes("token") || msg.includes("authorization");
+    const safe = isAuthError ? "Sessão inválida" : "Não foi possível abrir o portal de assinatura";
+    return new Response(JSON.stringify({ error: safe }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: isAuthError ? 401 : 500,
     });
   }
 });

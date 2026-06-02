@@ -180,8 +180,13 @@ Deno.serve(async (req) => {
     const { data: userData, error: userErr } = await supabase.auth.getUser(auth);
     if (userErr || !userData.user) return json({ error: "unauthorized" }, 401);
 
-    // Owner-only: restricted to a single email
-    if ((userData.user.email || "").toLowerCase() !== "oluciano.dosantos@gmail.com") {
+    // Admin-only via user_roles table
+    const { data: roleRows, error: roleErr } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id)
+      .eq("role", "admin");
+    if (roleErr || !roleRows || roleRows.length === 0) {
       return json({ error: "forbidden" }, 403);
     }
 
