@@ -69,11 +69,42 @@ serve(async (req) => {
       });
     }
 
+    // Require WhatsApp to be enabled and restrict recipient to the user's own registered number
+    const { data: prefs } = await supabase
+      .from("whatsapp_preferences")
+      .select("whatsapp_number, enabled")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!prefs?.enabled || !prefs?.whatsapp_number) {
+      return new Response(JSON.stringify({ error: "WhatsApp não está habilitado para sua conta." }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { to, message } = await req.json();
 
     if (!to || !message) {
       return new Response(JSON.stringify({ error: "Missing 'to' or 'message'" }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof message !== "string" || message.length > 1600) {
+      return new Response(JSON.stringify({ error: "Mensagem inválida." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Force recipient = user's own registered number to prevent abuse
+    const recipient = normalizeRecipientWhatsAppNumber(prefs.whatsapp_number);
+    const requested = normalizeRecipientWhatsAppNumber(String(to));
+    if (recipient !== requested) {
+      return new Response(JSON.stringify({ error: "Só é permitido enviar para o seu número registrado." }), {
+        status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -125,7 +156,7 @@ serve(async (req) => {
         });
       }
 
-      return new Response(JSON.stringify({ error: "Failed to send WhatsApp", details: data }), {
+      return new Response(JSON.stringify({ error: "Falha ao enviar WhatsApp" }), {
         status: response.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -137,7 +168,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("send-whatsapp error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "Erro interno ao enviar WhatsApp" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

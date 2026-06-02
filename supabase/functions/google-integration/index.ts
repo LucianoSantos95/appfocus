@@ -319,8 +319,26 @@ serve(async (req) => {
     switch (action) {
       case "auth_url": {
         const functionUrl = `${SUPABASE_URL}/functions/v1/google-integration`;
-        const redirectUrl = params.redirect_url || "/";
-        const state = await signState({ userId, redirect: redirectUrl });
+        const ALLOWED_REDIRECT_ORIGINS = [
+          "https://app.focusinteligente.com.br",
+          "https://appfocus.lovable.app",
+          "https://id-preview--7b5ec06c-73e1-4b8a-b8c6-b0355f0a1aa9.lovable.app",
+        ];
+        const requestedRedirect = typeof params.redirect_url === "string" ? params.redirect_url : "/";
+        let safeRedirect = "/configuracoes";
+        try {
+          if (requestedRedirect.startsWith("/")) {
+            safeRedirect = requestedRedirect;
+          } else {
+            const u = new URL(requestedRedirect);
+            if (ALLOWED_REDIRECT_ORIGINS.includes(u.origin)) {
+              safeRedirect = u.toString();
+            }
+          }
+        } catch {
+          safeRedirect = "/configuracoes";
+        }
+        const state = await signState({ userId, redirect: safeRedirect });
         const url = buildAuthUrl(GOOGLE_CLIENT_ID, functionUrl, state);
         return new Response(JSON.stringify({ url }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
