@@ -41,6 +41,8 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDemoData } from "@/contexts/DemoDataContext";
+import { DemoModulePreview } from "@/components/onboarding/DemoModulePreview";
 import { cn } from "@/lib/utils";
 import {
   BarChart,
@@ -142,6 +144,7 @@ function getProjectDeadlineStatus(endDate: string, progress: number) {
 export default function Projetos() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { demoModule } = useDemoData();
   const { projetos: dbProjetos, isLoading, addProjeto, updateProjeto, deleteProjeto: deleteProjetoDB, refetch: refetchProjetosDB } = useProjetosDB();
   const { clientes } = useClientes();
   const { transacoes } = useTransacoes();
@@ -235,6 +238,15 @@ export default function Projetos() {
     deleteProjetoDB(id);
     setSelectedProjeto(null);
   };
+
+  if (demoModule === "projetos") {
+    return (
+      <MainLayout>
+        <PageMeta path="/projetos" title="Projetos" description="Demonstração do módulo de projetos." />
+        <DemoModulePreview module="projetos" />
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

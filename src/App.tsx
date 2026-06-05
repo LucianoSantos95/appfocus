@@ -9,6 +9,7 @@ import { PlanProvider } from "@/contexts/PlanContext";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { DemoDataProvider } from "@/contexts/DemoDataContext";
 
 
 const Index = lazy(() => import("./pages/Index"));
@@ -50,6 +51,7 @@ const App = () => (
         <AuthProvider>
           <PlanProvider>
             <SidebarProvider>
+              <DemoDataProvider>
               <ErrorBoundary>
                 <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
                   <Routes>
@@ -74,6 +76,7 @@ const App = () => (
                   </Routes>
                 </Suspense>
               </ErrorBoundary>
+              </DemoDataProvider>
             </SidebarProvider>
           </PlanProvider>
         </AuthProvider>
