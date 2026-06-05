@@ -74,10 +74,19 @@ const TOOLS = [
 ];
 
 function buildSystemPrompt(session: any) {
-  const segment = session?.segment || "pme";
+  const ALLOWED_SEGMENTS = new Set(["agencia", "consultoria", "freelancer", "pme"]);
+  const ALLOWED_MODULES = new Set(Object.keys(MODULE_LABELS));
+  const ALLOWED_STEPS = new Set(["welcome", "module_1", "module_2", "module_3", "completed"]);
+
+  const rawSegment = typeof session?.segment === "string" ? session.segment : "pme";
+  const segment = ALLOWED_SEGMENTS.has(rawSegment) ? rawSegment : "pme";
   const route = SEGMENT_ROUTES[segment] || SEGMENT_ROUTES.pme;
-  const completedModules = session?.completed_modules || [];
-  const currentStep = session?.current_step || "welcome";
+  const rawCompleted = Array.isArray(session?.completed_modules) ? session.completed_modules : [];
+  const completedModules = rawCompleted.filter(
+    (m: unknown): m is string => typeof m === "string" && ALLOWED_MODULES.has(m),
+  );
+  const rawStep = typeof session?.current_step === "string" ? session.current_step : "welcome";
+  const currentStep = ALLOWED_STEPS.has(rawStep) ? rawStep : "welcome";
   const routeLabels = route.map(r => MODULE_LABELS[r] || r);
 
   return `Você é o **Focus**, o assistente de onboarding do Hub Empresarial. Seu objetivo é guiar o usuário de forma conversacional, empática e EXTREMAMENTE EFICIENTE para configurar a operação dele em poucos minutos.
