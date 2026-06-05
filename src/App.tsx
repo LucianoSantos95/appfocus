@@ -76,6 +76,7 @@ const App = () => (
                   </Routes>
                 </Suspense>
               </ErrorBoundary>
+              </DemoDataProvider>
             </SidebarProvider>
           </PlanProvider>
         </AuthProvider>
