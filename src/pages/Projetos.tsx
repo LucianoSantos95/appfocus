@@ -41,6 +41,8 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDemoData } from "@/contexts/DemoDataContext";
+import { DemoModulePreview } from "@/components/onboarding/DemoModulePreview";
 import { cn } from "@/lib/utils";
 import {
   BarChart,
