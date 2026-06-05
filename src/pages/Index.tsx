@@ -4,7 +4,6 @@ import { OnboardingPrompt } from "@/components/guide/OnboardingPrompt";
 import { OnboardingCouponBanner } from "@/components/onboarding/OnboardingCouponBanner";
 import { GuidedTour } from "@/components/guide/GuidedTour";
 import { ModuleCard } from "@/components/ui/module-card";
-import { ModuleCard } from "@/components/ui/module-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
 import { HealthSummary } from "@/components/dashboard/HealthSummary";
@@ -78,7 +77,6 @@ const modules = [
 const Index = () => {
   const navigate = useNavigate();
   const { needsOnboarding, session, loading: onbLoading } = useOnboardingSession();
-  const { demoModule } = useDemoData();
   const [forceTour, setForceTour] = useState(false);
 
   // Redirect new users to onboarding
@@ -111,8 +109,7 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Health Summary (demo overrides when in demo mode) */}
-        {demoModule === "painel" ? <DemoPainelKPIs /> : <HealthSummary />}
+        <HealthSummary />
 
 
         {/* Module Grid */}
