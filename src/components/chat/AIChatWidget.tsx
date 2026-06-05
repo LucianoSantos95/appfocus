@@ -44,6 +44,32 @@ export function AIChatWidget() {
     }
   }, [messages, isLoading]);
 
+  // Auto-open with a pre-generated assistant message (used by onboarding demo flow)
+  useEffect(() => {
+    if (!session) return;
+    const check = () => {
+      const raw = localStorage.getItem("hub_assistant_pending_message");
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw) as { content: string };
+        if (parsed?.content) {
+          setMessages((prev) =>
+            prev.some((m) => m.content === parsed.content)
+              ? prev
+              : [...prev, { role: "assistant", content: parsed.content }]
+          );
+          setIsOpen(true);
+        }
+      } catch {
+        /* ignore */
+      }
+      localStorage.removeItem("hub_assistant_pending_message");
+    };
+    // Run on mount + give the chosen route a tick to mount
+    const t = setTimeout(check, 400);
+    return () => clearTimeout(t);
+  }, [session]);
+
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || !session?.access_token) return;
