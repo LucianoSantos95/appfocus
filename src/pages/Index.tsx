@@ -4,14 +4,12 @@ import { OnboardingPrompt } from "@/components/guide/OnboardingPrompt";
 import { OnboardingCouponBanner } from "@/components/onboarding/OnboardingCouponBanner";
 import { GuidedTour } from "@/components/guide/GuidedTour";
 import { ModuleCard } from "@/components/ui/module-card";
-import { StatCard } from "@/components/ui/stat-card";
+import { ModuleCard } from "@/components/ui/module-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
 import { HealthSummary } from "@/components/dashboard/HealthSummary";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
-import { useDemoData } from "@/contexts/DemoDataContext";
-import { dadosPainel } from "@/lib/demo-data";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
@@ -23,20 +21,8 @@ import {
   ListTodo,
   GitBranch,
   BookOpen,
-  AlertCircle,
-  Clock,
 } from "lucide-react";
 
-function DemoPainelKPIs() {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <StatCard label="Receita do Mês" value={`R$ ${dadosPainel.receitaMes.toLocaleString("pt-BR")}`} icon={DollarSign} variant="success" />
-      <StatCard label="Tarefas Vencidas" value={String(dadosPainel.tarefasVencidas)} icon={AlertCircle} variant="destructive" />
-      <StatCard label="Projetos Atrasados" value={String(dadosPainel.projetosAtrasados)} icon={Clock} variant="warning" />
-      <StatCard label="Clientes sem Contato" value={String(dadosPainel.clientesSemContato)} icon={UserCheck} variant="default" />
-    </div>
-  );
-}
 
 const modules = [
   {
