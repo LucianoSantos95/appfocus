@@ -238,6 +238,7 @@ export function AIChatWidget() {
       {/* Chat window */}
       {isOpen && (
         <div
+          style={isMobile ? undefined : { transform: `translate(${pos.x}px, ${pos.y}px)` }}
           className={cn(
             "z-50 flex flex-col bg-background border shadow-xl overflow-hidden",
             isMobile
@@ -245,8 +246,17 @@ export function AIChatWidget() {
               : "fixed bottom-24 right-6 w-[400px] h-[500px] rounded-2xl"
           )}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+          {/* Header (drag handle on desktop) */}
+          <div
+            onPointerDown={onDragPointerDown}
+            onPointerMove={onDragPointerMove}
+            onPointerUp={onDragPointerUp}
+            onPointerCancel={onDragPointerUp}
+            className={cn(
+              "flex items-center justify-between px-4 py-3 border-b bg-muted/30 select-none touch-none",
+              !isMobile && (isDragging ? "cursor-grabbing" : "cursor-grab")
+            )}
+          >
             <div className="flex items-center gap-2">
               <img src={hubLogo} alt="Assistente Focus" className="h-8 w-8 rounded-full object-cover" />
               <div>
@@ -258,6 +268,7 @@ export function AIChatWidget() {
               <X className="h-4 w-4" />
             </Button>
           </div>
+
 
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
