@@ -31,6 +31,7 @@ export function useOnboardingSession() {
       .from("onboarding_sessions" as any)
       .select("*")
       .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
       .maybeSingle();
     if (data) setSession(data as any);
     setLoading(false);
@@ -50,6 +51,7 @@ export function useOnboardingSession() {
         current_step: "module_1",
       } as any)
       .select()
+      .order("created_at", { ascending: false })
       .single() as any);
     if (data) setSession(data as OnboardingSession);
     return (data as OnboardingSession) || null;
@@ -62,6 +64,7 @@ export function useOnboardingSession() {
       .update(updates as any)
       .eq("user_id", user.id)
       .select()
+      .order("created_at", { ascending: false })
       .single();
     if (data) setSession(data as any);
   }, [user, session]);
