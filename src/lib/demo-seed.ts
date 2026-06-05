@@ -70,12 +70,36 @@ async function seedProjetos(userId: string) {
   await supabase.from("projetos").insert(projetos);
 }
 
+async function wipeFinanceiro(userId: string) {
+  await supabase.from("transacoes").delete().eq("user_id", userId);
+  await supabase.from("contas_bancarias").delete().eq("user_id", userId);
+}
+
+async function wipeClientes(userId: string) {
+  await supabase.from("campanha_clientes").delete().eq("user_id", userId);
+  await supabase.from("client_recordings").delete().eq("user_id", userId);
+  await supabase.from("clientes").delete().eq("user_id", userId);
+}
+
+async function wipeProjetos(userId: string) {
+  await supabase.from("projetos").delete().eq("user_id", userId);
+}
+
 export async function seedDemoData(module: DemoModule, userId: string) {
   try {
-    if (module === "financeiro") await seedFinanceiro(userId);
-    else if (module === "clientes") await seedClientes(userId);
-    else if (module === "projetos") await seedProjetos(userId);
-    else if (module === "painel") {
+    // Always reset the relevant module(s) before seeding so the panel starts
+    // from a clean state every time the user picks an option in onboarding.
+    if (module === "financeiro") {
+      await wipeFinanceiro(userId);
+      await seedFinanceiro(userId);
+    } else if (module === "clientes") {
+      await wipeClientes(userId);
+      await seedClientes(userId);
+    } else if (module === "projetos") {
+      await wipeProjetos(userId);
+      await seedProjetos(userId);
+    } else if (module === "painel") {
+      await Promise.all([wipeFinanceiro(userId), wipeClientes(userId), wipeProjetos(userId)]);
       await Promise.all([
         seedFinanceiro(userId),
         seedClientes(userId),
@@ -86,3 +110,4 @@ export async function seedDemoData(module: DemoModule, userId: string) {
     console.error("[demo-seed] Failed to seed demo data:", err);
   }
 }
+
