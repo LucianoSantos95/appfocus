@@ -1,61 +1,53 @@
-# Cancelamento de Plano com Feedback
 
-Hoje, no painel **Faturamento** (`BillingPanel.tsx`), usuários com plano ativo só veem **"Gerenciar Assinatura"** (portal Stripe). Não há botão de cancelamento direto nem captura do motivo. Vamos adicionar isso.
+# Novo Onboarding Hub Empresarial — Fluxo Visual com Demo
 
-## O que será feito
+Substituir o fluxo guiado atual (welcome modal + chat + módulos 1/2/3) por um onboarding direto: o usuário escolhe um foco, vê o módulo populado com dados fictícios (apenas no estado local), o Hub Assistant abre com uma mensagem contextual e um banner de cupom oferece os próximos passos.
 
-### 1. Nova tabela `cancellation_feedback`
-Armazena feedbacks de cancelamento para análise.
+## Arquivos novos
 
-Campos:
-- `user_id`, `nome`, `email`
-- `plano_anterior` (plus/pro/enterprise)
-- `motivo` (categoria: ex. "muito caro", "não uso", "faltam recursos", "encontrei alternativa", "outro")
-- `comentario` (texto livre opcional)
-- `created_at`
+- `src/contexts/DemoDataContext.tsx` — Provider com `demoMode`, `demoModule` ("financeiro" | "clientes" | "projetos" | "painel" | null), datasets fictícios e `clearDemo()`. Estado só em React, nunca persiste.
+- `src/components/onboarding/WelcomeChoiceModal.tsx` — Modal fullscreen com overlay `rgba(0,0,0,0.82)`, logo, saudação `Olá, [primeiro nome] 👋`, grid 2x2 (cai para coluna única em mobile) com 4 botões nos estilos especificados, rodapé com texto auxiliar.
+- `src/components/onboarding/DemoCouponBanner.tsx` — Banner fixo no topo (abaixo da navbar) com gradiente azul, texto do cupom à esquerda e dois CTAs à direita: "Assinar agora com desconto →" e "Começar com meus dados reais".
+- `src/lib/demo-data.ts` — Datasets fictícios exatamente como no brief (financeiro, clientes, projetos, painel).
 
-Acesso:
-- Usuário pode inserir o próprio feedback
-- Apenas **admins** podem visualizar todos os registros (para análise)
+## Arquivos alterados
 
-### 2. Botão "Cancelar Plano" no BillingPanel
-- Aparece somente quando `plan !== 'gratuito'`
-- Posicionado abaixo de "Gerenciar Assinatura", com estilo discreto (variant `ghost` em vermelho suave) para não competir com o upgrade
+- `src/components/onboarding/OnboardingFlow.tsx` — Reescrito: só mostra o `WelcomeChoiceModal`. Remove `OnboardingChat`, `OnboardingProgressBar`, módulos 1/2/3, lógica de `completeModule`/achievements/WOW. Ao escolher um foco:
+  1. Marca `demoMode` no contexto com o módulo escolhido.
+  2. Cria registro em `onboarding_sessions` com `segment` = escolha, `current_step="demo"`, `completed_at=null`.
+  3. Dispara abertura do Hub Assistant via flag global (`localStorage` + custom event `hub-assistant:open-with-message`) com a mensagem pré-gerada do brief.
+  4. Navega para a rota do módulo (`/financas`, `/clientes`, `/projetos`, ou `/` para "Ver tudo").
+- `src/pages/Index.tsx`, `src/pages/Financas.tsx`, `src/pages/Clientes.tsx`, `src/pages/Projetos.tsx` — Quando `demoMode` ativo e o módulo bate, injetar os dados fictícios no lugar dos dados reais (overlay simples no nível da página, sem tocar nos hooks Supabase). Mostrar badge sutil "Modo demonstração" perto do título.
+- `src/components/layout/MainLayout.tsx` — Renderizar `DemoCouponBanner` no topo quando `demoMode` ativo.
+- `src/components/chat/AIChatWidget.tsx` — Escutar o evento `hub-assistant:open-with-message`: abrir o widget e injetar a mensagem do assistente como primeira resposta visível (sem chamar a edge function). Apenas no estado local do widget.
+- `src/App.tsx` — Envolver a árvore autenticada com `<DemoDataProvider>`.
+- `src/hooks/useOnboardingSession.ts` — Adicionar helper `finalizeOnboarding(couponClicked: boolean)` que faz update setando `completed_at`, `coupon_shown=true`, `coupon_code='FOCUS20'`, `coupon_expires_at=now()+48h`, `current_step='completed'`. Manter o resto do hook (a tabela continua sendo a fonte de verdade para "primeira vez").
+- `src/pages/Index.tsx` — Trocar a regra de redirect para `/onboarding`: continuar redirecionando apenas quando `needsOnboarding` (sem registro na tabela). Para sessões interrompidas (registro existe, `completed_at=null`, `current_step !== 'demo'` antigo), exibir banner discreto "👋 Bem-vindo de volta!" com botões `Resgatar cupom` / `Continuar explorando` — novo componente leve embutido no Index.
 
-### 3. Modal de Cancelamento
-Ao clicar em "Cancelar Plano", abre um dialog com:
-- Mensagem empática ("Sentimos muito em ver você ir...")
-- **Select obrigatório** com motivo (categorias acima)
-- **Textarea opcional** para detalhar
-- Botões: "Manter assinatura" / "Confirmar cancelamento"
+## Arquivos a remover (não usados mais)
 
-Ao confirmar:
-1. Salva feedback em `cancellation_feedback`
-2. Cancela assinatura no Stripe via edge function `cancel-subscription` (nova)
-3. Atualiza `subscriptions` para `gratuito` / `ends_at = now()`
-4. Mostra toast de confirmação e fecha o modal
-5. Chama `refreshSubscription()` para atualizar UI
+- `src/components/onboarding/OnboardingChat.tsx`
+- `src/components/onboarding/OnboardingWelcomeModal.tsx`
+- `src/components/onboarding/OnboardingProgressBar.tsx`
+- `src/components/onboarding/OnboardingCouponPreview.tsx`
+- `src/components/onboarding/WowMomentCard.tsx`
+- Edge function `supabase/functions/onboarding-assistant` permanece (pode ser usada pelo Hub Assistant em outro fluxo), mas não é mais chamada pelo onboarding.
 
-### 4. Edge function `cancel-subscription`
-Recebe JWT do usuário, busca customer Stripe pelo e-mail, cancela a subscription ativa (`stripe.subscriptions.cancel`), e atualiza a tabela `subscriptions` local via service role.
+A tabela `onboarding_sessions` é mantida no banco — só mudamos como ela é usada (sem migração).
 
-## Arquivos afetados
+## Comportamentos do banner de cupom
 
-- **Novo:** `supabase/migrations/...` — cria `cancellation_feedback` com GRANTs e RLS
-- **Novo:** `supabase/functions/cancel-subscription/index.ts`
-- **Novo:** `src/components/user/CancelSubscriptionDialog.tsx`
-- **Editado:** `src/components/user/BillingPanel.tsx` — adicionar botão e abrir o dialog
-- **Editado:** `supabase/config.toml` — registrar a nova função com `verify_jwt = false`
+- "Assinar agora com desconto" → chama `finalizeOnboarding(true)`, limpa `demoMode`, navega para `/planos` (cupom `FOCUS20` aplicado automaticamente pela lógica de checkout já existente).
+- "Começar com meus dados reais" → chama `finalizeOnboarding(false)`, limpa `demoMode`, fecha o banner; usuário permanece no módulo atual agora com dados reais (vazios).
 
-## Pergunta antes de implementar
+## Restrições respeitadas
 
-As categorias de motivo que vou usar no select:
-1. Muito caro para o meu momento
-2. Não estou usando o suficiente
-3. Faltam recursos que preciso
-4. Encontrei uma alternativa melhor
-5. Problemas técnicos / bugs
-6. Apenas testei, não era para mim
-7. Outro (descrever)
+- Nada muda em Stripe, Google Auth, sidebar, módulos, schema do banco.
+- Dados fictícios apenas em React state; nenhum INSERT em tabelas de domínio.
+- Hub Assistant existente é reutilizado, não recriado.
+- Mobile: grid `grid-cols-1 md:grid-cols-2` no modal.
 
-Posso seguir com essa lista, ou prefere ajustar?
+## Pontos a confirmar antes de codar
+
+1. Para o card "🚀 Ver tudo" o Painel Principal deve mostrar os 4 KPIs fictícios (`receitaMes`, `tarefasVencidas`, `projetosAtrasados`, `clientesSemContato`) no `HealthSummary`, sobrescrevendo os valores reais enquanto em demo — confirma?
+2. Posso remover de fato os arquivos antigos listados acima (OnboardingChat, WowMomentCard, etc.) ou prefere mantê-los no repo desativados?
