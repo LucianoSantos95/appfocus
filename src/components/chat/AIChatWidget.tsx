@@ -28,6 +28,17 @@ export function AIChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Draggable position (desktop only). Persisted across navigation.
+  const [pos, setPos] = useState<{ x: number; y: number }>(() => {
+    try {
+      const raw = localStorage.getItem("hub_assistant_position");
+      if (raw) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return { x: 0, y: 0 };
+  });
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   const pendingVoiceRef = useRef<string | null>(null);
 
   const handleVoiceResult = useCallback((text: string) => {
@@ -43,6 +54,38 @@ export function AIChatWidget() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
+
+  const onDragPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (isMobile) return;
+    // Ignore drags initiated on the close button
+    if ((e.target as HTMLElement).closest("button")) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y };
+    setIsDragging(true);
+  }, [isMobile, pos.x, pos.y]);
+
+  const onDragPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    // Bounds: keep widget visible (~400x500). Allow negative x/y up to viewport.
+    const maxX = 0;
+    const minX = -(window.innerWidth - 440);
+    const maxY = 0;
+    const minY = -(window.innerHeight - 100);
+    const nx = Math.min(maxX, Math.max(minX, dragRef.current.origX + dx));
+    const ny = Math.min(maxY, Math.max(minY, dragRef.current.origY + dy));
+    setPos({ x: nx, y: ny });
+  }, []);
+
+  const onDragPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return;
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* ignore */ }
+    dragRef.current = null;
+    setIsDragging(false);
+    try { localStorage.setItem("hub_assistant_position", JSON.stringify(pos)); } catch { /* ignore */ }
+  }, [pos]);
+
 
   // Auto-open with a pre-generated assistant message (used by onboarding demo flow)
   useEffect(() => {
