@@ -48,7 +48,7 @@ export function useOnboardingSession() {
         user_name: userName ?? user.user_metadata?.full_name ?? user.email ?? null,
         segment,
         priority_pain: priorityPain,
-        current_step: "module_1",
+        current_step: "demo",
       } as any)
       .select()
       .order("created_at", { ascending: false })
@@ -73,23 +73,7 @@ export function useOnboardingSession() {
     if (!session) return;
     const modules = [...(session.completed_modules || [])];
     if (!modules.includes(moduleSlug)) modules.push(moduleSlug);
-
-    const stepNum = modules.length;
-    const isComplete = stepNum >= 3;
-
-    const updates: any = {
-      completed_modules: modules,
-      current_step: isComplete ? "completed" : `module_${stepNum + 1}`,
-    };
-
-    if (isComplete && !session.completed_at) {
-      updates.completed_at = new Date().toISOString();
-      updates.coupon_shown = true;
-      updates.coupon_code = COUPON_CODE;
-      updates.coupon_expires_at = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-    }
-
-    await updateSession(updates);
+    await updateSession({ completed_modules: modules } as any);
   }, [session, updateSession]);
 
   const addAchievement = useCallback(async (achievement: string) => {
@@ -101,11 +85,34 @@ export function useOnboardingSession() {
     }
   }, [session, updateSession]);
 
+  /**
+   * Marks the onboarding as complete and attaches the welcome coupon.
+   * Called when the user clicks any CTA on the demo coupon banner.
+   */
+  const finalizeOnboarding = useCallback(async () => {
+    if (!user) return;
+    const updates = {
+      current_step: "completed",
+      completed_at: new Date().toISOString(),
+      coupon_shown: true,
+      coupon_code: COUPON_CODE,
+      coupon_expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+    };
+    const { data } = await supabase
+      .from("onboarding_sessions" as any)
+      .update(updates as any)
+      .eq("user_id", user.id)
+      .select()
+      .order("created_at", { ascending: false })
+      .maybeSingle();
+    if (data) setSession(data as any);
+  }, [user]);
+
   const needsOnboarding = !loading && user && !session;
   const isOnboardingComplete = session?.current_step === "completed";
 
   return {
     session, loading, createSession, updateSession, completeModule,
-    addAchievement, needsOnboarding, isOnboardingComplete, fetchSession,
+    addAchievement, finalizeOnboarding, needsOnboarding, isOnboardingComplete, fetchSession,
   };
 }
