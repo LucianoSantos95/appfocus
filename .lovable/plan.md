@@ -1,53 +1,55 @@
 
-# Novo Onboarding Hub Empresarial — Fluxo Visual com Demo
+## Objetivo
 
-Substituir o fluxo guiado atual (welcome modal + chat + módulos 1/2/3) por um onboarding direto: o usuário escolhe um foco, vê o módulo populado com dados fictícios (apenas no estado local), o Hub Assistant abre com uma mensagem contextual e um banner de cupom oferece os próximos passos.
+Eliminar a tela `DemoModulePreview` (que mostra dados fictícios em um layout próprio) e fazer o onboarding levar o usuário direto para a página real do módulo escolhido (`/financas`, `/clientes`, `/projetos` ou `/`). O banner de cupom no topo continua igual. O Hub Assistant abre com a mensagem contextual e passa a ser **arrastável**, para o usuário poder posicioná-lo onde quiser enquanto explora a interface real.
 
-## Arquivos novos
+## Arquivos a alterar
 
-- `src/contexts/DemoDataContext.tsx` — Provider com `demoMode`, `demoModule` ("financeiro" | "clientes" | "projetos" | "painel" | null), datasets fictícios e `clearDemo()`. Estado só em React, nunca persiste.
-- `src/components/onboarding/WelcomeChoiceModal.tsx` — Modal fullscreen com overlay `rgba(0,0,0,0.82)`, logo, saudação `Olá, [primeiro nome] 👋`, grid 2x2 (cai para coluna única em mobile) com 4 botões nos estilos especificados, rodapé com texto auxiliar.
-- `src/components/onboarding/DemoCouponBanner.tsx` — Banner fixo no topo (abaixo da navbar) com gradiente azul, texto do cupom à esquerda e dois CTAs à direita: "Assinar agora com desconto →" e "Começar com meus dados reais".
-- `src/lib/demo-data.ts` — Datasets fictícios exatamente como no brief (financeiro, clientes, projetos, painel).
+### 1. `src/pages/Financas.tsx`, `src/pages/Clientes.tsx`, `src/pages/Projetos.tsx`, `src/pages/Index.tsx`
+- Remover o early-return que renderiza `<DemoModulePreview module="..." />`.
+- Remover qualquer injeção de dados fictícios (`dadosFinanceiro`, `dadosClientes`, `dadosProjetos`, `dadosPainel`) e o badge "Modo demonstração".
+- As páginas voltam a renderizar 100% como já fazem hoje, com os dados reais do Supabase (vazios para um usuário novo — é exatamente o estado em que ele vai começar a operar).
 
-## Arquivos alterados
+### 2. `src/components/onboarding/DemoModulePreview.tsx`
+- **Remover do projeto** (não é mais usado por nenhuma página).
 
-- `src/components/onboarding/OnboardingFlow.tsx` — Reescrito: só mostra o `WelcomeChoiceModal`. Remove `OnboardingChat`, `OnboardingProgressBar`, módulos 1/2/3, lógica de `completeModule`/achievements/WOW. Ao escolher um foco:
-  1. Marca `demoMode` no contexto com o módulo escolhido.
-  2. Cria registro em `onboarding_sessions` com `segment` = escolha, `current_step="demo"`, `completed_at=null`.
-  3. Dispara abertura do Hub Assistant via flag global (`localStorage` + custom event `hub-assistant:open-with-message`) com a mensagem pré-gerada do brief.
-  4. Navega para a rota do módulo (`/financas`, `/clientes`, `/projetos`, ou `/` para "Ver tudo").
-- `src/pages/Index.tsx`, `src/pages/Financas.tsx`, `src/pages/Clientes.tsx`, `src/pages/Projetos.tsx` — Quando `demoMode` ativo e o módulo bate, injetar os dados fictícios no lugar dos dados reais (overlay simples no nível da página, sem tocar nos hooks Supabase). Mostrar badge sutil "Modo demonstração" perto do título.
-- `src/components/layout/MainLayout.tsx` — Renderizar `DemoCouponBanner` no topo quando `demoMode` ativo.
-- `src/components/chat/AIChatWidget.tsx` — Escutar o evento `hub-assistant:open-with-message`: abrir o widget e injetar a mensagem do assistente como primeira resposta visível (sem chamar a edge function). Apenas no estado local do widget.
-- `src/App.tsx` — Envolver a árvore autenticada com `<DemoDataProvider>`.
-- `src/hooks/useOnboardingSession.ts` — Adicionar helper `finalizeOnboarding(couponClicked: boolean)` que faz update setando `completed_at`, `coupon_shown=true`, `coupon_code='FOCUS20'`, `coupon_expires_at=now()+48h`, `current_step='completed'`. Manter o resto do hook (a tabela continua sendo a fonte de verdade para "primeira vez").
-- `src/pages/Index.tsx` — Trocar a regra de redirect para `/onboarding`: continuar redirecionando apenas quando `needsOnboarding` (sem registro na tabela). Para sessões interrompidas (registro existe, `completed_at=null`, `current_step !== 'demo'` antigo), exibir banner discreto "👋 Bem-vindo de volta!" com botões `Resgatar cupom` / `Continuar explorando` — novo componente leve embutido no Index.
+### 3. `src/lib/demo-data.ts`
+- Manter apenas o tipo `DemoModule` e o objeto `ASSISTANT_MESSAGES` (usados pelo OnboardingFlow e pelo chat).
+- Remover `dadosFinanceiro`, `dadosClientes`, `dadosProjetos`, `dadosPainel` (não são mais consumidos por ninguém).
 
-## Arquivos a remover (não usados mais)
+### 4. `src/contexts/DemoDataContext.tsx`
+- Mantido como está. `demoModule` continua sinalizando "estou no fluxo de demonstração" para:
+  - `MainLayout` mostrar o `DemoCouponBanner`.
+  - O assistente saber quando deve aparecer aberto.
 
-- `src/components/onboarding/OnboardingChat.tsx`
-- `src/components/onboarding/OnboardingWelcomeModal.tsx`
-- `src/components/onboarding/OnboardingProgressBar.tsx`
-- `src/components/onboarding/OnboardingCouponPreview.tsx`
-- `src/components/onboarding/WowMomentCard.tsx`
-- Edge function `supabase/functions/onboarding-assistant` permanece (pode ser usada pelo Hub Assistant em outro fluxo), mas não é mais chamada pelo onboarding.
+### 5. `src/components/onboarding/OnboardingFlow.tsx`
+- Sem mudança de fluxo: continua chamando `startDemo(module)`, criando a sessão, salvando a mensagem do assistente em `localStorage` e navegando para a rota do módulo. O usuário cai direto na página real.
 
-A tabela `onboarding_sessions` é mantida no banco — só mudamos como ela é usada (sem migração).
+### 6. `src/components/chat/AIChatWidget.tsx` — tornar arrastável
+- Adicionar estado de posição (`{ x, y }`) no componente, inicializado no canto inferior direito (mesma posição atual).
+- Implementar drag via `onPointerDown` no header do chat: ao pressionar, capturar o ponteiro, atualizar posição em `onPointerMove`, soltar em `onPointerUp`.
+- Aplicar a posição via `style={{ transform: \`translate(${x}px, ${y}px)\` }}` no container, mantendo as classes Tailwind atuais de tamanho/sombra.
+- Limitar a posição às bordas do viewport (`Math.min/Math.max`) para o widget não sair da tela.
+- Persistir a última posição em `localStorage` (`hub_assistant_position`) para sobreviver à navegação.
+- Em mobile (`useIsMobile`), o widget continua fullscreen — drag fica desativado.
+- Cursor do header passa a `cursor-grab` / `cursor-grabbing` durante o drag.
+- Mensagem pré-gerada do onboarding (já implementada) continua funcionando: o assistente abre automaticamente com o texto do `ASSISTANT_MESSAGES[module]` quando o usuário chega na página do módulo.
 
-## Comportamentos do banner de cupom
+### 7. Banner de cupom (`DemoCouponBanner.tsx`)
+- Sem alterações: continua fixo no topo enquanto `demoModule` estiver ativo, com os dois CTAs ("Assinar agora com desconto" / "Começar com meus dados reais").
 
-- "Assinar agora com desconto" → chama `finalizeOnboarding(true)`, limpa `demoMode`, navega para `/planos` (cupom `FOCUS20` aplicado automaticamente pela lógica de checkout já existente).
-- "Começar com meus dados reais" → chama `finalizeOnboarding(false)`, limpa `demoMode`, fecha o banner; usuário permanece no módulo atual agora com dados reais (vazios).
+## Comportamento final
+
+1. Usuário escolhe um foco no `WelcomeChoiceModal` (Finanças / Clientes / Projetos / Ver tudo).
+2. Vai para a página real do módulo, **vazia** (os dados de demonstração não existem mais; ele vê o estado real).
+3. Banner de cupom aparece no topo.
+4. Hub Assistant abre automaticamente no canto, com a mensagem contextual explicando o módulo e indicando o botão a clicar ("+ Nova Transação", "+ Novo Cliente", "+ Novo Projeto").
+5. Usuário pode **arrastar** o assistente para qualquer canto da tela enquanto vai clicando nos botões reais e cadastrando seus dados.
+6. Em qualquer momento ele pode usar os CTAs do banner para assinar (com cupom `FOCUS20`) ou encerrar a demonstração.
 
 ## Restrições respeitadas
 
-- Nada muda em Stripe, Google Auth, sidebar, módulos, schema do banco.
-- Dados fictícios apenas em React state; nenhum INSERT em tabelas de domínio.
-- Hub Assistant existente é reutilizado, não recriado.
-- Mobile: grid `grid-cols-1 md:grid-cols-2` no modal.
+- Stripe, autenticação, sidebar, módulos e schema do banco permanecem intactos.
+- Nenhum dado fictício é mais escrito em estado da página: o usuário vê desde o início a interface real do Hub.
+- Hub Assistant existente é reutilizado; só ganhou drag.
 
-## Pontos a confirmar antes de codar
-
-1. Para o card "🚀 Ver tudo" o Painel Principal deve mostrar os 4 KPIs fictícios (`receitaMes`, `tarefasVencidas`, `projetosAtrasados`, `clientesSemContato`) no `HealthSummary`, sobrescrevendo os valores reais enquanto em demo — confirma?
-2. Posso remover de fato os arquivos antigos listados acima (OnboardingChat, WowMomentCard, etc.) ou prefere mantê-los no repo desativados?
