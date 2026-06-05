@@ -110,8 +110,6 @@ import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2, Sparkles } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { useDemoData } from "@/contexts/DemoDataContext";
-import { DemoModulePreview } from "@/components/onboarding/DemoModulePreview";
 
 // Types
 interface Transaction {
@@ -157,7 +155,7 @@ const accountTypes = [
 export default function Financas() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { demoModule } = useDemoData();
+  
   const { transacoes, isLoading: isLoadingTransacoes, addTransacao, updateTransacao, deleteTransacao, refetch: refetchTransacoes } = useTransacoes();
   const { contas: bankAccounts, addConta, updateConta, updateBalance, deleteConta } = useContasBancarias();
   const [searchTerm, setSearchTerm] = useState("");
@@ -401,14 +399,6 @@ export default function Financas() {
 
   const overdueCount = transactions.filter(t => t.status === 'atrasado').length;
 
-  if (demoModule === "financeiro") {
-    return (
-      <MainLayout>
-        <PageMeta path="/financas" title="Finanças" description="Demonstração do módulo financeiro." />
-        <DemoModulePreview module="financeiro" />
-      </MainLayout>
-    );
-  }
 
   return (
     <MainLayout>

@@ -47,8 +47,6 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useDemoData } from "@/contexts/DemoDataContext";
-import { DemoModulePreview } from "@/components/onboarding/DemoModulePreview";
 import { cn } from "@/lib/utils";
 import { isValidHttpUrl } from "@/lib/validation";
 import {
@@ -95,7 +93,7 @@ const contractTypes = ["Consultoria", "Serviços", "Desenvolvimento", "Licenciam
 export default function Clientes() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { demoModule } = useDemoData();
+  
   const {
     clientes,
     isLoading,
@@ -303,14 +301,6 @@ export default function Clientes() {
     );
   }
 
-  if (demoModule === "clientes") {
-    return (
-      <MainLayout>
-        <PageMeta path="/clientes" title="Clientes" description="Demonstração do CRM." />
-        <DemoModulePreview module="clientes" />
-      </MainLayout>
-    );
-  }
 
   return (
     <MainLayout>
