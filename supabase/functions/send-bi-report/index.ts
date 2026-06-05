@@ -433,6 +433,32 @@ serve(async (req) => {
       });
     }
 
+    // SECURITY: prevent open relay — restrict recipients to the authenticated user's own address/number.
+    if (payload.canal === "email") {
+      const userEmail = (user.email || "").trim().toLowerCase();
+      const target = (payload.destinatario || "").trim().toLowerCase();
+      if (!userEmail || target !== userEmail) {
+        return new Response(
+          JSON.stringify({ error: "Os relatórios por e-mail só podem ser enviados ao e-mail da conta autenticada." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } else if (payload.canal === "whatsapp") {
+      const { data: prefs } = await adminClient
+        .from("whatsapp_preferences")
+        .select("whatsapp_number, enabled")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const registered = normalizeRecipientWhatsAppNumber(String(prefs?.whatsapp_number || ""));
+      const requested = normalizeRecipientWhatsAppNumber(String(payload.destinatario || ""));
+      if (!prefs?.enabled || !registered || registered !== requested) {
+        return new Response(
+          JSON.stringify({ error: "Os relatórios por WhatsApp só podem ser enviados ao número registrado e habilitado nas preferências do usuário." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     let result: any = {};
     let pdfUrl: string | null = null;
 
