@@ -8,6 +8,7 @@ import { useDemoData } from "@/contexts/DemoDataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ASSISTANT_MESSAGES, type DemoModule } from "@/lib/demo-data";
+import { seedDemoData } from "@/lib/demo-seed";
 
 const MODULE_ROUTES: Record<DemoModule, string> = {
   financeiro: "/financas",
@@ -49,7 +50,13 @@ export function OnboardingFlow() {
       // 2. Create onboarding session record (segment = chosen module)
       await createSession(module, module, userName);
 
-      // 3. Activate demo overlay
+      // 3. Seed fictitious demo data into the real tables so the user
+      //    immediately sees the module populated.
+      if (user) {
+        await seedDemoData(module, user.id);
+      }
+
+      // 4. Activate demo overlay
       startDemo(module);
 
       // 4. Queue assistant message + auto-open flag for the chat widget
