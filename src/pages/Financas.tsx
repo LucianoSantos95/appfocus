@@ -401,6 +401,15 @@ export default function Financas() {
 
   const overdueCount = transactions.filter(t => t.status === 'atrasado').length;
 
+  if (demoModule === "financeiro") {
+    return (
+      <MainLayout>
+        <PageMeta path="/financas" title="Finanças" description="Demonstração do módulo financeiro." />
+        <DemoModulePreview module="financeiro" />
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <PageMeta path="/financas" title="Finanças" description="Controle receitas, despesas e fluxo de caixa da sua operação. Gestão financeira completa." />
