@@ -80,7 +80,7 @@ function renderTemplate(opts: {
   ${opts.blocksHtml}
 </td></tr>
 <tr><td align="center" style="padding:20px 36px 32px">
-  <a href="${opts.ctaUrl}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:16px 36px;border-radius:12px;box-shadow:0 8px 24px rgba(59,130,246,.4)">
+  <a href="${escapeHtml(safeHttpUrl(opts.ctaUrl, `${SITE_URL}/`))}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:16px 36px;border-radius:12px;box-shadow:0 8px 24px rgba(59,130,246,.4)">
     ${escapeHtml(opts.ctaLabel)} →
   </a>
 </td></tr>
