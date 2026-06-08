@@ -36,6 +36,14 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
+function safeHttpUrl(url: string, fallback: string): string {
+  try {
+    const u = new URL(url);
+    if (u.protocol === "http:" || u.protocol === "https:") return u.toString();
+  } catch { /* ignore */ }
+  return fallback;
+}
+
 function firstName(name: string | null | undefined): string | null {
   if (!name) return null;
   const trimmed = name.trim();
@@ -72,7 +80,7 @@ function renderTemplate(opts: {
   ${opts.blocksHtml}
 </td></tr>
 <tr><td align="center" style="padding:20px 36px 32px">
-  <a href="${opts.ctaUrl}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:16px 36px;border-radius:12px;box-shadow:0 8px 24px rgba(59,130,246,.4)">
+  <a href="${escapeHtml(safeHttpUrl(opts.ctaUrl, `${SITE_URL}/`))}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:16px 36px;border-radius:12px;box-shadow:0 8px 24px rgba(59,130,246,.4)">
     ${escapeHtml(opts.ctaLabel)} →
   </a>
 </td></tr>
@@ -242,7 +250,7 @@ Responda APENAS JSON válido (sem markdown), no formato:
       const introHtml = String(body?.intro_html || "").trim();
       const blocksHtml = String(body?.blocks_html || "").trim();
       const ctaLabel = String(body?.cta_label || "Acessar o Hub").trim();
-      const ctaUrl = String(body?.cta_url || `${SITE_URL}/`).trim();
+      const ctaUrl = safeHttpUrl(String(body?.cta_url || `${SITE_URL}/`).trim(), `${SITE_URL}/`);
       const greetingTone = body?.greeting_tone === "reengage" ? "reengage" : "welcome";
       const bodyText = String(body?.body_text || "").trim();
       if (!subject || !introHtml) return json(400, { error: "subject and intro_html required" });
