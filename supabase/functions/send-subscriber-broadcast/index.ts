@@ -36,6 +36,14 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
+function safeHttpUrl(url: string, fallback: string): string {
+  try {
+    const u = new URL(url);
+    if (u.protocol === "http:" || u.protocol === "https:") return u.toString();
+  } catch { /* ignore */ }
+  return fallback;
+}
+
 function firstName(name: string | null | undefined): string | null {
   if (!name) return null;
   const trimmed = name.trim();
