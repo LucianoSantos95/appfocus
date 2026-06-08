@@ -250,7 +250,7 @@ Responda APENAS JSON válido (sem markdown), no formato:
       const introHtml = String(body?.intro_html || "").trim();
       const blocksHtml = String(body?.blocks_html || "").trim();
       const ctaLabel = String(body?.cta_label || "Acessar o Hub").trim();
-      const ctaUrl = String(body?.cta_url || `${SITE_URL}/`).trim();
+      const ctaUrl = safeHttpUrl(String(body?.cta_url || `${SITE_URL}/`).trim(), `${SITE_URL}/`);
       const greetingTone = body?.greeting_tone === "reengage" ? "reengage" : "welcome";
       const bodyText = String(body?.body_text || "").trim();
       if (!subject || !introHtml) return json(400, { error: "subject and intro_html required" });
