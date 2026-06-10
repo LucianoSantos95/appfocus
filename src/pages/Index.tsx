@@ -8,6 +8,7 @@ import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
 import { HealthSummary } from "@/components/dashboard/HealthSummary";
 import { UsageLimitWidget } from "@/components/dashboard/UsageLimitWidget";
+import { PersistentCouponWidget } from "@/components/dashboard/PersistentCouponWidget";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useNavigate } from "react-router-dom";
@@ -102,6 +103,8 @@ const Index = () => {
     <MainLayout>
       <PageMeta path="/" title="Painel Principal" description="Visão geral da sua operação em um só lugar. Gerencie finanças, equipe, marketing, entregas e clientes." />
       <div className="space-y-8 animate-fade-in">
+        <PersistentCouponWidget />
+
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-foreground">Painel Principal</h1>
