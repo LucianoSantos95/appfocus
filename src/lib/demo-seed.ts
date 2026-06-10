@@ -92,7 +92,7 @@ async function wipeProjetos(userId: string) {
  */
 export async function wipeDemoData(module: DemoModule, userId: string) {
   const tag = `%${DEMO_TAG}%`;
-  const tasks: Promise<unknown>[] = [];
+  const tasks: PromiseLike<unknown>[] = [];
 
   if (module === "financeiro" || module === "painel") {
     tasks.push(
