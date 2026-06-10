@@ -33,10 +33,11 @@ export function useContasBancarias() {
       setContas(data || []);
     } catch (error) {
       console.error("Error fetching contas:", error);
+      toast({ title: "Erro ao carregar contas bancárias", description: "Recarregue a página para tentar novamente.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   const addConta = async (input: ContaBancariaInput): Promise<ContaBancaria | null> => {
     try {
@@ -83,6 +84,7 @@ export function useContasBancarias() {
       return true;
     } catch (error) {
       console.error("Error updating balance:", error);
+      toast({ title: "Erro ao atualizar saldo da conta", description: "Tente novamente ou recarregue a página.", variant: "destructive" });
       return false;
     }
   };

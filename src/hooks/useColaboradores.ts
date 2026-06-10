@@ -43,10 +43,11 @@ export function useColaboradores() {
       setColaboradores((data as Colaborador[]) || []);
     } catch (error) {
       console.error("Error fetching colaboradores:", error);
+      toast({ title: "Erro ao carregar colaboradores", description: "Recarregue a página para tentar novamente.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   const addColaborador = async (input: ColaboradorInput): Promise<Colaborador | null> => {
     try {

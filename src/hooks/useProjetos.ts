@@ -43,10 +43,11 @@ export function useProjetos() {
       setProjetos((data as Projeto[]) || []);
     } catch (error) {
       console.error("Error fetching projetos:", error);
+      toast({ title: "Erro ao carregar projetos", description: "Recarregue a página para tentar novamente.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   const addProjeto = async (input: ProjetoInput): Promise<Projeto | null> => {
     try {

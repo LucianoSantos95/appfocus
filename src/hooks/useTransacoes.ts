@@ -47,10 +47,11 @@ export function useTransacoes() {
       setTransacoes((data as Transacao[]) || []);
     } catch (error) {
       console.error("Error fetching transacoes:", error);
+      toast({ title: "Erro ao carregar transações", description: "Recarregue a página para tentar novamente.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   const addTransacao = async (input: TransacaoInput): Promise<Transacao | null> => {
     try {

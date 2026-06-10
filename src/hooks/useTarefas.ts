@@ -41,10 +41,11 @@ export function useTarefas() {
       setTarefas((data as Tarefa[]) || []);
     } catch (error) {
       console.error("Error fetching tarefas:", error);
+      toast({ title: "Erro ao carregar tarefas", description: "Recarregue a página para tentar novamente.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   const addTarefa = async (input: TarefaInput): Promise<Tarefa | null> => {
     try {
