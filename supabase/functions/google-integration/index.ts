@@ -78,11 +78,9 @@ async function getValidToken(
   clientId: string,
   clientSecret: string
 ): Promise<{ token: string; error?: never } | { token?: never; error: string }> {
+  // Tokens are encrypted at rest; use the RPC so decryption happens server-side.
   const { data: integration, error } = await supabaseService
-    .from("user_integrations")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("provider", "google")
+    .rpc("get_integration_tokens", { p_user_id: userId, p_provider: "google" })
     .single();
 
   if (error || !integration) {
@@ -122,14 +120,13 @@ async function getValidToken(
   const tokenData = await res.json();
   const newExpiry = new Date(now.getTime() + (tokenData.expires_in || 3600) * 1000).toISOString();
 
-  await supabaseService
-    .from("user_integrations")
-    .update({
-      access_token: tokenData.access_token,
-      token_expires_at: newExpiry,
-    })
-    .eq("user_id", userId)
-    .eq("provider", "google");
+  // Encrypt the refreshed access_token before storing
+  await supabaseService.rpc("update_integration_access_token", {
+    p_user_id:      userId,
+    p_provider:     "google",
+    p_access_token: tokenData.access_token,
+    p_expires_at:   newExpiry,
+  });
 
   return { token: tokenData.access_token };
 }
@@ -267,21 +264,16 @@ serve(async (req) => {
         console.error("Failed to get user info:", e);
       }
 
-      // Upsert integration
-      const { error: upsertError } = await supabaseService
-        .from("user_integrations")
-        .upsert(
-          {
-            user_id: stateData.userId,
-            provider: "google",
-            access_token: tokens.access_token,
-            refresh_token: tokens.refresh_token || null,
-            token_expires_at: expiresAt,
-            scopes: tokens.scope || "",
-            metadata: { email: googleEmail },
-          },
-          { onConflict: "user_id,provider" }
-        );
+      // Upsert integration — tokens are encrypted by the RPC (ON CONFLICT handled server-side)
+      const { error: upsertError } = await supabaseService.rpc("upsert_integration", {
+        p_user_id:       stateData.userId,
+        p_provider:      "google",
+        p_access_token:  tokens.access_token,
+        p_refresh_token: tokens.refresh_token || null,
+        p_expires_at:    expiresAt,
+        p_scopes:        tokens.scope || "",
+        p_metadata:      { email: googleEmail },
+      });
 
       if (upsertError) {
         console.error("Upsert error:", upsertError);

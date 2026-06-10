@@ -1,8 +1,9 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { WelcomeChoiceModal } from "@/components/onboarding/WelcomeChoiceModal";
+import { OnboardingWelcomeModal } from "@/components/onboarding/OnboardingWelcomeModal";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useDemoData } from "@/contexts/DemoDataContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,22 +18,48 @@ const MODULE_ROUTES: Record<DemoModule, string> = {
   painel: "/",
 };
 
+// Maps the pain point selected in OnboardingWelcomeModal to a demo module
+// so the WelcomeChoiceModal can highlight the most relevant option.
+const PAIN_TO_MODULE: Record<string, DemoModule> = {
+  financas: "financeiro",
+  clientes: "clientes",
+  projetos: "projetos",
+  tarefas: "painel",
+};
+
 export function OnboardingFlow() {
   const { user } = useAuth();
   const { session, loading, createSession, needsOnboarding } = useOnboardingSession();
   const { startDemo } = useDemoData();
   const navigate = useNavigate();
 
-  // If already has session, leave onboarding immediately
+  // "welcome" → collect segment + pain via OnboardingWelcomeModal
+  // "choose"  → pick demo module via WelcomeChoiceModal
+  const [step, setStep] = useState<"welcome" | "choose">("welcome");
+  const [collectedSegment, setCollectedSegment] = useState("pme");
+
+  // Set localStorage flag as soon as the user lands here.
+  // Prevents Index.tsx from re-redirecting if the user dismisses the modal.
+  useEffect(() => {
+    if (user?.id) {
+      localStorage.setItem(`onb_visited_${user.id}`, "1");
+    }
+  }, [user?.id]);
+
+  // If they already completed onboarding, send them home.
   useEffect(() => {
     if (!loading && session) {
       navigate("/", { replace: true });
     }
   }, [loading, session, navigate]);
 
+  const handleWelcomeComplete = useCallback((segment: string, _pain: string) => {
+    setCollectedSegment(segment);
+    setStep("choose");
+  }, []);
+
   const handleChoose = useCallback(
     async (module: DemoModule) => {
-      // 1. Resolve display name for session record
       let userName: string | null = null;
       if (user) {
         const { data: prof } = await supabase
@@ -47,28 +74,23 @@ export function OnboardingFlow() {
           null;
       }
 
-      // 2. Create onboarding session record (segment = chosen module)
-      await createSession(module, module, userName);
+      // Use the real segment collected in OnboardingWelcomeModal
+      await createSession(collectedSegment, module, userName);
 
-      // 3. Seed fictitious demo data into the real tables so the user
-      //    immediately sees the module populated.
       if (user) {
         await seedDemoData(module, user.id);
       }
 
-      // 4. Activate demo overlay
       startDemo(module);
 
-      // 4. Queue assistant message + auto-open flag for the chat widget
       localStorage.setItem(
         "hub_assistant_pending_message",
         JSON.stringify({ module, content: ASSISTANT_MESSAGES[module] })
       );
 
-      // 5. Navigate to the chosen module route
       navigate(MODULE_ROUTES[module], { replace: true });
     },
-    [user, createSession, startDemo, navigate]
+    [user, collectedSegment, createSession, startDemo, navigate]
   );
 
   if (loading) {
@@ -99,7 +121,18 @@ export function OnboardingFlow() {
   return (
     <MainLayout>
       <PageMeta title="Bem-vindo" description="Escolha por onde começar no Hub Empresarial" />
-      <WelcomeChoiceModal firstName={firstName} onChoose={handleChoose} />
+
+      {/* Step 1: collect segment + priority pain */}
+      <OnboardingWelcomeModal
+        open={step === "welcome"}
+        onComplete={handleWelcomeComplete}
+        onSkip={() => setStep("choose")}
+      />
+
+      {/* Step 2: pick demo module */}
+      {step === "choose" && (
+        <WelcomeChoiceModal firstName={firstName} onChoose={handleChoose} />
+      )}
     </MainLayout>
   );
 }

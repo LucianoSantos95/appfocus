@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { TeamPermissionsProvider } from "@/contexts/TeamPermissionsContext";
 import { PlanProvider } from "@/contexts/PlanContext";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -49,6 +50,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <TeamPermissionsProvider>
           <PlanProvider>
             <SidebarProvider>
               <DemoDataProvider>
@@ -79,6 +81,7 @@ const App = () => (
               </DemoDataProvider>
             </SidebarProvider>
           </PlanProvider>
+          </TeamPermissionsProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

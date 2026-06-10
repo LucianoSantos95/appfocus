@@ -109,18 +109,19 @@ export default function Planos() {
   // Campaign coupon from URL (?coupon=XXXX) — overrides onboarding coupon
   const urlCoupon = new URLSearchParams(window.location.search).get("coupon");
 
-  // Check for success/cancel in URL
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("success") === "true") {
-    toast.success("Assinatura realizada com sucesso!");
-    void recordMilestone("upgrade_completed", { source: "plan_page" });
-    refreshSubscription();
-    window.history.replaceState({}, "", "/planos");
-  }
-
   useEffect(() => {
+    // Handle Stripe success redirect (?success=true) — must run once on mount,
+    // not on every render, to avoid duplicate toasts and milestone records.
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") === "true") {
+      toast.success("Assinatura realizada com sucesso!");
+      void recordMilestone("upgrade_completed", { source: "plan_page" });
+      refreshSubscription();
+      window.history.replaceState({}, "", "/planos");
+    }
     void recordMilestone("plan_page_viewed", { from: window.location.pathname });
-  }, [recordMilestone]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubscribe = async (planId: "plus" | "pro" | "enterprise") => {
     // Refresh session so the token sent to the edge function is always valid

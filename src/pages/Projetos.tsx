@@ -63,6 +63,7 @@ import { useTransacoes } from "@/hooks/useTransacoes";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { FreemiumWarningBanner } from "@/components/plan/FreemiumWarningBanner";
 import { ProjetosBIPanel } from "@/components/bi/ProjetosBIPanel";
 import { ProjetoAnexos } from "@/components/projetos/ProjetoAnexos";
 import { ProjetosKanban } from "@/components/projetos/ProjetosKanban";
@@ -242,6 +243,9 @@ export default function Projetos() {
     <MainLayout>
       <PageMeta path="/projetos" title="Projetos" description="Acompanhe entregas, prazos e orçamentos dos clientes. Gestão de projetos integrada." />
       <div className="space-y-8 animate-fade-in">
+        {freemium.isNearLimit && (
+          <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Projetos" />
+        )}
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

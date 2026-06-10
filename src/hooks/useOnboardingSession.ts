@@ -49,6 +49,10 @@ export function useOnboardingSession() {
         segment,
         priority_pain: priorityPain,
         current_step: "demo",
+        // Coupon is activated as soon as demo starts so the countdown begins immediately
+        coupon_code: COUPON_CODE,
+        coupon_expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+        coupon_shown: true,
       } as any)
       .select()
       .order("created_at", { ascending: false })
@@ -86,21 +90,15 @@ export function useOnboardingSession() {
   }, [session, updateSession]);
 
   /**
-   * Marks the onboarding as complete and attaches the welcome coupon.
-   * Called when the user clicks any CTA on the demo coupon banner.
+   * Called when user clicks "Começar com meus dados reais".
+   * Moves to "exploring" step WITHOUT setting completed_at so re-engagement
+   * emails keep firing until the user actually subscribes.
    */
-  const finalizeOnboarding = useCallback(async () => {
+  const startExploring = useCallback(async () => {
     if (!user) return;
-    const updates = {
-      current_step: "completed",
-      completed_at: new Date().toISOString(),
-      coupon_shown: true,
-      coupon_code: COUPON_CODE,
-      coupon_expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-    };
     const { data } = await supabase
       .from("onboarding_sessions" as any)
-      .update(updates as any)
+      .update({ current_step: "exploring" } as any)
       .eq("user_id", user.id)
       .select()
       .order("created_at", { ascending: false })
@@ -108,11 +106,39 @@ export function useOnboardingSession() {
     if (data) setSession(data as any);
   }, [user]);
 
-  const needsOnboarding = !loading && user && !session;
+  /**
+   * Called when user clicks "Assinar agora".
+   * Sets completed_at to mark the funnel step as done for analytics.
+   */
+  const finalizeOnboarding = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("onboarding_sessions" as any)
+      .update({
+        current_step: "completed",
+        completed_at: new Date().toISOString(),
+      } as any)
+      .eq("user_id", user.id)
+      .select()
+      .order("created_at", { ascending: false })
+      .maybeSingle();
+    if (data) setSession(data as any);
+  }, [user]);
+
+  // A user "needs onboarding" if they have no session AND have never visited
+  // the onboarding page. The localStorage flag prevents a redirect loop when
+  // the user dismisses the modal before completing it.
+  const hasVisitedOnboarding =
+    typeof window !== "undefined" &&
+    !!user?.id &&
+    localStorage.getItem(`onb_visited_${user.id}`) === "1";
+
+  const needsOnboarding = !loading && !!user && !session && !hasVisitedOnboarding;
   const isOnboardingComplete = session?.current_step === "completed";
 
   return {
     session, loading, createSession, updateSession, completeModule,
-    addAchievement, finalizeOnboarding, needsOnboarding, isOnboardingComplete, fetchSession,
+    addAchievement, startExploring, finalizeOnboarding,
+    needsOnboarding, isOnboardingComplete, fetchSession,
   };
 }

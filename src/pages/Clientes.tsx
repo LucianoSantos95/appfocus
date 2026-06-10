@@ -75,6 +75,7 @@ import { importConfigs } from "@/lib/import-configs";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { FreemiumWarningBanner } from "@/components/plan/FreemiumWarningBanner";
 import { ClientesBIPanel } from "@/components/bi/ClientesBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
@@ -306,6 +307,9 @@ export default function Clientes() {
     <MainLayout>
       <PageMeta path="/clientes" title="Clientes" description="CRM de carteira e prospecção. Gerencie o relacionamento com seus clientes." />
       <div className="space-y-8 animate-fade-in">
+        {freemium.isNearLimit && (
+          <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="CRM" />
+        )}
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

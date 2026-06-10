@@ -17,16 +17,18 @@ interface PlanGateButtonProps {
  * - Se não: intercepta o clique, mostra cadeado e redireciona para /planos.
  */
 export function PlanGateButton({ module, action, children }: PlanGateButtonProps) {
-  const { canAccess } = usePlan();
+  const { canAccess, plan } = usePlan();
   const { isAdmin } = useTeamPermissions();
   const navigate = useNavigate();
 
-  if (isAdmin || canAccess(module, action)) {
+  // Free users can always create records — useFreemiumLimit handles the count gate.
+  const isFreeCreate = plan === "gratuito" && action === "create";
+
+  if (isAdmin || isFreeCreate || canAccess(module, action)) {
     return <>{children}</>;
   }
 
   const planNames: Record<string, string> = {
-    create: "Plus",
     export: "Pro",
     ai_analysis: "Pro",
     api: "Enterprise",

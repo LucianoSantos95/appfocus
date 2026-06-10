@@ -17,14 +17,16 @@ export function PlanGate({ module, action, children, fallback }: PlanGateProps) 
   const navigate = useNavigate();
   const { isAdmin } = useTeamPermissions();
 
-  if (isAdmin || canAccess(module, action)) {
+  // Free users can always create records — useFreemiumLimit handles the count gate.
+  const isFreeCreate = plan === "gratuito" && action === "create";
+
+  if (isAdmin || isFreeCreate || canAccess(module, action)) {
     return <>{children}</>;
   }
 
   if (fallback) return <>{fallback}</>;
 
   const planNames: Record<string, string> = {
-    create: "Plus",
     export: "Pro",
     ai_analysis: "Pro",
     api: "Enterprise",

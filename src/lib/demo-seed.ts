@@ -85,6 +85,35 @@ async function wipeProjetos(userId: string) {
   await supabase.from("projetos").delete().eq("user_id", userId);
 }
 
+/**
+ * Deletes only the [DEMO]-tagged rows that seedDemoData inserted.
+ * Safe to call even if the user has added their own real data since
+ * the ilike filter only matches rows containing the DEMO_TAG marker.
+ */
+export async function wipeDemoData(module: DemoModule, userId: string) {
+  const tag = `%${DEMO_TAG}%`;
+  const tasks: Promise<unknown>[] = [];
+
+  if (module === "financeiro" || module === "painel") {
+    tasks.push(
+      supabase.from("transacoes").delete().eq("user_id", userId).ilike("description", tag),
+      supabase.from("contas_bancarias").delete().eq("user_id", userId).ilike("name", tag),
+    );
+  }
+  if (module === "clientes" || module === "painel") {
+    tasks.push(
+      supabase.from("clientes").delete().eq("user_id", userId).ilike("nome", tag),
+    );
+  }
+  if (module === "projetos" || module === "painel") {
+    tasks.push(
+      supabase.from("projetos").delete().eq("user_id", userId).ilike("name", tag),
+    );
+  }
+
+  await Promise.all(tasks);
+}
+
 export async function seedDemoData(module: DemoModule, userId: string) {
   try {
     // Always reset the relevant module(s) before seeding so the panel starts

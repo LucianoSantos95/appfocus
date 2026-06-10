@@ -105,6 +105,7 @@ import { useContasBancarias, ContaBancaria } from "@/hooks/useContasBancarias";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { FreemiumWarningBanner } from "@/components/plan/FreemiumWarningBanner";
 import { FinanceiroBIPanel } from "@/components/bi/FinanceiroBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
@@ -404,6 +405,9 @@ export default function Financas() {
     <MainLayout>
       <PageMeta path="/financas" title="Finanças" description="Controle receitas, despesas e fluxo de caixa da sua operação. Gestão financeira completa." />
       <div className="space-y-8 animate-fade-in">
+        {freemium.isNearLimit && (
+          <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Financeiro" />
+        )}
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { MfaChallenge } from "@/components/auth/MfaChallenge";
 
+const MFA_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 interface ProtectedRouteProps {
   children: ReactNode;
 }
@@ -20,21 +22,35 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       return;
     }
 
+    // Serve from sessionStorage cache to avoid a spinner on every navigation.
+    const cacheKey = `mfa_check_${user.id}`;
+    try {
+      const raw = sessionStorage.getItem(cacheKey);
+      if (raw) {
+        const { result, ts } = JSON.parse(raw) as { result: boolean; ts: number };
+        if (Date.now() - ts < MFA_CACHE_TTL) {
+          setMfaRequired(result);
+          return;
+        }
+      }
+    } catch { /* ignore malformed cache */ }
+
     const checkMfa = async () => {
       try {
         const { data } = await supabase.auth.mfa.listFactors();
         const hasVerifiedFactor = data?.totp.some((f) => f.status === "verified");
+        let required = false;
         if (hasVerifiedFactor) {
           // Check current AAL level
           const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
           if (aal?.currentLevel === "aal1" && aal?.nextLevel === "aal2") {
-            setMfaRequired(true);
-          } else {
-            setMfaRequired(false);
+            required = true;
           }
-        } else {
-          setMfaRequired(false);
         }
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify({ result: required, ts: Date.now() }));
+        } catch { /* storage quota exceeded — proceed without caching */ }
+        setMfaRequired(required);
       } catch {
         setMfaRequired(false);
       }
