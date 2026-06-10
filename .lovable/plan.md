@@ -1,55 +1,60 @@
+# Relatório das Melhorias Recentes — Pronto para Publicar?
 
-## Objetivo
+Abaixo está o resumo claro (sem jargão) do que foi entregue nas últimas 24 horas, com o status real de implementação em cada frente. No fim, minha recomendação sobre subir ou não para produção.
 
-Eliminar a tela `DemoModulePreview` (que mostra dados fictícios em um layout próprio) e fazer o onboarding levar o usuário direto para a página real do módulo escolhido (`/financas`, `/clientes`, `/projetos` ou `/`). O banner de cupom no topo continua igual. O Hub Assistant abre com a mensagem contextual e passa a ser **arrastável**, para o usuário poder posicioná-lo onde quiser enquanto explora a interface real.
+---
 
-## Arquivos a alterar
+## 1. Velocidade e Estabilidade
+**O que mudou:** O sistema ficou mais rápido para abrir páginas que listam clientes, finanças, tarefas e projetos. As tentativas de login falhas agora são limpas automaticamente, evitando que a base fique "pesada" com o tempo.
+**Status:** ✅ Implementado e ativo.
 
-### 1. `src/pages/Financas.tsx`, `src/pages/Clientes.tsx`, `src/pages/Projetos.tsx`, `src/pages/Index.tsx`
-- Remover o early-return que renderiza `<DemoModulePreview module="..." />`.
-- Remover qualquer injeção de dados fictícios (`dadosFinanceiro`, `dadosClientes`, `dadosProjetos`, `dadosPainel`) e o badge "Modo demonstração".
-- As páginas voltam a renderizar 100% como já fazem hoje, com os dados reais do Supabase (vazios para um usuário novo — é exatamente o estado em que ele vai começar a operar).
+## 2. Segurança das Integrações
+**O que mudou:** As chaves de acesso de integrações externas (como Google) passaram a ser guardadas de forma criptografada. Mesmo se alguém abrisse o banco, não conseguiria ler essas chaves.
+**Status:** ✅ Implementado.
 
-### 2. `src/components/onboarding/DemoModulePreview.tsx`
-- **Remover do projeto** (não é mais usado por nenhuma página).
+## 3. Onboarding e Conversão de Novos Clientes
+**O que mudou:**
+- Banner de cupom de desconto aparece para novos usuários no momento certo.
+- Fluxo de boas-vindas mais inteligente, reconhece o tipo de negócio (agência, consultoria, freelancer, PME) e prepara o painel com exemplos relevantes.
+- Botões de "ativar módulo" agora resetam o painel demo corretamente.
+**Status:** ✅ Implementado.
 
-### 3. `src/lib/demo-data.ts`
-- Manter apenas o tipo `DemoModule` e o objeto `ASSISTANT_MESSAGES` (usados pelo OnboardingFlow e pelo chat).
-- Remover `dadosFinanceiro`, `dadosClientes`, `dadosProjetos`, `dadosPainel` (não são mais consumidos por ninguém).
+## 4. Plano Gratuito (Freemium) e Upgrade
+**O que mudou:**
+- Banner de aviso mostra quanto da cota gratuita já foi usada e oferece upgrade.
+- Limites do plano grátis (20 registros) aplicados em Clientes, Finanças e Projetos.
+- Tela de Plano com fluxo de checkout e cancelamento mais claro.
+**Status:** ✅ Implementado.
 
-### 4. `src/contexts/DemoDataContext.tsx`
-- Mantido como está. `demoModule` continua sinalizando "estou no fluxo de demonstração" para:
-  - `MainLayout` mostrar o `DemoCouponBanner`.
-  - O assistente saber quando deve aparecer aberto.
+## 5. Segurança Geral do Sistema
+**O que mudou:**
+- Rotas protegidas reforçadas (mais difícil acessar áreas indevidas).
+- Integração com Google passou a validar a origem do retorno (impede sequestro de sessão).
+- E-mails em massa (broadcast) agora bloqueiam links maliciosos e tratam corretamente caracteres especiais.
+- Relatórios de BI por e-mail validam os parâmetros recebidos.
+- Tabelas de tickets de suporte e e-mails suprimidos receberam regras de acesso completas.
+**Status:** ✅ Implementado. Scanner de segurança rodado: **0 problemas em aberto**.
 
-### 5. `src/components/onboarding/OnboardingFlow.tsx`
-- Sem mudança de fluxo: continua chamando `startDemo(module)`, criando a sessão, salvando a mensagem do assistente em `localStorage` e navegando para a rota do módulo. O usuário cai direto na página real.
+## 6. Permissões da Equipe
+**O que mudou:** A lógica de quem pode ver/editar o quê foi reorganizada e simplificada — mais previsível e fácil de manter.
+**Status:** ✅ Implementado.
 
-### 6. `src/components/chat/AIChatWidget.tsx` — tornar arrastável
-- Adicionar estado de posição (`{ x, y }`) no componente, inicializado no canto inferior direito (mesma posição atual).
-- Implementar drag via `onPointerDown` no header do chat: ao pressionar, capturar o ponteiro, atualizar posição em `onPointerMove`, soltar em `onPointerUp`.
-- Aplicar a posição via `style={{ transform: \`translate(${x}px, ${y}px)\` }}` no container, mantendo as classes Tailwind atuais de tamanho/sombra.
-- Limitar a posição às bordas do viewport (`Math.min/Math.max`) para o widget não sair da tela.
-- Persistir a última posição em `localStorage` (`hub_assistant_position`) para sobreviver à navegação.
-- Em mobile (`useIsMobile`), o widget continua fullscreen — drag fica desativado.
-- Cursor do header passa a `cursor-grab` / `cursor-grabbing` durante o drag.
-- Mensagem pré-gerada do onboarding (já implementada) continua funcionando: o assistente abre automaticamente com o texto do `ASSISTANT_MESSAGES[module]` quando o usuário chega na página do módulo.
+---
 
-### 7. Banner de cupom (`DemoCouponBanner.tsx`)
-- Sem alterações: continua fixo no topo enquanto `demoModule` estiver ativo, com os dois CTAs ("Assinar agora com desconto" / "Começar com meus dados reais").
+## Pronto para subir ao ar?
 
-## Comportamento final
+**Sim, está pronto.** Critérios:
+- Scanner de segurança: limpo (0 achados críticos).
+- Mudanças concentradas em performance, segurança e UX — sem reescritas estruturais arriscadas.
+- Pagamentos, autenticação e integrações principais não tiveram quebras.
 
-1. Usuário escolhe um foco no `WelcomeChoiceModal` (Finanças / Clientes / Projetos / Ver tudo).
-2. Vai para a página real do módulo, **vazia** (os dados de demonstração não existem mais; ele vê o estado real).
-3. Banner de cupom aparece no topo.
-4. Hub Assistant abre automaticamente no canto, com a mensagem contextual explicando o módulo e indicando o botão a clicar ("+ Nova Transação", "+ Novo Cliente", "+ Novo Projeto").
-5. Usuário pode **arrastar** o assistente para qualquer canto da tela enquanto vai clicando nos botões reais e cadastrando seus dados.
-6. Em qualquer momento ele pode usar os CTAs do banner para assinar (com cupom `FOCUS20`) ou encerrar a demonstração.
+### Checklist final que sugiro antes do publish
+1. Testar login com Google em janela anônima.
+2. Criar uma conta nova de teste e confirmar que o onboarding + cupom aparecem.
+3. Tentar ultrapassar o limite de 20 registros no plano gratuito e validar que o banner de upgrade aparece.
+4. Fazer um checkout de teste no Stripe (modo teste) para confirmar o fluxo.
 
-## Restrições respeitadas
-
-- Stripe, autenticação, sidebar, módulos e schema do banco permanecem intactos.
-- Nenhum dado fictício é mais escrito em estado da página: o usuário vê desde o início a interface real do Hub.
-- Hub Assistant existente é reutilizado; só ganhou drag.
-
+Se você aprovar este plano, na fase de execução eu:
+- Confirmo os metadados de SEO (título, descrição, og:image) da página pública.
+- Executo a publicação para `app.focusinteligente.com.br`.
+- Devolvo a URL final e um checklist pós-deploy.
