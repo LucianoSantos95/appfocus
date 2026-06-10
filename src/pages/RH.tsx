@@ -60,6 +60,7 @@ import { DocumentUpload } from "@/components/rh/DocumentUpload";
 import { FeriasAniversariosTimeline } from "@/components/rh/FeriasAniversariosTimeline";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { FreemiumWarningBanner } from "@/components/plan/FreemiumWarningBanner";
 import { RHBIPanel } from "@/components/bi/RHBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
@@ -225,6 +226,9 @@ export default function RH() {
     <MainLayout>
       <PageMeta path="/rh" title="RH" description="Gerencie sua equipe, freelancers e documentos. Gestão de pessoas simplificada." />
       <div className="space-y-8 animate-fade-in">
+        {freemium.isNearLimit && (
+          <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="RH" />
+        )}
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

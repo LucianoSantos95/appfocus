@@ -58,6 +58,7 @@ import { Loader2, Maximize2 } from "lucide-react";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { FreemiumWarningBanner } from "@/components/plan/FreemiumWarningBanner";
 import { TarefasBIPanel } from "@/components/bi/TarefasBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
@@ -269,6 +270,9 @@ export default function Tarefas() {
     <MainLayout>
       <PageMeta path="/atividades" title="Atividades" description="Gerencie tarefas e metas da sua operação. Organize as atividades da equipe." />
       <div className="space-y-8 animate-fade-in">
+        {freemium.isNearLimit && (
+          <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Atividades" />
+        )}
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

@@ -62,6 +62,7 @@ import { useCampanhaClientes } from "@/hooks/useCampanhaClientes";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { FreemiumWarningBanner } from "@/components/plan/FreemiumWarningBanner";
 import { MarketingBIPanel } from "@/components/bi/MarketingBIPanel";
 import { ContentCalendar } from "@/components/marketing/ContentCalendar";
 import { usePlan } from "@/contexts/PlanContext";
@@ -307,6 +308,9 @@ export default function Marketing() {
     <MainLayout>
       <PageMeta path="/marketing" title="Marketing" description="Gerencie campanhas, conteúdos e ideias de marketing para sua empresa." />
       <div className="space-y-8 animate-fade-in">
+        {freemium.isNearLimit && (
+          <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Marketing" />
+        )}
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="h-9 w-9">

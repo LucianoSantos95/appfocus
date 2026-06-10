@@ -54,6 +54,7 @@ import { useProcessos as useProcessosDB } from "@/hooks/useProcessos";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
+import { FreemiumWarningBanner } from "@/components/plan/FreemiumWarningBanner";
 import { SendReportButton } from "@/components/relatorios/SendReportButton";
 import { buildProcessoPayload } from "@/components/relatorios/genericPayloads";
 
@@ -178,6 +179,9 @@ export default function Processos() {
     <MainLayout>
       <PageMeta path="/processos" title="Processos" description="Padronize playbooks e fluxos da sua operação. Documente processos internos." />
       <div className="space-y-8 animate-fade-in">
+        {freemium.isNearLimit && (
+          <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Processos" />
+        )}
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
