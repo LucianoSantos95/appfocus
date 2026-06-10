@@ -7,6 +7,7 @@ import { ModuleCard } from "@/components/ui/module-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
 import { HealthSummary } from "@/components/dashboard/HealthSummary";
+import { UsageLimitWidget } from "@/components/dashboard/UsageLimitWidget";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useNavigate } from "react-router-dom";
@@ -111,6 +112,7 @@ const Index = () => {
 
         <HealthSummary />
 
+        <UsageLimitWidget />
 
         {/* Module Grid */}
         <section>

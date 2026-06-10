@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
 import { UserMenu } from "@/components/user/UserMenu";
@@ -19,9 +19,14 @@ import {
   ChevronRight,
   Lock as LockIcon,
   Crown,
+  BarChart2,
 } from "lucide-react";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { usePlan } from "@/contexts/PlanContext";
+import { useClientes } from "@/hooks/useClientes";
+import { useProjetos } from "@/hooks/useProjetos";
+import { useColaboradores } from "@/hooks/useColaboradores";
 
 const modules = [
   { name: "Painel", path: "/", slug: "", icon: LayoutDashboard },
@@ -34,6 +39,80 @@ const modules = [
   { name: "Processos", path: "/processos", slug: "processos", icon: GitBranch },
   { name: "Guia de Uso", path: "/guia", slug: "guia", icon: BookOpen },
 ];
+
+const FREE_LIMIT = 20;
+
+function barColor(pct: number) {
+  if (pct >= 80) return "bg-destructive";
+  if (pct >= 60) return "bg-warning";
+  return "bg-emerald-500";
+}
+
+function labelColor(pct: number) {
+  if (pct >= 80) return "text-destructive";
+  if (pct >= 60) return "text-warning";
+  return "text-muted-foreground";
+}
+
+function UsageSidebarHint({ collapsed }: { collapsed: boolean }) {
+  const { plan } = usePlan();
+  const { isAdmin } = useTeamPermissions();
+  const navigate = useNavigate();
+  const { clientes } = useClientes();
+  const { projetos } = useProjetos();
+  const { colaboradores } = useColaboradores();
+
+  if (plan !== "gratuito" || isAdmin) return null;
+
+  const modules = [
+    { name: "Clientes",      count: clientes.length },
+    { name: "Projetos",      count: projetos.length },
+    { name: "Colaboradores", count: colaboradores.length },
+  ];
+
+  const top = modules.reduce((best, m) => (m.count > best.count ? m : best), modules[0]);
+  const pct = Math.min(Math.round((top.count / FREE_LIMIT) * 100), 100);
+
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={() => navigate("/planos")}
+            className="p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors"
+          >
+            <BarChart2 className={cn("w-4 h-4", labelColor(pct))} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          {top.name}: {pct}% do limite — Ver planos
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => navigate("/planos")}
+      className="w-full text-left px-1 py-2 rounded-lg hover:bg-sidebar-accent transition-colors group"
+    >
+      <div className="flex items-center justify-between text-xs mb-1">
+        <span className="text-muted-foreground group-hover:text-foreground transition-colors">
+          {top.name}
+        </span>
+        <span className={cn("font-medium tabular-nums", labelColor(pct))}>
+          {pct}%
+        </span>
+      </div>
+      <div className="h-1 bg-muted rounded-full overflow-hidden">
+        <div
+          className={cn("h-full rounded-full transition-all duration-300", barColor(pct))}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </button>
+  );
+}
 
 export function Sidebar() {
   const { collapsed, toggle } = useSidebar();
@@ -159,14 +238,18 @@ export function Sidebar() {
       </div>
 
       {/* Footer */}
-      {!collapsed && (
-        <div className="p-4 border-t border-sidebar-border">
-          <div className="text-xs text-muted-foreground">
+      <div className={cn(
+        "border-t border-sidebar-border",
+        collapsed ? "px-2 py-3 flex flex-col items-center gap-2" : "p-4"
+      )}>
+        <UsageSidebarHint collapsed={collapsed} />
+        {!collapsed && (
+          <div className="text-xs text-muted-foreground mt-2">
             <p>Hub Empresarial v1.0</p>
             <p className="mt-1">Focus Inteligente</p>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </aside>
   );
 }
