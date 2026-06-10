@@ -40,22 +40,16 @@ export function PlanGateButton({ module, action, children }: PlanGateButtonProps
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className="relative inline-flex cursor-pointer"
+            className="inline-flex items-center gap-1.5 cursor-pointer opacity-60"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               navigate("/planos");
             }}
           >
-            {/* Render children but disable interaction */}
-            <div className="pointer-events-none opacity-60">
+            <Lock className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+            <div className="pointer-events-none">
               {children}
-            </div>
-            {/* Lock overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary/90 flex items-center justify-center">
-                <Lock className="w-3 h-3 text-primary-foreground" />
-              </div>
             </div>
           </div>
         </TooltipTrigger>

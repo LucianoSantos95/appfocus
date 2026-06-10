@@ -35,20 +35,29 @@ export function PlanGate({ module, action, children, fallback }: PlanGateProps) 
   const requiredPlan = planNames[action] || "Plus";
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 rounded-xl border border-border bg-card/50 text-center space-y-4">
-      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-        <Lock className="w-6 h-6 text-primary" />
+    <div className="relative overflow-hidden rounded-xl">
+      {/* Blurred content preview */}
+      <div className="pointer-events-none select-none blur-[6px]">
+        {children}
       </div>
-      <h3 className="text-lg font-semibold text-foreground">
-        Funcionalidade exclusiva do plano {requiredPlan}
-      </h3>
-      <p className="text-sm text-muted-foreground max-w-sm">
-        Faça upgrade para o plano {requiredPlan} e desbloqueie esta funcionalidade.
-      </p>
-      <Button onClick={() => navigate("/planos")} className="gap-2">
-        <Sparkles className="w-4 h-4" />
-        Conhecer Planos
-      </Button>
+      {/* Lock overlay */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-xl bg-black/50">
+        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+          <Lock className="w-6 h-6 text-white" />
+        </div>
+        <p className="text-white font-semibold text-sm">
+          Disponível no plano {requiredPlan}
+        </p>
+        <Button
+          onClick={() => navigate("/planos")}
+          variant="secondary"
+          size="sm"
+          className="gap-2"
+        >
+          <Sparkles className="w-4 h-4" />
+          Ver planos
+        </Button>
+      </div>
     </div>
   );
 }
