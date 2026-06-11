@@ -321,3 +321,23 @@
     animation: rotateWordOut 0.4s ease-in forwards;
   }
 }
+
+/* === World Cup 2026 campaign animations === */
+@keyframes wc-confetti-fall-full {
+  0%   { transform: translateY(-10vh) rotate(0deg);   opacity: 0; }
+  8%   { opacity: 0.85; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+@keyframes wc-confetti-fall {
+  0%   { transform: translateY(-20px) rotate(0deg);   opacity: 0; }
+  10%  { opacity: 0.9; }
+  100% { transform: translateY(220px) rotate(540deg); opacity: 0; }
+}
+@keyframes wc-flag-sway {
+  from { transform: rotate(-4deg); }
+  to   { transform: rotate(4deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-wc-banner] *,
+  .wc-overlay * { animation: none !important; }
+}
