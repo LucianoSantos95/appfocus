@@ -103,7 +103,11 @@ export function OnboardingFlow() {
     );
   }
 
-  if (!needsOnboarding) {
+  // Only show "Redirecionando..." when there is actually a session — the
+  // effect above will navigate home. Using `needsOnboarding` here caused a
+  // deadlock: this page sets the `onb_visited_` flag on mount, which flips
+  // `needsOnboarding` to false and left users stuck on a black screen.
+  if (session) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
