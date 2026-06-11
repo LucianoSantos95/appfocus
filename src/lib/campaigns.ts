@@ -51,6 +51,17 @@ export function getActiveCampaignCoupon(now: number = Date.now()): CampaignCoupo
     : WORLD_CUP_CAMPAIGN.fallback;
 }
 
+/**
+ * Given a human-readable coupon code (e.g. "HEXA", "FOCUS20"),
+ * returns the corresponding Stripe internal coupon ID.
+ * Returns null if the code is not recognised.
+ */
+export function getCouponStripeId(code: string): string | null {
+  if (WORLD_CUP_CAMPAIGN.coupon.code === code) return WORLD_CUP_CAMPAIGN.coupon.stripeId;
+  if (WORLD_CUP_CAMPAIGN.fallback.code === code) return WORLD_CUP_CAMPAIGN.fallback.stripeId;
+  return null;
+}
+
 export function getWorldCupTimeLeft(now: number = Date.now()): string | null {
   if (!isWorldCupActive(now)) return null;
   const diff = WORLD_CUP_CAMPAIGN.endsAt.getTime() - now;

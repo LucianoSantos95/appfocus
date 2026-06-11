@@ -14,7 +14,7 @@ import { useMilestones } from "@/hooks/useMilestones";
 import { supabase } from "@/integrations/supabase/client";
 import { STRIPE_PLANS } from "@/lib/stripe-plans";
 import { toast } from "sonner";
-import { getActiveCampaignCoupon, isWorldCupActive } from "@/lib/campaigns";
+import { getActiveCampaignCoupon, getCouponStripeId, isWorldCupActive } from "@/lib/campaigns";
 
 const plans = [
   {
@@ -142,11 +142,13 @@ export default function Planos() {
       const priceId = STRIPE_PLANS[planId][interval].priceId;
 
       const body: any = { priceId };
-      // Priority: URL coupon (campaign) > onboarding coupon
+      // Priority: URL coupon (campaign) > onboarding coupon.
+      // Always resolve the Stripe coupon ID — human-readable codes (e.g. "HEXA")
+      // are not valid Stripe coupon IDs and would cause the checkout to fail.
       if (urlCoupon) {
-        body.couponId = urlCoupon;
-      } else if (hasCoupon) {
-        body.couponId = getActiveCampaignCoupon().stripeId;
+        body.couponId = getCouponStripeId(urlCoupon) ?? urlCoupon;
+      } else if (hasCoupon && onbSession?.coupon_code) {
+        body.couponId = getCouponStripeId(onbSession.coupon_code) ?? getActiveCampaignCoupon().stripeId;
       }
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
