@@ -17,7 +17,9 @@ const FLAG_COUNT = 32;
  * em App.tsx enquanto a campanha da Copa estiver ativa.
  */
 export function WorldCupOverlay() {
+  const { pathname } = useLocation();
   if (!isWorldCupActive()) return null;
+  if (!ALLOWED_ROUTES.has(pathname)) return null;
 
   const pieces = useMemo(
     () =>
