@@ -6,8 +6,8 @@ import {
   isWorldCupActive,
   getActiveCampaignCoupon,
   getWorldCupTimeLeft,
-  WORLD_CUP_CAMPAIGN,
 } from "@/lib/campaigns";
+
 
 export function WorldCupBanner() {
   const navigate = useNavigate();
