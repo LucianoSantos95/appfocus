@@ -29,7 +29,7 @@ const PAIN_TO_MODULE: Record<string, DemoModule> = {
 
 export function OnboardingFlow() {
   const { user } = useAuth();
-  const { session, loading, createSession, needsOnboarding } = useOnboardingSession();
+  const { session, loading, createSession } = useOnboardingSession();
   const { startDemo } = useDemoData();
   const navigate = useNavigate();
 
