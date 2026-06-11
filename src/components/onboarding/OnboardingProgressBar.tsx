@@ -80,8 +80,8 @@ export function OnboardingProgressBar({ session }: Props) {
               <Sparkles className="h-5 w-5 text-green-500" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-foreground">Cupom FOCUS20 destravado! 🎉</p>
-              <p className="text-xs text-muted-foreground">20% OFF aplicado automaticamente ao assinar.</p>
+              <p className="text-sm font-semibold text-foreground">Cupom {getActiveCampaignCoupon().code} destravado! 🎉</p>
+              <p className="text-xs text-muted-foreground">{getActiveCampaignCoupon().label} ao assinar.</p>
             </div>
           </div>
         </div>
