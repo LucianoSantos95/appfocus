@@ -188,6 +188,42 @@ export type Database = {
         }
         Relationships: []
       }
+      consent_records: {
+        Row: {
+          id: string
+          user_id: string
+          consent_type: string
+          version: string
+          accepted: boolean
+          ip_address: string | null
+          user_agent: string | null
+          accepted_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          consent_type: string
+          version?: string
+          accepted?: boolean
+          ip_address?: string | null
+          user_agent?: string | null
+          accepted_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          consent_type?: string
+          version?: string
+          accepted?: boolean
+          ip_address?: string | null
+          user_agent?: string | null
+          accepted_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       cancellation_feedback: {
         Row: {
           comentario: string | null
@@ -461,6 +497,42 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      data_export_requests: {
+        Row: {
+          id: string
+          user_id: string
+          status: string
+          download_url: string | null
+          download_expires_at: string | null
+          processed_at: string | null
+          metadata: Json | null
+          requested_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          status?: string
+          download_url?: string | null
+          download_expires_at?: string | null
+          processed_at?: string | null
+          metadata?: Json | null
+          requested_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          status?: string
+          download_url?: string | null
+          download_expires_at?: string | null
+          processed_at?: string | null
+          metadata?: Json | null
+          requested_at?: string
+          created_at?: string
         }
         Relationships: []
       }
@@ -850,6 +922,42 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_change_history: {
+        Row: {
+          id: string
+          user_id: string
+          from_plan: string | null
+          to_plan: string
+          change_type: string
+          stripe_subscription_id: string | null
+          metadata: Json | null
+          changed_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          from_plan?: string | null
+          to_plan: string
+          change_type: string
+          stripe_subscription_id?: string | null
+          metadata?: Json | null
+          changed_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          from_plan?: string | null
+          to_plan?: string
+          change_type?: string
+          stripe_subscription_id?: string | null
+          metadata?: Json | null
+          changed_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       processos: {
         Row: {
           created_at: string
@@ -894,6 +1002,7 @@ export type Database = {
           display_name: string | null
           employee_count: string | null
           id: string
+          last_sign_in_at: string | null
           onboarding_completed: boolean
           phone: string | null
           segment: string | null
@@ -907,6 +1016,7 @@ export type Database = {
           display_name?: string | null
           employee_count?: string | null
           id?: string
+          last_sign_in_at?: string | null
           onboarding_completed?: boolean
           phone?: string | null
           segment?: string | null
@@ -920,6 +1030,7 @@ export type Database = {
           display_name?: string | null
           employee_count?: string | null
           id?: string
+          last_sign_in_at?: string | null
           onboarding_completed?: boolean
           phone?: string | null
           segment?: string | null
@@ -997,6 +1108,48 @@ export type Database = {
           request_count?: number
           user_id?: string
           window_start?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          id: string
+          referrer_user_id: string
+          referred_email: string
+          referred_user_id: string | null
+          referral_code: string
+          status: string
+          reward_granted: boolean
+          converted_at: string | null
+          expires_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          referrer_user_id: string
+          referred_email: string
+          referred_user_id?: string | null
+          referral_code: string
+          status?: string
+          reward_granted?: boolean
+          converted_at?: string | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          referrer_user_id?: string
+          referred_email?: string
+          referred_user_id?: string | null
+          referral_code?: string
+          status?: string
+          reward_granted?: boolean
+          converted_at?: string | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1252,6 +1405,36 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          id: string
+          type: string
+          status: string
+          payload: Json | null
+          error_message: string | null
+          processed_at: string
+          created_at: string
+        }
+        Insert: {
+          id: string
+          type: string
+          status?: string
+          payload?: Json | null
+          error_message?: string | null
+          processed_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          type?: string
+          status?: string
+          payload?: Json | null
+          error_message?: string | null
+          processed_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -1502,6 +1685,57 @@ export type Database = {
           milestone_key?: string
           reached_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          theme: string
+          language: string
+          timezone: string
+          notify_email_weekly_report: boolean
+          notify_email_product_updates: boolean
+          notify_inapp_tasks: boolean
+          notify_inapp_clientes: boolean
+          notify_inapp_financeiro: boolean
+          sidebar_collapsed: boolean
+          dashboard_widgets: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          theme?: string
+          language?: string
+          timezone?: string
+          notify_email_weekly_report?: boolean
+          notify_email_product_updates?: boolean
+          notify_inapp_tasks?: boolean
+          notify_inapp_clientes?: boolean
+          notify_inapp_financeiro?: boolean
+          sidebar_collapsed?: boolean
+          dashboard_widgets?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          theme?: string
+          language?: string
+          timezone?: string
+          notify_email_weekly_report?: boolean
+          notify_email_product_updates?: boolean
+          notify_inapp_tasks?: boolean
+          notify_inapp_clientes?: boolean
+          notify_inapp_financeiro?: boolean
+          sidebar_collapsed?: boolean
+          dashboard_widgets?: Json
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
