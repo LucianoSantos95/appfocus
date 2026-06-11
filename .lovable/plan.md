@@ -1,54 +1,71 @@
-# Ajuste: decoração Copa do Mundo em tela cheia + landing/Auth
+# Ajustes finais da campanha Copa do Mundo
 
-## O que muda
+## 1. Hover sutil na decoração (dentro do hub)
 
-### 1. Confetes e bandeirinhas em tela cheia (não só no banner)
+No `WorldCupBanner.tsx` (cartão "Rumo ao Hexa" na Home):
+- Adicionar `group` + transição no `<section>`: leve `hover:scale-[1.01]`, `hover:shadow-glow`, e brilho diagonal animado (gradient sweep) ao passar o mouse.
+- O troféu ganha `group-hover:animate-bounce` discreto e o ícone do botão um `group-hover:rotate-12`.
+- Tudo respeitando `motion-reduce:transition-none`.
 
-Extrair os efeitos visuais (`Confetti` + `FlagBunting`) do `WorldCupBanner` para um componente global novo `WorldCupOverlay`:
-- Posicionado `fixed inset-0 pointer-events-none z-[5]` cobrindo a viewport inteira.
-- **Confetes** caem do topo ao rodapé da tela (não apenas dentro do banner), ~28 partículas distribuídas em toda a largura, com `position: fixed` e animação `translateY(100vh)`.
-- **Bandeirinhas (varal)** no topo absoluto da tela, atravessando toda a largura (`fixed top-0 left-0 right-0`), ~32 bandeirinhas.
-- Fica atrás de modais/dropdowns (`z-index` baixo) mas acima do conteúdo de fundo.
-- `pointer-events-none` em tudo — não bloqueia cliques.
-- Respeita `prefers-reduced-motion` e fica oculto em mobile (`hidden md:block`) para não pesar.
-- Só renderiza se `isWorldCupActive()`.
+## 2. CTA "Aproveitar promoção" inteligente
 
-### 2. Limpar o banner
+Atualizar o `onClick` do botão no `WorldCupBanner` e também no `WorldCupPromoStrip` (Auth) e `PersistentCouponWidget`:
+- Usar o hook `useOnboardingSession`:
+  - Se `isOnboardingComplete` (ou já existe `session?.completed_at`) → `navigate("/planos")`.
+  - Caso contrário → `navigate("/onboarding")`.
+- Na strip de Auth (usuário deslogado) mantém comportamento atual (abre signup).
 
-Remover `Confetti` e `FlagBunting` de dentro do `WorldCupBanner` (agora vêm do overlay global). O banner fica apenas com o conteúdo informativo (faixa "Rumo ao Hexa", cupom, CTA, gradiente).
+## 3. Planos: anual primeiro
 
-### 3. Decoração na página de login/landing (`/auth`)
+Em `src/pages/Planos.tsx`:
+- Mudar o estado inicial `useState(false)` → `useState(true)` para o toggle anual.
+- Garantir que a seleção visual do toggle reflita corretamente o padrão "Anual".
+- Banner do cupom continua igual.
 
-A `Auth.tsx` (landing/conversão) hoje não tem nada relativo à Copa. Plano:
-- Montar `WorldCupOverlay` (mesmos confetes e bandeirinhas em tela cheia) também em `Auth.tsx`.
-- Adicionar uma **faixa promocional fina** no topo da landing, acima do header "Hub Empresarial":
-  - Texto: "🏆 Rumo ao Hexa — Cadastre-se e ganhe 20% OFF nos 3 primeiros meses com o cupom **HEXA**"
-  - Botão "Cadastrar" → rola para o formulário ou abre o dialog de signup.
-  - Mesma identidade visual: gradiente verde/amarelo/azul, ícone de troféu.
-  - Componente novo: `src/components/auth/WorldCupPromoStrip.tsx`.
+## 4. Confete apenas na Home
 
-### 4. Onde montar o overlay global
+Hoje o `WorldCupOverlay` é montado em `App.tsx` e aparece em todas as rotas internas, atrapalhando trabalho em Finanças/RH/etc.
 
-Em vez de duplicar `WorldCupOverlay` em cada página, montar **uma vez** em `src/App.tsx` (dentro do `BrowserRouter`, fora de rotas) para que apareça em toda a aplicação enquanto a campanha estiver ativa — Home, Planos, Auth, módulos internos, etc.
+Plano:
+- Manter o overlay montado em `App.tsx`, mas dentro do componente verificar `useLocation()`:
+  - Renderizar somente quando `pathname === "/"` **ou** quando estiver em `/auth`, `/planos`, `/onboarding` (rotas promocionais/landing).
+  - Em rotas operacionais (`/financas`, `/rh`, `/marketing`, `/projetos`, `/clientes`, `/atividades`, `/processos`, `/guia`, `/assinantes`) **não renderizar** confete nem bandeirinhas.
+- O `WorldCupBanner` (cartão estático com "Rumo ao Hexa") continua visível na Home.
+- A strip de Auth (`WorldCupPromoStrip`) continua na página de login.
 
-## Arquivos
+## 5. Auditoria do onboarding
 
-**Novos:**
-- `src/components/dashboard/WorldCupOverlay.tsx` — confetes + bandeirinhas tela cheia
-- `src/components/auth/WorldCupPromoStrip.tsx` — faixa promocional na landing
+Após as mudanças, validar:
 
-**Editados:**
-- `src/components/dashboard/WorldCupBanner.tsx` — remove `Confetti`/`FlagBunting` internos
-- `src/App.tsx` — monta `<WorldCupOverlay />` global
-- `src/pages/Auth.tsx` — adiciona `<WorldCupPromoStrip />` no topo
+1. **OnboardingFlow / OnboardingChat**: confirmar que o overlay agora **não** aparece sobre o chat (rota `/onboarding` — decidir se mantemos overlay ali; recomendação: **manter, mas sem confete pesado**, ou remover para não atrapalhar leitura do chat. Proposta: **remover** `/onboarding` da lista de rotas com overlay para garantir foco).
+2. **useOnboardingSession**: `COUPON_CODE` continua sendo lido de `getActiveCampaignCoupon()` — ok, sem regressão.
+3. **DemoCouponBanner / OnboardingCouponBanner / OnboardingCouponPreview / OnboardingProgressBar**: confirmar que labels dinâmicos (HEXA / 20% / 3 meses) seguem corretos.
+4. **CTA "Aproveitar promoção"**: ao não ter sessão (`needsOnboarding`), deve cair em `/onboarding`. Ao ter `completed_at`, vai para `/planos` com cupom já aplicado.
+5. **Planos.tsx**: com `annual = true` por padrão, a lógica de `displayAnnualTotal` e do checkout com `interval = "annual"` continua correta — o `priceId` anual já existe em `STRIPE_PLANS`.
+6. **`WelcomeChoiceModal`/`OnboardingWelcomeModal`**: garantir que continuam abrindo normalmente e que o overlay (quando presente em `/`) não bloqueia cliques — já usa `pointer-events-none`, ok.
+7. **prefers-reduced-motion**: hover sweep + bounce devem respeitar `motion-reduce:`.
+
+## Arquivos afetados
+
+- `src/components/dashboard/WorldCupBanner.tsx` — hover + CTA inteligente
+- `src/components/dashboard/WorldCupOverlay.tsx` — gate por rota via `useLocation`
+- `src/components/dashboard/PersistentCouponWidget.tsx` — CTA inteligente
+- `src/pages/Planos.tsx` — `annual` default `true`
+- `src/index.css` — keyframe `wc-shine` para o hover sweep (opcional)
 
 ## Detalhes técnicos
 
-- Keyframes movidos para `src/index.css` (em vez de `<style>` inline em cada componente) para evitar duplicação:
-  - `@keyframes wc-confetti-fall`
-  - `@keyframes wc-flag-sway`
-- Z-index: overlay `z-[5]`, conteúdo da página `relative z-10`, modais Radix continuam em `z-50`+ — sem conflitos.
-- `getActiveCampaignCoupon()` e `isWorldCupActive()` já existem em `src/lib/campaigns.ts`, expiração automática preservada (após 19/07/2026 tudo some sozinho).
+```ts
+// WorldCupOverlay.tsx
+const { pathname } = useLocation();
+const ALLOWED = new Set(["/", "/auth", "/planos"]);
+if (!ALLOWED.has(pathname)) return null;
+```
 
-## Resposta à sua pergunta
-Sim, faz total sentido — decoração sazonal precisa estar onde o usuário entra (landing/login) e ser visível no fundo de toda a navegação, não confinada a um único bloco. Assim a campanha "respira" pela interface inteira.
+```ts
+// CTA inteligente
+const { session, isOnboardingComplete } = useOnboardingSession();
+const target = isOnboardingComplete || session?.completed_at ? "/planos" : "/onboarding";
+```
+
+Sem mudanças em edge functions, schema ou Stripe.
