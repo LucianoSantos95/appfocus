@@ -7,6 +7,7 @@ import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useAuth } from "@/contexts/AuthContext";
 import { wipeDemoData } from "@/lib/demo-seed";
 import type { DemoModule } from "@/lib/demo-data";
+import { getActiveCampaignCoupon } from "@/lib/campaigns";
 
 function useCouponCountdown(expiresAt: string | null | undefined): string | null {
   const [label, setLabel] = useState<string | null>(null);
