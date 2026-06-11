@@ -14,11 +14,7 @@ import { useMilestones } from "@/hooks/useMilestones";
 import { supabase } from "@/integrations/supabase/client";
 import { STRIPE_PLANS } from "@/lib/stripe-plans";
 import { toast } from "sonner";
-
-// Stripe Coupon ID for onboarding reward (ONBOARDING20 — 20% off, once, no restrictions)
-// We pass the coupon ID directly instead of a promotion code wrapper to avoid
-// "coupon does not apply to anything in this order" errors caused by promotion-code restrictions.
-const ONBOARDING_COUPON_ID = "NpOu4Cxn";
+import { getActiveCampaignCoupon, isWorldCupActive } from "@/lib/campaigns";
 
 const plans = [
   {
