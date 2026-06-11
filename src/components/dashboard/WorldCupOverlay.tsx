@@ -1,5 +1,11 @@
 import { useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { isWorldCupActive } from "@/lib/campaigns";
+
+// Rotas onde a decoração de Copa pode aparecer.
+// Em rotas operacionais (Finanças, RH, etc.) o overlay é ocultado
+// para não atrapalhar o trabalho do usuário.
+const ALLOWED_ROUTES = new Set<string>(["/", "/auth", "/planos"]);
 
 const CONFETTI_COUNT = 28;
 const CONFETTI_COLORS = ["#009C3B", "#FFDF00", "#002776", "#FFFFFF"];
@@ -11,7 +17,9 @@ const FLAG_COUNT = 32;
  * em App.tsx enquanto a campanha da Copa estiver ativa.
  */
 export function WorldCupOverlay() {
+  const { pathname } = useLocation();
   if (!isWorldCupActive()) return null;
+  if (!ALLOWED_ROUTES.has(pathname)) return null;
 
   const pieces = useMemo(
     () =>

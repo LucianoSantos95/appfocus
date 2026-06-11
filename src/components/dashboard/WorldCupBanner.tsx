@@ -7,10 +7,12 @@ import {
   getActiveCampaignCoupon,
   getWorldCupTimeLeft,
 } from "@/lib/campaigns";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 
 export function WorldCupBanner() {
   const navigate = useNavigate();
+  const { session, isOnboardingComplete } = useOnboardingSession();
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -24,11 +26,16 @@ export function WorldCupBanner() {
   const coupon = getActiveCampaignCoupon();
   const timeLeft = getWorldCupTimeLeft();
 
+  const goToOffer = () => {
+    const done = isOnboardingComplete || !!session?.completed_at;
+    navigate(done ? "/planos" : "/onboarding");
+  };
+
   return (
     <>
       <section
         data-wc-banner
-        className="relative overflow-hidden rounded-2xl border shadow-lg animate-fade-in"
+        className="group relative overflow-hidden rounded-2xl border shadow-lg animate-fade-in transition-all duration-300 hover:shadow-glow hover:scale-[1.01] motion-reduce:transition-none motion-reduce:hover:scale-100"
         style={{
           background:
             "linear-gradient(135deg, rgba(0,156,59,0.22) 0%, rgba(255,223,0,0.16) 50%, rgba(0,39,118,0.28) 100%)",
@@ -36,12 +43,19 @@ export function WorldCupBanner() {
         }}
         aria-label="Promoção Copa do Mundo"
       >
+        {/* Shine sweep no hover */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-wc-shine motion-reduce:hidden"
+        />
+
+
 
 
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-5 px-6 py-7 pt-10 md:px-10">
           <div className="flex items-start gap-4 min-w-0">
             <div
-              className="rounded-full p-3 shrink-0 shadow-md"
+              className="rounded-full p-3 shrink-0 shadow-md transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:transform-none"
               style={{ background: "linear-gradient(135deg, #FFDF00, #FFB300)" }}
             >
               <Trophy className="h-7 w-7" style={{ color: "#002776" }} />
@@ -87,14 +101,14 @@ export function WorldCupBanner() {
 
           <Button
             size="lg"
-            onClick={() => navigate("/planos")}
-            className="shrink-0 gap-2 font-semibold shadow-md"
+            onClick={goToOffer}
+            className="shrink-0 gap-2 font-semibold shadow-md transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:transform-none"
             style={{
               background: "linear-gradient(135deg, #009C3B 0%, #00753B 100%)",
               color: "#FFFFFF",
             }}
           >
-            <Trophy className="h-4 w-4" />
+            <Trophy className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
             Aproveitar promoção
           </Button>
         </div>

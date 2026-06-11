@@ -337,6 +337,12 @@
   from { transform: rotate(-4deg); }
   to   { transform: rotate(4deg); }
 }
+@keyframes wc-shine {
+  0%   { transform: translateX(0) skewX(-12deg); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translateX(450%) skewX(-12deg); opacity: 0; }
+}
+.animate-wc-shine { animation: wc-shine 1.2s ease-out; }
 @media (prefers-reduced-motion: reduce) {
   [data-wc-banner] *,
   .wc-overlay * { animation: none !important; }

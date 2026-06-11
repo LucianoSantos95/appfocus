@@ -89,7 +89,7 @@ function PlanCardSkeleton() {
 }
 
 export default function Planos() {
-  const [annual, setAnnual] = useState(false);
+  const [annual, setAnnual] = useState(true);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { plan: currentPlan, isLoading: isPlanLoading, refreshSubscription } = usePlan();
   const { session: authSession } = useAuth();
