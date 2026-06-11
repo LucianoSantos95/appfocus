@@ -277,7 +277,9 @@ export default function Planos() {
                           <span className="text-4xl font-bold text-foreground">R${displayMonthly}</span>
                           <span className="text-muted-foreground">/mês</span>
                           {hasCoupon && (
-                            <p className="text-xs text-primary mt-1">Primeiro mês com 20% OFF</p>
+                            <p className="text-xs text-primary mt-1">
+                              {isWorldCupActive() ? "20% OFF nos 3 primeiros meses" : "Primeiro mês com 20% OFF"}
+                            </p>
                           )}
                         </>
                       )}
