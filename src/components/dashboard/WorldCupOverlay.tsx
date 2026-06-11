@@ -18,9 +18,6 @@ const FLAG_COUNT = 32;
  */
 export function WorldCupOverlay() {
   const { pathname } = useLocation();
-  if (!isWorldCupActive()) return null;
-  if (!ALLOWED_ROUTES.has(pathname)) return null;
-
   const pieces = useMemo(
     () =>
       Array.from({ length: CONFETTI_COUNT }).map((_, i) => ({
@@ -33,6 +30,9 @@ export function WorldCupOverlay() {
       })),
     [],
   );
+
+  if (!isWorldCupActive()) return null;
+  if (!ALLOWED_ROUTES.has(pathname)) return null;
 
   const flagPalette = [
     "linear-gradient(180deg, #009C3B 0% 33%, #FFDF00 33% 66%, #002776 66% 100%)",
