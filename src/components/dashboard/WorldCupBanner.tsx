@@ -7,6 +7,7 @@ import {
   getActiveCampaignCoupon,
   getWorldCupTimeLeft,
 } from "@/lib/campaigns";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 
 export function WorldCupBanner() {
