@@ -60,7 +60,7 @@ const App = () => (
                 <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
                   {/* Decoração da Copa isolada em ErrorBoundary próprio:
                       qualquer erro nela é silenciado e nunca derruba o app */}
-                  <ErrorBoundary fallback={null}>
+                  <ErrorBoundary fallback={<></>}>
                     <WorldCupOverlay />
                   </ErrorBoundary>
                   <Routes>
