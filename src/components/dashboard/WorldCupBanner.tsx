@@ -101,14 +101,14 @@ export function WorldCupBanner() {
 
           <Button
             size="lg"
-            onClick={() => navigate("/planos")}
-            className="shrink-0 gap-2 font-semibold shadow-md"
+            onClick={goToOffer}
+            className="shrink-0 gap-2 font-semibold shadow-md transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:transform-none"
             style={{
               background: "linear-gradient(135deg, #009C3B 0%, #00753B 100%)",
               color: "#FFFFFF",
             }}
           >
-            <Trophy className="h-4 w-4" />
+            <Trophy className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
             Aproveitar promoção
           </Button>
         </div>
