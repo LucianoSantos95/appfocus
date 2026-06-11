@@ -14,11 +14,7 @@ import { useMilestones } from "@/hooks/useMilestones";
 import { supabase } from "@/integrations/supabase/client";
 import { STRIPE_PLANS } from "@/lib/stripe-plans";
 import { toast } from "sonner";
-
-// Stripe Coupon ID for onboarding reward (ONBOARDING20 — 20% off, once, no restrictions)
-// We pass the coupon ID directly instead of a promotion code wrapper to avoid
-// "coupon does not apply to anything in this order" errors caused by promotion-code restrictions.
-const ONBOARDING_COUPON_ID = "NpOu4Cxn";
+import { getActiveCampaignCoupon, isWorldCupActive } from "@/lib/campaigns";
 
 const plans = [
   {
@@ -150,7 +146,7 @@ export default function Planos() {
       if (urlCoupon) {
         body.couponId = urlCoupon;
       } else if (hasCoupon) {
-        body.couponId = ONBOARDING_COUPON_ID;
+        body.couponId = getActiveCampaignCoupon().stripeId;
       }
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
@@ -205,7 +201,9 @@ export default function Planos() {
             <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-5 py-2.5 mb-6 animate-fade-in">
               <Gift className="h-5 w-5 text-primary" />
               <span className="text-sm font-semibold text-primary">
-                🎉 Cupom de 20% OFF aplicado automaticamente!
+                {isWorldCupActive()
+                  ? "🏆 Cupom HEXA — 20% OFF nos 3 primeiros meses aplicado automaticamente!"
+                  : "🎉 Cupom de 20% OFF aplicado automaticamente!"}
               </span>
             </div>
           )}
@@ -279,7 +277,9 @@ export default function Planos() {
                           <span className="text-4xl font-bold text-foreground">R${displayMonthly}</span>
                           <span className="text-muted-foreground">/mês</span>
                           {hasCoupon && (
-                            <p className="text-xs text-primary mt-1">Primeiro mês com 20% OFF</p>
+                            <p className="text-xs text-primary mt-1">
+                              {isWorldCupActive() ? "20% OFF nos 3 primeiros meses" : "Primeiro mês com 20% OFF"}
+                            </p>
                           )}
                         </>
                       )}

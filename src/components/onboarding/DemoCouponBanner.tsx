@@ -7,6 +7,7 @@ import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useAuth } from "@/contexts/AuthContext";
 import { wipeDemoData } from "@/lib/demo-seed";
 import type { DemoModule } from "@/lib/demo-data";
+import { getActiveCampaignCoupon } from "@/lib/campaigns";
 
 function useCouponCountdown(expiresAt: string | null | undefined): string | null {
   const [label, setLabel] = useState<string | null>(null);
@@ -65,8 +66,8 @@ export function DemoCouponBanner() {
         <Gift className="h-4 w-4 text-primary shrink-0" />
         <span>
           <span className="hidden sm:inline">Seu cupom de boas-vindas: </span>
-          <span className="font-mono font-bold text-primary">FOCUS20</span>
-          <span> — 20% OFF no primeiro mês</span>
+          <span className="font-mono font-bold text-primary">{getActiveCampaignCoupon().code}</span>
+          <span> — {getActiveCampaignCoupon().label}</span>
         </span>
         {countdown && (
           <span className="flex items-center gap-1 text-xs font-semibold text-warning bg-warning/10 border border-warning/20 rounded-full px-2 py-0.5">

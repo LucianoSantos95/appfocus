@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Gift, Sparkles, Lock } from "lucide-react";
 import type { OnboardingSession } from "@/hooks/useOnboardingSession";
+import { getActiveCampaignCoupon } from "@/lib/campaigns";
 
 interface Props {
   session: OnboardingSession;
@@ -29,7 +30,7 @@ export function OnboardingCouponPreview({ session }: Props) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="font-bold text-foreground text-sm">
-              🎁 Recompensa: 20% OFF no seu primeiro mês
+              🎁 Recompensa: {getActiveCampaignCoupon().label}
             </span>
             <Badge variant="secondary" className="gap-1 text-[10px] uppercase tracking-wide">
               <Sparkles className="h-3 w-3" /> Preview

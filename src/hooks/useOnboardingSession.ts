@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getActiveCampaignCoupon } from "@/lib/campaigns";
 
 export interface OnboardingSession {
   id: string;
@@ -18,7 +19,7 @@ export interface OnboardingSession {
   completed_at: string | null;
 }
 
-const COUPON_CODE = "FOCUS20";
+const COUPON_CODE = getActiveCampaignCoupon().code;
 
 export function useOnboardingSession() {
   const { user } = useAuth();

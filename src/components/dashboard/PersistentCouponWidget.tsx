@@ -4,6 +4,7 @@ import { Gift, Clock, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { usePlan } from "@/contexts/PlanContext";
+import { getActiveCampaignCoupon } from "@/lib/campaigns";
 
 function useCountdown(expiresAt: string | null | undefined) {
   const [timeLeft, setTimeLeft] = useState<string | null>(null);
@@ -69,7 +70,7 @@ export function PersistentCouponWidget() {
             <code className="font-mono font-bold text-primary bg-primary/12 border border-primary/25 px-2 py-0.5 rounded text-sm tracking-widest">
               {session.coupon_code}
             </code>
-            <span className="text-sm text-muted-foreground hidden sm:inline">— 20% OFF aplicado automaticamente</span>
+            <span className="text-sm text-muted-foreground hidden sm:inline">— {getActiveCampaignCoupon().label} aplicado automaticamente</span>
           </div>
           <div className="flex items-center gap-1.5 text-xs font-medium text-warning">
             <Clock className="h-3 w-3 shrink-0" />
@@ -85,7 +86,7 @@ export function PersistentCouponWidget() {
         className="gap-2 shrink-0 bg-primary hover:bg-primary/90"
       >
         <Zap className="h-4 w-4" />
-        Assinar com 20% OFF
+        Assinar com {getActiveCampaignCoupon().percentOff}% OFF
       </Button>
     </div>
   );

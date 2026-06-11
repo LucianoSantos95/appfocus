@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Gift, ArrowRight, Clock, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { OnboardingSession } from "@/hooks/useOnboardingSession";
+import { getActiveCampaignCoupon } from "@/lib/campaigns";
 
 interface Props {
   session: OnboardingSession;
@@ -51,7 +52,7 @@ export function OnboardingCouponBanner({ session }: Props) {
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="font-bold text-foreground">20% OFF</span>
               <Badge variant="outline" className="font-mono text-xs border-primary/40 text-primary">
-                {session.coupon_code || "FOCUS20"}
+                {session.coupon_code || getActiveCampaignCoupon().code}
               </Badge>
               <Badge variant="secondary" className="gap-1 text-xs">
                 <Clock className="h-3 w-3" />
@@ -59,7 +60,7 @@ export function OnboardingCouponBanner({ session }: Props) {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Parabéns! Clique em <span className="font-semibold text-foreground">Assinar</span> e o cupom <span className="font-semibold text-foreground">{session.coupon_code || "FOCUS20"}</span> será aplicado <span className="font-semibold text-foreground">automaticamente</span> no checkout.
+              Parabéns! Clique em <span className="font-semibold text-foreground">Assinar</span> e o cupom <span className="font-semibold text-foreground">{session.coupon_code || getActiveCampaignCoupon().code}</span> será aplicado <span className="font-semibold text-foreground">automaticamente</span> no checkout.
             </p>
           </div>
           <Button size="sm" onClick={() => navigate("/planos")} className="gap-1 shrink-0">
