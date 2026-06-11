@@ -55,7 +55,7 @@ export function WorldCupBanner() {
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-5 px-6 py-7 pt-10 md:px-10">
           <div className="flex items-start gap-4 min-w-0">
             <div
-              className="rounded-full p-3 shrink-0 shadow-md"
+              className="rounded-full p-3 shrink-0 shadow-md transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:transform-none"
               style={{ background: "linear-gradient(135deg, #FFDF00, #FFB300)" }}
             >
               <Trophy className="h-7 w-7" style={{ color: "#002776" }} />
