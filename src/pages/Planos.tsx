@@ -146,7 +146,7 @@ export default function Planos() {
       if (urlCoupon) {
         body.couponId = urlCoupon;
       } else if (hasCoupon) {
-        body.couponId = ONBOARDING_COUPON_ID;
+        body.couponId = getActiveCampaignCoupon().stripeId;
       }
 
       const { data, error } = await supabase.functions.invoke("create-checkout", {
