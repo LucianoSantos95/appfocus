@@ -11,6 +11,8 @@ import { SidebarProvider } from "@/components/layout/SidebarContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DemoDataProvider } from "@/contexts/DemoDataContext";
+import { WorldCupOverlay } from "@/components/dashboard/WorldCupOverlay";
+
 
 
 const Index = lazy(() => import("./pages/Index"));
@@ -56,7 +58,9 @@ const App = () => (
               <DemoDataProvider>
               <ErrorBoundary>
                 <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+                  <WorldCupOverlay />
                   <Routes>
+
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/termos" element={<Termos />} />
                     <Route path="/privacidade" element={<Privacidade />} />

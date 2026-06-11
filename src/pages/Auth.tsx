@@ -8,6 +8,8 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import AuthFooter from "@/components/auth/AuthFooter";
 import AuthLoginDialog from "@/components/auth/AuthLoginDialog";
 import AuthSignupDialog from "@/components/auth/AuthSignupDialog";
+import WorldCupPromoStrip from "@/components/auth/WorldCupPromoStrip";
+
 import { Sparkles, ArrowRight, ArrowDown, Shield, XCircle, DollarSign, FolderKanban, Users, UserCog, Megaphone, CheckSquare, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -118,6 +120,7 @@ export default function Auth() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl" />
       </div>
 
+      <WorldCupPromoStrip onCadastrar={() => setSignupOpen(true)} />
       <AuthHeader />
 
       {/* Hero Section */}
