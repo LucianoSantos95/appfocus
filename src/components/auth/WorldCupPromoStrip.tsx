@@ -51,7 +51,7 @@ export function WorldCupPromoStrip({ onCadastrar }: WorldCupPromoStripProps) {
             — Cadastre-se e ganhe{" "}
             <span className="font-bold text-foreground">{coupon.label}</span> com o cupom{" "}
             <code
-              className="rounded px-1.5 py-0.5 font-mono text-xs tracking-widest transition-all duration-300 group-hover:shadow-[0_0_8px_rgba(255,223,0,0.5)]"
+              className="inline-block rounded px-1.5 py-0.5 font-mono text-xs tracking-widest transition-all duration-300 group-hover:scale-110 group-hover:shadow-[0_0_10px_rgba(255,223,0,0.6)] group-hover:bg-[rgba(255,223,0,0.35)]"
               style={{
                 background: "rgba(255,223,0,0.18)",
                 color: "#FFDF00",
