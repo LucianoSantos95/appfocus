@@ -12,6 +12,7 @@ import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 export function WorldCupBanner() {
   const navigate = useNavigate();
+  const { session, isOnboardingComplete } = useOnboardingSession();
   const [, setTick] = useState(0);
 
   useEffect(() => {
