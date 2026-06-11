@@ -2,6 +2,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, CheckCircle2, Circle, Gift, Sparkles } from "lucide-react";
 import type { OnboardingSession } from "@/hooks/useOnboardingSession";
+import { getActiveCampaignCoupon } from "@/lib/campaigns";
 
 const SEGMENT_ROUTES: Record<string, string[]> = {
   agencia: ["projetos", "clientes", "financas"],
