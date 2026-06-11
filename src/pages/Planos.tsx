@@ -201,7 +201,9 @@ export default function Planos() {
             <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-5 py-2.5 mb-6 animate-fade-in">
               <Gift className="h-5 w-5 text-primary" />
               <span className="text-sm font-semibold text-primary">
-                🎉 Cupom de 20% OFF aplicado automaticamente!
+                {isWorldCupActive()
+                  ? "🏆 Cupom HEXA — 20% OFF nos 3 primeiros meses aplicado automaticamente!"
+                  : "🎉 Cupom de 20% OFF aplicado automaticamente!"}
               </span>
             </div>
           )}
