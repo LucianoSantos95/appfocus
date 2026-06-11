@@ -9,74 +9,6 @@ import {
   WORLD_CUP_CAMPAIGN,
 } from "@/lib/campaigns";
 
-const CONFETTI_COUNT = 14;
-const CONFETTI_COLORS = ["#009C3B", "#FFDF00", "#002776", "#FFFFFF"];
-
-function Confetti() {
-  // Pré-calcula propriedades para evitar reflow
-  const pieces = Array.from({ length: CONFETTI_COUNT }).map((_, i) => ({
-    left: `${(i / CONFETTI_COUNT) * 100 + Math.random() * 6}%`,
-    delay: `${Math.random() * 4}s`,
-    duration: `${4 + Math.random() * 3}s`,
-    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-    size: 6 + Math.round(Math.random() * 5),
-    rotate: `${Math.random() * 360}deg`,
-  }));
-  return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute inset-0 overflow-hidden motion-reduce:hidden hidden md:block"
-    >
-      {pieces.map((p, i) => (
-        <span
-          key={i}
-          className="absolute -top-4 rounded-sm opacity-80"
-          style={{
-            left: p.left,
-            width: p.size,
-            height: p.size,
-            background: p.color,
-            transform: `rotate(${p.rotate})`,
-            animation: `wc-confetti-fall ${p.duration} linear ${p.delay} infinite`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function FlagBunting() {
-  const flags = Array.from({ length: 18 });
-  return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute left-0 right-0 top-0 flex items-start justify-around px-2 pt-0"
-    >
-      {flags.map((_, i) => {
-        const colors = [
-          "linear-gradient(180deg, #009C3B 0% 33%, #FFDF00 33% 66%, #002776 66% 100%)",
-          "linear-gradient(180deg, #FFDF00 0% 50%, #009C3B 50% 100%)",
-          "linear-gradient(180deg, #002776 0% 50%, #FFFFFF 50% 100%)",
-          "linear-gradient(180deg, #009C3B 0% 100%)",
-        ];
-        return (
-          <span
-            key={i}
-            className="block origin-top"
-            style={{
-              width: 14,
-              height: 18,
-              clipPath: "polygon(0 0, 100% 0, 50% 100%)",
-              background: colors[i % colors.length],
-              animation: `wc-flag-sway 3s ease-in-out ${i * 0.12}s infinite alternate`,
-            }}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
 export function WorldCupBanner() {
   const navigate = useNavigate();
   const [, setTick] = useState(0);
@@ -94,22 +26,6 @@ export function WorldCupBanner() {
 
   return (
     <>
-      {/* Keyframes inline para não poluir tailwind config */}
-      <style>{`
-        @keyframes wc-confetti-fall {
-          0%   { transform: translateY(-20px) rotate(0deg);   opacity: 0; }
-          10%  { opacity: 0.9; }
-          100% { transform: translateY(220px) rotate(540deg); opacity: 0; }
-        }
-        @keyframes wc-flag-sway {
-          from { transform: rotate(-4deg); }
-          to   { transform: rotate(4deg); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          [data-wc-banner] * { animation: none !important; }
-        }
-      `}</style>
-
       <section
         data-wc-banner
         className="relative overflow-hidden rounded-2xl border shadow-lg animate-fade-in"
@@ -120,8 +36,7 @@ export function WorldCupBanner() {
         }}
         aria-label="Promoção Copa do Mundo"
       >
-        <FlagBunting />
-        <Confetti />
+
 
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-5 px-6 py-7 pt-10 md:px-10">
           <div className="flex items-start gap-4 min-w-0">
