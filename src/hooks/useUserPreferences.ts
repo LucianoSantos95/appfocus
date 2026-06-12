@@ -44,7 +44,7 @@ export function useUserPreferences() {
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
-    setPreferences((data as UserPreferences) ?? null);
+    setPreferences((data as unknown as UserPreferences) ?? null);
     setIsLoading(false);
   }, [user]);
 
