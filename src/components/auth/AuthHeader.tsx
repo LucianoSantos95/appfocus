@@ -6,7 +6,7 @@ export default function AuthHeader() {
   return (
     <header className="flex items-center justify-between px-6 py-4 border-b border-border/50">
       <Link to="/" className="flex items-center gap-2">
-        <img src={logo} alt="AppFocus" className="h-8 w-auto" />
+        <img src={logo} alt="Hub Empresarial — Logotipo Focus Inteligente" className="h-8 w-auto />
         <span className="text-sm font-semibold text-foreground hidden sm:inline">Hub Empresarial</span>
       </Link>
       <Link
