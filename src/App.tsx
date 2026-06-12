@@ -30,6 +30,7 @@ const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const Glossario = lazy(() => import("./pages/Glossario"));
 const Comparar = lazy(() => import("./pages/Comparar"));
+const OQueEHubEmpresarial = lazy(() => import("./pages/OQueEHubEmpresarial"));
 const Assinantes = lazy(() => import("./pages/Assinantes"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OnboardingPage = lazy(() => import("./pages/Onboarding"));
@@ -71,6 +72,7 @@ const App = () => (
                     <Route path="/planos" element={<Planos />} />
                     <Route path="/glossario" element={<Glossario />} />
                     <Route path="/comparar" element={<Comparar />} />
+                    <Route path="/blog/o-que-e-hub-empresarial" element={<OQueEHubEmpresarial />} />
                     <Route path="/" element={<ProtectedRoute><ErrorBoundary><Index /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/financas" element={<ProtectedRoute><ErrorBoundary><Financas /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/rh" element={<ProtectedRoute><ErrorBoundary><RH /></ErrorBoundary></ProtectedRoute>} />
