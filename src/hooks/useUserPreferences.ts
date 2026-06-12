@@ -63,7 +63,7 @@ export function useUserPreferences() {
           .select()
           .single();
         if (error) return false;
-        setPreferences(data as UserPreferences);
+        setPreferences(data as unknown as UserPreferences);
       } else {
         const { data, error } = await supabase
           .from("user_preferences" as any)
