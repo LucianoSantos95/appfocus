@@ -28,7 +28,7 @@ export function useConsentRecords() {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    setConsents((data as ConsentRecord[]) ?? []);
+    setConsents((data as unknown as ConsentRecord[]) ?? []);
     setIsLoading(false);
   }, [user]);
 
