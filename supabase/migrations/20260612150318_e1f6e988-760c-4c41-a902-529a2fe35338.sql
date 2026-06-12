@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS referrals_update_own ON public.referrals;
