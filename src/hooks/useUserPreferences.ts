@@ -71,7 +71,7 @@ export function useUserPreferences() {
           .select()
           .single();
         if (error) return false;
-        setPreferences(data as UserPreferences);
+        setPreferences(data as unknown as UserPreferences);
       }
       return true;
     },
