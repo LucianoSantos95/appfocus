@@ -188,42 +188,6 @@ export type Database = {
         }
         Relationships: []
       }
-      consent_records: {
-        Row: {
-          id: string
-          user_id: string
-          consent_type: string
-          version: string
-          accepted: boolean
-          ip_address: string | null
-          user_agent: string | null
-          accepted_at: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          consent_type: string
-          version?: string
-          accepted?: boolean
-          ip_address?: string | null
-          user_agent?: string | null
-          accepted_at?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          consent_type?: string
-          version?: string
-          accepted?: boolean
-          ip_address?: string | null
-          user_agent?: string | null
-          accepted_at?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
       cancellation_feedback: {
         Row: {
           comentario: string | null
@@ -425,6 +389,42 @@ export type Database = {
         }
         Relationships: []
       }
+      consent_records: {
+        Row: {
+          accepted: boolean
+          accepted_at: string
+          consent_type: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+          version: string
+        }
+        Insert: {
+          accepted?: boolean
+          accepted_at?: string
+          consent_type: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+          version?: string
+        }
+        Update: {
+          accepted?: boolean
+          accepted_at?: string
+          consent_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       contas_bancarias: {
         Row: {
           balance: number
@@ -502,37 +502,37 @@ export type Database = {
       }
       data_export_requests: {
         Row: {
-          id: string
-          user_id: string
-          status: string
-          download_url: string | null
-          download_expires_at: string | null
-          processed_at: string | null
-          metadata: Json | null
-          requested_at: string
           created_at: string
+          download_expires_at: string | null
+          download_url: string | null
+          id: string
+          metadata: Json | null
+          processed_at: string | null
+          requested_at: string
+          status: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          status?: string
-          download_url?: string | null
-          download_expires_at?: string | null
-          processed_at?: string | null
-          metadata?: Json | null
-          requested_at?: string
           created_at?: string
+          download_expires_at?: string | null
+          download_url?: string | null
+          id?: string
+          metadata?: Json | null
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          status?: string
-          download_url?: string | null
-          download_expires_at?: string | null
-          processed_at?: string | null
-          metadata?: Json | null
-          requested_at?: string
           created_at?: string
+          download_expires_at?: string | null
+          download_url?: string | null
+          id?: string
+          metadata?: Json | null
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -898,6 +898,42 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_change_history: {
+        Row: {
+          change_type: string
+          changed_at: string
+          created_at: string
+          from_plan: string | null
+          id: string
+          metadata: Json | null
+          stripe_subscription_id: string | null
+          to_plan: string
+          user_id: string
+        }
+        Insert: {
+          change_type: string
+          changed_at?: string
+          created_at?: string
+          from_plan?: string | null
+          id?: string
+          metadata?: Json | null
+          stripe_subscription_id?: string | null
+          to_plan: string
+          user_id: string
+        }
+        Update: {
+          change_type?: string
+          changed_at?: string
+          created_at?: string
+          from_plan?: string | null
+          id?: string
+          metadata?: Json | null
+          stripe_subscription_id?: string | null
+          to_plan?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plan_features: {
         Row: {
           action: string
@@ -919,42 +955,6 @@ export type Database = {
           id?: string
           module?: string
           plan?: string
-        }
-        Relationships: []
-      }
-      plan_change_history: {
-        Row: {
-          id: string
-          user_id: string
-          from_plan: string | null
-          to_plan: string
-          change_type: string
-          stripe_subscription_id: string | null
-          metadata: Json | null
-          changed_at: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          from_plan?: string | null
-          to_plan: string
-          change_type: string
-          stripe_subscription_id?: string | null
-          metadata?: Json | null
-          changed_at?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          from_plan?: string | null
-          to_plan?: string
-          change_type?: string
-          stripe_subscription_id?: string | null
-          metadata?: Json | null
-          changed_at?: string
-          created_at?: string
         }
         Relationships: []
       }
@@ -1113,42 +1113,42 @@ export type Database = {
       }
       referrals: {
         Row: {
+          converted_at: string | null
+          created_at: string
+          expires_at: string | null
           id: string
-          referrer_user_id: string
+          referral_code: string
           referred_email: string
           referred_user_id: string | null
-          referral_code: string
-          status: string
+          referrer_user_id: string
           reward_granted: boolean
-          converted_at: string | null
-          expires_at: string | null
-          created_at: string
+          status: string
           updated_at: string
         }
         Insert: {
+          converted_at?: string | null
+          created_at?: string
+          expires_at?: string | null
           id?: string
-          referrer_user_id: string
+          referral_code: string
           referred_email: string
           referred_user_id?: string | null
-          referral_code: string
-          status?: string
+          referrer_user_id: string
           reward_granted?: boolean
-          converted_at?: string | null
-          expires_at?: string | null
-          created_at?: string
+          status?: string
           updated_at?: string
         }
         Update: {
+          converted_at?: string | null
+          created_at?: string
+          expires_at?: string | null
           id?: string
-          referrer_user_id?: string
+          referral_code?: string
           referred_email?: string
           referred_user_id?: string | null
-          referral_code?: string
-          status?: string
+          referrer_user_id?: string
           reward_granted?: boolean
-          converted_at?: string | null
-          expires_at?: string | null
-          created_at?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -1237,6 +1237,36 @@ export type Database = {
           secao?: string
           status?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      stripe_webhook_events: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          payload: Json | null
+          processed_at: string
+          status: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id: string
+          payload?: Json | null
+          processed_at?: string
+          status?: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          processed_at?: string
+          status?: string
+          type?: string
         }
         Relationships: []
       }
@@ -1402,36 +1432,6 @@ export type Database = {
           telefone?: string | null
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      stripe_webhook_events: {
-        Row: {
-          id: string
-          type: string
-          status: string
-          payload: Json | null
-          error_message: string | null
-          processed_at: string
-          created_at: string
-        }
-        Insert: {
-          id: string
-          type: string
-          status?: string
-          payload?: Json | null
-          error_message?: string | null
-          processed_at?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          type?: string
-          status?: string
-          payload?: Json | null
-          error_message?: string | null
-          processed_at?: string
-          created_at?: string
         }
         Relationships: []
       }
@@ -1690,52 +1690,52 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          created_at: string
+          dashboard_widgets: Json
           id: string
-          user_id: string
-          theme: string
           language: string
-          timezone: string
-          notify_email_weekly_report: boolean
           notify_email_product_updates: boolean
-          notify_inapp_tasks: boolean
+          notify_email_weekly_report: boolean
           notify_inapp_clientes: boolean
           notify_inapp_financeiro: boolean
+          notify_inapp_tasks: boolean
           sidebar_collapsed: boolean
-          dashboard_widgets: Json
-          created_at: string
+          theme: string
+          timezone: string
           updated_at: string
+          user_id: string
         }
         Insert: {
+          created_at?: string
+          dashboard_widgets?: Json
           id?: string
-          user_id: string
-          theme?: string
           language?: string
-          timezone?: string
-          notify_email_weekly_report?: boolean
           notify_email_product_updates?: boolean
-          notify_inapp_tasks?: boolean
+          notify_email_weekly_report?: boolean
           notify_inapp_clientes?: boolean
           notify_inapp_financeiro?: boolean
+          notify_inapp_tasks?: boolean
           sidebar_collapsed?: boolean
-          dashboard_widgets?: Json
-          created_at?: string
+          theme?: string
+          timezone?: string
           updated_at?: string
+          user_id: string
         }
         Update: {
+          created_at?: string
+          dashboard_widgets?: Json
           id?: string
-          user_id?: string
-          theme?: string
           language?: string
-          timezone?: string
-          notify_email_weekly_report?: boolean
           notify_email_product_updates?: boolean
-          notify_inapp_tasks?: boolean
+          notify_email_weekly_report?: boolean
           notify_inapp_clientes?: boolean
           notify_inapp_financeiro?: boolean
+          notify_inapp_tasks?: boolean
           sidebar_collapsed?: boolean
-          dashboard_widgets?: Json
-          created_at?: string
+          theme?: string
+          timezone?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
