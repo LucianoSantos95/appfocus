@@ -149,6 +149,7 @@ export function Sidebar() {
         )}
         <button
           onClick={toggle}
+          aria-label={collapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
           className="p-1.5 rounded-lg hover:bg-sidebar-accent text-muted-foreground hover:text-foreground transition-colors"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}

@@ -1230,7 +1230,7 @@ function TransactionTableRows({ transactions, type, bankAccounts, onSelect, onDe
           <TableCell>
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Opções da transação">
                   <MoreHorizontal className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
