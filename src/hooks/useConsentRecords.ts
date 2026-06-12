@@ -28,7 +28,7 @@ export function useConsentRecords() {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    setConsents((data as ConsentRecord[]) ?? []);
+    setConsents((data as unknown as ConsentRecord[]) ?? []);
     setIsLoading(false);
   }, [user]);
 
@@ -53,7 +53,7 @@ export function useConsentRecords() {
         .select()
         .single();
       if (error) return false;
-      setConsents(prev => [data as ConsentRecord, ...prev]);
+      setConsents(prev => [data as unknown as ConsentRecord, ...prev]);
       return true;
     },
     [user]

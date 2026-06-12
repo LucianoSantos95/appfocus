@@ -44,7 +44,7 @@ export function useUserPreferences() {
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
-    setPreferences((data as UserPreferences) ?? null);
+    setPreferences((data as unknown as UserPreferences) ?? null);
     setIsLoading(false);
   }, [user]);
 
@@ -63,7 +63,7 @@ export function useUserPreferences() {
           .select()
           .single();
         if (error) return false;
-        setPreferences(data as UserPreferences);
+        setPreferences(data as unknown as UserPreferences);
       } else {
         const { data, error } = await supabase
           .from("user_preferences" as any)
@@ -71,7 +71,7 @@ export function useUserPreferences() {
           .select()
           .single();
         if (error) return false;
-        setPreferences(data as UserPreferences);
+        setPreferences(data as unknown as UserPreferences);
       }
       return true;
     },
