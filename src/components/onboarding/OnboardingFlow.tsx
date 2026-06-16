@@ -7,7 +7,7 @@ import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useDemoData } from "@/contexts/DemoDataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ASSISTANT_MESSAGES, type DemoModule } from "@/lib/demo-data";
+import { getAssistantMessage, type DemoModule } from "@/lib/demo-data";
 import { seedDemoData } from "@/lib/demo-seed";
 
 const MODULE_ROUTES: Record<DemoModule, string> = {
@@ -66,7 +66,7 @@ export function OnboardingFlow() {
 
         localStorage.setItem(
           "hub_assistant_pending_message",
-          JSON.stringify({ module, content: ASSISTANT_MESSAGES[module] })
+          JSON.stringify({ module, content: getAssistantMessage(module, segment) })
         );
 
         navigate(MODULE_ROUTES[module], { replace: true });
