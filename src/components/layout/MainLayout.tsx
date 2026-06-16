@@ -4,7 +4,6 @@ import { useSidebar } from "./SidebarContext";
 import { UpgradeCTA } from "@/components/plan/UpgradeCTA";
 import { AIChatWidget } from "@/components/chat/AIChatWidget";
 import { DemoCouponBanner } from "@/components/onboarding/DemoCouponBanner";
-import { AssistantWelcomeBanner } from "@/components/onboarding/AssistantWelcomeBanner";
 import { useDemoData } from "@/contexts/DemoDataContext";
 import { useLocation } from "react-router-dom";
 
@@ -29,7 +28,6 @@ export function MainLayout({ children }: MainLayoutProps) {
       </main>
       {!isOnboardingRoute && <AIChatWidget />}
       {!isOnboardingRoute && <UpgradeCTA />}
-      {!isOnboardingRoute && <AssistantWelcomeBanner />}
     </div>
   );
 }
