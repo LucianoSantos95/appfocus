@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Search, ShieldAlert, Sparkles, Clock, CheckCircle2, Send, Megaphone } from "lucide-react";
+import { Users, Search, ShieldAlert, Sparkles, Clock, CheckCircle2, Send, Megaphone, Activity } from "lucide-react";
 import { CampanhaPromoCard } from "@/components/admin/CampanhaPromoCard";
 import { FollowupComposerDialog } from "@/components/admin/FollowupComposerDialog";
 import { BroadcastDialog } from "@/components/admin/BroadcastDialog";
+import { UsuariosAtivosPanel } from "@/components/admin/UsuariosAtivosPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSubscriberFollowups } from "@/hooks/useSubscriberFollowups";
 import { Button } from "@/components/ui/button";
 import { format, formatDistanceToNowStrict } from "date-fns";
@@ -197,6 +199,17 @@ export default function Assinantes() {
           </Badge>
         </div>
 
+        <Tabs defaultValue="assinantes" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="assinantes" className="gap-1">
+              <Users className="h-4 w-4" /> Assinantes
+            </TabsTrigger>
+            <TabsTrigger value="ativos" className="gap-1">
+              <Activity className="h-4 w-4" /> Usuários mais ativos
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="assinantes" className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
@@ -401,6 +414,12 @@ export default function Assinantes() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="ativos">
+            <UsuariosAtivosPanel />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {followupTarget && (
