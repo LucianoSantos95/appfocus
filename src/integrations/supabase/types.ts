@@ -1798,6 +1798,30 @@ export type Database = {
       }
     }
     Views: {
+      user_integrations_status: {
+        Row: {
+          connected: boolean | null
+          connected_at: string | null
+          email: string | null
+          provider: string | null
+          user_id: string | null
+        }
+        Insert: {
+          connected?: never
+          connected_at?: string | null
+          email?: never
+          provider?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          connected?: never
+          connected_at?: string | null
+          email?: never
+          provider?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       vw_assinantes: {
         Row: {
           assinatura_fim: string | null
