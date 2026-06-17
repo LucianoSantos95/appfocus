@@ -8,11 +8,13 @@ import {
   getWorldCupTimeLeft,
 } from "@/lib/campaigns";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
-
+import { useTheme } from "@/contexts/ThemeContext";
 
 export function WorldCupBanner() {
   const navigate = useNavigate();
   const { session, isOnboardingComplete } = useOnboardingSession();
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -37,8 +39,9 @@ export function WorldCupBanner() {
         data-wc-banner
         className="group relative overflow-hidden rounded-2xl border shadow-lg animate-fade-in transition-all duration-300 hover:shadow-glow hover:scale-[1.01] motion-reduce:transition-none motion-reduce:hover:scale-100"
         style={{
-          background:
-            "linear-gradient(135deg, rgba(0,156,59,0.22) 0%, rgba(255,223,0,0.16) 50%, rgba(0,39,118,0.28) 100%)",
+          background: isLight
+            ? "linear-gradient(135deg, rgba(0,156,59,0.12) 0%, rgba(255,223,0,0.18) 50%, rgba(0,39,118,0.12) 100%)"
+            : "linear-gradient(135deg, rgba(0,156,59,0.22) 0%, rgba(255,223,0,0.16) 50%, rgba(0,39,118,0.28) 100%)",
           borderColor: "rgba(255,223,0,0.45)",
         }}
         aria-label="Promoção Copa do Mundo"
@@ -48,9 +51,6 @@ export function WorldCupBanner() {
           aria-hidden
           className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-wc-shine motion-reduce:hidden"
         />
-
-
-
 
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-5 px-6 py-7 pt-10 md:px-10">
           <div className="flex items-start gap-4 min-w-0">
@@ -67,12 +67,13 @@ export function WorldCupBanner() {
               <h2
                 className="text-3xl md:text-4xl font-extrabold leading-tight"
                 style={{
-                  background:
-                    "linear-gradient(90deg, #009C3B 0%, #FFDF00 50%, #FFFFFF 100%)",
+                  background: isLight
+                    ? "linear-gradient(90deg, #007A2F 0%, #B38600 50%, #002776 100%)"
+                    : "linear-gradient(90deg, #009C3B 0%, #FFDF00 50%, #FFFFFF 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
-                  textShadow: "0 1px 0 rgba(0,0,0,0.25)",
+                  textShadow: isLight ? "none" : "0 1px 0 rgba(0,0,0,0.25)",
                 }}
               >
                 Rumo ao Hexa 🏆
@@ -81,9 +82,9 @@ export function WorldCupBanner() {
                 <span
                   className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
                   style={{
-                    background: "rgba(255,223,0,0.20)",
+                    background: isLight ? "rgba(255,223,0,0.55)" : "rgba(255,223,0,0.20)",
                     border: "1px solid rgba(255,223,0,0.45)",
-                    color: "#FFDF00",
+                    color: isLight ? "#004a1f" : "#FFDF00",
                   }}
                 >
                   <Gift className="h-3.5 w-3.5" />
