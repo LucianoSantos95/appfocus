@@ -8,6 +8,7 @@ import { OnboardingReengagementD1Email } from '../_shared/email-templates/onboar
 import { OnboardingReengagementD3Email } from '../_shared/email-templates/onboarding-reengagement-d3.tsx'
 import { OnboardingReengagementD7Email } from '../_shared/email-templates/onboarding-reengagement-d7.tsx'
 import { PowerUserUpgradeDigestEmail } from '../_shared/email-templates/power-user-upgrade-digest.tsx'
+import { OnboardingReengagementExploringEmail } from '../_shared/email-templates/onboarding-reengagement-exploring.tsx'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,6 +47,10 @@ const EMAIL_TEMPLATES: Record<string, { component: React.ComponentType<any>, sub
   'power-user-upgrade-digest': {
     component: PowerUserUpgradeDigestEmail,
     subject: 'Sua operação está crescendo no Focus 🚀',
+  },
+  'onboarding-reengagement-exploring': {
+    component: OnboardingReengagementExploringEmail,
+    subject: 'Você está a 2 minutos do seu primeiro dado real no Focus',
   },
 }
 
