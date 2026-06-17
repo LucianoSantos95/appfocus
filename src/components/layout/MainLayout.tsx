@@ -4,6 +4,7 @@ import { useSidebar } from "./SidebarContext";
 import { UpgradeCTA } from "@/components/plan/UpgradeCTA";
 import { AIChatWidget } from "@/components/chat/AIChatWidget";
 import { DemoCouponBanner } from "@/components/onboarding/DemoCouponBanner";
+import { WowMomentCard } from "@/components/onboarding/WowMomentCard";
 import { useDemoData } from "@/contexts/DemoDataContext";
 import { useLocation } from "react-router-dom";
 
@@ -14,7 +15,7 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const { collapsed } = useSidebar();
   const location = useLocation();
-  const { demoModule } = useDemoData();
+  const { demoModule, pendingWow, clearWow } = useDemoData();
   const isOnboardingRoute = location.pathname === "/onboarding";
 
   return (
@@ -28,6 +29,8 @@ export function MainLayout({ children }: MainLayoutProps) {
       </main>
       {!isOnboardingRoute && <AIChatWidget />}
       {!isOnboardingRoute && <UpgradeCTA />}
+      {/* WowMomentCard fires automatically after demo seeding — bottom-right */}
+      <WowMomentCard moment={pendingWow} onDismiss={clearWow} />
     </div>
   );
 }

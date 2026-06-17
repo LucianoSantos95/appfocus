@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getAssistantMessage, type DemoModule } from "@/lib/demo-data";
 import { seedDemoData } from "@/lib/demo-seed";
+import { buildWowMoment } from "@/components/onboarding/WowMomentCard";
 
 const MODULE_ROUTES: Record<DemoModule, string> = {
   financeiro: "/financas",
@@ -17,10 +18,26 @@ const MODULE_ROUTES: Record<DemoModule, string> = {
   painel: "/",
 };
 
+// buildWowMoment uses internal module names that differ from DemoModule keys
+const WOW_MODULE_MAP: Record<DemoModule, string> = {
+  financeiro: "financas",
+  clientes: "clientes",
+  projetos: "projetos",
+  painel: "painel",
+};
+
+// Metadata seeded into each module, used to show concrete numbers in the WowMoment card
+const WOW_META: Record<DemoModule, Record<string, unknown>> = {
+  financeiro: { value: 11700 },
+  clientes:   { nome: "seus primeiros clientes" },
+  projetos:   {},
+  painel:     { value: 11700 },
+};
+
 export function OnboardingFlow() {
   const { user } = useAuth();
   const { session, loading, createSession } = useOnboardingSession();
-  const { startDemo } = useDemoData();
+  const { startDemo, triggerWow } = useDemoData();
   const navigate = useNavigate();
   const [isSeeding, setIsSeeding] = useState(false);
 
@@ -41,6 +58,7 @@ export function OnboardingFlow() {
   const handleChoose = useCallback(
     async (module: DemoModule, segment: string) => {
       setIsSeeding(true);
+      const seedStart = Date.now();
       try {
         let userName: string | null = null;
         if (user) {
@@ -59,11 +77,17 @@ export function OnboardingFlow() {
         await createSession(segment, module, userName);
 
         if (user) {
-          await seedDemoData(module, user.id);
+          // Pass segment so demo data matches the user's context (agencia/consultoria/freelancer/pme)
+          await seedDemoData(module, user.id, segment);
         }
 
         startDemo(module);
 
+        // Queue WowMomentCard to fire on the destination page (1.2s delay via triggerWow)
+        const ttvSeconds = (Date.now() - seedStart) / 1000;
+        triggerWow(buildWowMoment(WOW_MODULE_MAP[module], ttvSeconds, WOW_META[module]));
+
+        // AIChatWidget reads this on mount and auto-opens with the segment-aware message
         localStorage.setItem(
           "hub_assistant_pending_message",
           JSON.stringify({ module, content: getAssistantMessage(module, segment) })
@@ -74,7 +98,7 @@ export function OnboardingFlow() {
         setIsSeeding(false);
       }
     },
-    [user, createSession, startDemo, navigate]
+    [user, createSession, startDemo, triggerWow, navigate]
   );
 
   if (loading) {
