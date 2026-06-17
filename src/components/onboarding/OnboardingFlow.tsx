@@ -56,7 +56,7 @@ export function OnboardingFlow() {
   }, [loading, session, navigate]);
 
   const handleChoose = useCallback(
-    async (module: DemoModule, segment: string) => {
+    async (module: DemoModule, segment: string, phone: string | null) => {
       setIsSeeding(true);
       const seedStart = Date.now();
       try {
@@ -72,6 +72,10 @@ export function OnboardingFlow() {
             (user.user_metadata as any)?.full_name ??
             user.email ??
             null;
+
+          if (phone) {
+            await supabase.from("profiles").update({ phone }).eq("user_id", user.id);
+          }
         }
 
         await createSession(segment, module, userName);

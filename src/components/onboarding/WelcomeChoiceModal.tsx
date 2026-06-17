@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { DollarSign, Users, FolderKanban, Rocket, Loader2 } from "lucide-react";
+import { DollarSign, Users, FolderKanban, Rocket, Loader2, ArrowRight } from "lucide-react";
 import hubLogo from "@/assets/logo.png";
 import type { DemoModule } from "@/lib/demo-data";
 
 interface Props {
   firstName: string;
-  onChoose: (module: DemoModule, segment: string) => void;
+  onChoose: (module: DemoModule, segment: string, phone: string | null) => void;
   isLoading?: boolean;
 }
 
@@ -28,6 +28,8 @@ const CHOICES: Array<{
   { module: "projetos",   icon: FolderKanban, emoji: "📋", title: "Projetos",      desc: "Acompanhe entregas e prazos dos clientes" },
   { module: "painel",     icon: Rocket,       emoji: "🚀", title: "Ver tudo",      desc: "Me mostre como o Hub funciona todo" },
 ];
+
+type Step = "segment" | "phone" | "module";
 
 function CardButton({
   onClick,
@@ -61,15 +63,40 @@ function CardButton({
 }
 
 export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: Props) {
+  const [step, setStep] = useState<Step>("segment");
   const [segment, setSegment] = useState<string | null>(null);
+  const [phone, setPhone] = useState("");
 
-  const subtitle = segment
-    ? "O que você quer resolver primeiro na sua operação?"
-    : "Como você descreveria sua operação?";
+  const subtitles: Record<Step, string> = {
+    segment: "Como você descreveria sua operação?",
+    phone:   "Quer receber alertas do Hub pelo WhatsApp?",
+    module:  "O que você quer resolver primeiro na sua operação?",
+  };
 
-  const footer = segment
-    ? "Você pode explorar todas as áreas depois — isso é só o começo."
-    : "Isso nos ajuda a personalizar sua experiência no Hub.";
+  const footers: Record<Step, string> = {
+    segment: "Isso nos ajuda a personalizar sua experiência no Hub.",
+    phone:   "Só enviamos avisos úteis do seu negócio. Sem spam.",
+    module:  "Você pode explorar todas as áreas depois — isso é só o começo.",
+  };
+
+  const dotSteps: Step[] = ["segment", "phone", "module"];
+  const dotLabels = ["Perfil", "Contato", "Início"];
+
+  const handleSegmentClick = (id: string) => {
+    setSegment(id);
+    setStep("phone");
+  };
+
+  const handlePhoneContinue = (skipPhone = false) => {
+    setStep("module");
+    if (skipPhone) setPhone("");
+  };
+
+  const handleModuleClick = (module: DemoModule) => {
+    if (!segment) return;
+    const trimmedPhone = phone.replace(/\D/g, "");
+    onChoose(module, segment, trimmedPhone.length >= 10 ? trimmedPhone : null);
+  };
 
   return (
     <div
@@ -81,33 +108,42 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
         <div className="flex flex-col items-center text-center mb-8">
           <img src={hubLogo} alt="Hub Empresarial" className="h-16 w-16 rounded-2xl mb-5 ring-2 ring-primary/30" />
           <h1 className="text-3xl font-bold text-foreground">
-            Olá, {firstName} <span aria-hidden>👋</span>
+            {step === "phone" ? `Quase lá, ${firstName}!` : `Olá, ${firstName} 👋`}
           </h1>
-          <p className="mt-2 text-base text-muted-foreground">{subtitle}</p>
+          <p className="mt-2 text-base text-muted-foreground">{subtitles[step]}</p>
 
           {/* Progress dots */}
           <div className="flex items-center gap-3 mt-4">
-            <div className="flex items-center gap-1.5">
-              <div className={`h-2 w-2 rounded-full transition-colors ${!segment ? "bg-primary" : "bg-primary/40"}`} />
-              <span className={`text-xs transition-colors ${!segment ? "text-foreground" : "text-muted-foreground"}`}>
-                Perfil
-              </span>
-            </div>
-            <div className="h-px w-8" style={{ background: "rgba(255,255,255,0.15)" }} />
-            <div className="flex items-center gap-1.5">
-              <div className={`h-2 w-2 rounded-full transition-colors ${segment ? "bg-primary" : "bg-muted-foreground/30"}`} />
-              <span className={`text-xs transition-colors ${segment ? "text-foreground" : "text-muted-foreground"}`}>
-                Início
-              </span>
-            </div>
+            {dotSteps.map((s, i) => (
+              <div key={s} className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className={`h-2 w-2 rounded-full transition-colors ${
+                      step === s ? "bg-primary" :
+                      dotSteps.indexOf(step) > i ? "bg-primary/40" : "bg-muted-foreground/30"
+                    }`}
+                  />
+                  <span
+                    className={`text-xs transition-colors ${
+                      step === s ? "text-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    {dotLabels[i]}
+                  </span>
+                </div>
+                {i < dotSteps.length - 1 && (
+                  <div className="h-px w-8" style={{ background: "rgba(255,255,255,0.15)" }} />
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Step 1 — segment */}
-        {!segment && (
+        {step === "segment" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {SEGMENTS.map((s) => (
-              <CardButton key={s.id} onClick={() => setSegment(s.id)}>
+              <CardButton key={s.id} onClick={() => handleSegmentClick(s.id)}>
                 <span className="text-3xl leading-none mb-3 block">{s.emoji}</span>
                 <h3 className="text-base font-semibold text-foreground mb-1">{s.label}</h3>
                 <p className="text-sm" style={{ color: "rgba(255,255,255,0.50)" }}>{s.desc}</p>
@@ -116,15 +152,60 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
           </div>
         )}
 
+        {/* Step 1.5 — phone */}
+        {step === "phone" && (
+          <div
+            className="rounded-[14px] border p-8 flex flex-col gap-5"
+            style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.10)" }}
+          >
+            <div className="text-4xl text-center">📱</div>
+            <div>
+              <label
+                htmlFor="phone-input"
+                className="block text-sm font-medium text-foreground mb-2"
+              >
+                Número do WhatsApp
+              </label>
+              <input
+                id="phone-input"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handlePhoneContinue()}
+                placeholder="(11) 99999-9999"
+                autoFocus
+                className="w-full rounded-[10px] border bg-transparent px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
+                style={{ borderColor: "rgba(255,255,255,0.15)" }}
+              />
+            </div>
+            <button
+              onClick={() => handlePhoneContinue()}
+              className="flex items-center justify-center gap-2 w-full rounded-[10px] bg-primary py-3 text-sm font-semibold text-white hover:bg-primary/90 transition"
+            >
+              Continuar
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => handlePhoneContinue(true)}
+              className="text-xs text-center transition"
+              style={{ color: "rgba(255,255,255,0.40)" }}
+              onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.65)"; }}
+              onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.40)"; }}
+            >
+              Pular esta etapa →
+            </button>
+          </div>
+        )}
+
         {/* Step 2 — module choice */}
-        {segment && (
+        {step === "module" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {CHOICES.map((c) => {
               const Icon = c.icon;
               return (
                 <CardButton
                   key={c.module}
-                  onClick={() => onChoose(c.module, segment)}
+                  onClick={() => handleModuleClick(c.module)}
                   disabled={isLoading}
                 >
                   <div className="flex items-center gap-2 mb-3">
@@ -149,7 +230,7 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
 
         {!isLoading && (
           <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.45)" }}>
-            {footer}
+            {footers[step]}
           </p>
         )}
       </div>
