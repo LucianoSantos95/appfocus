@@ -199,6 +199,17 @@ export default function Assinantes() {
           </Badge>
         </div>
 
+        <Tabs defaultValue="assinantes" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="assinantes" className="gap-1">
+              <Users className="h-4 w-4" /> Assinantes
+            </TabsTrigger>
+            <TabsTrigger value="ativos" className="gap-1">
+              <Activity className="h-4 w-4" /> Usuários mais ativos
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="assinantes" className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
@@ -403,6 +414,12 @@ export default function Assinantes() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="ativos">
+            <UsuariosAtivosPanel />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {followupTarget && (
