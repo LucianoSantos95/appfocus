@@ -20,10 +20,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+
+        // After any sign-in (covers Google OAuth redirect), try to attribute UTM
+        // if profiles.canal_aquisicao is still NULL (first-touch, never overwrites)
+        if (event === "SIGNED_IN" && session?.user) {
+          try {
+            const raw = localStorage.getItem("hub_utm");
+            if (raw) {
+              const utm = JSON.parse(raw) as { utm_source?: string; captured_at?: number };
+              const fresh = Date.now() - (utm.captured_at ?? 0) < 24 * 60 * 60 * 1000;
+              if (fresh && utm.utm_source) {
+                await supabase
+                  .from("profiles")
+                  .update({ canal_aquisicao: utm.utm_source })
+                  .eq("user_id", session.user.id)
+                  .is("canal_aquisicao", null);
+                localStorage.removeItem("hub_utm");
+              }
+            }
+          } catch {
+            // Non-blocking — attribution failure must never break login
+          }
+        }
       }
     );
 
@@ -62,6 +84,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name?: string, inviteToken?: string) => {
+    // Read first-touch UTM from localStorage (set when user landed on /auth)
+    let canalAquisicao: string | null = null;
+    try {
+      const raw = localStorage.getItem("hub_utm");
+      if (raw) {
+        const utm = JSON.parse(raw) as { utm_source?: string; captured_at?: number };
+        const fresh = Date.now() - (utm.captured_at ?? 0) < 24 * 60 * 60 * 1000;
+        if (fresh && utm.utm_source) canalAquisicao = utm.utm_source;
+      }
+    } catch { /* ignore */ }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -72,9 +105,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: {
           full_name: name || email,
           invite_token: inviteToken || null,
+          canal_aquisicao: canalAquisicao,
         },
       },
     });
+
+    // Clean up UTM after successful signup (onAuthStateChange handles Google OAuth cleanup)
+    if (!error && canalAquisicao) localStorage.removeItem("hub_utm");
+
     return { error: error ? new Error(error.message) : null };
   };
 

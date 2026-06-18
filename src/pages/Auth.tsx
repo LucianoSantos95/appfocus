@@ -39,6 +39,18 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get("invite");
   const { signIn, signUp } = useAuth();
+
+  // Capture UTM params on first visit and persist for 24h
+  useEffect(() => {
+    const source = searchParams.get("utm_source");
+    if (!source) return;
+    localStorage.setItem("hub_utm", JSON.stringify({
+      utm_source: source,
+      utm_medium: searchParams.get("utm_medium"),
+      utm_campaign: searchParams.get("utm_campaign"),
+      captured_at: Date.now(),
+    }));
+  }, [searchParams]);
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
