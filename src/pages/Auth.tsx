@@ -10,7 +10,7 @@ import AuthLoginDialog from "@/components/auth/AuthLoginDialog";
 import AuthSignupDialog from "@/components/auth/AuthSignupDialog";
 import WorldCupPromoStrip from "@/components/auth/WorldCupPromoStrip";
 
-import { Sparkles, ArrowRight, ArrowDown, Shield, XCircle, DollarSign, FolderKanban, Users, UserCog, Megaphone, CheckSquare, Cog } from "lucide-react";
+import { ArrowRight, ArrowDown, Shield, XCircle, DollarSign, FolderKanban, Users, UserCog, Megaphone, CheckSquare, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -211,7 +211,7 @@ export default function Auth() {
             ))}
           </div>
           <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">+50 usuários</span> já utilizam
+            <span className="font-semibold text-foreground">+100 usuários</span> já utilizam
           </span>
         </div>
 
@@ -227,11 +227,6 @@ export default function Auth() {
           </span>
         </div>
 
-        {/* Urgency badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-sm text-primary/90">
-          <Sparkles className="w-4 h-4" />
-          Primeiros 100 usuários ganham acesso antecipado a recursos premium
-        </div>
       </main>
 
       <AuthFooter />
