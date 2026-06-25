@@ -128,12 +128,14 @@ serve(async (req) => {
       return json({ url: session.url }, 200);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
+      console.error("Stripe session create error", msg);
       log("Stripe session create error", { msg });
-      return json({ error: `Erro do provedor de pagamento: ${msg}` }, 502);
+      return json({ error: "Erro ao iniciar o pagamento. Tente novamente em instantes." }, 502);
     }
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
+    console.error("create-checkout unhandled error", msg);
     log("Unhandled error", { msg });
-    return json({ error: msg }, 500);
+    return json({ error: "Erro interno. Tente novamente." }, 500);
   }
 });
