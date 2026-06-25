@@ -147,6 +147,7 @@ const Index = () => {
         <ActivityTimeline />
 
         <OnboardingPrompt />
+        <OnboardingFeedbackPrompt />
         {session && <OnboardingCouponBanner session={session} />}
       </div>
       <GuidedTour forceRun={forceTour} onTourComplete={() => setForceTour(false)} />
