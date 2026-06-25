@@ -69,6 +69,20 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Server-side plan enforcement (paid feature)
+    const [{ data: sub }, { data: adminRole }] = await Promise.all([
+      supabase.from("subscriptions").select("plan,status").eq("user_id", userData.user.id).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", userData.user.id).eq("role", "admin").maybeSingle(),
+    ]);
+    const isAdmin = !!adminRole;
+    const plan = (sub?.plan ?? "gratuito").toLowerCase();
+    if (!isAdmin && plan === "gratuito") {
+      return new Response(JSON.stringify({ error: "Recurso disponível apenas em planos pagos." }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const body = (await req.json()) as RequestBody;
     if (!body.sheets?.length) {
       return new Response(JSON.stringify({ error: "Sem planilhas" }), {
@@ -207,7 +221,7 @@ Deno.serve(async (req: Request) => {
   } catch (e) {
     console.error("smart-import error", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Erro" }),
+      JSON.stringify({ error: "Erro interno ao importar dados. Tente novamente." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

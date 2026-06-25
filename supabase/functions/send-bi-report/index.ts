@@ -425,6 +425,21 @@ serve(async (req) => {
       });
     }
 
+    // Server-side plan enforcement (paid feature)
+    {
+      const [{ data: sub }, { data: adminRole }] = await Promise.all([
+        adminClient.from("subscriptions").select("plan").eq("user_id", user.id).maybeSingle(),
+        adminClient.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
+      ]);
+      const plan = (sub?.plan ?? "gratuito").toLowerCase();
+      if (!adminRole && plan === "gratuito") {
+        return new Response(
+          JSON.stringify({ error: "Recurso disponível apenas em planos pagos." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const payload = (await req.json()) as ReportPayload;
     if (!payload.canal || !payload.destinatario || !payload.formato) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
