@@ -14,9 +14,11 @@ import { stripHtml } from "@/lib/sanitize";
 interface FeedbackDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  placeholder?: string;
+  onSubmitted?: () => void;
 }
 
-export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
+export function FeedbackDialog({ open, onOpenChange, placeholder, onSubmitted }: FeedbackDialogProps) {
   const { toast } = useToast();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -45,6 +47,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
       });
       if (error) throw error;
       toast({ title: "Feedback enviado!", description: "Obrigado pela sua opinião!" });
+      onSubmitted?.();
       setNome("");
       setEmail("");
       setMensagem("");
@@ -97,7 +100,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
           </div>
           <div className="space-y-2">
             <Label>Mensagem *</Label>
-            <Textarea value={mensagem} onChange={(e) => setMensagem(e.target.value)} rows={4} maxLength={1000} placeholder="O que achou do sistema?" />
+            <Textarea value={mensagem} onChange={(e) => setMensagem(e.target.value)} rows={4} maxLength={1000} placeholder={placeholder ?? "O que achou do sistema?"} />
           </div>
           <Button type="submit" className="w-full gap-2" disabled={loading}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

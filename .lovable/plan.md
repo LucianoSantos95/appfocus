@@ -1,71 +1,55 @@
-# Ajustes finais da campanha Copa do Mundo
+# Popup de feedback do onboarding
 
-## 1. Hover sutil na decoração (dentro do hub)
+Reusa o `FeedbackDialog` existente (que grava em `feedbacks`) e o dispara em três momentos, no painel principal (`/`), para não atrapalhar o fluxo do onboarding em si.
 
-No `WorldCupBanner.tsx` (cartão "Rumo ao Hexa" na Home):
-- Adicionar `group` + transição no `<section>`: leve `hover:scale-[1.01]`, `hover:shadow-glow`, e brilho diagonal animado (gradient sweep) ao passar o mouse.
-- O troféu ganha `group-hover:animate-bounce` discreto e o ícone do botão um `group-hover:rotate-12`.
-- Tudo respeitando `motion-reduce:transition-none`.
+## Gatilhos
 
-## 2. CTA "Aproveitar promoção" inteligente
+1. **Concluiu o onboarding** — logo após `WelcomeChoiceModal` finalizar e o usuário cair no módulo escolhido, o popup aparece (com 3–4s de atraso) **na primeira volta ao painel**.
+2. **Abandonou o onboarding** — usuário entrou em `/onboarding` mas não criou `onboarding_sessions` e voltou ao painel.
+3. **Pendente há X dias** — sem sessão de onboarding criada e conta tem ≥ 3 dias → dispara também.
 
-Atualizar o `onClick` do botão no `WorldCupBanner` e também no `WorldCupPromoStrip` (Auth) e `PersistentCouponWidget`:
-- Usar o hook `useOnboardingSession`:
-  - Se `isOnboardingComplete` (ou já existe `session?.completed_at`) → `navigate("/planos")`.
-  - Caso contrário → `navigate("/onboarding")`.
-- Na strip de Auth (usuário deslogado) mantém comportamento atual (abre signup).
+Em todos os casos: dispara no `/` (painel), nunca em cima do fluxo de onboarding.
 
-## 3. Planos: anual primeiro
+## Frequência
 
-Em `src/pages/Planos.tsx`:
-- Mudar o estado inicial `useState(false)` → `useState(true)` para o toggle anual.
-- Garantir que a seleção visual do toggle reflita corretamente o padrão "Anual".
-- Banner do cupom continua igual.
+- Mostra 1×. Se o usuário fechar sem responder, reaparece 1× depois de 3 dias. Se enviar, nunca mais.
+- Controle por `localStorage`:
+  - `onb_feedback_state` = `{ status: "shown" | "submitted", lastShownAt, attempts }`
+  - Máximo de `attempts = 2`.
 
-## 4. Confete apenas na Home
+## Conteúdo do popup
 
-Hoje o `WorldCupOverlay` é montado em `App.tsx` e aparece em todas as rotas internas, atrapalhando trabalho em Finanças/RH/etc.
+Reaproveita o `FeedbackDialog` atual sem mudar campos. Apenas adiciona um pré-preenchimento contextual no `mensagem` (placeholder) para guiar a resposta:
+- Concluído: "Como foi sua primeira experiência configurando o Hub?"
+- Abandonado/pendente: "O que te impediu de concluir a configuração inicial?"
 
-Plano:
-- Manter o overlay montado em `App.tsx`, mas dentro do componente verificar `useLocation()`:
-  - Renderizar somente quando `pathname === "/"` **ou** quando estiver em `/auth`, `/planos`, `/onboarding` (rotas promocionais/landing).
-  - Em rotas operacionais (`/financas`, `/rh`, `/marketing`, `/projetos`, `/clientes`, `/atividades`, `/processos`, `/guia`, `/assinantes`) **não renderizar** confete nem bandeirinhas.
-- O `WorldCupBanner` (cartão estático com "Rumo ao Hexa") continua visível na Home.
-- A strip de Auth (`WorldCupPromoStrip`) continua na página de login.
-
-## 5. Auditoria do onboarding
-
-Após as mudanças, validar:
-
-1. **OnboardingFlow / OnboardingChat**: confirmar que o overlay agora **não** aparece sobre o chat (rota `/onboarding` — decidir se mantemos overlay ali; recomendação: **manter, mas sem confete pesado**, ou remover para não atrapalhar leitura do chat. Proposta: **remover** `/onboarding` da lista de rotas com overlay para garantir foco).
-2. **useOnboardingSession**: `COUPON_CODE` continua sendo lido de `getActiveCampaignCoupon()` — ok, sem regressão.
-3. **DemoCouponBanner / OnboardingCouponBanner / OnboardingCouponPreview / OnboardingProgressBar**: confirmar que labels dinâmicos (HEXA / 20% / 3 meses) seguem corretos.
-4. **CTA "Aproveitar promoção"**: ao não ter sessão (`needsOnboarding`), deve cair em `/onboarding`. Ao ter `completed_at`, vai para `/planos` com cupom já aplicado.
-5. **Planos.tsx**: com `annual = true` por padrão, a lógica de `displayAnnualTotal` e do checkout com `interval = "annual"` continua correta — o `priceId` anual já existe em `STRIPE_PLANS`.
-6. **`WelcomeChoiceModal`/`OnboardingWelcomeModal`**: garantir que continuam abrindo normalmente e que o overlay (quando presente em `/`) não bloqueia cliques — já usa `pointer-events-none`, ok.
-7. **prefers-reduced-motion**: hover sweep + bounce devem respeitar `motion-reduce:`.
-
-## Arquivos afetados
-
-- `src/components/dashboard/WorldCupBanner.tsx` — hover + CTA inteligente
-- `src/components/dashboard/WorldCupOverlay.tsx` — gate por rota via `useLocation`
-- `src/components/dashboard/PersistentCouponWidget.tsx` — CTA inteligente
-- `src/pages/Planos.tsx` — `annual` default `true`
-- `src/index.css` — keyframe `wc-shine` para o hover sweep (opcional)
+A coluna `pagina` já é preenchida automaticamente com a rota atual (`/`), o que permite filtrar feedbacks de onboarding no admin.
 
 ## Detalhes técnicos
 
-```ts
-// WorldCupOverlay.tsx
-const { pathname } = useLocation();
-const ALLOWED = new Set(["/", "/auth", "/planos"]);
-if (!ALLOWED.has(pathname)) return null;
-```
+**Novo componente:** `src/components/onboarding/OnboardingFeedbackPrompt.tsx`
+- Hook em `Index.tsx` (montado só no `/`).
+- Usa `useAuth`, `useOnboardingSession` (`session`, `loading`, `needsOnboarding`) e lê `user.created_at` para o gatilho de 3 dias.
+- Lógica:
+  1. Se `localStorage.onb_feedback_state.status === "submitted"` → não mostra.
+  2. Se `attempts >= 2` → não mostra.
+  3. Se `lastShownAt` < 3 dias → não mostra.
+  4. Detecta gatilho:
+     - **Concluído**: flag `localStorage.onb_just_completed = "1"` setada por `OnboardingFlow.tsx` no `handleChoose` antes de navegar, e lida/limpa aqui.
+     - **Abandonado/pendente**: `needsOnboarding === true` e `(now - user.created_at) >= 1h` (abandono curto) ou `≥ 3 dias` (pendente longo).
+  5. Após 3–4s, abre o `FeedbackDialog` com placeholder contextual.
+- Ao fechar sem enviar: incrementa `attempts`, grava `lastShownAt`.
+- Ao enviar (callback novo `onSubmitted` no `FeedbackDialog`): grava `status = "submitted"`.
 
-```ts
-// CTA inteligente
-const { session, isOnboardingComplete } = useOnboardingSession();
-const target = isOnboardingComplete || session?.completed_at ? "/planos" : "/onboarding";
-```
+**Mudanças em arquivos existentes:**
+- `src/components/user/FeedbackDialog.tsx`: adiciona props opcionais `placeholder?: string` e `onSubmitted?: () => void`. Sem mudar layout nem campos.
+- `src/components/onboarding/OnboardingFlow.tsx`: no `handleChoose`, após `createSession`, `localStorage.setItem("onb_just_completed", "1")`.
+- `src/pages/Index.tsx`: monta `<OnboardingFeedbackPrompt />` ao lado do `<OnboardingPrompt />` existente.
 
-Sem mudanças em edge functions, schema ou Stripe.
+**Banco:** nenhuma migração. `feedbacks.pagina = "/"` identifica origem; se quiser filtrar com mais precisão depois, dá pra prefixar o `mensagem` com `[onboarding-concluido]` / `[onboarding-abandonado]` (decisão simples na hora do envio).
+
+## Fora de escopo
+
+- Não cria nova tabela.
+- Não altera o `FeedbackDialog` visualmente.
+- Não dispara durante o fluxo de `/onboarding` em si — só após sair pro painel.

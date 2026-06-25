@@ -1,6 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { OnboardingPrompt } from "@/components/guide/OnboardingPrompt";
+import { OnboardingFeedbackPrompt } from "@/components/onboarding/OnboardingFeedbackPrompt";
 import { OnboardingCouponBanner } from "@/components/onboarding/OnboardingCouponBanner";
 import { GuidedTour } from "@/components/guide/GuidedTour";
 import { ModuleCard } from "@/components/ui/module-card";
@@ -146,6 +147,7 @@ const Index = () => {
         <ActivityTimeline />
 
         <OnboardingPrompt />
+        <OnboardingFeedbackPrompt />
         {session && <OnboardingCouponBanner session={session} />}
       </div>
       <GuidedTour forceRun={forceTour} onTourComplete={() => setForceTour(false)} />
