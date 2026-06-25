@@ -142,6 +142,6 @@ serve(async (req) => {
     return json({ success: true, transcript, summary, next_actions: nextActions });
   } catch (err) {
     console.error("transcribe-meeting error:", err);
-    return json({ error: (err as Error).message }, 500);
+    return json({ error: "Erro interno ao processar a reunião. Tente novamente." }, 500);
   }
 });
