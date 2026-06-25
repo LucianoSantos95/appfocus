@@ -57,6 +57,21 @@ serve(async (req) => {
       );
     }
 
+    // Server-side plan enforcement (paid feature)
+    {
+      const [{ data: sub }, { data: adminRole }] = await Promise.all([
+        supabaseAuth.from("subscriptions").select("plan").eq("user_id", userId).maybeSingle(),
+        supabaseAuth.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
+      ]);
+      const plan = (sub?.plan ?? "gratuito").toLowerCase();
+      if (!adminRole && plan === "gratuito") {
+        return new Response(
+          JSON.stringify({ error: "Recurso disponível apenas em planos pagos." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Rate limiting check
     const SUPABASE_URL_ENV = Deno.env.get("SUPABASE_URL");
     const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
