@@ -100,7 +100,7 @@ export function FeedbackDialog({ open, onOpenChange, placeholder, onSubmitted }:
           </div>
           <div className="space-y-2">
             <Label>Mensagem *</Label>
-            <Textarea value={mensagem} onChange={(e) => setMensagem(e.target.value)} rows={4} maxLength={1000} placeholder="O que achou do sistema?" />
+            <Textarea value={mensagem} onChange={(e) => setMensagem(e.target.value)} rows={4} maxLength={1000} placeholder={placeholder ?? "O que achou do sistema?"} />
           </div>
           <Button type="submit" className="w-full gap-2" disabled={loading}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
