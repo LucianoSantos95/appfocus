@@ -207,7 +207,7 @@ Deno.serve(async (req: Request) => {
   } catch (e) {
     console.error("smart-import error", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Erro" }),
+      JSON.stringify({ error: "Erro interno ao importar dados. Tente novamente." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
