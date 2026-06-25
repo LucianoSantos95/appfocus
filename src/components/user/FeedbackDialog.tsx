@@ -47,6 +47,7 @@ export function FeedbackDialog({ open, onOpenChange, placeholder, onSubmitted }:
       });
       if (error) throw error;
       toast({ title: "Feedback enviado!", description: "Obrigado pela sua opinião!" });
+      onSubmitted?.();
       setNome("");
       setEmail("");
       setMensagem("");
