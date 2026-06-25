@@ -79,6 +79,7 @@ export function OnboardingFlow() {
         }
 
         await createSession(segment, module, userName);
+        localStorage.setItem("onb_just_completed", "1");
 
         if (user) {
           // Pass segment so demo data matches the user's context (agencia/consultoria/freelancer/pme)
