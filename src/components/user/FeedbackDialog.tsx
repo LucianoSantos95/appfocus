@@ -18,7 +18,7 @@ interface FeedbackDialogProps {
   onSubmitted?: () => void;
 }
 
-export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
+export function FeedbackDialog({ open, onOpenChange, placeholder, onSubmitted }: FeedbackDialogProps) {
   const { toast } = useToast();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
