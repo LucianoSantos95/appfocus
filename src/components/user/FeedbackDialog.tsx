@@ -14,6 +14,8 @@ import { stripHtml } from "@/lib/sanitize";
 interface FeedbackDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  placeholder?: string;
+  onSubmitted?: () => void;
 }
 
 export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
