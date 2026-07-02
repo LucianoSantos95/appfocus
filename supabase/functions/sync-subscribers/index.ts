@@ -94,13 +94,32 @@ serve(async (req) => {
       }
     }
 
-    const activeSubscriptions = await stripe.subscriptions.list({ status: "active", limit: 100 });
-    logStep("Active subscriptions fetched", { count: activeSubscriptions.data.length });
+    // Fetch subscriptions in all relevant statuses so we can also downgrade
+    // users whose Stripe subscription has been canceled / past_due / unpaid.
+    const statusesToSync = ["active", "past_due", "unpaid", "canceled"] as const;
+    const allSubs: Stripe.Subscription[] = [];
+    for (const st of statusesToSync) {
+      const page = await stripe.subscriptions.list({ status: st, limit: 100 });
+      allSubs.push(...page.data);
+    }
+    logStep("Subscriptions fetched", { count: allSubs.length });
+
+    // Keep only the most recent subscription per customer (by created desc)
+    allSubs.sort((a, b) => (b.created ?? 0) - (a.created ?? 0));
+    const seenCustomer = new Set<string>();
+    const subscriptions: Stripe.Subscription[] = [];
+    for (const s of allSubs) {
+      const cid = typeof s.customer === "string" ? s.customer : s.customer.id;
+      if (seenCustomer.has(cid)) continue;
+      seenCustomer.add(cid);
+      subscriptions.push(s);
+    }
 
     let synced = 0;
     let skipped = 0;
+    let downgraded = 0;
 
-    for (const subscription of activeSubscriptions.data) {
+    for (const subscription of subscriptions) {
       const customerId = typeof subscription.customer === "string"
         ? subscription.customer
         : subscription.customer.id;
@@ -124,11 +143,7 @@ serve(async (req) => {
       }
 
       const productId = subscription.items.data[0]?.price.product;
-      const plan = typeof productId === "string" ? PRODUCT_TO_PLAN[productId] : null;
-      if (!plan) {
-        skipped += 1;
-        continue;
-      }
+      const stripePlan = typeof productId === "string" ? PRODUCT_TO_PLAN[productId] : null;
 
       const invoices = await stripe.invoices.list({ customer: customerId, limit: 100 });
       const paidInvoices = invoices.data.filter((invoice) => invoice.status === "paid");
@@ -140,8 +155,31 @@ serve(async (req) => {
         .sort((a, b) => (a ?? 0) - (b ?? 0))[0];
 
       const startedAt = toIso(subscription.start_date) ?? new Date().toISOString();
-      const endsAt = toIso(subscription.current_period_end);
       const conversionDate = (toIso(firstPaidInvoice) ?? startedAt).slice(0, 10);
+
+      // Determine local plan/status based on Stripe status
+      let localPlan = stripePlan ?? "gratuito";
+      let localStatus: string = subscription.status;
+      let localEndsAt: string | null = toIso(subscription.current_period_end);
+
+      if (subscription.status === "canceled") {
+        localPlan = "gratuito";
+        localStatus = "canceled";
+        localEndsAt = toIso(subscription.ended_at) ?? toIso(subscription.canceled_at) ?? localEndsAt;
+        downgraded += 1;
+      } else if (subscription.status === "past_due" || subscription.status === "unpaid") {
+        // Keep the plan visible but flag payment issue
+        localStatus = subscription.status;
+      } else if (subscription.status === "active" || subscription.status === "trialing") {
+        if (!stripePlan) {
+          skipped += 1;
+          continue;
+        }
+        localStatus = "active";
+      } else {
+        skipped += 1;
+        continue;
+      }
 
       const { data: existingSubscription } = await supabase
         .from("subscriptions")
@@ -151,11 +189,11 @@ serve(async (req) => {
 
       const subscriptionPayload = {
         user_id: userId,
-        plan,
-        status: "active",
+        plan: localPlan,
+        status: localStatus,
         stripe_customer_id: customerId,
         started_at: startedAt,
-        ends_at: endsAt,
+        ends_at: localEndsAt,
         updated_at: new Date().toISOString(),
       };
 
@@ -199,7 +237,7 @@ serve(async (req) => {
       synced += 1;
     }
 
-    return new Response(JSON.stringify({ synced, skipped, total_active: activeSubscriptions.data.length }), {
+    return new Response(JSON.stringify({ synced, skipped, downgraded, total: subscriptions.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
