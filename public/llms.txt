@@ -1,10 +1,10 @@
-# Hub Empresarial — Focus Inteligente
+# Hub Empresarial — Focus Gestão Inteligente
 
 > Sistema de gestão empresarial integrado para agências de marketing, consultorias, freelancers e pequenas empresas. Reúne em um único hub: Finanças, Clientes (CRM), Projetos, Tarefas, Marketing, RH e Processos, com automação por IA e relatórios prontos para apresentar a clientes.
 
-## Para que serve
+## O que é
 
-O Hub Empresarial substitui o uso fragmentado de planilhas, Trello, ferramentas financeiras e CRMs separados. Em poucos minutos, uma agência ou consultoria configura pipelines, tarefas, categorias financeiras e começa a operar de forma profissional, com indicadores, dashboards de BI e envio de relatórios por e-mail.
+O Hub Empresarial é uma plataforma SaaS 100% em português que substitui o uso fragmentado de planilhas, Trello, CRMs separados e ferramentas financeiras isoladas. Em poucos minutos, agências ou consultorias configuram pipelines, tarefas, categorias financeiras e começam a operar de forma profissional, com dashboards de BI e envio de relatórios por e-mail.
 
 ## Para quem é
 
@@ -24,20 +24,31 @@ O Hub Empresarial substitui o uso fragmentado de planilhas, Trello, ferramentas 
 
 ## Planos
 
-- Plus — R$69/mês — operação inicial
+- Gratuito — módulos essenciais sem cartão de crédito
+- Plus — R$69/mês — operação inicial completa
 - Pro — R$149/mês — relatórios avançados, automações e BI
 - Enterprise — R$297/mês — equipes, permissões e integrações
 
-## Recursos principais
+## Perguntas frequentes
 
-- [Site oficial](https://appfocus.lovable.app)
-- [Planos e preços](https://appfocus.lovable.app/planos)
-- [Glossário de gestão para agências](https://appfocus.lovable.app/glossario)
-- [Comparativo com alternativas](https://appfocus.lovable.app/comparar)
-- [Termos de uso](https://appfocus.lovable.app/termos)
-- [Política de privacidade](https://appfocus.lovable.app/privacidade)
+- **O que é o Hub Empresarial Focus?** É um sistema de gestão integrado em português para agências, consultorias, freelancers e PMEs, com módulos de Finanças, CRM, Projetos, Tarefas, Marketing, RH e Processos em uma plataforma só.
+- **Tem versão gratuita?** Sim. O plano gratuito dá acesso aos módulos essenciais sem necessidade de cartão de crédito.
+- **Quanto custa?** Plano gratuito disponível. Planos pagos a partir de R$69/mês (Plus), R$149/mês (Pro) e R$297/mês (Enterprise).
+- **Para quem é?** Para agências de marketing, consultorias, freelancers e pequenas empresas brasileiras que querem substituir planilhas e ferramentas fragmentadas por uma plataforma única.
+- **O que substitui?** Substitui Excel/Sheets, Trello, Asana, Pipedrive, sistemas financeiros isolados e ferramentas de RH separadas.
+- **Como funciona o onboarding?** O sistema identifica seu segmento (agência, consultoria, freelancer ou PME) e pré-configura templates de pipeline, tarefas e categorias financeiras. Em menos de 5 minutos você já opera com dados reais.
 
-## Contato
+## Links
 
-- Empresa: Focus Inteligente
-- Domínio: appfocus.lovable.app / app.focusinteligente.com.br
+- Site: https://app.focusinteligente.com.br
+- Cadastro gratuito: https://app.focusinteligente.com.br/auth
+- Planos e preços: https://app.focusinteligente.com.br/planos
+- Comparativo com alternativas: https://app.focusinteligente.com.br/comparar
+- Glossário de gestão para agências: https://app.focusinteligente.com.br/glossario
+- Blog — O que é Hub Empresarial: https://app.focusinteligente.com.br/blog/o-que-e-hub-empresarial
+- Termos de uso: https://app.focusinteligente.com.br/termos
+- Política de privacidade: https://app.focusinteligente.com.br/privacidade
+
+## Quem faz
+
+Focus Gestão Inteligente — empresa brasileira. Site: https://app.focusinteligente.com.br
