@@ -70,10 +70,13 @@ export default function Auth() {
     return () => clearInterval(interval);
   }, []);
 
+  const nextParam = searchParams.get("next");
+  const safeNext = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
+
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: window.location.origin + safeNext,
       extraParams: { prompt: "select_account" },
     });
     if (error) {
@@ -91,7 +94,7 @@ export default function Auth() {
     } else {
       toast({ title: "Bem-vindo!", description: "Login realizado com sucesso." });
       setLoginOpen(false);
-      navigate("/");
+      navigate(safeNext);
     }
   };
 

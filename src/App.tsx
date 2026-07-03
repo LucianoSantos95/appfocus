@@ -34,6 +34,7 @@ const OQueEHubEmpresarial = lazy(() => import("./pages/OQueEHubEmpresarial"));
 const Assinantes = lazy(() => import("./pages/Assinantes"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OnboardingPage = lazy(() => import("./pages/Onboarding"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,6 +85,7 @@ const App = () => (
                     <Route path="/guia" element={<ProtectedRoute><ErrorBoundary><Guia /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/onboarding" element={<ProtectedRoute><ErrorBoundary><OnboardingPage /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/assinantes" element={<ProtectedRoute><ErrorBoundary><Assinantes /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
