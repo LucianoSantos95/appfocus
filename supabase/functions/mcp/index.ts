@@ -20,13 +20,13 @@ var list_clientes_default = defineTool({
   title: "Listar clientes",
   description: "Lista os clientes (prospects e ativos) do usu\xE1rio autenticado.",
   inputSchema: {
-    status: z.enum(["prospect", "active", "inactive"]).optional().describe("Filtra por status do cliente."),
-    limit: z.number().int().min(1).max(100).optional().describe("M\xE1ximo de clientes a retornar (padr\xE3o 25).")
+    status: z.enum(["prospecto", "ativo", "inativo"]).optional().describe("Filtra por status."),
+    limit: z.number().int().min(1).max(100).optional()
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ status, limit }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "N\xE3o autenticado" }], isError: true };
-    let q = sbForUser(ctx).from("clientes").select("id,nome,email,telefone,status,valor_mensal,created_at").order("created_at", { ascending: false }).limit(limit ?? 25);
+    let q = sbForUser(ctx).from("clientes").select("id,nome,email,telefone,empresa,status,valor_total,potencial,created_at").order("created_at", { ascending: false }).limit(limit ?? 25);
     if (status) q = q.eq("status", status);
     const { data, error } = await q;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
@@ -54,7 +54,7 @@ var list_projetos_default = defineTool2({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ limit }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "N\xE3o autenticado" }], isError: true };
-    const { data, error } = await sbForUser2(ctx).from("projetos").select("id,nome,status,prazo,orcamento,cliente_id,created_at").order("created_at", { ascending: false }).limit(limit ?? 25);
+    const { data, error } = await sbForUser2(ctx).from("projetos").select("id,name,status,priority,end_date,budget,responsible,cliente_id,created_at").order("created_at", { ascending: false }).limit(limit ?? 25);
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return { content: [{ type: "text", text: JSON.stringify(data) }], structuredContent: { projetos: data } };
   }
@@ -81,7 +81,7 @@ var list_tarefas_default = defineTool3({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ status, limit }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "N\xE3o autenticado" }], isError: true };
-    let q = sbForUser3(ctx).from("tarefas").select("id,titulo,descricao,status,prioridade,prazo,created_at").order("created_at", { ascending: false }).limit(limit ?? 25);
+    let q = sbForUser3(ctx).from("tarefas").select("id,title,description,status,priority,due_date,category,responsible,created_at").order("created_at", { ascending: false }).limit(limit ?? 25);
     if (status) q = q.eq("status", status);
     const { data, error } = await q;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
@@ -104,20 +104,22 @@ var create_tarefa_default = defineTool4({
   title: "Criar tarefa",
   description: "Cria uma nova tarefa para o usu\xE1rio autenticado.",
   inputSchema: {
-    titulo: z4.string().min(1).describe("T\xEDtulo da tarefa."),
-    descricao: z4.string().optional(),
-    prioridade: z4.enum(["baixa", "media", "alta", "urgente"]).optional(),
-    prazo: z4.string().optional().describe("Data limite ISO (YYYY-MM-DD).")
+    title: z4.string().min(1).describe("T\xEDtulo da tarefa."),
+    description: z4.string().optional(),
+    priority: z4.enum(["baixa", "media", "alta", "urgente"]).optional(),
+    due_date: z4.string().optional().describe("Data limite ISO (YYYY-MM-DD)."),
+    category: z4.string().optional()
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-  handler: async ({ titulo, descricao, prioridade, prazo }, ctx) => {
+  handler: async ({ title, description, priority, due_date, category }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "N\xE3o autenticado" }], isError: true };
     const { data, error } = await sbForUser4(ctx).from("tarefas").insert({
       user_id: ctx.getUserId(),
-      titulo,
-      descricao: descricao ?? null,
-      prioridade: prioridade ?? "media",
-      prazo: prazo ?? null,
+      title,
+      description: description ?? null,
+      priority: priority ?? "media",
+      due_date: due_date ?? null,
+      category: category ?? null,
       status: "pendente"
     }).select().single();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
@@ -162,18 +164,214 @@ var financeiro_resumo_default = defineTool5({
   }
 });
 
+// src/lib/mcp/tools/funnel-summary.ts
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { createClient as createClient6 } from "npm:@supabase/supabase-js@^2.108.2";
+function sbAdmin() {
+  return createClient6(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+async function requireAdmin(ctx) {
+  if (!ctx.isAuthenticated()) return { ok: false, msg: "N\xE3o autenticado" };
+  const sb = sbAdmin();
+  const { data, error } = await sb.rpc("has_role", { _user_id: ctx.getUserId(), _role: "admin" });
+  if (error) return { ok: false, msg: error.message };
+  if (!data) return { ok: false, msg: "Requer permiss\xE3o de admin" };
+  return { ok: true, sb };
+}
+var funnel_summary_default = defineTool6({
+  name: "funnel_summary",
+  title: "Resumo do funil de convers\xE3o",
+  description: "Retorna a contagem de usu\xE1rios por est\xE1gio (novo, ativado, quente, convertido, churn) e taxa de convers\xE3o. Apenas admins.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async (_input, ctx) => {
+    const gate = await requireAdmin(ctx);
+    if (!gate.ok) return { content: [{ type: "text", text: gate.msg }], isError: true };
+    const { data, error } = await gate.sb.from("vw_funnel_summary").select("*");
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    const total = (data ?? []).reduce((s, r) => s + (r.usuarios ?? 0), 0);
+    const convertidos = (data ?? []).find((r) => r.stage === "convertido")?.usuarios ?? 0;
+    const summary = {
+      por_estagio: data,
+      total_usuarios: total,
+      taxa_conversao_pct: total ? Math.round(convertidos / total * 1e3) / 10 : 0
+    };
+    return { content: [{ type: "text", text: JSON.stringify(summary) }], structuredContent: summary };
+  }
+});
+
+// src/lib/mcp/tools/list-hot-leads.ts
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { createClient as createClient7 } from "npm:@supabase/supabase-js@^2.108.2";
+import { z as z6 } from "npm:zod@^3.23.8";
+function sbAdmin2() {
+  return createClient7(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+async function requireAdmin2(ctx) {
+  if (!ctx.isAuthenticated()) return { ok: false, msg: "N\xE3o autenticado" };
+  const sb = sbAdmin2();
+  const { data, error } = await sb.rpc("has_role", { _user_id: ctx.getUserId(), _role: "admin" });
+  if (error) return { ok: false, msg: error.message };
+  if (!data) return { ok: false, msg: "Requer permiss\xE3o de admin" };
+  return { ok: true, sb };
+}
+var list_hot_leads_default = defineTool7({
+  name: "list_hot_leads",
+  title: "Listar leads quentes",
+  description: "Lista usu\xE1rios no est\xE1gio 'quente' (ativos e engajados no plano gratuito) prontos para convers\xE3o. Apenas admins.",
+  inputSchema: {
+    limit: z6.number().int().min(1).max(100).optional().describe("M\xE1ximo de leads (padr\xE3o 20)."),
+    dias_sem_contato: z6.number().int().min(0).max(90).optional().describe("Filtrar quem n\xE3o recebeu touchpoint nos \xFAltimos N dias.")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ limit, dias_sem_contato }, ctx) => {
+    const gate = await requireAdmin2(ctx);
+    if (!gate.ok) return { content: [{ type: "text", text: gate.msg }], isError: true };
+    const { data: hot, error } = await gate.sb.from("user_funnel_stage").select("user_id, score, hot_at, last_activity_at").eq("stage", "quente").order("score", { ascending: false }).limit(limit ?? 20);
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    const results = [];
+    for (const row of hot ?? []) {
+      const { data: profile } = await gate.sb.from("profiles").select("display_name, company_name, phone").eq("user_id", row.user_id).maybeSingle();
+      const { data: authUser } = await gate.sb.auth.admin.getUserById(row.user_id);
+      const email = authUser?.user?.email;
+      if (dias_sem_contato && dias_sem_contato > 0) {
+        const { count } = await gate.sb.from("sales_touchpoints").select("id", { count: "exact", head: true }).eq("user_id", row.user_id).gte("created_at", new Date(Date.now() - dias_sem_contato * 24 * 3600 * 1e3).toISOString());
+        if ((count ?? 0) > 0) continue;
+      }
+      results.push({
+        user_id: row.user_id,
+        display_name: profile?.display_name,
+        company_name: profile?.company_name,
+        email,
+        phone: profile?.phone,
+        score: row.score,
+        hot_since: row.hot_at,
+        last_activity_at: row.last_activity_at
+      });
+    }
+    return { content: [{ type: "text", text: JSON.stringify(results) }], structuredContent: { leads: results } };
+  }
+});
+
+// src/lib/mcp/tools/mark-contacted.ts
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { createClient as createClient8 } from "npm:@supabase/supabase-js@^2.108.2";
+import { z as z7 } from "npm:zod@^3.23.8";
+function sbAdmin3() {
+  return createClient8(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+async function requireAdmin3(ctx) {
+  if (!ctx.isAuthenticated()) return { ok: false, msg: "N\xE3o autenticado" };
+  const sb = sbAdmin3();
+  const { data, error } = await sb.rpc("has_role", { _user_id: ctx.getUserId(), _role: "admin" });
+  if (error) return { ok: false, msg: error.message };
+  if (!data) return { ok: false, msg: "Requer permiss\xE3o de admin" };
+  return { ok: true, sb };
+}
+var mark_contacted_default = defineTool8({
+  name: "mark_contacted",
+  title: "Registrar contato comercial",
+  description: "Registra um touchpoint de vendas (liga\xE7\xE3o, e-mail, WhatsApp) feito com um usu\xE1rio. Apenas admins.",
+  inputSchema: {
+    user_id: z7.string().uuid().describe("ID do usu\xE1rio contatado."),
+    channel: z7.enum(["email", "whatsapp", "call", "manual"]).describe("Canal do contato."),
+    reason: z7.string().min(1).describe("Motivo do contato (ex: 'upgrade Plus', 'follow-up cupom')."),
+    outcome: z7.string().optional().describe("Resultado observado (ex: 'aceitou call', 'sem resposta').")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  handler: async ({ user_id, channel, reason, outcome }, ctx) => {
+    const gate = await requireAdmin3(ctx);
+    if (!gate.ok) return { content: [{ type: "text", text: gate.msg }], isError: true };
+    const { data, error } = await gate.sb.from("sales_touchpoints").insert({ user_id, channel, reason, outcome: outcome ?? null, created_by: ctx.getUserId() }).select().single();
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: `Touchpoint registrado (${channel}): ${reason}` }],
+      structuredContent: { touchpoint: data }
+    };
+  }
+});
+
+// src/lib/mcp/tools/send-conversion-nudge.ts
+import { defineTool as defineTool9 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { createClient as createClient9 } from "npm:@supabase/supabase-js@^2.108.2";
+import { z as z8 } from "npm:zod@^3.23.8";
+function sbAdmin4() {
+  return createClient9(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+async function requireAdmin4(ctx) {
+  if (!ctx.isAuthenticated()) return { ok: false, msg: "N\xE3o autenticado" };
+  const sb = sbAdmin4();
+  const { data, error } = await sb.rpc("has_role", { _user_id: ctx.getUserId(), _role: "admin" });
+  if (error) return { ok: false, msg: error.message };
+  if (!data) return { ok: false, msg: "Requer permiss\xE3o de admin" };
+  return { ok: true, sb };
+}
+var send_conversion_nudge_default = defineTool9({
+  name: "send_conversion_nudge",
+  title: "Enviar nudge de convers\xE3o",
+  description: "Envia uma notifica\xE7\xE3o in-app oferecendo cupom de convers\xE3o (20% OFF - ONBOARDING20) e registra o touchpoint. Apenas admins.",
+  inputSchema: {
+    user_id: z8.string().uuid(),
+    custom_message: z8.string().optional().describe("Mensagem personalizada opcional.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  handler: async ({ user_id, custom_message }, ctx) => {
+    const gate = await requireAdmin4(ctx);
+    if (!gate.ok) return { content: [{ type: "text", text: gate.msg }], isError: true };
+    const { data: profile } = await gate.sb.from("profiles").select("display_name").eq("user_id", user_id).maybeSingle();
+    const message = custom_message ?? `${profile?.display_name ?? "Ol\xE1"}, aproveite 20% OFF no Plus com o cupom ONBOARDING20. V\xE1lido por tempo limitado.`;
+    const { error: notifErr } = await gate.sb.from("notifications").insert({
+      user_id,
+      title: "\u{1F381} Cupom especial para voc\xEA",
+      message,
+      type: "upgrade_nudge"
+    });
+    if (notifErr) return { content: [{ type: "text", text: notifErr.message }], isError: true };
+    await gate.sb.from("sales_touchpoints").insert({
+      user_id,
+      channel: "system",
+      reason: "conversion_nudge_coupon",
+      outcome: "notification_sent",
+      created_by: ctx.getUserId(),
+      metadata: { coupon: "ONBOARDING20" }
+    });
+    return {
+      content: [{ type: "text", text: "Nudge enviado com cupom ONBOARDING20." }],
+      structuredContent: { sent: true, coupon: "ONBOARDING20" }
+    };
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "hnextembswhejumvxbzd";
 var mcp_default = defineMcp({
   name: "hub-empresarial-mcp",
   title: "Hub Empresarial MCP",
-  version: "0.1.0",
-  instructions: "Ferramentas do Hub Empresarial (Focus Inteligente): gerencie clientes, projetos, tarefas e finan\xE7as da opera\xE7\xE3o do usu\xE1rio autenticado. Toda opera\xE7\xE3o respeita RLS do usu\xE1rio.",
+  version: "0.2.0",
+  instructions: "Ferramentas do Hub Empresarial (Focus Inteligente). Uso geral: consulte e gerencie clientes, projetos, tarefas e finan\xE7as da opera\xE7\xE3o do usu\xE1rio autenticado (respeita RLS). Ferramentas de vendas (apenas admins): 'funnel_summary' para vis\xE3o do funil, 'list_hot_leads' para identificar usu\xE1rios prontos para converter, 'mark_contacted' para registrar contato comercial, 'send_conversion_nudge' para enviar cupom de 20% OFF via notifica\xE7\xE3o in-app.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
-  tools: [list_clientes_default, list_projetos_default, list_tarefas_default, create_tarefa_default, financeiro_resumo_default]
+  tools: [
+    list_clientes_default,
+    list_projetos_default,
+    list_tarefas_default,
+    create_tarefa_default,
+    financeiro_resumo_default,
+    funnel_summary_default,
+    list_hot_leads_default,
+    mark_contacted_default,
+    send_conversion_nudge_default
+  ]
 });
 
 // lovable-mcp-supabase-entry.ts

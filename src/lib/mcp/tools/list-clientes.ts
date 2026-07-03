@@ -14,13 +14,13 @@ export default defineTool({
   title: "Listar clientes",
   description: "Lista os clientes (prospects e ativos) do usuário autenticado.",
   inputSchema: {
-    status: z.enum(["prospect", "active", "inactive"]).optional().describe("Filtra por status do cliente."),
-    limit: z.number().int().min(1).max(100).optional().describe("Máximo de clientes a retornar (padrão 25)."),
+    status: z.enum(["prospecto", "ativo", "inativo"]).optional().describe("Filtra por status."),
+    limit: z.number().int().min(1).max(100).optional(),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ status, limit }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Não autenticado" }], isError: true };
-    let q = sbForUser(ctx).from("clientes").select("id,nome,email,telefone,status,valor_mensal,created_at").order("created_at", { ascending: false }).limit(limit ?? 25);
+    let q = sbForUser(ctx).from("clientes").select("id,nome,email,telefone,empresa,status,valor_total,potencial,created_at").order("created_at", { ascending: false }).limit(limit ?? 25);
     if (status) q = q.eq("status", status);
     const { data, error } = await q;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
