@@ -21,7 +21,7 @@ export default defineTool({
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Não autenticado" }], isError: true };
     const { data, error } = await sbForUser(ctx)
       .from("projetos")
-      .select("id,nome,status,prazo,orcamento,cliente_id,created_at")
+      .select("id,name,status,priority,end_date,budget,responsible,cliente_id,created_at")
       .order("created_at", { ascending: false })
       .limit(limit ?? 25);
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };

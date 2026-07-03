@@ -22,7 +22,7 @@ export default defineTool({
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Não autenticado" }], isError: true };
     let q = sbForUser(ctx)
       .from("tarefas")
-      .select("id,titulo,descricao,status,prioridade,prazo,created_at")
+      .select("id,title,description,status,priority,due_date,category,responsible,created_at")
       .order("created_at", { ascending: false })
       .limit(limit ?? 25);
     if (status) q = q.eq("status", status);

@@ -14,22 +14,24 @@ export default defineTool({
   title: "Criar tarefa",
   description: "Cria uma nova tarefa para o usuário autenticado.",
   inputSchema: {
-    titulo: z.string().min(1).describe("Título da tarefa."),
-    descricao: z.string().optional(),
-    prioridade: z.enum(["baixa", "media", "alta", "urgente"]).optional(),
-    prazo: z.string().optional().describe("Data limite ISO (YYYY-MM-DD)."),
+    title: z.string().min(1).describe("Título da tarefa."),
+    description: z.string().optional(),
+    priority: z.enum(["baixa", "media", "alta", "urgente"]).optional(),
+    due_date: z.string().optional().describe("Data limite ISO (YYYY-MM-DD)."),
+    category: z.string().optional(),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-  handler: async ({ titulo, descricao, prioridade, prazo }, ctx) => {
+  handler: async ({ title, description, priority, due_date, category }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Não autenticado" }], isError: true };
     const { data, error } = await sbForUser(ctx)
       .from("tarefas")
       .insert({
         user_id: ctx.getUserId(),
-        titulo,
-        descricao: descricao ?? null,
-        prioridade: prioridade ?? "media",
-        prazo: prazo ?? null,
+        title,
+        description: description ?? null,
+        priority: priority ?? "media",
+        due_date: due_date ?? null,
+        category: category ?? null,
         status: "pendente",
       })
       .select()

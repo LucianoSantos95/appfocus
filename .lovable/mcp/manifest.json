@@ -12,7 +12,7 @@
   "mcp": {
     "server": {
       "name": "hub-empresarial-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "Hub Empresarial MCP"
     },
     "tools": [
@@ -31,17 +31,16 @@
             "status": {
               "type": "string",
               "enum": [
-                "prospect",
-                "active",
-                "inactive"
+                "prospecto",
+                "ativo",
+                "inativo"
               ],
-              "description": "Filtra por status do cliente."
+              "description": "Filtra por status."
             },
             "limit": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 100,
-              "description": "Máximo de clientes a retornar (padrão 25)."
+              "maximum": 100
             }
           },
           "additionalProperties": false,
@@ -115,15 +114,15 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "titulo": {
+            "title": {
               "type": "string",
               "minLength": 1,
               "description": "Título da tarefa."
             },
-            "descricao": {
+            "description": {
               "type": "string"
             },
-            "prioridade": {
+            "priority": {
               "type": "string",
               "enum": [
                 "baixa",
@@ -132,13 +131,16 @@
                 "urgente"
               ]
             },
-            "prazo": {
+            "due_date": {
               "type": "string",
               "description": "Data limite ISO (YYYY-MM-DD)."
+            },
+            "category": {
+              "type": "string"
             }
           },
           "required": [
-            "titulo"
+            "title"
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
@@ -166,6 +168,128 @@
               "description": "Data final ISO (YYYY-MM-DD)."
             }
           },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "funnel_summary",
+        "title": "Resumo do funil de conversão",
+        "description": "Retorna a contagem de usuários por estágio (novo, ativado, quente, convertido, churn) e taxa de conversão. Apenas admins.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_hot_leads",
+        "title": "Listar leads quentes",
+        "description": "Lista usuários no estágio 'quente' (ativos e engajados no plano gratuito) prontos para conversão. Apenas admins.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Máximo de leads (padrão 20)."
+            },
+            "dias_sem_contato": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 90,
+              "description": "Filtrar quem não recebeu touchpoint nos últimos N dias."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "mark_contacted",
+        "title": "Registrar contato comercial",
+        "description": "Registra um touchpoint de vendas (ligação, e-mail, WhatsApp) feito com um usuário. Apenas admins.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "user_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID do usuário contatado."
+            },
+            "channel": {
+              "type": "string",
+              "enum": [
+                "email",
+                "whatsapp",
+                "call",
+                "manual"
+              ],
+              "description": "Canal do contato."
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Motivo do contato (ex: 'upgrade Plus', 'follow-up cupom')."
+            },
+            "outcome": {
+              "type": "string",
+              "description": "Resultado observado (ex: 'aceitou call', 'sem resposta')."
+            }
+          },
+          "required": [
+            "user_id",
+            "channel",
+            "reason"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "send_conversion_nudge",
+        "title": "Enviar nudge de conversão",
+        "description": "Envia uma notificação in-app oferecendo cupom de conversão (20% OFF - ONBOARDING20) e registra o touchpoint. Apenas admins.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "user_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "custom_message": {
+              "type": "string",
+              "description": "Mensagem personalizada opcional."
+            }
+          },
+          "required": [
+            "user_id"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
