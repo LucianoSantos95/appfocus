@@ -26,25 +26,26 @@
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "status": {
-              "description": "Filtra por status do cliente.",
               "type": "string",
               "enum": [
                 "prospect",
                 "active",
                 "inactive"
-              ]
+              ],
+              "description": "Filtra por status do cliente."
             },
             "limit": {
-              "description": "Máximo de clientes a retornar (padrão 25).",
               "type": "integer",
               "minimum": 1,
-              "maximum": 100
+              "maximum": 100,
+              "description": "Máximo de clientes a retornar (padrão 25)."
             }
-          }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       },
@@ -58,7 +59,6 @@
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "limit": {
@@ -66,7 +66,9 @@
               "minimum": 1,
               "maximum": 100
             }
-          }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       },
@@ -80,7 +82,6 @@
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "status": {
@@ -96,7 +97,9 @@
               "minimum": 1,
               "maximum": 100
             }
-          }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       },
@@ -110,7 +113,6 @@
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "titulo": {
@@ -131,13 +133,15 @@
               ]
             },
             "prazo": {
-              "description": "Data limite ISO (YYYY-MM-DD).",
-              "type": "string"
+              "type": "string",
+              "description": "Data limite ISO (YYYY-MM-DD)."
             }
           },
           "required": [
             "titulo"
-          ]
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       },
@@ -151,18 +155,19 @@
           "openWorldHint": false
         },
         "inputSchema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {
             "inicio": {
-              "description": "Data inicial ISO (YYYY-MM-DD).",
-              "type": "string"
+              "type": "string",
+              "description": "Data inicial ISO (YYYY-MM-DD)."
             },
             "fim": {
-              "description": "Data final ISO (YYYY-MM-DD).",
-              "type": "string"
+              "type": "string",
+              "description": "Data final ISO (YYYY-MM-DD)."
             }
-          }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
       }
