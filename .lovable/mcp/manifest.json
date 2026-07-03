@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://hnextembswhejumvxbzd.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "hub-empresarial-mcp",
+      "version": "0.1.0",
+      "title": "Hub Empresarial MCP"
+    },
+    "tools": [
+      {
+        "name": "list_clientes",
+        "title": "Listar clientes",
+        "description": "Lista os clientes (prospects e ativos) do usuário autenticado.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "description": "Filtra por status do cliente.",
+              "type": "string",
+              "enum": [
+                "prospect",
+                "active",
+                "inactive"
+              ]
+            },
+            "limit": {
+              "description": "Máximo de clientes a retornar (padrão 25).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_projetos",
+        "title": "Listar projetos",
+        "description": "Lista os projetos do usuário autenticado.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_tarefas",
+        "title": "Listar tarefas",
+        "description": "Lista as tarefas do usuário autenticado, opcionalmente filtradas por status.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "pendente",
+                "em_andamento",
+                "concluida"
+              ]
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_tarefa",
+        "title": "Criar tarefa",
+        "description": "Cria uma nova tarefa para o usuário autenticado.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "titulo": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Título da tarefa."
+            },
+            "descricao": {
+              "type": "string"
+            },
+            "prioridade": {
+              "type": "string",
+              "enum": [
+                "baixa",
+                "media",
+                "alta",
+                "urgente"
+              ]
+            },
+            "prazo": {
+              "description": "Data limite ISO (YYYY-MM-DD).",
+              "type": "string"
+            }
+          },
+          "required": [
+            "titulo"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "financeiro_resumo",
+        "title": "Resumo financeiro",
+        "description": "Retorna soma de receitas, despesas e saldo do período informado.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "inicio": {
+              "description": "Data inicial ISO (YYYY-MM-DD).",
+              "type": "string"
+            },
+            "fim": {
+              "description": "Data final ISO (YYYY-MM-DD).",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
