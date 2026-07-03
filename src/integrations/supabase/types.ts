@@ -1243,6 +1243,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_touchpoints: {
+        Row: {
+          channel: string
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata: Json | null
+          outcome: string | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          outcome?: string | null
+          reason: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          outcome?: string | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stripe_webhook_events: {
         Row: {
           created_at: string
@@ -1625,6 +1658,51 @@ export type Database = {
           },
         ]
       }
+      user_funnel_stage: {
+        Row: {
+          activated_at: string | null
+          churn_at: string | null
+          converted_at: string | null
+          created_at: string
+          hot_at: string | null
+          last_activity_at: string | null
+          last_computed_at: string
+          notes: string | null
+          score: number
+          stage: Database["public"]["Enums"]["funnel_stage"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          churn_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          hot_at?: string | null
+          last_activity_at?: string | null
+          last_computed_at?: string
+          notes?: string | null
+          score?: number
+          stage?: Database["public"]["Enums"]["funnel_stage"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          churn_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          hot_at?: string | null
+          last_activity_at?: string | null
+          last_computed_at?: string
+          notes?: string | null
+          score?: number
+          stage?: Database["public"]["Enums"]["funnel_stage"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_integrations: {
         Row: {
           access_token: string | null
@@ -1848,6 +1926,15 @@ export type Database = {
         }
         Relationships: []
       }
+      vw_funnel_summary: {
+        Row: {
+          ativos_7d: number | null
+          score_medio: number | null
+          stage: Database["public"]["Enums"]["funnel_stage"] | null
+          usuarios: number | null
+        }
+        Relationships: []
+      }
       vw_user_engagement: {
         Row: {
           actions_by_module: Json | null
@@ -1929,11 +2016,35 @@ export type Database = {
           read_ct: number
         }[]
       }
+      recompute_funnel_stage: {
+        Args: { p_user_id: string }
+        Returns: {
+          activated_at: string | null
+          churn_at: string | null
+          converted_at: string | null
+          created_at: string
+          hot_at: string | null
+          last_activity_at: string | null
+          last_computed_at: string
+          notes: string | null
+          score: number
+          stage: Database["public"]["Enums"]["funnel_stage"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_funnel_stage"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       record_login_attempt: { Args: { p_email: string }; Returns: undefined }
       verify_cron_token: { Args: { p_token: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
+      funnel_stage: "novo" | "ativado" | "quente" | "convertido" | "churn"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2062,6 +2173,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      funnel_stage: ["novo", "ativado", "quente", "convertido", "churn"],
     },
   },
 } as const
