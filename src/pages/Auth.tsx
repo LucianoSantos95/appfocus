@@ -59,6 +59,7 @@ export default function Auth() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(!!inviteToken);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [wordIndex, setWordIndex] = useState(0);
   const [fadeClass, setFadeClass] = useState("animate-rotate-word-in");
 
