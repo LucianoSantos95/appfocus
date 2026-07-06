@@ -217,6 +217,45 @@ export default function Auth() {
           </Button>
         </div>
 
+        {/* Demo login card — Lovable Partner reviewers */}
+        <div className="w-full max-w-md mb-8 rounded-xl border border-primary/30 bg-primary/5 backdrop-blur-sm p-5 shadow-lg shadow-primary/5">
+          <div className="flex items-center gap-2 mb-3">
+            <GraduationCap className="w-4 h-4 text-primary" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-primary">Avaliador Lovable Partner</span>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Acesso completo ao Hub com dados pré-carregados para avaliação da certificação.
+          </p>
+          <div className="space-y-2 mb-4 text-xs font-mono bg-background/60 rounded-lg p-3 border border-border/50">
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Email:</span>
+              <span className="text-foreground">{DEMO_EMAIL}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-muted-foreground">Senha:</span>
+              <span className="text-foreground">{DEMO_PASSWORD}</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              className="flex-1 gradient-primary text-foreground font-semibold"
+              onClick={handleDemoLogin}
+              disabled={demoLoading}
+            >
+              {demoLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Entrar como avaliador
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={copyCredentials}
+              title="Copiar credenciais"
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
         {/* Ver Preços link */}
         <Link
           to="/planos"
