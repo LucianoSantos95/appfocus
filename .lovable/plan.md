@@ -1,46 +1,64 @@
-## Diagnóstico
+# Plano: Login de Demonstração para Avaliadores Lovable
 
-**Rose Nascimento (roseengsp@gmail.com)** aparece como **Plus ativa** no painel, mas no provedor de pagamento (Stripe) a assinatura dela está assim:
+## Objetivo
+Criar uma conta demo pré-populada com dados realistas e acesso total (plano Enterprise/Admin) para que avaliadores da certificação Lovable Partner possam explorar todas as funcionalidades do Hub sem precisar cadastrar-se.
 
-- **Status real:** Cancelada em **01/07/2026** (ontem)
-- **Motivo do cancelamento:** `payment_failed` — a cobrança de renovação de julho falhou (provavelmente cartão recusado/expirado)
-- **Última cobrança bem-sucedida:** junho/2026 (R$ 69,00 — Plus mensal)
-- **Nenhum pagamento** foi registrado em julho
+## Credenciais propostas
+- **Email:** `demo@focusinteligente.com.br`
+- **Senha:** `LovableDemo2026!`
 
-Ou seja: você está correto — ela não pagou julho. O que aconteceu foi que a cobrança automática falhou, o Stripe tentou algumas vezes e cancelou a assinatura definitivamente ontem.
+(Confirme se prefere outras credenciais antes de eu implementar.)
 
-**Por que o painel ainda mostra "Plus ativa"?**
-A tabela local `subscriptions` guarda `plan=plus / status=active` desde 17/06 e nunca foi atualizada porque:
-1. A função `check-subscription` só roda quando a **própria Rose** faz login (e ela não entrou desde o cancelamento).
-2. A função `sync-subscribers` (usada no painel de assinantes) só varre assinaturas com `status=active` no Stripe — como a dela já foi cancelada, ela é ignorada e o registro local fica desatualizado.
+## O que será feito
 
-## Plano
+### 1. Criação da conta no backend
+- Inserir usuário em `auth.users` com email já confirmado (via `supabase--insert` usando funções admin).
+- O trigger `handle_new_user` cria automaticamente `profiles` + `subscriptions` (gratuito) + `user_roles` (user) + demo data básica.
 
-### 1. Corrigir o registro da Rose agora (one-off)
-Atualizar a linha dela em `subscriptions` para refletir a realidade:
-- `plan` → `gratuito`
-- `status` → `canceled`
-- `ends_at` → `2026-07-01` (data do cancelamento no Stripe)
+### 2. Elevar privilégios da conta demo
+- Atualizar `subscriptions` para plano **Enterprise** com status `active` (sem limite freemium, sem gates).
+- Adicionar role `admin` em `user_roles` para liberar painéis administrativos (Assinantes, BI completo, MCP tools de vendas).
 
-Isso vai fazer o painel mostrar imediatamente que ela caiu para o gratuito.
+### 3. Popular com dados ricos de demonstração
+Além do que o trigger `populate_demo_data` já injeta, adicionar volume extra para as telas parecerem "vividas":
+- +10 clientes (mix prospectos/ativos com valores variados)
+- +8 projetos em diferentes estágios (kanban preenchido)
+- +15 tarefas distribuídas por prioridade/status
+- +20 transações financeiras (receitas e despesas dos últimos 90 dias) para gráficos de BI mostrarem tendências
+- +5 colaboradores adicionais
+- +3 campanhas de marketing com conteúdos agendados
+- +2 processos documentados
+- Marcar onboarding como concluído (`onboarding_progress`) para evitar prompts
 
-### 2. Ajustar `sync-subscribers` para também capturar cancelamentos
-Hoje a função só busca `status: "active"` no Stripe. Vou alterar para também buscar assinaturas `canceled` / `past_due` / `unpaid` e:
-- Rebaixar para `gratuito` + `status=canceled` quando a assinatura no Stripe estiver cancelada
-- Marcar `status=past_due` quando houver falha de cobrança em aberto
+### 4. Exibir credenciais na tela de login
+- Adicionar um card discreto em `src/pages/Auth.tsx` (visível apenas na tela pública) com:
+  - Título "🎓 Avaliador Lovable Partner"
+  - Email e senha em destaque
+  - Botão **"Entrar como avaliador"** que preenche e submete o formulário automaticamente
+- Design alinhado ao tema dark premium do projeto
 
-Assim o botão "Sincronizar" no painel de assinantes passa a corrigir divergências como essa automaticamente.
-
-### 3. (Opcional, recomendo) Aviso visual no painel
-Adicionar na aba de assinantes uma coluna/badge "Última cobrança" e destacar em vermelho quem está com pagamento falho ou sem cobrança há mais de 35 dias — para você identificar esses casos antes de virar cancelamento.
-
-### 4. (Opcional) E-mail automático de "cartão recusado"
-Configurar no Stripe (Billing → Emails) o envio automático de aviso de falha de cobrança e link para atualizar o cartão. Isso reduz cancelamentos por cartão vencido. Posso te guiar quando quiser.
+### 5. Proteção da conta demo
+- Impedir que a conta demo seja excluída ou tenha senha alterada acidentalmente (opcional — via política ou apenas documentado).
 
 ## Detalhes técnicos
 
-- Update direto via migration na tabela `public.subscriptions` para `user_id = f6e2afd1-175e-4885-8fed-4e9816ebf6af`.
-- Em `supabase/functions/sync-subscribers/index.ts`: trocar o `stripe.subscriptions.list({ status: "active" })` por um loop que também lista `canceled`, `past_due` e `unpaid`, aplicando o downgrade correto no upsert local.
-- Sem mudanças de schema; apenas dados + edge function.
+**Migração / Insert SQL:**
+```sql
+-- 1. Criar usuário via função admin (email pré-confirmado)
+-- 2. UPDATE subscriptions SET plan='enterprise', status='active' WHERE user_id=<demo>
+-- 3. INSERT INTO user_roles (user_id, role) VALUES (<demo>, 'admin')
+-- 4. Bulk INSERT em clientes/projetos/tarefas/transacoes/colaboradores/campanhas
+-- 5. UPDATE onboarding_progress SET completed=true
+```
 
-Confirma que posso aplicar os itens 1 e 2? Os itens 3 e 4 posso deixar para uma rodada seguinte se preferir.
+**Frontend (`src/pages/Auth.tsx`):**
+- Novo componente `DemoLoginCard` renderizado abaixo do formulário principal
+- Handler que chama `signIn(demoEmail, demoPassword)` diretamente
+
+## Fora de escopo
+- Reset automático diário dos dados demo (podemos adicionar depois se quiser proteger contra alterações dos avaliadores)
+- Múltiplas contas demo por role (uma única conta admin cobre todos os cenários)
+
+## Confirme antes de eu implementar
+1. Credenciais sugeridas estão OK?
+2. Quer o botão "Entrar como avaliador" visível para qualquer visitante da `/auth`, ou apenas quando um parâmetro `?demo=1` estiver na URL (mais discreto)?
