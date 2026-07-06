@@ -10,9 +10,12 @@ import AuthLoginDialog from "@/components/auth/AuthLoginDialog";
 import AuthSignupDialog from "@/components/auth/AuthSignupDialog";
 import WorldCupPromoStrip from "@/components/auth/WorldCupPromoStrip";
 
-import { ArrowRight, ArrowDown, Shield, XCircle, DollarSign, FolderKanban, Users, UserCog, Megaphone, CheckSquare, Cog } from "lucide-react";
+import { ArrowRight, ArrowDown, Shield, XCircle, DollarSign, FolderKanban, Users, UserCog, Megaphone, CheckSquare, Cog, GraduationCap, Copy, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+const DEMO_EMAIL = "demo@focusinteligente.com.br";
+const DEMO_PASSWORD = "LovableDemo2026!";
 
 const rotatingWords = ["escalar", "organizar", "automatizar", "crescer", "faturar"];
 
