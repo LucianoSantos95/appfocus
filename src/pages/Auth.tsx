@@ -114,6 +114,27 @@ export default function Auth() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setDemoLoading(true);
+    const { error } = await signIn(DEMO_EMAIL, DEMO_PASSWORD);
+    setDemoLoading(false);
+    if (error) {
+      toast({ title: "Erro ao entrar como avaliador", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Bem-vindo, avaliador!", description: "Acesso completo liberado para exploração." });
+      navigate("/");
+    }
+  };
+
+  const copyCredentials = async () => {
+    try {
+      await navigator.clipboard.writeText(`${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
+      toast({ title: "Credenciais copiadas" });
+    } catch {
+      toast({ title: "Não foi possível copiar", variant: "destructive" });
+    }
+  };
+
   const loading = isLoading || googleLoading;
 
   return (
