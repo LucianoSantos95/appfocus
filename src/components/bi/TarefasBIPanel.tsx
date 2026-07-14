@@ -79,7 +79,7 @@ export function TarefasBIPanel({ open, onOpenChange, tarefas }: TarefasBIPanelPr
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
             <ListTodo className="w-5 h-5 text-primary mx-auto mb-1" />
-            <p className="text-2xl font-bold text-foreground">{total}</p>
+            <p className="font-display text-2xl font-bold text-foreground tracking-tight tabular-nums">{total}</p>
             <p className="text-xs text-muted-foreground">Total</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">

@@ -318,7 +318,7 @@ export default function Marketing() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Marketing</h1>
+            <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">Marketing</h1>
             <p className="text-muted-foreground mt-1">Campanhas, conteúdos e performance digital</p>
           </div>
         </div>

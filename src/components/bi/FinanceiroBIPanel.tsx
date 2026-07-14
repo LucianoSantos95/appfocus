@@ -499,7 +499,7 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
             </div>
             <div className="space-y-4">
               <div className="text-center py-4">
-                <p className="text-3xl font-bold text-warning">R$ {inadimplencia.total.toLocaleString("pt-BR")}</p>
+                <p className="font-display text-3xl font-bold text-warning tracking-tight tabular-nums">R$ {inadimplencia.total.toLocaleString("pt-BR")}</p>
                 <p className="text-sm text-muted-foreground mt-1">{inadimplencia.count} receita{inadimplencia.count !== 1 ? "s" : ""} pendente{inadimplencia.count !== 1 ? "s" : ""} e vencida{inadimplencia.count !== 1 ? "s" : ""}</p>
               </div>
               <div className="rounded-lg bg-warning/10 p-3 text-center">
