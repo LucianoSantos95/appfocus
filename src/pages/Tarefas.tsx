@@ -36,7 +36,6 @@ import {
   GripVertical,
   FileSpreadsheet,
   Lightbulb,
-  ListTodo as ListTodoIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
