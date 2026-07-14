@@ -385,53 +385,60 @@ export default function RH() {
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
             </TabsList>
 
-            {["ativo", "ferias", "licenca", "todos"].map((filter) => (
-              <TabsContent key={filter} value={filter} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {getFilteredColaboradores(filter as any).map((c) => (
-                    <div
-                      key={c.id}
-                      className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
-                      onClick={() => setSelectedColaborador(c)}
-                    >
-                      <div className="flex items-start gap-4">
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage src={c.avatar} alt={c.name} />
-                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                            {c.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-semibold text-foreground truncate">{c.name}</p>
-                              <p className="text-sm text-muted-foreground">{c.role}</p>
+            {["ativo", "ferias", "licenca", "todos"].map((filter) => {
+              const list = getFilteredColaboradores(filter as any);
+              return (
+                <TabsContent key={filter} value={filter} className="space-y-4">
+                  {list.length === 0 ? (
+                    <EmptyState icon={Users} title="Sem dados" description="Nenhum colaborador nesta categoria. Clique em 'Novo Colaborador' para começar." />
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {list.map((c) => (
+                        <div
+                          key={c.id}
+                          className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
+                          onClick={() => setSelectedColaborador(c)}
+                        >
+                          <div className="flex items-start gap-4">
+                            <Avatar className="w-12 h-12">
+                              <AvatarImage src={c.avatar} alt={c.name} />
+                              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                {c.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="font-semibold text-foreground truncate">{c.name}</p>
+                                  <p className="text-sm text-muted-foreground">{c.role}</p>
+                                </div>
+                                <span className={cn("text-xs px-2 py-1 rounded-full font-medium flex-shrink-0", statusColaborador[c.status].class)}>
+                                  {statusColaborador[c.status].label}
+                                </span>
+                              </div>
                             </div>
-                            <span className={cn("text-xs px-2 py-1 rounded-full font-medium flex-shrink-0", statusColaborador[c.status].class)}>
-                              {statusColaborador[c.status].label}
-                            </span>
+                          </div>
+                          <div className="mt-4 space-y-2">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Building className="w-4 h-4" />
+                              <span>{c.department}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Mail className="w-4 h-4" />
+                              <span className="truncate">{c.email}</span>
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Desde {new Date(c.startDate).toLocaleDateString("pt-BR")}</span>
+                            <span className="text-foreground font-medium">R$ {c.salary.toLocaleString("pt-BR")}</span>
                           </div>
                         </div>
-                      </div>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Building className="w-4 h-4" />
-                          <span>{c.department}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Mail className="w-4 h-4" />
-                          <span className="truncate">{c.email}</span>
-                        </div>
-                      </div>
-                      <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Desde {new Date(c.startDate).toLocaleDateString("pt-BR")}</span>
-                        <span className="text-foreground font-medium">R$ {c.salary.toLocaleString("pt-BR")}</span>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
+                  )}
+                </TabsContent>
+              );
+            })}
 
             <TabsContent value="timeline" className="space-y-4">
               <FeriasAniversariosTimeline
