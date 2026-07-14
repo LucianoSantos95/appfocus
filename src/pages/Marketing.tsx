@@ -55,7 +55,6 @@ import {
 } from "recharts";
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Megaphone } from "lucide-react";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useCampanhas as useCampanhasDB } from "@/hooks/useCampanhas";
