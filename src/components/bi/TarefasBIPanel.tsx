@@ -84,17 +84,17 @@ export function TarefasBIPanel({ open, onOpenChange, tarefas }: TarefasBIPanelPr
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
             <Clock className="w-5 h-5 text-warning mx-auto mb-1" />
-            <p className="text-2xl font-bold text-warning">{pendentes + emAndamento}</p>
+            <p className="font-display text-2xl font-bold text-warning tracking-tight tabular-nums">{pendentes + emAndamento}</p>
             <p className="text-xs text-muted-foreground">Em Aberto</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
             <CheckCircle2 className="w-5 h-5 text-success mx-auto mb-1" />
-            <p className="text-2xl font-bold text-success">{concluidas}</p>
+            <p className="font-display text-2xl font-bold text-success tracking-tight tabular-nums">{concluidas}</p>
             <p className="text-xs text-muted-foreground">Concluídas</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
             <AlertCircle className="w-5 h-5 text-destructive mx-auto mb-1" />
-            <p className="text-2xl font-bold text-destructive">{vencidas}</p>
+            <p className="font-display text-2xl font-bold text-destructive tracking-tight tabular-nums">{vencidas}</p>
             <p className="text-xs text-muted-foreground">Vencidas</p>
           </div>
         </div>
