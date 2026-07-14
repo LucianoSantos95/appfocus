@@ -95,6 +95,8 @@ import {
   Cell,
 } from "recharts";
 import { ImportDialog } from "@/components/import/ImportDialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Landmark, Receipt } from "lucide-react";
 import { SmartImportFinanceiroDialog } from "@/components/import/SmartImportFinanceiroDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { ImportExtratoDialog } from "@/components/financas/ImportExtratoDialog";
