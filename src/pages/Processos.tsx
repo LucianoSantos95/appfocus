@@ -358,6 +358,9 @@ export default function Processos() {
                               </div>
                             </div>
                           ))}
+                          {p.steps.length === 0 && (
+                            <EmptyState size="sm" icon={FileText} title="Sem etapas cadastradas" description="Adicione etapas para documentar o passo a passo deste processo." />
+                          )}
                         </div>
                       </div>
 
