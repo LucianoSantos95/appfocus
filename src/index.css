@@ -108,10 +108,11 @@
 
     /* Muted - darkened for WCAG AA contrast (>=4.5:1 on white) */
     --muted: 215 20% 94%;
-    --muted-foreground: 215 20% 28%;
+    --muted-foreground: 215 22% 24%;
 
     /* Accent */
     --accent: 215 90% 48%;
+
     --accent-foreground: 0 0% 100%;
 
     /* Semantic - darker tones to keep readable on light bg */
