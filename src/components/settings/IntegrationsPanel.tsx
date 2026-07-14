@@ -2,10 +2,23 @@ import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Chrome, Mail, Calendar, RefreshCw, Unplug, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Chrome,
+  Mail,
+  Calendar,
+  RefreshCw,
+  Unplug,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Slack,
+  Send,
+} from "lucide-react";
 
 interface IntegrationsPanelProps {
   open: boolean;
@@ -22,6 +35,8 @@ export function IntegrationsPanel({ open, onOpenChange }: IntegrationsPanelProps
   }>({ connected: false, email: null, connected_at: null });
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [slackChannel, setSlackChannel] = useState<string>("");
+  const [slackTesting, setSlackTesting] = useState(false);
 
   const checkGoogleStatus = useCallback(async () => {
     if (!session?.access_token) return;
@@ -53,10 +68,12 @@ export function IntegrationsPanel({ open, onOpenChange }: IntegrationsPanelProps
     if (open) {
       setLoading(true);
       checkGoogleStatus();
+      // Restore saved slack channel
+      const saved = localStorage.getItem("hub:slack_channel");
+      if (saved) setSlackChannel(saved);
     }
   }, [open, checkGoogleStatus]);
 
-  // Check URL params for connection result
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("google_connected") === "true") {
@@ -72,6 +89,7 @@ export function IntegrationsPanel({ open, onOpenChange }: IntegrationsPanelProps
       });
       window.history.replaceState({}, "", window.location.pathname);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleConnect = async () => {
@@ -167,14 +185,40 @@ export function IntegrationsPanel({ open, onOpenChange }: IntegrationsPanelProps
     }
   };
 
+  const handleSlackTest = async () => {
+    if (!slackChannel.trim()) {
+      toast({ title: "Informe um canal", description: "Ex: #geral ou C0123456789", variant: "destructive" });
+      return;
+    }
+    setSlackTesting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("notify-slack", {
+        body: {
+          channel: slackChannel.trim(),
+          title: "Hub Empresarial conectado",
+          text: "Esta é uma mensagem de teste. Se você recebeu, tudo pronto! ✅",
+          level: "success",
+        },
+      });
+      if (error) throw error;
+      localStorage.setItem("hub:slack_channel", slackChannel.trim());
+      toast({ title: "Mensagem enviada!", description: "Confira seu Slack." });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Falha ao enviar";
+      toast({ title: "Erro ao enviar", description: msg, variant: "destructive" });
+    } finally {
+      setSlackTesting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Integrações</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 mt-2">
+        <div className="space-y-4 mt-2">
           {/* Google Workspace */}
           <div className="rounded-xl border border-border p-5">
             <div className="flex items-center gap-3 mb-4">
@@ -218,11 +262,7 @@ export function IntegrationsPanel({ open, onOpenChange }: IntegrationsPanelProps
             </div>
 
             {!googleStatus.connected ? (
-              <Button
-                onClick={handleConnect}
-                disabled={!!actionLoading}
-                className="w-full"
-              >
+              <Button onClick={handleConnect} disabled={!!actionLoading} className="w-full">
                 {actionLoading === "connect" ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
@@ -259,14 +299,78 @@ export function IntegrationsPanel({ open, onOpenChange }: IntegrationsPanelProps
                 </Button>
               </div>
             )}
+          </div>
 
-            <p className="text-xs text-muted-foreground mt-3">
-              Requer configuração de credenciais OAuth no Google Cloud Console.
-              O administrador deve configurar Client ID e Client Secret nas variáveis de ambiente.
+          {/* Slack */}
+          <div className="rounded-xl border border-border p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-10 w-10 rounded-lg bg-[#4A154B]/10 flex items-center justify-center">
+                <Slack className="w-5 h-5 text-[#E01E5A]" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-foreground">Slack</h4>
+                <p className="text-xs text-muted-foreground">Notificações para sua equipe</p>
+              </div>
+              <Badge variant="default" className="bg-success/10 text-success border-success/20">
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                Ativo
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Conectado via Lovable Connector. Envie alertas de tarefas urgentes,
+              hot leads e metas batidas direto para um canal do seu workspace.
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="slack-channel" className="text-xs">
+                Canal padrão
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="slack-channel"
+                  placeholder="#geral ou C0123456789"
+                  value={slackChannel}
+                  onChange={(e) => setSlackChannel(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  variant="outline"
+                  onClick={handleSlackTest}
+                  disabled={slackTesting}
+                >
+                  {slackTesting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4 mr-2" />
+                  )}
+                  Testar
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Resend (Emails) */}
+          <div className="rounded-xl border border-border p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Mail className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-foreground">E-mails transacionais</h4>
+                <p className="text-xs text-muted-foreground">Resend via Lovable Connector</p>
+              </div>
+              <Badge variant="default" className="bg-success/10 text-success border-success/20">
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                Ativo
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Relatórios BI, convites de equipe, follow-ups e campanhas são enviados
+              pelo gateway do Lovable (refresh automático de credenciais). Domínio:{" "}
+              <span className="font-medium text-foreground">app.focusinteligente.com.br</span>
             </p>
           </div>
 
-          {/* WhatsApp (already configured) */}
+          {/* WhatsApp */}
           <div className="rounded-xl border border-border p-5">
             <div className="flex items-center gap-3 mb-2">
               <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
@@ -285,7 +389,8 @@ export function IntegrationsPanel({ open, onOpenChange }: IntegrationsPanelProps
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              O Assistente Focus pode enviar mensagens WhatsApp por comando de voz. Configure suas preferências em Perfil → WhatsApp.
+              O Assistente Focus pode enviar mensagens WhatsApp por comando de voz.
+              Configure suas preferências em Perfil → WhatsApp.
             </p>
           </div>
         </div>
