@@ -1353,8 +1353,13 @@ function TransactionTable({ transactions, type, bankAccounts, onSelect, onDelete
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  Nenhuma {type === "receita" ? "receita" : "despesa"} registrada
+                <TableCell colSpan={8} className="p-0">
+                  <EmptyState
+                    size="sm"
+                    icon={Receipt}
+                    title={`Nenhuma ${type === "receita" ? "receita" : "despesa"} registrada`}
+                    description={`Cadastre a primeira ${type === "receita" ? "entrada" : "saída"} para começar a ver o fluxo de caixa.`}
+                  />
                 </TableCell>
               </TableRow>
             ) : (
