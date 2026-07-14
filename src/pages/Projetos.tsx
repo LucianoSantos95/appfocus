@@ -73,6 +73,7 @@ import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2, TrendingUp } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Stagger, StaggerItem } from "@/components/motion";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface SubTask {
   id: string;
