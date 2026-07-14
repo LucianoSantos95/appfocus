@@ -1,64 +1,119 @@
-# Plano: Login de Demonstração para Avaliadores Lovable
+# Resposta ao feedback da Lovable — Conectores + Polish
 
-## Objetivo
-Criar uma conta demo pré-populada com dados realistas e acesso total (plano Enterprise/Admin) para que avaliadores da certificação Lovable Partner possam explorar todas as funcionalidades do Hub sem precisar cadastrar-se.
+O revisor apontou dois gaps para certificação:
 
-## Credenciais propostas
-- **Email:** `demo@focusinteligente.com.br`
-- **Senha:** `LovableDemo2026!`
+1. **Uso de conectores/integrações** — precisa ficar visível no fluxo e agregar valor real.
+2. **Polish de produto/design** — a experiência ainda parece "rough" em alguns pontos.
 
-(Confirme se prefere outras credenciais antes de eu implementar.)
+Abaixo o diagnóstico do que já existe hoje no Hub e o que recomendo adicionar/refinar.
 
-## O que será feito
+---
 
-### 1. Criação da conta no backend
-- Inserir usuário em `auth.users` com email já confirmado (via `supabase--insert` usando funções admin).
-- O trigger `handle_new_user` cria automaticamente `profiles` + `subscriptions` (gratuito) + `user_roles` (user) + demo data básica.
+## 1) Conectores — o que já temos vs. o que falta
 
-### 2. Elevar privilégios da conta demo
-- Atualizar `subscriptions` para plano **Enterprise** com status `active` (sem limite freemium, sem gates).
-- Adicionar role `admin` em `user_roles` para liberar painéis administrativos (Assinantes, BI completo, MCP tools de vendas).
+**Já existente no projeto:**
 
-### 3. Popular com dados ricos de demonstração
-Além do que o trigger `populate_demo_data` já injeta, adicionar volume extra para as telas parecerem "vividas":
-- +10 clientes (mix prospectos/ativos com valores variados)
-- +8 projetos em diferentes estágios (kanban preenchido)
-- +15 tarefas distribuídas por prioridade/status
-- +20 transações financeiras (receitas e despesas dos últimos 90 dias) para gráficos de BI mostrarem tendências
-- +5 colaboradores adicionais
-- +3 campanhas de marketing com conteúdos agendados
-- +2 processos documentados
-- Marcar onboarding como concluído (`onboarding_progress`) para evitar prompts
+- Google Workspace (Gmail/Calendar) via OAuth2 custom (`google-integration`)
+- WhatsApp via Twilio (envio de lembretes)
+- Stripe (billing)
+- Lovable AI Gateway (Hub Assistant, análise de clientes, smart import)
+- MCP server próprio (Hub expõe tools para ChatGPT/Claude)
 
-### 4. Exibir credenciais na tela de login
-- Adicionar um card discreto em `src/pages/Auth.tsx` (visível apenas na tela pública) com:
-  - Título "🎓 Avaliador Lovable Partner"
-  - Email e senha em destaque
-  - Botão **"Entrar como avaliador"** que preenche e submete o formulário automaticamente
-- Design alinhado ao tema dark premium do projeto
+**O que o revisor quer ver** é uso de **conectores Lovable oficiais** integrados ao fluxo — não só APIs custom. Recomendo estes 4, escolhidos por encaixe direto com os módulos do Hub:
 
-### 5. Proteção da conta demo
-- Impedir que a conta demo seja excluída ou tenha senha alterada acidentalmente (opcional — via política ou apenas documentado).
+### Prioridade ALTA (impacto imediato no fluxo)
 
-## Detalhes técnicos
 
-**Migração / Insert SQL:**
-```sql
--- 1. Criar usuário via função admin (email pré-confirmado)
--- 2. UPDATE subscriptions SET plan='enterprise', status='active' WHERE user_id=<demo>
--- 3. INSERT INTO user_roles (user_id, role) VALUES (<demo>, 'admin')
--- 4. Bulk INSERT em clientes/projetos/tarefas/transacoes/colaboradores/campanhas
--- 5. UPDATE onboarding_progress SET completed=true
-```
+| Conector                       | Módulo Hub                         | Valor entregue                                                                                                                                                                                                                                     |
+| ------------------------------ | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Google Calendar (App User)** | Agenda / Home / Clientes           | Cada usuário conecta seu próprio calendário → reuniões com clientes viram eventos reais, agenda widget puxa compromissos do dia. Substitui a integração OAuth custom por App User Connector oficial (mais seguro, refresh automático via gateway). |
+| **Resend** (App connector)     | Relatórios / Follow-ups / Convites | Envio transacional dos relatórios BI, convites de equipe e follow-ups de campanhas com domínio verificado. Hoje temos edge functions de e-mail mas sem provedor oficial conectado.                                                                 |
 
-**Frontend (`src/pages/Auth.tsx`):**
-- Novo componente `DemoLoginCard` renderizado abaixo do formulário principal
-- Handler que chama `signIn(demoEmail, demoPassword)` diretamente
 
-## Fora de escopo
-- Reset automático diário dos dados demo (podemos adicionar depois se quiser proteger contra alterações dos avaliadores)
-- Múltiplas contas demo por role (uma única conta admin cobre todos os cenários)
+### Prioridade MÉDIA (diferenciação)
 
-## Confirme antes de eu implementar
-1. Credenciais sugeridas estão OK?
-2. Quer o botão "Entrar como avaliador" visível para qualquer visitante da `/auth`, ou apenas quando um parâmetro `?demo=1` estiver na URL (mais discreto)?
+
+| Conector                  | Módulo Hub             | Valor entregue                                                                                                                                                  |
+| ------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **HubSpot (App User)**    | Clientes / CRM         | Sincronizar contatos/deals do HubSpot do usuário para o CRM do Hub → um clique importa pipeline existente. Grande WOW moment para agências que já usam HubSpot. |
+| **Slack** (App connector) | Notificações / Tarefas | Notificar canal quando tarefa urgente é criada, cliente é marcado como hot lead, ou meta financeira é batida. Complementa o WhatsApp.                           |
+
+
+### Por que essa combinação atende o feedback
+
+- **Calendar + HubSpot** = cada end-user conecta seus próprios dados → prova que o app tem profundidade multi-tenant real (não é builder-only).
+- **Resend + Slack** = comunicação outbound profissional, cobre o "workflow completo".
+- Todos aparecem na aba **Integrações** (já existe `IntegrationsPanel.tsx`) com cards de conectar/desconectar.
+
+---
+
+## 2) Polish de produto/design — pontos rough identificados
+
+Varredura da UI atual sugere estes ajustes de maior impacto/menor esforço:
+
+### A. Consistência visual
+
+- **Auth page**: hoje mistura hero + form + branding panel. Após remoção do card de avaliador ficou espaço vazio na direita em alguns breakpoints — rebalancear grid.
+- **Sidebar collapsed state**: ícones não têm tooltip consistente em todos os itens.
+- **Empty states**: vários módulos (Processos, Marketing calendário, RH vagas vazias) mostram apenas texto cru. Padronizar com ilustração + CTA + microcopy.
+- **Loading skeletons**: hoje alguns painéis usam `Loader2` giratório, outros skeleton, outros nada. Padronizar para skeleton em todas as listas/cards.
+
+### B. Microinterações
+
+- **Toasts**: padronizar tom (sucesso verde suave, erro sem exclamação exagerada).
+- **Hover states**: cards de módulo na Home carecem de elevação/transform sutil no hover.
+- **Transições de página**: adicionar fade curto entre rotas (framer-motion `AnimatePresence` no `App.tsx`).
+
+### C. Densidade e hierarquia
+
+- **Dashboard Home**: cards de KPI competem visualmente com Agenda e Bulletin. Reduzir peso dos KPIs secundários (usar `text-muted-foreground` + `text-sm` para labels).
+- **Tabelas** (Clientes, Financeiro): headers com peso 500 em vez de 600, zebra striping mais sutil, row hover mais claro.
+- **Formulários em Dialogs**: espaçamento vertical inconsistente. Aplicar `space-y-4` uniforme em todos os `DialogContent`.
+
+### D. Onboarding polish
+
+- **Welcome modal**: reduzir de 3 passos para 2 (segmento + primeiro objetivo). Hoje sente-se longo.
+- **Tour guiado**: alguns steps apontam para elementos que podem estar fora da viewport em telas menores — validar posicionamento.
+
+### E. Acessibilidade e legibilidade
+
+- **Light mode**: alguns textos ainda usam `text-muted-foreground` com contraste baixo — revisar tokens no `.light` block do `index.css`.
+- **Focus rings**: garantir `focus-visible:ring-2` em todos os botões/inputs.
+
+---
+
+## 3) O que farei quando o plano for aprovado
+
+**Fase 1 — Conectores (para o revisor ver integração real):**
+
+1. Conectar **Google Calendar** como App User Connector oficial e migrar a Agenda/reuniões de clientes para usar as chamadas via gateway (`callAsAppUser`).
+2. Conectar **Resend** como App connector e migrar `send-bi-report` + `send-followup-email` + convites de equipe para usar Resend com domínio.
+3. Conectar **HubSpot** como App User Connector com botão "Importar do HubSpot" na página Clientes.
+4. Conectar **Slack** como App connector opcional, com toggle "Notificar Slack" nas configurações de notificações.
+5. Atualizar `IntegrationsPanel.tsx` para listar os 4 conectores oficiais com status conectado/não conectado.
+
+**Fase 2 — Polish (5 quick wins de maior impacto visual):**
+
+1. Padronizar empty states em todos os módulos (componente `EmptyState` reutilizável).
+2. Skeletons consistentes em todas as listas (`ListSkeleton`, `CardSkeleton`, `TableSkeleton`).
+3. Hover/transições em cards de módulo da Home + fade entre rotas.
+4. Rebalancear Auth page (grid + espaçamentos).
+5. Revisar contrastes do light mode e focus rings globais.
+
+**Fora do escopo desta rodada** (posso propor depois se quiser):
+
+- Redesign completo de páginas
+- Novos módulos
+- Reestruturação do onboarding além do encurtamento
+
+---
+
+## Perguntas antes de implementar
+
+1. Confirma os **4 conectores** (Google Calendar, Resend, HubSpot, Slack)? Ou prefere trocar/reduzir algum? Slack e HubSpot são os mais "opcionais" — dá para começar só com Calendar + Resend se quiser escopo menor.
+2. Para Resend, você já tem um **domínio verificado** que quer usar (ex: `focusinteligente.com.br`)? Se não, uso o domínio de sandbox do Resend temporariamente.
+3. Sobre o polish: topa as 5 quick wins da Fase 2, ou quer priorizar algo específico (ex: só Auth + empty states)?  
+  
+  
+Os conectores estão aprovados, o resend eu já utilizo  
+Ponto 3 também aprovado
