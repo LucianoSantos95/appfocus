@@ -274,28 +274,21 @@ Responda APENAS JSON válido (sem markdown), no formato:
             ? `Olá, ${firstName(r.display_name)}!\n\n`
             : "") + bodyText;
 
-          const resendRes = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${RESEND_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              from: FROM_EMAIL,
-              to: [r.email],
-              subject,
-              html,
-              text: personalizedText || undefined,
-            }),
+          const { sendResendEmail } = await import("../_shared/resend.ts");
+          const result = await sendResendEmail({
+            from: FROM_EMAIL,
+            to: r.email,
+            subject,
+            html,
+            text: personalizedText || undefined,
           });
-          const data = await resendRes.json();
-          if (!resendRes.ok) {
+          if (!result.ok) {
             failed++;
             await admin.from("email_send_log").insert({
               recipient_email: r.email,
               status: "failed",
               template_name: "subscriber_broadcast",
-              error_message: JSON.stringify(data).slice(0, 500),
+              error_message: (result.error ?? "unknown").slice(0, 500),
               metadata: { audience },
             });
           } else {
@@ -304,10 +297,11 @@ Responda APENAS JSON válido (sem markdown), no formato:
               recipient_email: r.email,
               status: "sent",
               template_name: "subscriber_broadcast",
-              message_id: data.id ?? null,
+              message_id: result.id ?? null,
               metadata: { audience },
             });
           }
+
           await new Promise((res) => setTimeout(res, 150));
         } catch (e) {
           failed++;

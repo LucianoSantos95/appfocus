@@ -12,6 +12,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DemoDataProvider } from "@/contexts/DemoDataContext";
 import { WorldCupOverlay } from "@/components/dashboard/WorldCupOverlay";
+import { RouteFade } from "@/components/layout/RouteFade";
+
 
 
 
@@ -65,6 +67,7 @@ const App = () => (
                   <ErrorBoundary fallback={<></>}>
                     <WorldCupOverlay />
                   </ErrorBoundary>
+                  <RouteFade>
                   <Routes>
 
                     <Route path="/auth" element={<Auth />} />
@@ -88,7 +91,9 @@ const App = () => (
                     <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                  </RouteFade>
                 </Suspense>
+
               </ErrorBoundary>
               </DemoDataProvider>
             </SidebarProvider>
