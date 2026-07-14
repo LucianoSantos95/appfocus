@@ -549,9 +549,11 @@ export default function Clientes() {
           </TabsList>
 
           <TabsContent value="prospectos" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {prospectosClientes.map((c) => renderClienteCard(c, true))}
-            </div>
+            <Stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {prospectosClientes.map((c) => (
+                <StaggerItem key={c.id}>{renderClienteCard(c, true)}</StaggerItem>
+              ))}
+            </Stagger>
             {prospectosClientes.length === 0 && (
               <EmptyState
                 icon={UserPlus}
@@ -562,9 +564,11 @@ export default function Clientes() {
           </TabsContent>
 
           <TabsContent value="ativos" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {ativosClientes.map((c) => renderClienteCard(c))}
-            </div>
+            <Stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {ativosClientes.map((c) => (
+                <StaggerItem key={c.id}>{renderClienteCard(c)}</StaggerItem>
+              ))}
+            </Stagger>
             {ativosClientes.length === 0 && (
               <EmptyState
                 icon={UserCheck}
