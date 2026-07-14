@@ -234,8 +234,23 @@ export default function Tarefas() {
 
   const renderKanbanColumn = (priority: Atividade["priority"], label: string) => {
     const items = getAtividadesByPriority(priority);
+    const isOver = dragOverPriority === priority;
     return (
-      <div className={cn("flex-1 min-w-[250px] rounded-lg border p-3", priorityStyles[priority].border, priorityStyles[priority].bg)}>
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOverPriority(priority); }}
+        onDragLeave={() => setDragOverPriority(null)}
+        onDrop={(e) => {
+          const id = e.dataTransfer.getData("text/plain");
+          if (id) updateTarefa(id, { priority });
+          setDragOverPriority(null);
+        }}
+        className={cn(
+          "flex-1 min-w-[250px] rounded-lg border p-3 transition-all duration-200",
+          priorityStyles[priority].border,
+          priorityStyles[priority].bg,
+          isOver && "border-primary/60 ring-2 ring-primary/30 scale-[1.01]"
+        )}
+      >
         <div className="flex items-center justify-between mb-3">
           <h4 className={cn("font-semibold", priorityStyles[priority].text)}>{label}</h4>
           <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", priorityStyles[priority].bg, priorityStyles[priority].text)}>
@@ -246,8 +261,10 @@ export default function Tarefas() {
           {items.map((a) => (
             <div
               key={a.id}
+              draggable
+              onDragStart={(e) => e.dataTransfer.setData("text/plain", a.id)}
               onClick={() => setSelectedAtividade(a)}
-              className="bg-card rounded-lg p-3 shadow-sm border border-border/50 cursor-pointer hover:border-primary/30 transition-colors"
+              className="bg-card rounded-lg p-3 shadow-sm border border-border/50 cursor-grab active:cursor-grabbing hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5"
             >
               <div className="flex items-start gap-2">
                 <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
@@ -263,7 +280,7 @@ export default function Tarefas() {
             </div>
           ))}
           {items.length === 0 && (
-            <EmptyState size="sm" icon={ClipboardList} title="Sem tarefas nesta coluna" description="Arraste ou crie uma nova tarefa para preencher esta prioridade." />
+            <EmptyState size="sm" icon={ClipboardList} title="Sem dados" description="Arraste tarefas para esta coluna para repriorizar." />
           )}
         </div>
       </div>
