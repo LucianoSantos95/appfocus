@@ -769,10 +769,11 @@ export default function Financas() {
             </PlanGateButton>
           </div>
           {bankAccounts.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl">
-              <Building2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">Nenhuma conta bancária cadastrada</p>
-            </div>
+            <EmptyState
+              icon={Landmark}
+              title="Nenhuma conta bancária cadastrada"
+              description="Adicione suas contas para acompanhar saldos e conciliar transações automaticamente."
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {bankAccounts.map((account) => (
