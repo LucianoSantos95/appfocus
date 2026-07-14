@@ -48,6 +48,8 @@ import {
 } from "@/components/ui/collapsible";
 // jsPDF loaded dynamically to reduce bundle size
 import { ImportDialog } from "@/components/import/ImportDialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Lightbulb } from "lucide-react";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessos as useProcessosDB } from "@/hooks/useProcessos";
@@ -232,8 +234,24 @@ export default function Processos() {
           </div>
         </div>
 
+        {/* Banner informativo */}
+        <div className="rounded-lg border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground flex items-start gap-3">
+          <Lightbulb className="w-5 h-5 text-primary/70 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium text-foreground mb-1">Documente seus processos</p>
+            <p>Cadastre playbooks de onboarding, fluxos comerciais, rotinas financeiras e qualquer procedimento repetível. Clique em <span className="text-foreground font-medium">Novo Processo</span> para começar e exporte cada documentação em PDF para compartilhar com a equipe.</p>
+          </div>
+        </div>
+
         {/* Processos List */}
         <div className="space-y-4">
+          {processos.length === 0 && (
+            <EmptyState
+              icon={GitBranch}
+              title="Nenhum processo documentado ainda"
+              description="Documente seus playbooks e fluxos internos para padronizar a operação. Clique em 'Novo Processo' acima para começar."
+            />
+          )}
           {processos.map((p) => (
             <Collapsible
               key={p.id}
