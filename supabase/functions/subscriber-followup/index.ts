@@ -220,25 +220,19 @@ async function handleSend(admin: any, body: any) {
   const bodyHtml = body.body_html || fu.body_html;
   const bodyText = body.body_text || fu.body_text || "";
 
-  const resendRes = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: FROM_EMAIL,
-      to: [fu.recipient_email],
-      subject,
-      html: bodyHtml,
-      text: bodyText,
-    }),
+  const { sendResendEmail } = await import("../_shared/resend.ts");
+  const result = await sendResendEmail({
+    from: FROM_EMAIL,
+    to: fu.recipient_email,
+    subject,
+    html: bodyHtml,
+    text: bodyText,
   });
-  const resendData = await resendRes.json();
-  if (!resendRes.ok) {
-    console.error("Resend error", resendData);
-    return json(500, { error: "send_failed", details: resendData });
+  if (!result.ok) {
+    console.error("Resend gateway error", result);
+    return json(500, { error: "send_failed", details: result.error });
   }
+
 
   const nextDays = Math.max(0, Number(body.suggested_next_days ?? fu.suggested_next_days ?? 7));
   const nextAt = nextDays > 0
