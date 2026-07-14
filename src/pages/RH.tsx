@@ -485,45 +485,52 @@ export default function RH() {
               <TabsTrigger value="todas">Todas</TabsTrigger>
             </TabsList>
 
-            {["aberta", "em_analise", "processo_recrutamento", "todas"].map((filter) => (
-              <TabsContent key={filter} value={filter} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {vagas.filter((v) => filter === "todas" || v.status === filter).map((v) => (
-                    <div
-                      key={v.id}
-                      className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
-                      onClick={() => setSelectedVaga(v)}
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Briefcase className="w-5 h-5 text-primary" />
+            {["aberta", "em_analise", "processo_recrutamento", "todas"].map((filter) => {
+              const list = vagas.filter((v) => filter === "todas" || v.status === filter);
+              return (
+                <TabsContent key={filter} value={filter} className="space-y-4">
+                  {list.length === 0 ? (
+                    <EmptyState icon={Briefcase} title="Sem dados" description="Cadastre vagas em aberto para acompanhar seu processo seletivo." />
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {list.map((v) => (
+                        <div
+                          key={v.id}
+                          className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
+                          onClick={() => setSelectedVaga(v)}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Briefcase className="w-5 h-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-foreground">{v.title}</p>
+                                <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{v.department}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-semibold text-foreground">{v.title}</p>
-                            <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{v.department}</span>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Nível</span>
+                              <span className="text-foreground font-medium">{v.level}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Faixa Salarial</span>
+                              <span className="text-foreground font-medium">{v.salaryRange}</span>
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
+                            <span className={cn("text-xs px-2 py-1 rounded-full font-medium", statusVaga[v.status].class)}>{statusVaga[v.status].label}</span>
+                            <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", priorityStyles[v.priority])}>{v.priority}</span>
                           </div>
                         </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Nível</span>
-                          <span className="text-foreground font-medium">{v.level}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Faixa Salarial</span>
-                          <span className="text-foreground font-medium">{v.salaryRange}</span>
-                        </div>
-                      </div>
-                      <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
-                        <span className={cn("text-xs px-2 py-1 rounded-full font-medium", statusVaga[v.status].class)}>{statusVaga[v.status].label}</span>
-                        <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", priorityStyles[v.priority])}>{v.priority}</span>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
+                  )}
+                </TabsContent>
+              );
+            })}
           </Tabs>
         </div>
 
