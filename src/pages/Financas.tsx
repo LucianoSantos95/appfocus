@@ -113,6 +113,7 @@ import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2, Sparkles } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Stagger, StaggerItem } from "@/components/motion";
 
 // Types
 interface Transaction {
@@ -775,10 +776,10 @@ export default function Financas() {
               description="Adicione suas contas para acompanhar saldos e conciliar transações automaticamente."
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {bankAccounts.map((account) => (
-                <div 
-                  key={account.id} 
+                <StaggerItem key={account.id}>
+                <div
                   className="bg-card rounded-xl border border-border/50 shadow-premium p-5 cursor-pointer hover:border-primary/30 transition-colors"
                   onClick={() => setEditingAccount(account)}
                 >
@@ -801,8 +802,9 @@ export default function Financas() {
                     <p className="font-display text-2xl font-bold text-foreground tracking-tight mt-2">R$ {account.balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
                   </div>
                 </div>
+                </StaggerItem>
               ))}
-            </div>
+            </Stagger>
           )}
         </div>
 

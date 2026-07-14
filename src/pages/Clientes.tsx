@@ -84,6 +84,7 @@ import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2 } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Stagger, StaggerItem } from "@/components/motion";
 
 const statusCliente = {
   ativo: { label: "Ativo", class: "bg-success/10 text-success" },
