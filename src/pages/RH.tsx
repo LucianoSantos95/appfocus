@@ -323,29 +323,33 @@ export default function RH() {
 
           <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
             <h3 className="font-semibold text-foreground mb-6">Média Salarial por Departamento</h3>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={salaryData} layout="vertical">
-                <defs>
-                  <linearGradient id="barGradientRH" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" horizontal={true} vertical={false} />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="department" stroke="hsl(var(--muted-foreground))" fontSize={11} width={80} axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "hsl(var(--popover))", 
-                    border: "1px solid hsl(var(--border))", 
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                  }} 
-                  formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, "Média"]} 
-                />
-                <Bar dataKey="media" fill="url(#barGradientRH)" radius={[0, 8, 8, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {salaryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={salaryData} layout="vertical">
+                  <defs>
+                    <linearGradient id="barGradientRH" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" horizontal={true} vertical={false} />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="department" stroke="hsl(var(--muted-foreground))" fontSize={11} width={80} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "12px",
+                      boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                    }}
+                    formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, "Média"]}
+                  />
+                  <Bar dataKey="media" fill="url(#barGradientRH)" radius={[0, 8, 8, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyState size="sm" icon={DollarSign} title="Sem dados" description="Informe salários dos colaboradores ativos para gerar esta análise." />
+            )}
           </div>
         </div>
 
