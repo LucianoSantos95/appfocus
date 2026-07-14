@@ -458,7 +458,7 @@ export default function Tarefas() {
             <div className="bg-card rounded-xl border border-border/50 shadow-premium divide-y divide-border/50">
               {concluidasAtividades.map(renderAtividadeItem)}
               {concluidasAtividades.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">Nenhuma tarefa concluída</p>
+                <EmptyState icon={CheckCircle2} title="Nada concluído ainda" description="Assim que você marcar tarefas como concluídas, elas aparecem aqui." />
               )}
             </div>
           </TabsContent>
