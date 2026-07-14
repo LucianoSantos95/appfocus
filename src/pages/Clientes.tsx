@@ -73,7 +73,7 @@ import { SugestoesPainel } from "@/components/clientes/SugestoesPainel";
 import { ImportDialog } from "@/components/import/ImportDialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CardGridSkeleton } from "@/components/ui/list-skeletons";
-import { UserPlus, UserCheck } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { importConfigs } from "@/lib/import-configs";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
