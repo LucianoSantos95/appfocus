@@ -51,6 +51,8 @@ import {
   Cell,
 } from "recharts";
 import { ImportDialog } from "@/components/import/ImportDialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { DollarSign } from "lucide-react";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useColaboradores } from "@/hooks/useColaboradores";
@@ -264,53 +266,59 @@ export default function RH() {
                 </UITooltip>
               </TooltipProvider>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <defs>
-                  <filter id="pieGlowRH">
-                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                <Pie 
-                  data={departmentData} 
-                  cx="50%" 
-                  cy="50%" 
-                  innerRadius={55} 
-                  outerRadius={82} 
-                  paddingAngle={4} 
-                  dataKey="colaboradores"
-                  strokeWidth={0}
-                  filter="url(#pieGlowRH)"
-                >
-                  {departmentData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+            {departmentData.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <defs>
+                      <filter id="pieGlowRH">
+                        <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                        <feMerge>
+                          <feMergeNode in="coloredBlur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <Pie
+                      data={departmentData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={82}
+                      paddingAngle={4}
+                      dataKey="colaboradores"
+                      strokeWidth={0}
+                      filter="url(#pieGlowRH)"
+                    >
+                      {departmentData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                        color: "#ffffff",
+                      }}
+                      labelStyle={{ color: "#ffffff" }}
+                      itemStyle={{ color: "#ffffff" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex flex-wrap gap-4 justify-center mt-4">
+                  {departmentData.map((d) => (
+                    <div key={d.name} className="flex items-center gap-2 text-xs">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color, boxShadow: `0 0 8px ${d.color}50` }} />
+                      <span className="text-muted-foreground">{d.name}</span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "hsl(var(--popover))", 
-                    border: "1px solid hsl(var(--border))", 
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                    color: "#ffffff",
-                  }} 
-                  labelStyle={{ color: "#ffffff" }}
-                  itemStyle={{ color: "#ffffff" }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap gap-4 justify-center mt-4">
-              {departmentData.map((d) => (
-                <div key={d.name} className="flex items-center gap-2 text-xs">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color, boxShadow: `0 0 8px ${d.color}50` }} />
-                  <span className="text-muted-foreground">{d.name}</span>
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <EmptyState size="sm" icon={Users} title="Sem dados" description="Cadastre colaboradores para visualizar a distribuição por departamento." />
+            )}
           </div>
 
           <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
