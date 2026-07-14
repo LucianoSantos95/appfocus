@@ -51,6 +51,8 @@ import {
   Cell,
 } from "recharts";
 import { ImportDialog } from "@/components/import/ImportDialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { DollarSign } from "lucide-react";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useColaboradores } from "@/hooks/useColaboradores";
@@ -264,80 +266,90 @@ export default function RH() {
                 </UITooltip>
               </TooltipProvider>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <defs>
-                  <filter id="pieGlowRH">
-                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                <Pie 
-                  data={departmentData} 
-                  cx="50%" 
-                  cy="50%" 
-                  innerRadius={55} 
-                  outerRadius={82} 
-                  paddingAngle={4} 
-                  dataKey="colaboradores"
-                  strokeWidth={0}
-                  filter="url(#pieGlowRH)"
-                >
-                  {departmentData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+            {departmentData.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <defs>
+                      <filter id="pieGlowRH">
+                        <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                        <feMerge>
+                          <feMergeNode in="coloredBlur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <Pie
+                      data={departmentData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={82}
+                      paddingAngle={4}
+                      dataKey="colaboradores"
+                      strokeWidth={0}
+                      filter="url(#pieGlowRH)"
+                    >
+                      {departmentData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                        color: "#ffffff",
+                      }}
+                      labelStyle={{ color: "#ffffff" }}
+                      itemStyle={{ color: "#ffffff" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex flex-wrap gap-4 justify-center mt-4">
+                  {departmentData.map((d) => (
+                    <div key={d.name} className="flex items-center gap-2 text-xs">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color, boxShadow: `0 0 8px ${d.color}50` }} />
+                      <span className="text-muted-foreground">{d.name}</span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "hsl(var(--popover))", 
-                    border: "1px solid hsl(var(--border))", 
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                    color: "#ffffff",
-                  }} 
-                  labelStyle={{ color: "#ffffff" }}
-                  itemStyle={{ color: "#ffffff" }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap gap-4 justify-center mt-4">
-              {departmentData.map((d) => (
-                <div key={d.name} className="flex items-center gap-2 text-xs">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color, boxShadow: `0 0 8px ${d.color}50` }} />
-                  <span className="text-muted-foreground">{d.name}</span>
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <EmptyState size="sm" icon={Users} title="Sem dados" description="Cadastre colaboradores para visualizar a distribuição por departamento." />
+            )}
           </div>
 
           <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
             <h3 className="font-semibold text-foreground mb-6">Média Salarial por Departamento</h3>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={salaryData} layout="vertical">
-                <defs>
-                  <linearGradient id="barGradientRH" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" horizontal={true} vertical={false} />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="department" stroke="hsl(var(--muted-foreground))" fontSize={11} width={80} axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "hsl(var(--popover))", 
-                    border: "1px solid hsl(var(--border))", 
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                  }} 
-                  formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, "Média"]} 
-                />
-                <Bar dataKey="media" fill="url(#barGradientRH)" radius={[0, 8, 8, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {salaryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={salaryData} layout="vertical">
+                  <defs>
+                    <linearGradient id="barGradientRH" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" horizontal={true} vertical={false} />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="department" stroke="hsl(var(--muted-foreground))" fontSize={11} width={80} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "12px",
+                      boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                    }}
+                    formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, "Média"]}
+                  />
+                  <Bar dataKey="media" fill="url(#barGradientRH)" radius={[0, 8, 8, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyState size="sm" icon={DollarSign} title="Sem dados" description="Informe salários dos colaboradores ativos para gerar esta análise." />
+            )}
           </div>
         </div>
 
@@ -373,53 +385,60 @@ export default function RH() {
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
             </TabsList>
 
-            {["ativo", "ferias", "licenca", "todos"].map((filter) => (
-              <TabsContent key={filter} value={filter} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {getFilteredColaboradores(filter as any).map((c) => (
-                    <div
-                      key={c.id}
-                      className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
-                      onClick={() => setSelectedColaborador(c)}
-                    >
-                      <div className="flex items-start gap-4">
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage src={c.avatar} alt={c.name} />
-                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                            {c.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-semibold text-foreground truncate">{c.name}</p>
-                              <p className="text-sm text-muted-foreground">{c.role}</p>
+            {["ativo", "ferias", "licenca", "todos"].map((filter) => {
+              const list = getFilteredColaboradores(filter as any);
+              return (
+                <TabsContent key={filter} value={filter} className="space-y-4">
+                  {list.length === 0 ? (
+                    <EmptyState icon={Users} title="Sem dados" description="Nenhum colaborador nesta categoria. Clique em 'Novo Colaborador' para começar." />
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {list.map((c) => (
+                        <div
+                          key={c.id}
+                          className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
+                          onClick={() => setSelectedColaborador(c)}
+                        >
+                          <div className="flex items-start gap-4">
+                            <Avatar className="w-12 h-12">
+                              <AvatarImage src={c.avatar} alt={c.name} />
+                              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                {c.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="font-semibold text-foreground truncate">{c.name}</p>
+                                  <p className="text-sm text-muted-foreground">{c.role}</p>
+                                </div>
+                                <span className={cn("text-xs px-2 py-1 rounded-full font-medium flex-shrink-0", statusColaborador[c.status].class)}>
+                                  {statusColaborador[c.status].label}
+                                </span>
+                              </div>
                             </div>
-                            <span className={cn("text-xs px-2 py-1 rounded-full font-medium flex-shrink-0", statusColaborador[c.status].class)}>
-                              {statusColaborador[c.status].label}
-                            </span>
+                          </div>
+                          <div className="mt-4 space-y-2">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Building className="w-4 h-4" />
+                              <span>{c.department}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Mail className="w-4 h-4" />
+                              <span className="truncate">{c.email}</span>
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Desde {new Date(c.startDate).toLocaleDateString("pt-BR")}</span>
+                            <span className="text-foreground font-medium">R$ {c.salary.toLocaleString("pt-BR")}</span>
                           </div>
                         </div>
-                      </div>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Building className="w-4 h-4" />
-                          <span>{c.department}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Mail className="w-4 h-4" />
-                          <span className="truncate">{c.email}</span>
-                        </div>
-                      </div>
-                      <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Desde {new Date(c.startDate).toLocaleDateString("pt-BR")}</span>
-                        <span className="text-foreground font-medium">R$ {c.salary.toLocaleString("pt-BR")}</span>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
+                  )}
+                </TabsContent>
+              );
+            })}
 
             <TabsContent value="timeline" className="space-y-4">
               <FeriasAniversariosTimeline
@@ -466,45 +485,52 @@ export default function RH() {
               <TabsTrigger value="todas">Todas</TabsTrigger>
             </TabsList>
 
-            {["aberta", "em_analise", "processo_recrutamento", "todas"].map((filter) => (
-              <TabsContent key={filter} value={filter} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {vagas.filter((v) => filter === "todas" || v.status === filter).map((v) => (
-                    <div
-                      key={v.id}
-                      className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
-                      onClick={() => setSelectedVaga(v)}
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Briefcase className="w-5 h-5 text-primary" />
+            {["aberta", "em_analise", "processo_recrutamento", "todas"].map((filter) => {
+              const list = vagas.filter((v) => filter === "todas" || v.status === filter);
+              return (
+                <TabsContent key={filter} value={filter} className="space-y-4">
+                  {list.length === 0 ? (
+                    <EmptyState icon={Briefcase} title="Sem dados" description="Cadastre vagas em aberto para acompanhar seu processo seletivo." />
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {list.map((v) => (
+                        <div
+                          key={v.id}
+                          className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
+                          onClick={() => setSelectedVaga(v)}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Briefcase className="w-5 h-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-foreground">{v.title}</p>
+                                <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{v.department}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-semibold text-foreground">{v.title}</p>
-                            <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{v.department}</span>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Nível</span>
+                              <span className="text-foreground font-medium">{v.level}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Faixa Salarial</span>
+                              <span className="text-foreground font-medium">{v.salaryRange}</span>
+                            </div>
+                          </div>
+                          <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
+                            <span className={cn("text-xs px-2 py-1 rounded-full font-medium", statusVaga[v.status].class)}>{statusVaga[v.status].label}</span>
+                            <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", priorityStyles[v.priority])}>{v.priority}</span>
                           </div>
                         </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Nível</span>
-                          <span className="text-foreground font-medium">{v.level}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Faixa Salarial</span>
-                          <span className="text-foreground font-medium">{v.salaryRange}</span>
-                        </div>
-                      </div>
-                      <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
-                        <span className={cn("text-xs px-2 py-1 rounded-full font-medium", statusVaga[v.status].class)}>{statusVaga[v.status].label}</span>
-                        <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", priorityStyles[v.priority])}>{v.priority}</span>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
+                  )}
+                </TabsContent>
+              );
+            })}
           </Tabs>
         </div>
 

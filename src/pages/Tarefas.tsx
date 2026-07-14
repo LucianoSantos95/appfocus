@@ -35,6 +35,7 @@ import {
   Trash2,
   GripVertical,
   FileSpreadsheet,
+  Lightbulb,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -112,6 +113,7 @@ export default function Tarefas() {
   const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(dbTarefas.length);
   const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
+  const [dragOverPriority, setDragOverPriority] = useState<Atividade["priority"] | null>(null);
 
   // Map DB tarefas to local Atividade type
   const atividades: Atividade[] = dbTarefas.map(t => ({
@@ -232,8 +234,23 @@ export default function Tarefas() {
 
   const renderKanbanColumn = (priority: Atividade["priority"], label: string) => {
     const items = getAtividadesByPriority(priority);
+    const isOver = dragOverPriority === priority;
     return (
-      <div className={cn("flex-1 min-w-[250px] rounded-lg border p-3", priorityStyles[priority].border, priorityStyles[priority].bg)}>
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOverPriority(priority); }}
+        onDragLeave={() => setDragOverPriority(null)}
+        onDrop={(e) => {
+          const id = e.dataTransfer.getData("text/plain");
+          if (id) updateTarefa(id, { priority });
+          setDragOverPriority(null);
+        }}
+        className={cn(
+          "flex-1 min-w-[250px] rounded-lg border p-3 transition-all duration-200",
+          priorityStyles[priority].border,
+          priorityStyles[priority].bg,
+          isOver && "border-primary/60 ring-2 ring-primary/30 scale-[1.01]"
+        )}
+      >
         <div className="flex items-center justify-between mb-3">
           <h4 className={cn("font-semibold", priorityStyles[priority].text)}>{label}</h4>
           <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", priorityStyles[priority].bg, priorityStyles[priority].text)}>
@@ -244,8 +261,10 @@ export default function Tarefas() {
           {items.map((a) => (
             <div
               key={a.id}
+              draggable
+              onDragStart={(e) => e.dataTransfer.setData("text/plain", a.id)}
               onClick={() => setSelectedAtividade(a)}
-              className="bg-card rounded-lg p-3 shadow-sm border border-border/50 cursor-pointer hover:border-primary/30 transition-colors"
+              className="bg-card rounded-lg p-3 shadow-sm border border-border/50 cursor-grab active:cursor-grabbing hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5"
             >
               <div className="flex items-start gap-2">
                 <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
@@ -261,7 +280,7 @@ export default function Tarefas() {
             </div>
           ))}
           {items.length === 0 && (
-            <EmptyState size="sm" icon={ClipboardList} title="Sem tarefas nesta coluna" description="Arraste ou crie uma nova tarefa para preencher esta prioridade." />
+            <EmptyState size="sm" icon={ClipboardList} title="Sem dados" description="Arraste tarefas para esta coluna para repriorizar." />
           )}
         </div>
       </div>
@@ -440,9 +459,15 @@ export default function Tarefas() {
           </TabsList>
 
           <TabsContent value="todas" className="mt-6">
-            <div className="bg-card rounded-xl border border-border/50 shadow-premium divide-y divide-border/50">
-              {todasAtividades.map(renderAtividadeItem)}
-            </div>
+            {todasAtividades.length === 0 ? (
+              <div className="bg-card rounded-xl border border-border/50 shadow-premium">
+                <EmptyState icon={ListTodo} title="Sem dados" description="Crie sua primeira tarefa clicando em 'Nova Tarefa' acima." />
+              </div>
+            ) : (
+              <div className="bg-card rounded-xl border border-border/50 shadow-premium divide-y divide-border/50">
+                {todasAtividades.map(renderAtividadeItem)}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="kanban" className="mt-6">
@@ -458,11 +483,20 @@ export default function Tarefas() {
             <div className="bg-card rounded-xl border border-border/50 shadow-premium divide-y divide-border/50">
               {concluidasAtividades.map(renderAtividadeItem)}
               {concluidasAtividades.length === 0 && (
-                <EmptyState icon={CheckCircle2} title="Nada concluído ainda" description="Assim que você marcar tarefas como concluídas, elas aparecem aqui." />
+                <EmptyState icon={CheckCircle2} title="Sem dados" description="Assim que você marcar tarefas como concluídas, elas aparecem aqui." />
               )}
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Dica no rodapé */}
+        <div className="rounded-lg border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground flex items-start gap-3">
+          <Lightbulb className="w-5 h-5 text-primary/70 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium text-foreground mb-1">Dica</p>
+            <p>Arraste tarefas entre as colunas do <span className="text-foreground font-medium">Kanban</span> para repriorizar automaticamente. Marque como concluída no checkbox à esquerda de cada item na aba <span className="text-foreground font-medium">Todas</span>.</p>
+          </div>
+        </div>
       </div>
 
       {/* Edit Dialog */}
