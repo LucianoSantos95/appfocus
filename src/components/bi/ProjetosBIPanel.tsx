@@ -85,7 +85,7 @@ export function ProjetosBIPanel({ open, onOpenChange, projetos }: ProjetosBIPane
             <p className="text-xs text-muted-foreground">Total</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
-            <p className="text-2xl font-bold text-success">{active}</p>
+            <p className="font-display text-2xl font-bold text-success tracking-tight tabular-nums">{active}</p>
             <p className="text-xs text-muted-foreground">Em Andamento</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">

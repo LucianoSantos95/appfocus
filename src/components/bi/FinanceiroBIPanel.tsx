@@ -305,7 +305,7 @@ export function FinanceiroBIPanel({ open, onOpenChange, transacoes }: Financeiro
                 <TrendingUp className="w-4 h-4 text-success" />
                 <p className="text-xs text-muted-foreground font-medium">Saldo Atual</p>
               </div>
-              <p className={`text-2xl font-bold ${monthDetail.saldoAtual >= 0 ? "text-success" : "text-destructive"}`}>
+              <p className={`font-display text-2xl font-bold tracking-tight tabular-nums ${monthDetail.saldoAtual >= 0 ? "text-success" : "text-destructive"}`}>
                 {monthDetail.saldoAtual < 0 ? "− " : ""}{fmt(monthDetail.saldoAtual)}
               </p>
               <p className="text-[11px] text-muted-foreground mt-1">inicial + líquido</p>
