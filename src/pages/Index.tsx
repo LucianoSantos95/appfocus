@@ -12,6 +12,7 @@ import { UsageLimitWidget } from "@/components/dashboard/UsageLimitWidget";
 import { PersistentCouponWidget } from "@/components/dashboard/PersistentCouponWidget";
 import { WorldCupBanner } from "@/components/dashboard/WorldCupBanner";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
+import { Stagger, StaggerItem, FadeIn } from "@/components/motion";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
