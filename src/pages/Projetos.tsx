@@ -72,6 +72,7 @@ import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2, TrendingUp } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Stagger, StaggerItem } from "@/components/motion";
 
 interface SubTask {
   id: string;
@@ -464,16 +465,16 @@ export default function Projetos() {
             }}
           />
         ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Stagger className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {projetos
             .filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()))
             .map((p) => {
             const deadlineStatus = getProjectDeadlineStatus(p.endDate, p.progress);
             const DeadlineIcon = deadlineStatus.icon;
-            
+
             return (
+              <StaggerItem key={p.id}>
               <div
-                key={p.id}
                 onClick={() => setSelectedProjeto(p)}
                 className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
               >
@@ -546,9 +547,10 @@ export default function Projetos() {
                   </div>
                 </div>
               </div>
+              </StaggerItem>
             );
           })}
-        </div>
+        </Stagger>
         )}
       </div>
 
