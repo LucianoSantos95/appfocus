@@ -3,6 +3,8 @@ import { PageMeta } from "@/components/seo/PageMeta";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CardGridSkeleton } from "@/components/ui/list-skeletons";
 import {
   Accordion,
   AccordionContent,
@@ -214,8 +216,12 @@ export default function Guia() {
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-pulse text-muted-foreground">Carregando...</div>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <CardGridSkeleton count={6} />
         </div>
       </MainLayout>
     );

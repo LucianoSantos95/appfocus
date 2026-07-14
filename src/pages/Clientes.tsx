@@ -407,11 +407,11 @@ export default function Clientes() {
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "12px",
                       boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                      color: "#ffffff",
+                      color: "hsl(var(--popover-foreground))",
                     }}
                     formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, "Receita"]}
-                    labelStyle={{ color: "#ffffff" }}
-                    itemStyle={{ color: "#ffffff" }}
+                    labelStyle={{ color: "hsl(var(--popover-foreground))" }}
+                    itemStyle={{ color: "hsl(var(--popover-foreground))" }}
                   />
                   <Bar dataKey="valor" fill="url(#barGradientClientes)" radius={[0, 8, 8, 0]} />
                 </BarChart>
@@ -464,10 +464,10 @@ export default function Clientes() {
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "12px",
                         boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                        color: "#ffffff",
+                        color: "hsl(var(--popover-foreground))",
                       }}
-                      labelStyle={{ color: "#ffffff" }}
-                      itemStyle={{ color: "#ffffff" }}
+                      labelStyle={{ color: "hsl(var(--popover-foreground))" }}
+                      itemStyle={{ color: "hsl(var(--popover-foreground))" }}
                     />
                   </PieChart>
                 </ResponsiveContainer>

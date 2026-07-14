@@ -1161,11 +1161,11 @@ function CategoryPieChart({ data, emptyLabel }: { data: { name: string; value: n
               border: "1px solid hsl(var(--border))", 
               borderRadius: "12px",
               boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-              color: "#ffffff",
+              color: "hsl(var(--popover-foreground))",
             }} 
             formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]} 
-            labelStyle={{ color: "#ffffff" }}
-            itemStyle={{ color: "#ffffff" }}
+            labelStyle={{ color: "hsl(var(--popover-foreground))" }}
+            itemStyle={{ color: "hsl(var(--popover-foreground))" }}
           />
         </PieChart>
       </ResponsiveContainer>
