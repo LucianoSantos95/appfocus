@@ -245,7 +245,7 @@ export default function Guia() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Guia de Configuração</h1>
+              <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">Guia de Configuração</h1>
               <p className="text-muted-foreground mt-1">Configure seu Hub em poucos minutos</p>
             </div>
           </div>
@@ -273,7 +273,7 @@ export default function Guia() {
             <div className="text-center md:text-left flex-1">
               {allDone ? (
                 <>
-                  <h2 className="text-2xl font-bold text-foreground mb-1 flex items-center gap-2 justify-center md:justify-start">
+                  <h2 className="font-display text-2xl font-bold text-foreground tracking-tight mb-1 flex items-center gap-2 justify-center md:justify-start">
                     Parabéns! Configuração completa! <PartyPopper className="w-6 h-6 text-warning" />
                   </h2>
                   <p className="text-muted-foreground">
@@ -282,7 +282,7 @@ export default function Guia() {
                 </>
               ) : (
                 <>
-                  <h2 className="text-2xl font-bold text-foreground mb-1">
+                  <h2 className="font-display text-2xl font-bold text-foreground tracking-tight mb-1">
                     {totalCompleted === 0 ? "Vamos configurar seu Hub! 🚀" : `Continue de onde parou!`}
                   </h2>
                   <p className="text-muted-foreground">
@@ -412,7 +412,7 @@ export default function Guia() {
             <div className="w-16 h-16 rounded-2xl bg-success/20 flex items-center justify-center mx-auto mb-4">
               <Trophy className="w-8 h-8 text-success" />
             </div>
-            <h3 className="text-2xl font-bold text-foreground mb-2">
+            <h3 className="font-display text-2xl font-bold text-foreground tracking-tight mb-2">
               Seu Hub está 100% configurado! 🎉
             </h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">

@@ -81,7 +81,7 @@ export function ProjetosBIPanel({ open, onOpenChange, projetos }: ProjetosBIPane
         {/* KPIs */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{projetos.length}</p>
+            <p className="font-display text-2xl font-bold text-foreground tracking-tight tabular-nums">{projetos.length}</p>
             <p className="text-xs text-muted-foreground">Total</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
@@ -89,11 +89,11 @@ export function ProjetosBIPanel({ open, onOpenChange, projetos }: ProjetosBIPane
             <p className="text-xs text-muted-foreground">Em Andamento</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{concluded}</p>
+            <p className="font-display text-2xl font-bold text-foreground tracking-tight tabular-nums">{concluded}</p>
             <p className="text-xs text-muted-foreground">Concluídos</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">R$ {(totalBudget / 1000).toFixed(0)}K</p>
+            <p className="font-display text-2xl font-bold text-foreground tracking-tight tabular-nums">R$ {(totalBudget / 1000).toFixed(0)}K</p>
             <p className="text-xs text-muted-foreground">Orçamento Total</p>
           </div>
         </div>

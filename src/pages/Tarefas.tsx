@@ -287,7 +287,7 @@ export default function Tarefas() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Tarefas</h1>
+              <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">Tarefas</h1>
               <p className="text-muted-foreground mt-1">
                 Tarefas e metas do negócio
               </p>

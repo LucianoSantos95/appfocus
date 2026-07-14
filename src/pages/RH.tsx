@@ -236,7 +236,7 @@ export default function RH() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Recursos Humanos</h1>
+              <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">Recursos Humanos</h1>
               <p className="text-muted-foreground mt-1">Gerencie sua equipe e processos seletivos</p>
             </div>
           </div>

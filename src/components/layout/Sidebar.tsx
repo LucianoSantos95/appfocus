@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
 import { UserMenu } from "@/components/user/UserMenu";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
 import {
   LayoutDashboard,
@@ -194,15 +195,22 @@ export function Sidebar() {
                 <NavLink
                   to={module.path}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                    "relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-200",
                     "text-sm font-medium",
                     isActive
-                      ? "bg-primary/10 text-primary"
+                      ? "text-primary"
                       : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
                   )}
                 >
-                  <module.icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-primary")} />
-                  {!collapsed && <span>{module.name}</span>}
+                  {isActive && (
+                    <motion.span
+                      layoutId="sidebar-active-pill"
+                      className="absolute inset-0 rounded-lg bg-primary/10"
+                      transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                    />
+                  )}
+                  <module.icon className={cn("relative w-5 h-5 flex-shrink-0", isActive && "text-primary")} />
+                  {!collapsed && <span className="relative">{module.name}</span>}
                 </NavLink>
               </li>
             );

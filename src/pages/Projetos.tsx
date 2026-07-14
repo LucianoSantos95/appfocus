@@ -258,7 +258,7 @@ export default function Projetos() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Projetos</h1>
+              <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">Projetos</h1>
               <p className="text-muted-foreground mt-1">
                 Acompanhe o progresso das suas entregas
               </p>

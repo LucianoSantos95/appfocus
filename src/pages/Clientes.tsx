@@ -325,7 +325,7 @@ export default function Clientes() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Clientes</h1>
+              <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">Clientes</h1>
               <p className="text-muted-foreground mt-1">
                 Cadastro e relacionamento com clientes
               </p>

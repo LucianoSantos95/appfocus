@@ -417,7 +417,7 @@ export default function Financas() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Finanças</h1>
+              <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">Finanças</h1>
               <p className="text-muted-foreground mt-1">Controle completo do seu fluxo financeiro</p>
             </div>
           </div>
@@ -798,7 +798,7 @@ export default function Financas() {
                     <span className={cn("text-xs px-2 py-1 rounded-full font-medium capitalize", accountTypeStyles[account.type] || "bg-muted text-muted-foreground")}>
                       {accountTypes.find((t) => t.value === account.type)?.label || account.type}
                     </span>
-                    <p className="text-2xl font-bold text-foreground mt-2">R$ {account.balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                    <p className="font-display text-2xl font-bold text-foreground tracking-tight mt-2">R$ {account.balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
                   </div>
                 </div>
               ))}

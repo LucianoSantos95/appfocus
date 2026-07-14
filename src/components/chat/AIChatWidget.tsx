@@ -228,7 +228,7 @@ export function AIChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 h-16 w-16 rounded-full shadow-glow-strong hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center overflow-hidden ring-2 ring-primary/30"
+          className="fixed bottom-6 right-6 z-50 h-16 w-16 rounded-full shadow-glow-strong hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center overflow-hidden ring-2 ring-primary/30 animate-idle-pulse"
           aria-label="Abrir assistente"
         >
           <img src={hubLogo} alt="Assistente Focus" className="h-16 w-16 object-cover" />

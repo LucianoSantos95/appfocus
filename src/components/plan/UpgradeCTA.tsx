@@ -11,14 +11,16 @@ export function UpgradeCTA() {
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
-      <Button
-        onClick={() => navigate("/planos")}
-        className="gap-2 shadow-glow-strong rounded-full px-6"
-        size="lg"
-      >
-        <Sparkles className="w-4 h-4" />
-        Desbloqueie os recursos — Plano Plus
-      </Button>
+      <div className="conic-border rounded-full">
+        <Button
+          onClick={() => navigate("/planos")}
+          className="gap-2 shadow-glow-strong rounded-full px-6"
+          size="lg"
+        >
+          <Sparkles className="w-4 h-4" />
+          Desbloqueie os recursos — Plano Plus
+        </Button>
+      </div>
     </div>
   );
 }
