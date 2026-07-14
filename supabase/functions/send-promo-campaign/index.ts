@@ -250,29 +250,30 @@ Deno.serve(async (req) => {
     const toSend = recipients.filter((r) => !alreadySent.has(r.email));
 
     const results = { sent: 0, failed: 0, skipped: alreadySent.size, errors: [] as any[] };
+    const { sendResendEmail } = await import("../_shared/resend.ts");
     for (const r of toSend) {
       const html = body.segment === "engaged" ? renderEngaged(r.display_name) : renderInactive(r.display_name);
       try {
-        const resp = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: fromEmail, to: [r.email], subject: tpl.subject, html }),
+        const result = await sendResendEmail({
+          from: fromEmail,
+          to: r.email,
+          subject: tpl.subject,
+          html,
         });
-        const data = await resp.json();
-        if (!resp.ok) {
+        if (!result.ok) {
           results.failed++;
-          results.errors.push({ email: r.email, error: data });
+          results.errors.push({ email: r.email, error: result.error });
           await supabase.from("email_send_log").insert({
             template_name: tpl.template_name,
             recipient_email: r.email,
             status: "failed",
-            error_message: JSON.stringify(data).slice(0, 500),
+            error_message: (result.error ?? "unknown").slice(0, 500),
             metadata: { segment: body.segment, user_id: r.user_id },
           });
         } else {
           results.sent++;
           await supabase.from("email_send_log").insert({
-            message_id: data.id,
+            message_id: result.id,
             template_name: tpl.template_name,
             recipient_email: r.email,
             status: "sent",
@@ -286,6 +287,7 @@ Deno.serve(async (req) => {
         results.errors.push({ email: r.email, error: String(e) });
       }
     }
+
 
     return json({ segment: body.segment, total: recipients.length, ...results });
   } catch (e) {
