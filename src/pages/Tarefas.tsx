@@ -35,6 +35,8 @@ import {
   Trash2,
   GripVertical,
   FileSpreadsheet,
+  Lightbulb,
+  ListTodo as ListTodoIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -112,6 +114,7 @@ export default function Tarefas() {
   const { isAdmin } = useTeamPermissions();
   const freemium = useFreemiumLimit(dbTarefas.length);
   const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
+  const [dragOverPriority, setDragOverPriority] = useState<Atividade["priority"] | null>(null);
 
   // Map DB tarefas to local Atividade type
   const atividades: Atividade[] = dbTarefas.map(t => ({
