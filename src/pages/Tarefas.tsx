@@ -261,7 +261,7 @@ export default function Tarefas() {
             </div>
           ))}
           {items.length === 0 && (
-            <p className="text-center text-sm text-muted-foreground py-4">Nenhuma tarefa</p>
+            <EmptyState size="sm" icon={ClipboardList} title="Sem tarefas nesta coluna" description="Arraste ou crie uma nova tarefa para preencher esta prioridade." />
           )}
         </div>
       </div>
