@@ -69,15 +69,6 @@ Deno.serve(async (req) => {
     })
   }
 
-  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-  if (!RESEND_API_KEY) {
-    console.error('RESEND_API_KEY not configured')
-    return new Response(JSON.stringify({ error: 'Server configuration error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
   try {
     const { to, type, displayName, templateData } = await req.json()
 
@@ -111,32 +102,25 @@ Deno.serve(async (req) => {
       { plainText: true }
     )
 
-    const resendResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [to],
-        subject: templateConfig.subject,
-        html,
-        text,
-      }),
+    const { sendResendEmail } = await import('../_shared/resend.ts')
+    const result = await sendResendEmail({
+      from: FROM_EMAIL,
+      to,
+      subject: templateConfig.subject,
+      html,
+      text,
     })
 
-    const resendData = await resendResponse.json()
-
-    if (!resendResponse.ok) {
-      console.error('Resend API error', { status: resendResponse.status, data: resendData })
-      return new Response(JSON.stringify({ error: 'Failed to send email', details: resendData }), {
-        status: 500,
+    if (!result.ok) {
+      console.error('Resend gateway error', { status: result.status, error: result.error })
+      return new Response(JSON.stringify({ error: 'Failed to send email', details: result.error }), {
+        status: result.status || 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    console.log('Follow-up email sent', { type, to, id: resendData.id })
+    console.log('Follow-up email sent', { type, to, id: result.id })
+
 
     return new Response(JSON.stringify({ success: true, id: resendData.id }), {
       status: 200,
