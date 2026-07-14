@@ -277,57 +277,26 @@ async function sendEmail(
   pdfBytes?: Uint8Array,
   pdfName?: string,
 ) {
-  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-  if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
-
-  // Domínio verificado no Resend para esta aplicação.
-  const VERIFIED_FROM = "Hub Empresarial <noreply@app.focusinteligente.com.br>";
-
-  // Domínios públicos que NUNCA podem aparecer no "from" (Resend rejeita).
-  const PUBLIC_DOMAINS = [
-    "gmail.com", "googlemail.com", "hotmail.com", "outlook.com",
-    "live.com", "yahoo.com", "yahoo.com.br", "icloud.com",
-    "me.com", "uol.com.br", "bol.com.br", "terra.com.br",
-  ];
+  const { sendResendEmail, resolveFrom } = await import("../_shared/resend.ts");
 
   const rawFrom = Deno.env.get("RESEND_FROM_EMAIL")?.trim();
-  // Extrai o domínio do formato "Nome <email@dominio>" ou "email@dominio".
-  const match = rawFrom?.match(/<?([^<>\s@]+@([^<>\s]+))>?$/);
-  const domain = match?.[2]?.toLowerCase();
-  const isPublic = domain ? PUBLIC_DOMAINS.includes(domain) : false;
+  const fromAddress = rawFrom ?? resolveFrom();
 
-  // Usa o secret só se for um domínio próprio verificado; caso contrário, usa o padrão.
-  const fromAddress = rawFrom && !isPublic ? rawFrom : VERIFIED_FROM;
+  const attachments = pdfBytes && pdfName
+    ? [{ filename: pdfName, content: btoa(String.fromCharCode(...pdfBytes)) }]
+    : undefined;
 
-  if (rawFrom && isPublic) {
-    console.warn(
-      `[send-bi-report] RESEND_FROM_EMAIL ignorado (domínio público "${domain}"). Usando remetente verificado.`,
-    );
-  }
-
-  const body: any = {
+  const result = await sendResendEmail({
     from: fromAddress,
-    to: [to],
+    to,
     subject,
     html,
-  };
-  if (pdfBytes && pdfName) {
-    body.attachments = [
-      { filename: pdfName, content: btoa(String.fromCharCode(...pdfBytes)) },
-    ];
-  }
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
+    attachments,
   });
-  if (!res.ok) {
-    const err = await res.text();
-    console.error("[send-bi-report] Resend error:", res.status, err);
+
+  if (!result.ok) {
+    console.error("[send-bi-report] Resend gateway error:", result.status, result.error);
+    const err = result.error ?? "";
     if (
       err.includes("verify a domain") ||
       err.includes("testing emails") ||
@@ -339,8 +308,9 @@ async function sendEmail(
     }
     throw new Error("Falha ao enviar o e-mail do relatório.");
   }
-  return await res.json();
+  return { id: result.id };
 }
+
 
 async function sendWhatsApp(to: string, message: string) {
   const sid = Deno.env.get("TWILIO_ACCOUNT_SID");
