@@ -357,53 +357,66 @@ export default function Projetos() {
               </TooltipProvider>
             </div>
             <div className="mt-4" />
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <defs>
-                  <filter id="pieGlowP">
-                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={55}
-                  outerRadius={78}
-                  paddingAngle={4}
-                  dataKey="value"
-                  strokeWidth={0}
-                  filter="url(#pieGlowP)"
-                >
-                  {statusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                    color: "#ffffff",
-                  }}
-                  labelStyle={{ color: "#ffffff" }}
-                  itemStyle={{ color: "#ffffff" }}
+            {statusData.every((d) => d.value === 0) ? (
+              <div className="h-[220px] flex items-center justify-center">
+                <EmptyState
+                  icon={FolderKanban}
+                  title="Nenhum projeto ainda"
+                  description="Crie seu primeiro projeto para visualizar o status por etapa."
+                  size="sm"
                 />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap gap-4 justify-center mt-4">
-              {statusData.map((d) => (
-                <div key={d.name} className="flex items-center gap-2 text-xs">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color, boxShadow: `0 0 8px ${d.color}50` }} />
-                  <span className="text-muted-foreground">{d.name}</span>
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <defs>
+                      <filter id="pieGlowP">
+                        <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                        <feMerge>
+                          <feMergeNode in="coloredBlur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <Pie
+                      data={statusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={78}
+                      paddingAngle={4}
+                      dataKey="value"
+                      strokeWidth={0}
+                      filter="url(#pieGlowP)"
+                    >
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                        color: "#ffffff",
+                      }}
+                      labelStyle={{ color: "#ffffff" }}
+                      itemStyle={{ color: "#ffffff" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex flex-wrap gap-4 justify-center mt-4">
+                  {statusData.map((d) => (
+                    <div key={d.name} className="flex items-center gap-2 text-xs">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color, boxShadow: `0 0 8px ${d.color}50` }} />
+                      <span className="text-muted-foreground">{d.name}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </div>
         </div>
 
