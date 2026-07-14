@@ -12,6 +12,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DemoDataProvider } from "@/contexts/DemoDataContext";
 import { WorldCupOverlay } from "@/components/dashboard/WorldCupOverlay";
+import { RouteFade } from "@/components/layout/RouteFade";
+
 
 
 
