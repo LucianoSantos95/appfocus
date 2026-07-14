@@ -1,71 +1,57 @@
-## Fluid & Alive — Phase 2 do polish
+## Phase 2.5 — Consistência + Wow nos módulos
 
-Transformar a interface de **estática e correta** em **viva e memorável**, sem redesign visual.
+O Phase 2 elevou Home/sidebar/chat, mas os módulos onde o usuário passa a maior parte do tempo (Finanças, Clientes, Tarefas, Projetos, Marketing, RH) continuam com tipografia e estática de "template SaaS". Este plano fecha essa lacuna.
 
-### 1. Instalar framer-motion e display font
-- Adicionar `framer-motion` (~50kb gzip, tree-shakeable).
-- Adicionar **Space Grotesk** via Google Fonts (`display=swap`, preconnect no `index.html`).
-- Atualizar `tailwind.config.ts`: `fontFamily.display = ['Space Grotesk', ...]`, manter `sans` como Inter.
+### 1. KPI unificado — extrair `<KPIStat>`
+Hoje os módulos usam blocos custom tipo `<p className="text-2xl font-bold">R$ 11.700</p>`. Criar componente único `<KPIStat value={number} format="currency|number|percent" label icon variant />` que:
+- Usa `font-display tracking-tight tabular-nums`.
+- Aplica `<CountUp>` automaticamente.
+- Formata pt-BR (currency, percent, número compacto tipo "12k").
+- Substituir os KPIs custom em: **Finanças** (Receita/Despesa/Lucro/Caixa), **Clientes** (topo do BI), **Projetos** (BI), **RH** (BI), **Marketing** (BI), **Tarefas** (BI).
 
-### 2. Tipografia com hierarquia
-- Aplicar `font-display` + `tracking-tight` em H1/H2 dos módulos e em números grandes (KPIs, HealthSummary, BI panels).
-- Body/UI segue Inter (`font-sans` default).
-- Ajustar pesos: display 600-700, body 400, muted 400.
+### 2. Gráficos com draw-in
+Recharts suporta animação nativa via `isAnimationActive`, `animationDuration`, `animationBegin`. Padronizar:
+- `animationDuration={900}`, easing `ease-out`.
+- Aplicar em todos os `<LineChart>`, `<AreaChart>`, `<BarChart>`, `<PieChart>` de: Finanças (Evolução, Por Categoria), Clientes (Receita/Segmento), Marketing (Funil), Projetos (Status), RH (headcount), BI panels.
+- Adicionar `<FadeIn delay={0.1}>` ao container do card do gráfico pra ele entrar já com o card.
 
-### 3. Camada de movimento
-Criar helpers reutilizáveis em `src/components/motion/`:
-- **`<Stagger>`** e **`<StaggerItem>`**: wrapper para listas com entrada em cascata (delay 30-50ms). Aplicar em: Kanban Tarefas, cards de Clientes, cards de Projetos, cards de módulos do Home, cards de campanhas Marketing, contas bancárias Finanças.
-- **`<FadeIn>`**: entrada com fade+translateY, respeita `prefers-reduced-motion`.
-- **Substituir `RouteFade`**: nova transição com slide+fade coordenado usando `AnimatePresence` (200ms).
-- **Modais/Dialogs**: sobrescrever transição do shadcn Dialog com spring (não fazer breaking change — apenas via variants).
-- **Layout animations**: `layout` prop nos cards do Kanban para acomodação suave ao criar/mover/excluir.
+### 3. Stagger nos módulos principais
+Aplicar `<Stagger>/<StaggerItem>` em:
+- **Tarefas**: colunas do Kanban e cards dentro de cada coluna (entrada 40ms cascata).
+- **Clientes**: grid de cards de prospecto/ativo.
+- **Projetos**: cards de projeto.
+- **Finanças**: linhas da tabela de transações (primeira renderização) + cards de contas bancárias.
+- **Marketing**: cards de campanha nas 4 tabs.
 
-### 4. Números vivos
-- Criar `<CountUp value={n} />` (~40 linhas, sem lib externa; usa `requestAnimationFrame`, duração 800ms, easing ease-out).
-- Aplicar em: HealthSummary, UsageLimitWidget, todos os KPIs dos BI panels (Finanças, Clientes, Marketing, Projetos, RH, Tarefas), cards de saldo de Finanças.
-- Garantir `isAnimationActive={true}` em todos os `<Recharts>` (LineChart, BarChart, PieChart, AreaChart).
+### 4. Empty states com personalidade
+Atualizar `<EmptyState>` para usar `font-display` no title e adicionar entrada com scale+fade (framer-motion). Aplica automaticamente em todos os empty states já existentes.
 
-### 5. Micro-personalidade
-- **Hero glow no Home**: radial gradient sutil atrás do H1 do painel principal (primary a 8%, blur 80px).
-- **Sidebar ativa com `layoutId`**: barra lateral do item ativo desliza entre itens ao navegar (framer-motion `layoutId="sidebar-active"`).
-- **AI Chat Widget**: `animate-pulse-subtle` no botão flutuante quando idle >30s.
-- **UpgradeCTA / plano premium**: border com gradient conic girando lentamente (8s), CSS puro.
+### 5. Cards clicáveis com layout animation
+Ativar `layout` prop do framer-motion em cards de:
+- Kanban Tarefas (acomodam ao mover entre colunas).
+- Lista de campanhas (acomodam ao arquivar/mudar status).
+- Contas bancárias (acomodam ao adicionar/remover).
 
-### 6. Feedback tátil
-- **Success toast**: micro-bounce no ícone de check (scale 1 → 1.2 → 1, 400ms).
-- **Copy-to-clipboard**: onde existir, ícone morfa copy → check por 1.2s.
-- **Botão destrutivo** (`variant="destructive"`): shake sutil no hover (translate-x -1px → 1px, 120ms).
+### 6. Tipografia display em títulos de card e seção
+Sweep global: `text-lg font-semibold` e `text-xl font-bold` de títulos de card/section nos módulos → `font-display tracking-tight`. Regex-guided, ~30-40 ocorrências.
 
 ### O que NÃO muda
-- Paleta de cores (azul elétrico segue).
-- Layout dos módulos.
-- Backend, hooks, RLS, edge functions, schemas.
-- Nenhuma feature funcional nova.
+- Nenhuma mudança em dados, hooks, RLS, edge functions.
+- Sem redesign de layout.
+- Sem nova dependência (framer-motion + Space Grotesk já instalados).
 
 ### Detalhes técnicos
-- Dep nova: `framer-motion` apenas.
-- Nova font: Space Grotesk (display), Inter mantida (body).
-- Todas as animações respeitam `@media (prefers-reduced-motion: reduce)`.
-- Componentes de movimento centralizados em `src/components/motion/` para reuso.
-- Sem edições em `src/integrations/supabase/*`, hooks de dados, ou edge functions.
+- Novo: `src/components/ui/kpi-stat.tsx` (~40 linhas, wraps CountUp + formatação pt-BR).
+- Edit: `src/components/ui/empty-state.tsx` (motion + font-display).
+- Edit: `src/pages/Financas.tsx`, `src/pages/Clientes.tsx`, `src/pages/Tarefas.tsx`, `src/pages/Projetos.tsx`, `src/pages/RH.tsx`, `src/pages/Marketing.tsx` — trocar KPIs custom por `<KPIStat>`, envolver listas em `<Stagger>`, aplicar font-display em títulos de seção.
+- Edit: `src/components/bi/*.tsx` — mesmo tratamento nos BI panels.
+- Edit: Charts em Finanças, BI panels — props de animação padronizadas.
 
-### Arquivos principais a editar/criar
-```
-NOVO  src/components/motion/Stagger.tsx
-NOVO  src/components/motion/FadeIn.tsx
-NOVO  src/components/motion/CountUp.tsx
-NOVO  src/components/motion/PageTransition.tsx  (substitui RouteFade)
-EDIT  index.html                                (preconnect + Space Grotesk)
-EDIT  tailwind.config.ts                        (fontFamily.display)
-EDIT  src/index.css                             (hero-glow, conic-border, bounce keyframes)
-EDIT  src/App.tsx                               (RouteFade → PageTransition)
-EDIT  src/components/layout/Sidebar.tsx         (layoutId no item ativo)
-EDIT  src/components/chat/AIChatWidget.tsx     (idle pulse)
-EDIT  src/components/plan/UpgradeCTA.tsx       (conic border)
-EDIT  src/pages/Index.tsx                       (hero glow, font-display no H1, Stagger nos módulos)
-EDIT  src/pages/{Tarefas,Clientes,Projetos,Financas,Marketing,RH}.tsx  (Stagger + font-display)
-EDIT  src/components/dashboard/HealthSummary.tsx, UsageLimitWidget.tsx  (CountUp)
-EDIT  src/components/bi/*.tsx                   (CountUp nos KPIs)
-```
+### Resultado esperado
+Ao terminar, qualquer módulo aberto vai:
+- Ter números que sobem em vez de "aparecerem".
+- Ter cards que entram em cascata.
+- Ter tipografia display consistente com o Home.
+- Ter gráficos que se desenham.
 
 Pronto para implementar.
