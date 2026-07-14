@@ -306,6 +306,46 @@
     @apply py-24 lg:py-32;
   }
 
+  /* === Polish utilities === */
+
+  /* Global focus ring - accessibility (WCAG 2.4.7) */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Module tile - Home dashboard cards */
+  .module-tile {
+    @apply relative rounded-xl border border-border/60 bg-card p-5 transition-all duration-300 ease-out;
+  }
+  .module-tile:hover {
+    transform: translateY(-3px);
+    border-color: hsl(var(--primary) / 0.4);
+    box-shadow: 0 10px 40px -12px hsl(var(--primary) / 0.25);
+  }
+  .module-tile:active {
+    transform: translateY(-1px);
+  }
+
+  /* Interactive row - lists that respond to click/hover */
+  .interactive-row {
+    @apply transition-colors duration-150;
+  }
+  .interactive-row:hover {
+    background: hsl(var(--primary) / 0.06);
+  }
+
+  /* Page fade transition */
+  .page-fade-enter {
+    animation: pageFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes pageFadeIn {
+    0% { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+
   /* Rotating word animations */
   @keyframes rotateWordIn {
     0% { opacity: 0; transform: translateY(20px); }
