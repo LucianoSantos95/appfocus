@@ -489,10 +489,21 @@ export default function Projetos() {
               if (p) setSelectedProjeto(p);
             }}
           />
-        ) : (
+        ) : (() => {
+          const filtered = projetos.filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+          if (filtered.length === 0) {
+            return (
+              <EmptyState
+                icon={FolderKanban}
+                title={searchTerm ? "Nenhum projeto encontrado" : "Nenhum projeto cadastrado"}
+                description={searchTerm ? "Ajuste sua busca ou crie um novo projeto." : "Comece criando seu primeiro projeto para acompanhar entregas e orçamento."}
+                size="md"
+              />
+            );
+          }
+          return (
         <Stagger className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {projetos
-            .filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+          {filtered
             .map((p) => {
             const deadlineStatus = getProjectDeadlineStatus(p.endDate, p.progress);
             const DeadlineIcon = deadlineStatus.icon;
