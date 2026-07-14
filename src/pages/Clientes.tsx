@@ -298,8 +298,8 @@ export default function Clientes() {
   if (isLoading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-96">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="p-8">
+          <CardGridSkeleton count={6} />
         </div>
       </MainLayout>
     );
