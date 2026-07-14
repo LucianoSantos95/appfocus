@@ -587,7 +587,8 @@ export default function Projetos() {
             );
           })}
         </Stagger>
-        )}
+          );
+        })()}
       </div>
 
       {/* Project Detail Dialog */}
