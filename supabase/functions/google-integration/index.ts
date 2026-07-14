@@ -499,6 +499,60 @@ serve(async (req) => {
         });
       }
 
+      case "create_event": {
+        const { summary, description, start, end, all_day } = params;
+        if (!summary || !start) {
+          return new Response(JSON.stringify({ error: "summary e start são obrigatórios" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const tokenResult = await getValidToken(supabaseService, userId, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+        if (tokenResult.error) {
+          return new Response(JSON.stringify({ error: tokenResult.error }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // all_day → { date: "YYYY-MM-DD" }; timed → { dateTime: ISO }.
+        // For timed events without an explicit end, default to +1h.
+        const startObj = all_day ? { date: start } : { dateTime: start };
+        const endObj = all_day
+          ? { date: end || start }
+          : { dateTime: end || new Date(new Date(start).getTime() + 3600000).toISOString() };
+
+        const createRes = await fetch(`${CALENDAR_API}/calendars/primary/events`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${tokenResult.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            summary,
+            description: description || undefined,
+            start: startObj,
+            end: endObj,
+          }),
+        });
+
+        if (!createRes.ok) {
+          const errBody = await createRes.text();
+          console.error("Create event error:", errBody);
+          return new Response(JSON.stringify({ error: "Falha ao criar evento na agenda" }), {
+            status: createRes.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const created = await createRes.json();
+        return new Response(
+          JSON.stringify({ success: true, eventId: created.id, htmlLink: created.htmlLink }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       case "sync_events": {
         const tokenResult = await getValidToken(supabaseService, userId, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
         if (tokenResult.error) {

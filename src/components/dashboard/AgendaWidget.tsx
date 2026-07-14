@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -51,6 +52,7 @@ export function AgendaWidget() {
     type: "meeting" as "meeting" | "deadline" | "event",
     priority: "medium" as "high" | "medium" | "low",
   });
+  const [pushToGoogle, setPushToGoogle] = useState(false);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -93,10 +95,35 @@ export function AgendaWidget() {
         priority: newItem.priority,
       });
       if (error) throw error;
+
+      // Optional two-way sync: also create the event on the user's Google Calendar.
+      // Best-effort — the local item is already saved, so a Google failure only warns.
+      if (pushToGoogle) {
+        try {
+          const startIso = new Date(`${newItem.date}T${newItem.time}`).toISOString();
+          const { data: gData, error: gErr } = await supabase.functions.invoke("google-integration", {
+            body: { action: "create_event", summary: newItem.title, start: startIso },
+          });
+          if (gErr || gData?.error) {
+            toast({
+              title: "Salvo, mas não foi para o Google",
+              description: gData?.error || "Conecte o Google em Integrações para sincronizar.",
+              variant: "destructive",
+            });
+          } else {
+            toast({ title: "Compromisso adicionado e enviado ao Google Agenda! 📅" });
+          }
+        } catch {
+          toast({ title: "Compromisso salvo", description: "Falha ao enviar ao Google Agenda." });
+        }
+      } else {
+        toast({ title: "Compromisso adicionado!" });
+      }
+
       setNewItem({ title: "", date: "", time: "", type: "meeting", priority: "medium" });
+      setPushToGoogle(false);
       setOpen(false);
       fetchItems();
-      toast({ title: "Compromisso adicionado!" });
     } catch (err: any) {
       toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
     }
@@ -222,6 +249,14 @@ export function AgendaWidget() {
                   </Select>
                 </div>
               </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer pt-1">
+                <Checkbox
+                  checked={pushToGoogle}
+                  onCheckedChange={(v) => setPushToGoogle(!!v)}
+                />
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                Adicionar também ao Google Agenda
+              </label>
             </div>
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
