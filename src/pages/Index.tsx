@@ -105,18 +105,18 @@ const Index = () => {
   return (
     <MainLayout>
       <PageMeta path="/" title="Painel Principal" description="Visão geral da sua operação em um só lugar. Gerencie finanças, equipe, marketing, entregas e clientes." />
-      <div className="space-y-8 animate-fade-in">
+      <div className="space-y-8">
         <WorldCupBanner />
         <PersistentCouponWidget />
 
 
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Painel Principal</h1>
+        <FadeIn className="hero-glow">
+          <h1 className="font-display text-3xl font-bold text-foreground tracking-tight">Painel Principal</h1>
           <p className="text-muted-foreground mt-1">
             Visão geral da sua operação em um só lugar
           </p>
-        </div>
+        </FadeIn>
 
         <HealthSummary />
 
@@ -124,18 +124,19 @@ const Index = () => {
 
         {/* Module Grid */}
         <section>
-          <h2 className="text-lg font-semibold text-foreground mb-4">Módulos</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <h2 className="font-display text-lg font-semibold text-foreground mb-4 tracking-tight">Módulos</h2>
+          <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {modules.map((module) => (
-              <ModuleCard
-                key={module.path}
-                icon={module.icon}
-                title={module.title}
-                description={module.description}
-                onClick={() => navigate(module.path)}
-              />
+              <StaggerItem key={module.path}>
+                <ModuleCard
+                  icon={module.icon}
+                  title={module.title}
+                  description={module.description}
+                  onClick={() => navigate(module.path)}
+                />
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         </section>
 
         {/* Two Column Layout: Agenda + Bulletin */}
