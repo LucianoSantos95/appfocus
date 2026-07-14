@@ -1,5 +1,6 @@
 // Recomputes funnel stage for all non-converted users and enqueues nudges for hot leads.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { sendSlackMessage, isSlackConfigured } from "../_shared/slack.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,12 @@ Deno.serve(async (req) => {
   const log = (msg: string, extra?: unknown) =>
     console.log(`[cron-funnel-progression] ${msg}${extra ? " " + JSON.stringify(extra) : ""}`);
 
+  // Team-facing Slack alerts for new hot leads. Routes through the Lovable Slack
+  // connector (_shared/slack.ts). No-ops gracefully unless the connector is
+  // configured AND an alerts channel is set, so the cron never breaks on Slack.
+  const SLACK_ALERTS_CHANNEL = Deno.env.get("SLACK_ALERTS_CHANNEL") ?? "";
+  const slackReady = isSlackConfigured() && !!SLACK_ALERTS_CHANNEL;
+
   try {
     log("started");
 
@@ -30,7 +37,7 @@ Deno.serve(async (req) => {
 
     let recomputed = 0;
     let becameHot = 0;
-    const hotUsers: string[] = [];
+    const hotUsers: { user_id: string; score: number }[] = [];
 
     for (const row of rows ?? []) {
       const { data: updated, error: rpcErr } = await supabase.rpc("recompute_funnel_stage", {
@@ -43,13 +50,14 @@ Deno.serve(async (req) => {
       recomputed++;
       if (updated && (updated as { stage?: string }).stage === "quente" && row.stage !== "quente") {
         becameHot++;
-        hotUsers.push(row.user_id);
+        hotUsers.push({ user_id: row.user_id, score: (updated as { score?: number }).score ?? 0 });
       }
     }
 
     // Nudge (email + touchpoint) for users that just turned hot
     let nudged = 0;
-    for (const uid of hotUsers) {
+    let slackAlerted = 0;
+    for (const { user_id: uid, score } of hotUsers) {
       // Skip if we already nudged in the last 3 days
       const { count: recent } = await supabase
         .from("sales_touchpoints")
@@ -62,7 +70,7 @@ Deno.serve(async (req) => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, company_name")
         .eq("user_id", uid)
         .maybeSingle();
       const { data: authUser } = await supabase.auth.admin.getUserById(uid);
@@ -86,12 +94,29 @@ Deno.serve(async (req) => {
         type: "upgrade_nudge",
       }).catch(() => null);
 
+      // Team alert in Slack — a hot lead just surfaced, worth a human touch.
+      if (slackReady) {
+        const company = (profile as { company_name?: string } | null)?.company_name;
+        const alert = await sendSlackMessage({
+          channel: SLACK_ALERTS_CHANNEL,
+          text:
+            `🔥 *Novo lead quente no Focus*\n` +
+            `*${profile?.display_name ?? email}*${company ? ` — ${company}` : ""}\n` +
+            `📧 ${email}\n` +
+            `📊 Score ${score} • operação ativa, pronto para upgrade`,
+          username: "Focus • Vendas",
+          icon_emoji: ":fire:",
+        });
+        if (alert.ok) slackAlerted++;
+        else log("slack alert failed", { user_id: uid, error: alert.error });
+      }
+
       nudged++;
     }
 
-    log("finished", { recomputed, becameHot, nudged });
+    log("finished", { recomputed, becameHot, nudged, slackAlerted });
     return new Response(
-      JSON.stringify({ ok: true, recomputed, became_hot: becameHot, nudged }),
+      JSON.stringify({ ok: true, recomputed, became_hot: becameHot, nudged, slack_alerted: slackAlerted }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
