@@ -73,6 +73,7 @@ import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Maximize2, TrendingUp } from "lucide-react";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Stagger, StaggerItem } from "@/components/motion";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface SubTask {
   id: string;
@@ -300,34 +301,45 @@ export default function Projetos() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
             <h3 className="font-semibold text-foreground mb-6">Orçamento vs Gasto</h3>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={budgetData} layout="vertical">
-                <defs>
-                  <linearGradient id="barGradientOrc" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="barGradientGasto" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" horizontal={true} vertical={false} />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={80} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                  }}
-                  formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]}
+            {budgetData.length === 0 ? (
+              <div className="h-[220px] flex items-center justify-center">
+                <EmptyState
+                  icon={DollarSign}
+                  title="Sem orçamentos cadastrados"
+                  description="Adicione projetos com orçamento para comparar planejado x realizado."
+                  size="sm"
                 />
-                <Bar dataKey="orcamento" fill="url(#barGradientOrc)" name="Orçamento" radius={[0, 8, 8, 0]} />
-                <Bar dataKey="gasto" fill="url(#barGradientGasto)" name="Gasto" radius={[0, 8, 8, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={budgetData} layout="vertical">
+                  <defs>
+                    <linearGradient id="barGradientOrc" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.5} />
+                    </linearGradient>
+                    <linearGradient id="barGradientGasto" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 4" stroke="hsl(var(--border)/0.5)" horizontal={true} vertical={false} />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={80} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "12px",
+                      boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                    }}
+                    formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]}
+                  />
+                  <Bar dataKey="orcamento" fill="url(#barGradientOrc)" name="Orçamento" radius={[0, 8, 8, 0]} />
+                  <Bar dataKey="gasto" fill="url(#barGradientGasto)" name="Gasto" radius={[0, 8, 8, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           <div className="bg-gradient-to-br from-card via-card to-card/80 rounded-2xl border border-border/50 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.1)] p-6 transition-all duration-300 hover:shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.15)]">
@@ -345,53 +357,66 @@ export default function Projetos() {
               </TooltipProvider>
             </div>
             <div className="mt-4" />
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <defs>
-                  <filter id="pieGlowP">
-                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={55}
-                  outerRadius={78}
-                  paddingAngle={4}
-                  dataKey="value"
-                  strokeWidth={0}
-                  filter="url(#pieGlowP)"
-                >
-                  {statusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
-                    color: "#ffffff",
-                  }}
-                  labelStyle={{ color: "#ffffff" }}
-                  itemStyle={{ color: "#ffffff" }}
+            {statusData.every((d) => d.value === 0) ? (
+              <div className="h-[220px] flex items-center justify-center">
+                <EmptyState
+                  icon={FolderKanban}
+                  title="Nenhum projeto ainda"
+                  description="Crie seu primeiro projeto para visualizar o status por etapa."
+                  size="sm"
                 />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex flex-wrap gap-4 justify-center mt-4">
-              {statusData.map((d) => (
-                <div key={d.name} className="flex items-center gap-2 text-xs">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color, boxShadow: `0 0 8px ${d.color}50` }} />
-                  <span className="text-muted-foreground">{d.name}</span>
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <defs>
+                      <filter id="pieGlowP">
+                        <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                        <feMerge>
+                          <feMergeNode in="coloredBlur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <Pie
+                      data={statusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={78}
+                      paddingAngle={4}
+                      dataKey="value"
+                      strokeWidth={0}
+                      filter="url(#pieGlowP)"
+                    >
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 32px -4px hsl(var(--primary)/0.15)",
+                        color: "#ffffff",
+                      }}
+                      labelStyle={{ color: "#ffffff" }}
+                      itemStyle={{ color: "#ffffff" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex flex-wrap gap-4 justify-center mt-4">
+                  {statusData.map((d) => (
+                    <div key={d.name} className="flex items-center gap-2 text-xs">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color, boxShadow: `0 0 8px ${d.color}50` }} />
+                      <span className="text-muted-foreground">{d.name}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -464,10 +489,21 @@ export default function Projetos() {
               if (p) setSelectedProjeto(p);
             }}
           />
-        ) : (
+        ) : (() => {
+          const filtered = projetos.filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+          if (filtered.length === 0) {
+            return (
+              <EmptyState
+                icon={FolderKanban}
+                title={searchTerm ? "Nenhum projeto encontrado" : "Nenhum projeto cadastrado"}
+                description={searchTerm ? "Ajuste sua busca ou crie um novo projeto." : "Comece criando seu primeiro projeto para acompanhar entregas e orçamento."}
+                size="md"
+              />
+            );
+          }
+          return (
         <Stagger className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {projetos
-            .filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+          {filtered
             .map((p) => {
             const deadlineStatus = getProjectDeadlineStatus(p.endDate, p.progress);
             const DeadlineIcon = deadlineStatus.icon;
@@ -551,7 +587,8 @@ export default function Projetos() {
             );
           })}
         </Stagger>
-        )}
+          );
+        })()}
       </div>
 
       {/* Project Detail Dialog */}
