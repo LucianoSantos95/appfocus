@@ -71,6 +71,9 @@ import { ClientesKanban } from "@/components/clientes/ClientesKanban";
 import { LayoutGrid, KanbanSquare } from "lucide-react";
 import { SugestoesPainel } from "@/components/clientes/SugestoesPainel";
 import { ImportDialog } from "@/components/import/ImportDialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CardGridSkeleton } from "@/components/ui/list-skeletons";
+import { UserPlus } from "lucide-react";
 import { importConfigs } from "@/lib/import-configs";
 import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
@@ -295,8 +298,8 @@ export default function Clientes() {
   if (isLoading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-96">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="p-8">
+          <CardGridSkeleton count={6} />
         </div>
       </MainLayout>
     );
@@ -550,9 +553,11 @@ export default function Clientes() {
               {prospectosClientes.map((c) => renderClienteCard(c, true))}
             </div>
             {prospectosClientes.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                Nenhum prospecto encontrado
-              </div>
+              <EmptyState
+                icon={UserPlus}
+                title="Nenhum prospecto ainda"
+                description="Cadastre os leads que estão em negociação para acompanhar o pipeline de novos clientes."
+              />
             )}
           </TabsContent>
 
@@ -561,9 +566,11 @@ export default function Clientes() {
               {ativosClientes.map((c) => renderClienteCard(c))}
             </div>
             {ativosClientes.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                Nenhum cliente ativo encontrado
-              </div>
+              <EmptyState
+                icon={UserCheck}
+                title="Sem clientes ativos"
+                description="Quando um prospecto virar cliente, ele aparece aqui com todo o histórico."
+              />
             )}
           </TabsContent>
         </Tabs>

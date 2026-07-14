@@ -95,6 +95,8 @@ import {
   Cell,
 } from "recharts";
 import { ImportDialog } from "@/components/import/ImportDialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Landmark } from "lucide-react";
 import { SmartImportFinanceiroDialog } from "@/components/import/SmartImportFinanceiroDialog";
 import { importConfigs } from "@/lib/import-configs";
 import { ImportExtratoDialog } from "@/components/financas/ImportExtratoDialog";
@@ -767,10 +769,11 @@ export default function Financas() {
             </PlanGateButton>
           </div>
           {bankAccounts.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl">
-              <Building2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">Nenhuma conta bancária cadastrada</p>
-            </div>
+            <EmptyState
+              icon={Landmark}
+              title="Nenhuma conta bancária cadastrada"
+              description="Adicione suas contas para acompanhar saldos e conciliar transações automaticamente."
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {bankAccounts.map((account) => (
@@ -1350,8 +1353,13 @@ function TransactionTable({ transactions, type, bankAccounts, onSelect, onDelete
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  Nenhuma {type === "receita" ? "receita" : "despesa"} registrada
+                <TableCell colSpan={8} className="p-0">
+                  <EmptyState
+                    size="sm"
+                    icon={Receipt}
+                    title={`Nenhuma ${type === "receita" ? "receita" : "despesa"} registrada`}
+                    description={`Cadastre a primeira ${type === "receita" ? "entrada" : "saída"} para começar a ver o fluxo de caixa.`}
+                  />
                 </TableCell>
               </TableRow>
             ) : (

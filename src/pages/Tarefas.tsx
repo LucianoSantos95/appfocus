@@ -51,6 +51,8 @@ import {
   Tooltip,
 } from "recharts";
 import { ImportDialog } from "@/components/import/ImportDialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ClipboardList } from "lucide-react";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useTarefas as useTarefasDB } from "@/hooks/useTarefas";
@@ -259,7 +261,7 @@ export default function Tarefas() {
             </div>
           ))}
           {items.length === 0 && (
-            <p className="text-center text-sm text-muted-foreground py-4">Nenhuma tarefa</p>
+            <EmptyState size="sm" icon={ClipboardList} title="Sem tarefas nesta coluna" description="Arraste ou crie uma nova tarefa para preencher esta prioridade." />
           )}
         </div>
       </div>
@@ -456,7 +458,7 @@ export default function Tarefas() {
             <div className="bg-card rounded-xl border border-border/50 shadow-premium divide-y divide-border/50">
               {concluidasAtividades.map(renderAtividadeItem)}
               {concluidasAtividades.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">Nenhuma tarefa concluída</p>
+                <EmptyState icon={CheckCircle2} title="Nada concluído ainda" description="Assim que você marcar tarefas como concluídas, elas aparecem aqui." />
               )}
             </div>
           </TabsContent>

@@ -54,6 +54,7 @@ import {
   Cell,
 } from "recharts";
 import { ImportDialog } from "@/components/import/ImportDialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import { importConfigs } from "@/lib/import-configs";
 import { useToast } from "@/hooks/use-toast";
 import { useCampanhas as useCampanhasDB } from "@/hooks/useCampanhas";
@@ -525,9 +526,13 @@ export default function Marketing() {
               <TabsContent key={status} value={status} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filteredCampanhas.filter((c) => c.status === status).length === 0 ? (
-                    <p className="text-muted-foreground text-sm col-span-2 text-center py-8">
-                      {filterClienteId ? "Nenhuma campanha vinculada a este cliente" : `Nenhuma campanha ${statusCampanha[status as keyof typeof statusCampanha]?.label.toLowerCase()}`}
-                    </p>
+                    <div className="col-span-2">
+                      <EmptyState
+                        icon={Megaphone}
+                        title={filterClienteId ? "Nenhuma campanha para este cliente" : `Sem campanhas ${statusCampanha[status as keyof typeof statusCampanha]?.label.toLowerCase()}`}
+                        description="Crie uma nova campanha para começar a acompanhar performance e resultados."
+                      />
+                    </div>
                   ) : filteredCampanhas.filter((c) => c.status === status).map((c) => {
                     const linkedClientes = getClientesByCampanha(c.id);
                     const linkedClienteNames = linkedClientes.map(cid => clientes.find(cl => cl.id === cid)?.nome).filter(Boolean);
