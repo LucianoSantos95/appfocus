@@ -553,9 +553,11 @@ export default function Clientes() {
               {prospectosClientes.map((c) => renderClienteCard(c, true))}
             </div>
             {prospectosClientes.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                Nenhum prospecto encontrado
-              </div>
+              <EmptyState
+                icon={UserPlus}
+                title="Nenhum prospecto ainda"
+                description="Cadastre os leads que estão em negociação para acompanhar o pipeline de novos clientes."
+              />
             )}
           </TabsContent>
 
@@ -564,9 +566,11 @@ export default function Clientes() {
               {ativosClientes.map((c) => renderClienteCard(c))}
             </div>
             {ativosClientes.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                Nenhum cliente ativo encontrado
-              </div>
+              <EmptyState
+                icon={UserCheck}
+                title="Sem clientes ativos"
+                description="Quando um prospecto virar cliente, ele aparece aqui com todo o histórico."
+              />
             )}
           </TabsContent>
         </Tabs>
