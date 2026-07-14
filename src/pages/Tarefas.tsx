@@ -459,9 +459,15 @@ export default function Tarefas() {
           </TabsList>
 
           <TabsContent value="todas" className="mt-6">
-            <div className="bg-card rounded-xl border border-border/50 shadow-premium divide-y divide-border/50">
-              {todasAtividades.map(renderAtividadeItem)}
-            </div>
+            {todasAtividades.length === 0 ? (
+              <div className="bg-card rounded-xl border border-border/50 shadow-premium">
+                <EmptyState icon={ListTodo} title="Sem dados" description="Crie sua primeira tarefa clicando em 'Nova Tarefa' acima." />
+              </div>
+            ) : (
+              <div className="bg-card rounded-xl border border-border/50 shadow-premium divide-y divide-border/50">
+                {todasAtividades.map(renderAtividadeItem)}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="kanban" className="mt-6">
@@ -477,11 +483,20 @@ export default function Tarefas() {
             <div className="bg-card rounded-xl border border-border/50 shadow-premium divide-y divide-border/50">
               {concluidasAtividades.map(renderAtividadeItem)}
               {concluidasAtividades.length === 0 && (
-                <EmptyState icon={CheckCircle2} title="Nada concluído ainda" description="Assim que você marcar tarefas como concluídas, elas aparecem aqui." />
+                <EmptyState icon={CheckCircle2} title="Sem dados" description="Assim que você marcar tarefas como concluídas, elas aparecem aqui." />
               )}
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Dica no rodapé */}
+        <div className="rounded-lg border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground flex items-start gap-3">
+          <Lightbulb className="w-5 h-5 text-primary/70 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium text-foreground mb-1">Dica</p>
+            <p>Arraste tarefas entre as colunas do <span className="text-foreground font-medium">Kanban</span> para repriorizar automaticamente. Marque como concluída no checkbox à esquerda de cada item na aba <span className="text-foreground font-medium">Todas</span>.</p>
+          </div>
+        </div>
       </div>
 
       {/* Edit Dialog */}
