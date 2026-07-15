@@ -264,7 +264,10 @@ export default function Tarefas() {
               draggable
               onDragStart={(e) => e.dataTransfer.setData("text/plain", a.id)}
               onClick={() => setSelectedAtividade(a)}
-              className="bg-card rounded-lg p-3 shadow-sm border border-border/50 cursor-grab active:cursor-grabbing hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5"
+              className={cn(
+                "group bg-card rounded-lg p-3 shadow-sm border border-border/50 cursor-grab active:cursor-grabbing hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5",
+                a.priority === "urgente" && "border-destructive/40 shadow-[0_0_0_1px_hsl(var(--destructive)/0.1)]"
+              )}
             >
               <div className="flex items-start gap-2">
                 <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
@@ -275,6 +278,20 @@ export default function Tarefas() {
                     <Clock className="w-3 h-3" />
                     <span>{new Date(a.dueDate).toLocaleDateString("pt-BR")}</span>
                   </div>
+                  {a.priority === "urgente" && (
+                    <div
+                      className="mt-2 pt-2 border-t border-border/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <NotifySlackButton
+                        title={`Tarefa urgente: ${a.title}`}
+                        text={`${a.description || "Sem descrição"}\nPrazo: ${new Date(a.dueDate).toLocaleDateString("pt-BR")}${a.responsible ? `\nResponsável: ${a.responsible}` : ""}`}
+                        level="urgent"
+                        className="h-7 px-2 text-[11px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                        label="Avisar equipe no Slack"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
