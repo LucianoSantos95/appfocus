@@ -232,6 +232,7 @@ export default function RH() {
         {freemium.isNearLimit && (
           <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="RH" />
         )}
+        <ContextualIntegrationsHint module="rh" />
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
