@@ -158,6 +158,14 @@ export default function Auth() {
         <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl" />
+        {/* Signature radial gradient (identidade Focus) */}
+        <div
+          className="absolute -top-40 -right-20 w-[720px] h-[720px] opacity-40 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(closest-side, hsl(var(--primary) / 0.22), transparent 70%)",
+          }}
+        />
       </div>
 
       <WorldCupPromoStrip onCadastrar={() => setSignupOpen(true)} />
@@ -166,13 +174,17 @@ export default function Auth() {
       {/* Hero Section */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
 
-        {/* Headline with rotating word */}
-        <h1 className="text-4xl md:text-6xl xl:text-7xl font-extrabold leading-tight mb-4 text-center max-w-4xl">
-          <span className="text-foreground">Gestão inteligente para</span>
+        {/* Headline with rotating word — tipografia Instrument Serif italic para acabar com cara Lovable genérica */}
+        <h1 className="text-4xl md:text-6xl xl:text-7xl leading-[1.05] mb-4 text-center max-w-4xl">
+          <span className="text-foreground font-extrabold tracking-tight">Gestão inteligente para</span>
           <br />
-          <span key={wordIndex} className={`gradient-text text-glow inline-block ${fadeClass}`}>
+          <span
+            key={wordIndex}
+            className={`font-display italic font-normal gradient-text text-glow inline-block ${fadeClass}`}
+          >
             {rotatingWords[wordIndex]}
           </span>
+          <span className="font-display italic text-foreground/40">.</span>
         </h1>
 
         {/* Subtitle */}
