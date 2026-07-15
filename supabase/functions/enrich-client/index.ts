@@ -1,6 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { enrichCompanyByWebsite, isFirecrawlConfigured } from "../_shared/firecrawl.ts";
-// touch: 2026-07-15T14:47 force redeploy v3
+// v4 inlined firecrawl helper (2026-07-15T14:50)
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,7 +13,6 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-// Derive a company web domain from an e-mail, skipping free/consumer providers.
 const FREE_DOMAINS = new Set([
   "gmail.com", "hotmail.com", "outlook.com", "yahoo.com", "yahoo.com.br",
   "icloud.com", "live.com", "bol.com.br", "uol.com.br", "terra.com.br", "proton.me",
@@ -25,6 +23,83 @@ function domainFromEmail(email: string | null): string | null {
   const domain = email.split("@")[1]?.trim().toLowerCase();
   if (!domain || FREE_DOMAINS.has(domain)) return null;
   return domain;
+}
+
+function toNumber(v: unknown): number | undefined {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string") {
+    const n = parseInt(v.replace(/[^\d]/g, ""), 10);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return undefined;
+}
+
+// Direct Firecrawl v2 call (connector is direct-API, not gateway).
+async function firecrawlScrape(website: string) {
+  const KEY = Deno.env.get("FIRECRAWL_API_KEY");
+  if (!KEY) return { ok: false, status: 500, error: "FIRECRAWL_API_KEY ausente." };
+
+  const keyDiag = `${KEY.slice(0, 6)}(len${KEY.length})`;
+  const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${KEY}`,
+    },
+    body: JSON.stringify({
+      url: website,
+      onlyMainContent: true,
+      formats: [
+        {
+          type: "json",
+          prompt:
+            "A partir do conteúdo do site desta empresa, extraia os dados solicitados. " +
+            "Responda em português. Se algum campo não estiver claro, deixe-o vazio.",
+          schema: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              industry: { type: "string" },
+              description: { type: "string" },
+              services: { type: "array", items: { type: "string" } },
+              employees: { type: "string" },
+              location: { type: "string" },
+              phone: { type: "string" },
+            },
+          },
+        },
+      ],
+    }),
+  });
+
+  const bodyText = await res.text();
+  let data: any = {};
+  try { data = JSON.parse(bodyText); } catch { /* keep bodyText */ }
+
+  if (!res.ok || data?.success === false) {
+    console.error(`[firecrawl] ${res.status} key=${keyDiag} body=${bodyText.slice(0, 400)}`);
+    return {
+      ok: false,
+      status: res.status,
+      error: `Firecrawl ${res.status} key=${keyDiag}: ${data?.error ?? bodyText.slice(0, 200)}`,
+    };
+  }
+
+  const ext = data?.data?.json ?? data?.data?.extract ?? data?.json ?? {};
+  return {
+    ok: true,
+    status: res.status,
+    data: {
+      name: ext.name,
+      industry: ext.industry,
+      description: ext.description,
+      services: Array.isArray(ext.services) ? ext.services.slice(0, 12) : undefined,
+      employees: toNumber(ext.employees),
+      location: ext.location,
+      phone: ext.phone,
+      raw: ext,
+    },
+  };
 }
 
 Deno.serve(async (req) => {
@@ -46,7 +121,7 @@ Deno.serve(async (req) => {
     if (claimsErr || !claims?.claims?.sub) return json({ error: "Token inválido" }, 401);
     const userId = claims.claims.sub as string;
 
-    if (!isFirecrawlConfigured()) {
+    if (!Deno.env.get("FIRECRAWL_API_KEY")) {
       return json({ error: "Firecrawl não está conectado neste projeto." }, 503);
     }
 
@@ -55,7 +130,6 @@ Deno.serve(async (req) => {
 
     const service = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    // Ownership check — only enrich the caller's own client.
     const { data: cliente, error: cErr } = await service
       .from("clientes")
       .select("id, nome, email, empresa, telefone, segmento, user_id")
@@ -71,20 +145,17 @@ Deno.serve(async (req) => {
 
     if (!domain) {
       return json(
-        { error: "Sem domínio para enriquecer. O e-mail do cliente é pessoal (gmail, etc.) — informe o site da empresa." },
+        { error: "Sem domínio para enriquecer. O e-mail do cliente é pessoal — informe o site da empresa." },
         422
       );
     }
 
-    const result = await enrichCompanyByWebsite(`https://${domain}`);
+    const result = await firecrawlScrape(`https://${domain}`);
     if (!result.ok || !result.data) {
-      return json({ error: result.error || "Não foi possível extrair dados do site desta empresa." }, result.status || 502);
+      return json({ error: result.error || "Não foi possível extrair dados do site." }, result.status || 502);
     }
 
     const enr = result.data;
-
-    // Non-destructive fill: only populate empty fields, never overwrite the user's data
-    // or the AI-analysis fields (classificacao/potencial/palavras_chave/…).
     const patch: Record<string, unknown> = {};
     if (!cliente.empresa && enr.name) patch.empresa = enr.name;
     if (!cliente.telefone && enr.phone) patch.telefone = enr.phone;
