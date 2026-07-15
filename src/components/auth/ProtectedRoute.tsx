@@ -59,7 +59,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     checkMfa();
   }, [user]);
 
-  if (isLoading || mfaRequired === null) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -71,6 +71,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/auth" replace />;
   }
 
+  // MFA check runs in background; renderizamos otimisticamente enquanto mfaRequired === null.
+  // Se descobrir depois que MFA é necessário, MfaChallenge substitui o conteúdo.
   if (mfaRequired && !mfaVerified) {
     return <MfaChallenge onVerified={() => { setMfaVerified(true); setMfaRequired(false); }} />;
   }

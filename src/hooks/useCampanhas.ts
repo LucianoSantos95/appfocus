@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useSharedResource } from "@/lib/sharedResource";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
@@ -37,29 +38,24 @@ export interface CampanhaInput {
 export function useCampanhas() {
   const { toast } = useToast();
   const { logEvent } = useAuditLog();
-  const [campanhas, setCampanhas] = useState<Campanha[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchCampanhas = useCallback(async () => {
-    try {
+  const { user } = useAuth();
+  const { data: campanhas, isLoading, refetch, mutate } = useSharedResource<any[]>(
+    user ? "campanhas:" + user.id : null,
+    async () => {
       const { data, error } = await supabase.from("campanhas").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setCampanhas((data as Campanha[]) || []);
-    } catch (error) {
-      console.error("Error fetching campanhas:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+      return data || [];
+    },
+    { initial: [], enabled: !!user }
+  );
 
   const addCampanha = async (input: CampanhaInput): Promise<Campanha | null> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
       const { data, error } = await supabase.from("campanhas").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
       const newC = data as Campanha;
-      setCampanhas(prev => [newC, ...prev]);
+      mutate((prev) => [newC, ...(prev || [])]);
       toast({ title: "Campanha adicionada!", description: `${input.name} foi criada.` });
       logEvent("create", "campanhas", newC.id, { name: input.name });
       return newC;
@@ -74,7 +70,7 @@ export function useCampanhas() {
     try {
       const { error } = await supabase.from("campanhas").update(updates as never).eq("id", id);
       if (error) throw error;
-      setCampanhas(prev => prev.map(c => c.id === id ? { ...c, ...updates } as Campanha : c));
+      mutate((prev) => (prev || []).map(c => c.id === id ? { ...c, ...updates } as Campanha : c));
       toast({ title: "Campanha atualizada!" });
       return true;
     } catch (error) {
@@ -88,7 +84,7 @@ export function useCampanhas() {
     try {
       const { error } = await supabase.from("campanhas").delete().eq("id", id);
       if (error) throw error;
-      setCampanhas(prev => prev.filter(c => c.id !== id));
+      mutate((prev) => (prev || []).filter(c => c.id !== id));
       toast({ title: "Campanha excluída" });
       logEvent("delete", "campanhas", id);
       return true;
@@ -99,7 +95,6 @@ export function useCampanhas() {
     }
   };
 
-  useEffect(() => { fetchCampanhas(); }, [fetchCampanhas]);
 
-  return { campanhas, isLoading, addCampanha, updateCampanha, deleteCampanha, refetch: fetchCampanhas };
+  return { campanhas: campanhas || [], isLoading, addCampanha, updateCampanha, deleteCampanha, refetch };
 }

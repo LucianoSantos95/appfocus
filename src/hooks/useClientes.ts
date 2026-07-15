@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useSharedResource } from "@/lib/sharedResource";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { isValidHttpUrl } from "@/lib/validation";
@@ -42,31 +44,18 @@ export interface ClienteInput {
 export function useClientes() {
   const { toast } = useToast();
   const { logEvent } = useAuditLog();
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-
-  // Fetch all clients
-  const fetchClientes = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from("clientes")
-        .select("*")
-        .order("created_at", { ascending: false });
-
+  const { data: clientesData, isLoading, refetch, mutate } = useSharedResource<Cliente[]>(
+    user ? `clientes:${user.id}` : null,
+    async () => {
+      const { data, error } = await supabase.from("clientes").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setClientes((data as Cliente[]) || []);
-    } catch (error) {
-      console.error("Error fetching clientes:", error);
-      toast({
-        title: "Erro ao carregar clientes",
-        description: "Não foi possível carregar a lista de clientes.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+      return (data as Cliente[]) || [];
+    },
+    { initial: [], enabled: !!user }
+  );
+  const clientes = clientesData || [];
 
   // Add new client
   const addCliente = async (input: ClienteInput): Promise<Cliente | null> => {
@@ -81,16 +70,7 @@ export function useClientes() {
     }
 
     try {
-      // Get current user for ownership
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Sessão expirada",
-          description: "Por favor, faça login novamente.",
-          variant: "destructive",
-        });
-        return null;
-      }
+      if (!user) return null;
 
       const { data, error } = await supabase
         .from("clientes")
@@ -113,7 +93,7 @@ export function useClientes() {
       if (error) throw error;
 
       const newCliente = data as Cliente;
-      setClientes((prev) => [newCliente, ...prev]);
+      mutate((prev) =>  [newCliente, ...prev]);
 
       // Trigger AI analysis for new client
       analyzeCliente(newCliente.id);
@@ -166,7 +146,7 @@ export function useClientes() {
       const result = await res.json();
       // Se preencheu algo, atualizar estado local + toast celebrativo
       if (result.updated && result.filled && Object.keys(result.filled).length > 0) {
-        setClientes((prev) =>
+        mutate((prev) => 
           prev.map((c) => (c.id === clienteId ? { ...c, ...result.filled } : c))
         );
         const filledLabels = Object.keys(result.filled)
@@ -202,7 +182,7 @@ export function useClientes() {
 
       if (error) throw error;
 
-      setClientes((prev) =>
+      mutate((prev) => 
         prev.map((c) => (c.id === id ? { ...c, ...updates } : c))
       );
 
@@ -237,7 +217,7 @@ export function useClientes() {
 
       if (error) throw error;
 
-      setClientes((prev) => prev.filter((c) => c.id !== id));
+      mutate((prev) =>  prev.filter((c) => c.id !== id));
       logEvent("delete", "clientes", id);
 
       toast({
@@ -303,7 +283,7 @@ export function useClientes() {
       const result = await response.json();
 
       // Update local state with analysis results
-      setClientes((prev) =>
+      mutate((prev) => 
         prev.map((c) =>
           c.id === clienteId
             ? {
@@ -382,7 +362,7 @@ export function useClientes() {
 
       if (error) throw error;
 
-      setClientes((prev) =>
+      mutate((prev) => 
         prev.map((c) =>
           c.id === id
             ? {
@@ -411,11 +391,6 @@ export function useClientes() {
     }
   };
 
-  // Initial fetch
-  useEffect(() => {
-    fetchClientes();
-  }, [fetchClientes]);
-
   return {
     clientes,
     isLoading,
@@ -426,6 +401,6 @@ export function useClientes() {
     analyzeCliente,
     analyzeAllClientes,
     convertToAtivo,
-    refetch: fetchClientes,
+    refetch,
   };
 }
