@@ -733,7 +733,17 @@ function EditClienteDialog({
       const { data, error } = await sb.functions.invoke("enrich-client", {
         body: { cliente_id: cliente.id },
       });
-      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      if (error) {
+        // FunctionsHttpError hides the body — read error.context (the Response) to surface the real reason.
+        let msg = error.message;
+        try {
+          const ctx = (error as any).context;
+          const body = ctx && typeof ctx.json === "function" ? await ctx.json() : null;
+          if (body?.error) msg = body.error;
+        } catch { /* keep generic message */ }
+        throw new Error(msg);
+      }
+      if ((data as any)?.error) throw new Error((data as any).error);
       setEnrichData((data as any).enrichment);
       if ((data as any).updated) {
         toast({ title: "Cliente enriquecido!", description: "Campos vazios foram preenchidos com dados do site da empresa." });
