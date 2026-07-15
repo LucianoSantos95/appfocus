@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ContextualIntegrationsHint } from "@/components/integrations/ContextualIntegrationsHint";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
