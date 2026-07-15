@@ -64,6 +64,7 @@ import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { FreemiumWarningBanner } from "@/components/plan/FreemiumWarningBanner";
+import { ContextualIntegrationsHint } from "@/components/integrations/ContextualIntegrationsHint";
 import { ProjetosBIPanel } from "@/components/bi/ProjetosBIPanel";
 import { ProjetoAnexos } from "@/components/projetos/ProjetoAnexos";
 import { ProjetosKanban } from "@/components/projetos/ProjetosKanban";
