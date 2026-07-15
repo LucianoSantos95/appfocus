@@ -53,8 +53,9 @@ export function ScheduleGoogleDialog({
   const [duration, setDuration] = useState(60);
 
   // Check Google connection on open
-  useState(() => {
+  useEffect(() => {
     if (!open || !session?.access_token) return;
+    setChecking(true);
     (async () => {
       try {
         const res = await fetch(
@@ -77,7 +78,7 @@ export function ScheduleGoogleDialog({
         setChecking(false);
       }
     })();
-  });
+  }, [open, session?.access_token]);
 
   const handleConnect = async () => {
     if (!session?.access_token) return;
