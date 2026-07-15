@@ -138,12 +138,15 @@ export function ContentCalendar() {
             </h3>
           </div>
           <div className="flex items-center gap-4 text-xs">
-            {Object.entries(statusStyles).map(([key, style]) => (
-              <div key={key} className="flex items-center gap-1.5">
-                <div className={cn("w-2.5 h-2.5 rounded-full", style.dot)} />
-                <span className="text-muted-foreground">{style.label}</span>
-              </div>
-            ))}
+            <CompetitorAnalyzer />
+            <div className="hidden md:flex items-center gap-4">
+              {Object.entries(statusStyles).map(([key, style]) => (
+                <div key={key} className="flex items-center gap-1.5">
+                  <div className={cn("w-2.5 h-2.5 rounded-full", style.dot)} />
+                  <span className="text-muted-foreground">{style.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
