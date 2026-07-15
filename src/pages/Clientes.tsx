@@ -80,6 +80,7 @@ import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { FreemiumWarningBanner } from "@/components/plan/FreemiumWarningBanner";
+import { ContextualIntegrationsHint } from "@/components/integrations/ContextualIntegrationsHint";
 import { ClientesBIPanel } from "@/components/bi/ClientesBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
@@ -315,6 +316,7 @@ export default function Clientes() {
         {freemium.isNearLimit && (
           <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="CRM" />
         )}
+        <ContextualIntegrationsHint module="clientes" />
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

@@ -63,6 +63,7 @@ import { FeriasAniversariosTimeline } from "@/components/rh/FeriasAniversariosTi
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { FreemiumWarningBanner } from "@/components/plan/FreemiumWarningBanner";
+import { ContextualIntegrationsHint } from "@/components/integrations/ContextualIntegrationsHint";
 import { RHBIPanel } from "@/components/bi/RHBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
@@ -231,6 +232,7 @@ export default function RH() {
         {freemium.isNearLimit && (
           <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="RH" />
         )}
+        <ContextualIntegrationsHint module="rh" />
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
