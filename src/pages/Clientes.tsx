@@ -45,6 +45,7 @@ import {
   Trash2,
   Loader2,
   FileSpreadsheet,
+  Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -716,6 +717,34 @@ function EditClienteDialog({
     anexo_url: cliente.anexo_url || "",
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { toast } = useToast();
+  const [enriching, setEnriching] = useState(false);
+  const [enrichData, setEnrichData] = useState<{
+    name?: string; industry?: string; employees?: number; location?: string;
+    website?: string; description?: string; keywords?: string[];
+  } | null>(null);
+
+  const handleEnrich = async () => {
+    setEnriching(true);
+    try {
+      const sb = (await import("@/integrations/supabase/client")).supabase;
+      const { data, error } = await sb.functions.invoke("enrich-client", {
+        body: { cliente_id: cliente.id },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      setEnrichData((data as any).enrichment);
+      if ((data as any).updated) {
+        toast({ title: "Cliente enriquecido!", description: "Campos vazios foram preenchidos com dados da Apollo." });
+        onRecordingDone?.();
+      } else {
+        toast({ title: "Dados da empresa encontrados" });
+      }
+    } catch (err: any) {
+      toast({ title: "Não foi possível enriquecer", description: err.message, variant: "destructive" });
+    } finally {
+      setEnriching(false);
+    }
+  };
 
   const handleSave = () => {
     onUpdate({
@@ -749,6 +778,36 @@ function EditClienteDialog({
               <p className="text-muted-foreground">{cliente.proxima_acao_sugerida}</p>
             </div>
           )}
+
+          {/* Enriquecimento via Apollo — busca dados da empresa e preenche campos vazios */}
+          <div className="rounded-lg border border-border p-3 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Sparkles className="w-4 h-4 text-primary" /> Enriquecer com Apollo
+              </div>
+              <Button size="sm" variant="outline" onClick={handleEnrich} disabled={enriching} className="gap-2">
+                {enriching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                Buscar dados da empresa
+              </Button>
+            </div>
+            {enrichData && (
+              <div className="text-xs text-muted-foreground space-y-1 border-t border-border pt-2">
+                {enrichData.name && <div className="text-sm font-medium text-foreground">{enrichData.name}</div>}
+                {enrichData.industry && <div>Setor: {enrichData.industry}</div>}
+                {enrichData.employees && <div>Funcionários: ~{enrichData.employees.toLocaleString("pt-BR")}</div>}
+                {enrichData.location && <div>Local: {enrichData.location}</div>}
+                {enrichData.website && <div>Site: {enrichData.website}</div>}
+                {enrichData.description && <p className="pt-1">{enrichData.description}</p>}
+                {enrichData.keywords && enrichData.keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {enrichData.keywords.map((k) => (
+                      <span key={k} className="px-1.5 py-0.5 rounded bg-primary/10 text-primary">{k}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           <Tabs defaultValue="detalhes" className="w-full">
             <TabsList className="w-full grid grid-cols-2">
