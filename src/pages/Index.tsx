@@ -148,11 +148,8 @@ const Index = () => {
           </Stagger>
         </section>
 
-        {/* Two Column Layout: Agenda + Bulletin */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <AgendaWidget />
-          <BulletinBoard />
-        </div>
+        {/* Agenda em destaque */}
+        <AgendaWidget />
 
         {/* Activity Timeline */}
         <ActivityTimeline />
