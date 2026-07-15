@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useConteudos, type Conteudo, type ConteudoInput } from "@/hooks/useConteudos";
 import { useToast } from "@/hooks/use-toast";
+import { CompetitorAnalyzer } from "@/components/marketing/CompetitorAnalyzer";
 
 const statusStyles: Record<string, { bg: string; dot: string; label: string }> = {
   rascunho: { bg: "bg-muted/80 text-muted-foreground", dot: "bg-muted-foreground", label: "Rascunho" },
