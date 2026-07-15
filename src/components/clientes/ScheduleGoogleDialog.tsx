@@ -145,7 +145,7 @@ export function ScheduleGoogleDialog({
 
       const data = await res.json();
 
-      // Espelhar em agenda_items local
+      // Espelhar em agenda_items local (tabela não tem coluna description)
       try {
         await supabase.from("agenda_items").insert({
           user_id: session.user!.id,
@@ -154,7 +154,6 @@ export function ScheduleGoogleDialog({
           time,
           type: "meeting",
           priority: "medium",
-          description: description || `Reunião agendada via Google Agenda`,
         });
       } catch (e) {
         console.warn("Espelho local falhou (não crítico):", e);
