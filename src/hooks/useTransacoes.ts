@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { useSharedResource } from "@/lib/sharedResource";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface Transacao {
   id: string;
@@ -37,30 +38,25 @@ export interface TransacaoInput {
 export function useTransacoes() {
   const { toast } = useToast();
   const { logEvent } = useAuditLog();
-  const [transacoes, setTransacoes] = useState<Transacao[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
-  const fetchTransacoes = useCallback(async () => {
-    try {
+  const { data: transacoes, isLoading, refetch, mutate } = useSharedResource<Transacao[]>(
+    user ? `transacoes:${user.id}` : null,
+    async () => {
       const { data, error } = await supabase.from("transacoes").select("*").order("date", { ascending: false });
       if (error) throw error;
-      setTransacoes((data as Transacao[]) || []);
-    } catch (error) {
-      console.error("Error fetching transacoes:", error);
-      toast({ title: "Erro ao carregar transações", description: "Recarregue a página para tentar novamente.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+      return (data as Transacao[]) || [];
+    },
+    { initial: [], enabled: !!user }
+  );
 
   const addTransacao = async (input: TransacaoInput): Promise<Transacao | null> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
       const { data, error } = await supabase.from("transacoes").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
       const newT = data as Transacao;
-      setTransacoes(prev => [newT, ...prev]);
+      mutate((prev) => [newT, ...(prev || [])]);
       toast({ title: "Transação adicionada!", description: `${input.description} foi registrada.` });
       logEvent("create", "transacoes", newT.id, { description: input.description });
       return newT;
@@ -75,7 +71,7 @@ export function useTransacoes() {
     try {
       const { error } = await supabase.from("transacoes").update(updates as never).eq("id", id);
       if (error) throw error;
-      setTransacoes(prev => prev.map(t => t.id === id ? { ...t, ...updates } as Transacao : t));
+      mutate((prev) => (prev || []).map((t) => (t.id === id ? ({ ...t, ...updates } as Transacao) : t)));
       return true;
     } catch (error) {
       console.error("Error updating transacao:", error);
@@ -88,7 +84,7 @@ export function useTransacoes() {
     try {
       const { error } = await supabase.from("transacoes").delete().eq("id", id);
       if (error) throw error;
-      setTransacoes(prev => prev.filter(t => t.id !== id));
+      mutate((prev) => (prev || []).filter((t) => t.id !== id));
       toast({ title: "Transação excluída" });
       logEvent("delete", "transacoes", id);
       return true;
@@ -99,7 +95,5 @@ export function useTransacoes() {
     }
   };
 
-  useEffect(() => { fetchTransacoes(); }, [fetchTransacoes]);
-
-  return { transacoes, isLoading, addTransacao, updateTransacao, deleteTransacao, refetch: fetchTransacoes };
+  return { transacoes: transacoes || [], isLoading, addTransacao, updateTransacao, deleteTransacao, refetch };
 }
