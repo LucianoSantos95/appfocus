@@ -1781,6 +1781,7 @@ export type Database = {
           notify_inapp_financeiro: boolean
           notify_inapp_tasks: boolean
           sidebar_collapsed: boolean
+          slack_default_channel: string | null
           theme: string
           timezone: string
           updated_at: string
@@ -1797,6 +1798,7 @@ export type Database = {
           notify_inapp_financeiro?: boolean
           notify_inapp_tasks?: boolean
           sidebar_collapsed?: boolean
+          slack_default_channel?: string | null
           theme?: string
           timezone?: string
           updated_at?: string
@@ -1813,6 +1815,7 @@ export type Database = {
           notify_inapp_financeiro?: boolean
           notify_inapp_tasks?: boolean
           sidebar_collapsed?: boolean
+          slack_default_channel?: string | null
           theme?: string
           timezone?: string
           updated_at?: string
