@@ -1,62 +1,60 @@
 ## Objetivo
-Criar uma conta demo funcional, popular com dados de exemplo e testar de ponta a ponta as 5 áreas (A–E) recentemente adicionadas, entregando um relatório com status HTTP e mensagens exatas de erro quando houver.
+Deixar todos os pontos A–D 100% funcionais na conta demo (E já está ✅).
 
-## Guardrails respeitados
-- **Não** recriar `get_integration_tokens`, `upsert_integration`, `update_integration_access_token`.
-- **Não** rodar migrations `20260609100002` (criptografia) nem `20260714200000` (trigger slack).
-- **Não** mexer em lógica Stripe/pagamento.
-- **Não** renomear `user_integrations`.
+## A) Firecrawl — do 503 ao enriquecimento real
 
-## Parte 1 — Conta demo
+**Causa raiz confirmada:** o connector Firecrawl não está linkado ao projeto → `LOVABLE_API_KEY`+`FIRECRAWL_API_KEY` do gateway não existem → `isFirecrawlConfigured()` retorna false → 503.
 
-1. Criar usuário via `supabase.auth.admin` (edge function ad-hoc ou insert direto no auth) com credenciais fixas que eu devolvo no relatório:
-   - email: `avaliador.demo+<timestamp>@focusinteligente.com.br`
-   - senha: gerada e revelada no relatório final
-   - `email_confirm: true` para pular verificação
-2. Os triggers `handle_new_user`, `assign_admin_role`, `create_default_subscription`, `populate_demo_data` e `init_funnel_stage` já criam profile, role `user`, subscription gratuita, dados-seed (2 contas, 3 transações, 3 colaboradores, 2 campanhas, 3 projetos, 3 clientes, 3 tarefas, 2 processos, 3 itens de agenda, 2 notes) e estágio de funil. Nada a fazer manualmente para isso.
-3. Complementar via `supabase--insert` para atender ao pedido específico:
-   - 1 cliente extra com e-mail de domínio corporativo (`contato@nubank.com.br`) para testar Firecrawl.
-   - Marcar `onboarding_progress.completed = true` para o Painel abrir direto.
-4. Login manual via Playwright (localhost:8080) para validar acesso e capturar screenshot do Painel.
+**Passos:**
+1. Conectar Firecrawl via `standard_connectors--connect` (gateway-backed). Isso injeta `FIRECRAWL_API_KEY` (`lovc_...`) e usa o `LOVABLE_API_KEY` já existente.
+2. Ajustar `supabase/functions/_shared/firecrawl.ts`:
+   - Migrar endpoint `/firecrawl/v1/scrape` → `/firecrawl/v2/scrape` (v1 está deprecado; formato de resposta mudou).
+   - Ajustar leitura da resposta: v2 retorna `data.json` diretamente; manter fallback para `data.extract` (compat).
+   - Ajustar `jsonOptions` → `formats: [{ type: "json", prompt, schema }]` conforme knowledge Firecrawl v2.
+3. Rodar novamente `POST /enrich-client` com `cliente_id` do Nubank e capturar retorno; se erro persistir, logar body bruto para diagnóstico.
 
-## Parte 2 — Testes A–E
+## B) Google Agenda 2-vias + C) Envio pelo Gmail do usuário
 
-Executados via Playwright headless contra `http://localhost:8080`, logado como a conta demo. Cada passo com screenshot.
+**Bloqueio:** OAuth consent é interativo — não roda em headless. Mas dá para garantir que **tudo** que não é o clique final esteja correto e à prova de erro.
 
-### A) Enriquecimento Firecrawl (`enrich-client`)
-- Abrir cliente Nubank → clicar "Enriquecer empresa" → "Buscar dados".
-- Capturar: status HTTP, corpo da resposta da edge function (via `supabase--curl_edge_functions` como fallback direto), texto do toast, painel resultante.
-- Ponto frágil já mapeado: caminho do gateway em `_shared/firecrawl.ts` usa `/firecrawl` + `/v1/scrape` (v1, não v2) e lê `data.json ?? data.extract` — vou logar a resposta bruta se falhar.
+**Passos:**
+1. Verificar `supabase/functions/google-integration/index.ts`:
+   - Confirmar que `action=connect` gera URL de consent com `redirect_uri` = `${VITE_SUPABASE_URL}/functions/v1/google-integration` (ou callback registrado no Google Cloud).
+   - Confirmar que `action=create_event` usa `get_integration_tokens` + auto-refresh via `update_integration_access_token` (respeita guardrails).
+   - Confirmar que scopes incluem `https://www.googleapis.com/auth/calendar.events` e `https://www.googleapis.com/auth/gmail.send`.
+2. Verificar no Google Cloud Console (via chat com o usuário — só o dono do OAuth pode) que o Redirect URI da função está autorizado. Se não estiver, orientar exatamente o que colar.
+3. Front-end (`IntegrationsPanel`): garantir que após retornar de `?google_connected=true` o status atualiza e o toast confirma.
+4. Fluxo AgendaWidget → "Novo Compromisso" com toggle "Google Agenda" já existe (verificado). Fazer teste manual: login com a conta demo → Integrações → Conectar Google → concluir consent → criar compromisso com toggle marcado → conferir na Google Agenda.
+5. Fluxo Finanças BI → "Enviar por e-mail" → canal "Meu Gmail" → destinatário → enviar. Confirmar que `SendReportDialog` chama edge `send-bi-report` com `channel: "gmail"` e essa edge usa `google-integration` action `send_email`.
+6. Se algum secret extra faltar (ex.: `GOOGLE_REDIRECT_URI` explícito), pedir com `add_secret`.
 
-### B) Google Agenda 2-vias
-- Checar em `Integrações` se há botão "Conectar Google". Como a conta é nova e não vou completar OAuth (requer interação humana no consent do Google), o teste real de `create_event` não é executável de forma automatizada.
-- Reportar: presença dos secrets `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (ambos já configurados), presença do botão, e limitação de que o OAuth interativo não roda em headless sem credenciais Google reais.
+**Entrega:** relatório com screenshots do fluxo completo B e C após o usuário fazer o login manual (única etapa não automatizável).
 
-### C) Gmail send_email
-- Mesma limitação de B — sem Google conectado, marcar como "não testável sem OAuth interativo" e reportar se o botão/fluxo aparece corretamente.
+## D) Slack — do `not_in_channel` ao envio real
 
-### D) Slack
-- Verificar `SLACK_API_KEY` (existe) e chamar edge function que dispara alerta/relatório (identificar qual: provavelmente `notify-slack` ou `cron-funnel-progression`).
-- Se houver canal padrão configurado no user_preferences/whatsapp_preferences equivalente, disparar e capturar retorno.
-- Se depender de config do usuário no app, reportar o que falta.
+**Causa raiz:** bot da conexão Slack precisa estar no canal alvo. Também não há canal padrão configurado no app, o que dificulta o disparo automático de alertas.
 
-### E) Design
-- Screenshot dos tooltips em cada módulo (Finanças, Clientes, Projetos, Tarefas, Marketing, RH) com mouseover em ponto do gráfico → validar cor do texto vs. tema.
-- Navegar a `/guia` e capturar frame inicial → confirmar se aparece skeleton ou texto "Carregando...".
+**Passos:**
+1. **UX de canal:** adicionar em `IntegrationsPanel` (ou em `Configurações → Notificações`) um seletor "Canal padrão do Slack" que:
+   - Chama `GET /notify-slack` para listar canais (já funciona).
+   - Persiste o `channel` escolhido em `user_preferences` (nova coluna `slack_default_channel text`).
+2. **Migration:** `ALTER TABLE user_preferences ADD COLUMN slack_default_channel text;` (com grants já cobertos pela tabela existente).
+3. **Alerta de lead quente:** localizar o gatilho (provavelmente `cron-funnel-progression` ou trigger de `user_funnel_stage` quando vira `quente`) e fazê-lo chamar `notify-slack` usando `user_preferences.slack_default_channel` do dono do funil.
+4. **Botão "Enviar ao Slack"** no `SendReportDialog` (canal adicional além de Email/Gmail), usando o canal padrão + fallback para dropdown de canais.
+5. **Orientação one-shot no UI:** quando `notify-slack` responder `not_in_channel`, exibir toast com instrução exata: "Convide o bot no Slack: `/invite @Hub Empresarial` no canal #x". Assim o usuário resolve sem precisar consultar suporte.
+6. **Teste final:** o usuário roda `/invite @Hub Empresarial` no `#social` (ou outro canal) → seleciona esse canal como padrão no app → dispara um teste ("Enviar teste") e vê a mensagem chegar. Se der certo, o alerta de lead quente já vai funcionar pelo mesmo caminho.
 
-## Parte 3 — Relatório final
-Tabela A–E com:
-- ✅ / ⚠️ / ❌
-- Mensagem exata do toast + status HTTP das edge functions
-- Screenshot referenciado
-- O que falta para os itens bloqueados por OAuth
+## Ordem de execução
+1. **Firecrawl (A)** — 100% resolvível por mim: conectar + ajustar endpoint v2 + retestar. Sem depender do usuário.
+2. **Slack (D)** — 90% resolvível por mim (migration + UI + hook do alerta). Único passo do usuário: um `/invite` no canal.
+3. **Google (B/C)** — verificação de código + orientação para o consent manual. Sem consent OAuth do usuário, não há como um teste headless comprovar o envio real; mas o app fica pronto para receber a conexão.
 
-E ao final: **email + senha da conta demo** em bloco destacado.
+## Guardrails mantidos
+- Não recriar `get_integration_tokens` / `upsert_integration` / `update_integration_access_token`.
+- Não aplicar migrations `20260609100002` (criptografia) e `20260714200000` (trigger slack).
+- Não mexer em Stripe.
 
-## Notas técnicas
-- Uso `supabase--curl_edge_functions` com Authorization gerado a partir do login da conta demo (via Playwright pegando o access_token do localStorage) para validar `enrich-client` isoladamente e capturar status HTTP puro.
-- Todos os screenshots vão para `/tmp/browser/demo-audit/`.
-- Nenhuma migration nova será criada.
-
-## Confirma?
-Se aprovar, eu executo tudo em sequência e devolvo o relatório + credenciais.
+## Entregável final
+- Relatório atualizado A–D todos ✅ (com a ressalva de B/C exigindo 1 clique manual do avaliador para o consent Google — inevitável).
+- Migration nova só para `slack_default_channel`.
+- Diffs pequenos em: `_shared/firecrawl.ts`, `IntegrationsPanel.tsx`, `SendReportDialog.tsx`, cron/trigger de lead quente.
