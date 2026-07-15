@@ -10,7 +10,7 @@ import AuthLoginDialog from "@/components/auth/AuthLoginDialog";
 import AuthSignupDialog from "@/components/auth/AuthSignupDialog";
 import WorldCupPromoStrip from "@/components/auth/WorldCupPromoStrip";
 
-import { ArrowRight, ArrowDown, Shield, XCircle, DollarSign, FolderKanban, Users, UserCog, Megaphone, CheckSquare, Cog, GraduationCap, Copy, Loader2 } from "lucide-react";
+import { ArrowRight, ArrowDown, Shield, XCircle, DollarSign, FolderKanban, Users, UserCog, Megaphone, CheckSquare, Cog, GraduationCap, Copy, Loader2, Slack, Calendar, MessageCircle, Sparkles, CreditCard, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -35,6 +35,17 @@ const fakeLogos = [
   { initials: "AT", color: "bg-violet-500" },
   { initials: "NX", color: "bg-amber-500" },
   { initials: "VP", color: "bg-rose-500" },
+];
+
+// Integrações reais do produto — exibidas na landing (proposta de valor)
+const integrations = [
+  { icon: Calendar, label: "Google Agenda & Gmail" },
+  { icon: Slack, label: "Slack" },
+  { icon: MessageCircle, label: "WhatsApp" },
+  { icon: Sparkles, label: "Enriquecimento de empresas" },
+  { icon: CreditCard, label: "Pagamentos (Stripe)" },
+  { icon: Bot, label: "Assistente de IA" },
+  { icon: DollarSign, label: "Importação bancária (OFX)" },
 ];
 
 export default function Auth() {
@@ -265,6 +276,24 @@ export default function Auth() {
             <XCircle className="w-3.5 h-3.5 text-primary" />
             Cancele quando quiser
           </span>
+        </div>
+
+        {/* Integrações — proposta de valor: conecta com as ferramentas do usuário */}
+        <div className="w-full max-w-3xl mt-4">
+          <p className="text-center text-[11px] uppercase tracking-[0.15em] text-muted-foreground mb-4">
+            Conecta com as ferramentas que você já usa
+          </p>
+          <div className="flex items-center justify-center gap-2.5 flex-wrap">
+            {integrations.map((it) => (
+              <div
+                key={it.label}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 bg-secondary/40 hover:border-primary/40 hover:bg-primary/10 transition-all duration-200"
+              >
+                <it.icon className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs text-muted-foreground">{it.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
       </main>
