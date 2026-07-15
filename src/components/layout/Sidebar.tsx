@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
 import { UserMenu } from "@/components/user/UserMenu";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
 import {
