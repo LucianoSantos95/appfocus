@@ -18,8 +18,6 @@ import {
   HelpCircle,
   LogOut,
   Plug,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ProfileDialog } from "./ProfileDialog";

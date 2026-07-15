@@ -241,10 +241,13 @@ export function Sidebar() {
       {/* Notification Bell + User Menu */}
       <div className={cn(
         "border-t border-sidebar-border px-3 py-2",
-        collapsed ? "flex flex-col items-center gap-2" : "flex items-center justify-between"
+        collapsed ? "flex flex-col items-center gap-2" : "flex items-center gap-1"
       )}>
         <NotificationBell />
-        <UserMenu collapsed={collapsed} />
+        <ThemeToggle />
+        <div className={collapsed ? "" : "ml-auto"}>
+          <UserMenu collapsed={collapsed} />
+        </div>
       </div>
 
       {/* Footer */}
