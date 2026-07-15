@@ -66,6 +66,7 @@ import { TarefasBIPanel } from "@/components/bi/TarefasBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { NotifySlackButton } from "@/components/integrations/NotifySlackButton";
 
 interface SubTask {
   id: string;
