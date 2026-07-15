@@ -80,6 +80,7 @@ import { PlanGateButton } from "@/components/plan/PlanGateButton";
 import { useFreemiumLimit } from "@/hooks/useFreemiumLimit";
 import { UpgradeModal } from "@/components/plan/UpgradeModal";
 import { FreemiumWarningBanner } from "@/components/plan/FreemiumWarningBanner";
+import { ContextualIntegrationsHint } from "@/components/integrations/ContextualIntegrationsHint";
 import { ClientesBIPanel } from "@/components/bi/ClientesBIPanel";
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
