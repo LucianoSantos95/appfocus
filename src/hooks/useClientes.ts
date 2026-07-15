@@ -117,11 +117,14 @@ export function useClientes() {
 
       // Trigger AI analysis for new client
       analyzeCliente(newCliente.id);
+      // Auto-enriquecimento silencioso via Firecrawl (só corre se e-mail tiver
+      // domínio corporativo — a edge function ignora domínios grátis)
+      enrichClienteInBackground(newCliente.id);
       logEvent("create", "clientes", newCliente.id, { nome: input.nome });
 
       toast({
         title: "Cliente adicionado!",
-        description: `${input.nome} foi cadastrado com sucesso.`,
+        description: `${input.nome} foi cadastrado. Analisando com IA em segundo plano...`,
       });
 
       return newCliente;
@@ -133,6 +136,49 @@ export function useClientes() {
         variant: "destructive",
       });
       return null;
+    }
+  };
+
+  // Auto-enriquecer via Firecrawl em background, sem toast
+  // (mostra toast apenas em sucesso para gerar sensação "mágica")
+  const enrichClienteInBackground = async (clienteId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/enrich-client`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ cliente_id: clienteId }),
+        }
+      );
+
+      if (!res.ok) {
+        // Silencioso: 422 (sem domínio) ou 503 (firecrawl off) não é erro do usuário
+        return;
+      }
+
+      const result = await res.json();
+      // Se preencheu algo, atualizar estado local + toast celebrativo
+      if (result.updated && result.filled && Object.keys(result.filled).length > 0) {
+        setClientes((prev) =>
+          prev.map((c) => (c.id === clienteId ? { ...c, ...result.filled } : c))
+        );
+        const filledLabels = Object.keys(result.filled)
+          .map((k) => ({ empresa: "empresa", telefone: "telefone", segmento: "segmento" }[k] || k))
+          .join(", ");
+        toast({
+          title: "✨ Cliente enriquecido por IA",
+          description: `Preenchemos automaticamente: ${filledLabels}`,
+        });
+      }
+    } catch (e) {
+      console.warn("Auto-enrich falhou (silencioso):", e);
     }
   };
 
