@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ContextualIntegrationsHint } from "@/components/integrations/ContextualIntegrationsHint";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -309,6 +310,7 @@ export default function Tarefas() {
     <MainLayout>
       <PageMeta path="/atividades" title="Atividades" description="Gerencie tarefas e metas da sua operação. Organize as atividades da equipe." />
       <div className="space-y-8 animate-fade-in">
+        <ContextualIntegrationsHint module="tarefas" />
         {freemium.isNearLimit && (
           <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Atividades" />
         )}
