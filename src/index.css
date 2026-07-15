@@ -1,174 +1,178 @@
-/* Inter font loaded via index.html with display=swap and preconnect */
+/* Focus Inteligente — Sistema visual "Inteligência Focada"
+   Display: Instrument Serif (autoridade consultiva)
+   Body:    Work Sans (grotesca humanista, distinta de Inter)
+   Mono:    JetBrains Mono (números financeiros)
+   Fonts loaded via index.html with display=swap + preconnect */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Focus Inteligente - Premium Dark Mode Design System
-   Tech-Forward, Minimalista Sofisticado */
-
 @layer base {
   :root {
-    /* Backgrounds - Preto azulado profundo */
-    --background: 210 15% 3%;
-    --background-secondary: 210 12% 6%;
-    --background-elevated: 210 10% 9%;
-    
-    /* Foreground/Text */
+    /* === DARK MODE (default) — Navy + Menta === */
+
+    /* Surfaces — camadas de navy profundo (não preto puro) */
+    --background: 217 55% 8%;           /* #0A1428 - navy noturno */
+    --background-secondary: 217 45% 12%; /* #0F1E33 */
+    --background-elevated: 217 38% 16%;  /* #1A2842 */
+
+    /* Foreground */
     --foreground: 210 40% 98%;
-    --foreground-muted: 210 20% 75%;
-    
-    /* Cards and surfaces */
-    --card: 210 10% 9%;
+    --foreground-muted: 215 20% 72%;
+
+    /* Cards & surfaces */
+    --card: 217 40% 13%;                 /* #121F35 */
     --card-foreground: 210 40% 98%;
-    --card-border: 210 15% 15%;
-    
-    --popover: 210 12% 6%;
+    --card-border: 217 30% 22%;
+
+    --popover: 217 45% 11%;
     --popover-foreground: 210 40% 98%;
-    
-    /* Primary - Azul Elétrico */
-    --primary: 213 94% 68%;
-    --primary-glow: 213 100% 85%;
-    --primary-foreground: 210 40% 98%;
-    
+
+    /* PRIMARY — Menta vibrante (#00D4A8) — destaque no dark */
+    --primary: 167 100% 42%;
+    --primary-glow: 167 90% 60%;
+    --primary-foreground: 217 60% 10%;
+
+    /* Accent secundário — Navy elevado para chips e destaques calmos */
+    --accent: 212 60% 30%;
+    --accent-foreground: 167 100% 65%;
+
     /* Secondary */
-    --secondary: 210 10% 12%;
+    --secondary: 217 35% 18%;
     --secondary-foreground: 210 40% 98%;
-    
+
     /* Muted */
-    --muted: 210 12% 6%;
-    --muted-foreground: 210 20% 75%;
-    
-    /* Accent */
-    --accent: 213 94% 68%;
-    --accent-foreground: 210 40% 98%;
-    
-    /* Semantic colors */
-    --success: 145 60% 42%;
-    --success-foreground: 145 60% 95%;
-    
-    --warning: 38 92% 50%;
+    --muted: 217 40% 13%;
+    --muted-foreground: 215 20% 72%;
+
+    /* Semantic */
+    --success: 167 100% 42%;              /* mesma menta = coerência visual */
+    --success-foreground: 217 60% 10%;
+    --warning: 38 92% 55%;
     --warning-foreground: 38 92% 10%;
-    
-    --destructive: 0 65% 50%;
+    --destructive: 4 84% 60%;             /* coral, não vermelho puro */
     --destructive-foreground: 0 0% 98%;
-    
-    /* UI Elements */
-    --border: 210 15% 15%;
-    --input: 210 10% 9%;
-    --ring: 213 94% 68%;
-    
+
+    /* UI */
+    --border: 217 30% 22%;
+    --input: 217 40% 13%;
+    --ring: 167 100% 42%;
+
     --radius: 0.75rem;
-    
+
     /* Sidebar */
-    --sidebar-background: 210 15% 3%;
-    --sidebar-foreground: 210 20% 85%;
-    --sidebar-primary: 213 94% 68%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 210 10% 9%;
+    --sidebar-background: 217 55% 6%;
+    --sidebar-foreground: 215 25% 82%;
+    --sidebar-primary: 167 100% 42%;
+    --sidebar-primary-foreground: 217 60% 10%;
+    --sidebar-accent: 217 40% 13%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 210 15% 12%;
-    --sidebar-ring: 213 94% 68%;
-    
-    /* Chart colors */
-    --chart-1: 213 94% 68%;
-    --chart-2: 145 60% 42%;
-    --chart-3: 38 92% 50%;
-    --chart-4: 280 60% 50%;
-    --chart-5: 0 65% 50%;
+    --sidebar-border: 217 30% 15%;
+    --sidebar-ring: 167 100% 42%;
+
+    /* Charts — paleta coordenada Focus */
+    --chart-1: 167 100% 42%;              /* menta primary */
+    --chart-2: 212 90% 60%;               /* azul elétrico */
+    --chart-3: 38 92% 55%;                /* âmbar */
+    --chart-4: 280 70% 65%;               /* roxo */
+    --chart-5: 4 84% 60%;                 /* coral */
   }
 
-  /* Light mode - High contrast for full legibility */
+  /* === LIGHT MODE — Navy dominante + menta como acento === */
   .light {
-    /* Backgrounds - clean off-white */
-    --background: 210 25% 98%;
-    --background-secondary: 210 20% 94%;
+    --background: 210 30% 98%;
+    --background-secondary: 210 25% 94%;
     --background-elevated: 0 0% 100%;
 
-    /* Foreground - near-black for max contrast */
-    --foreground: 215 30% 12%;
-    --foreground-muted: 215 18% 32%;
+    --foreground: 212 74% 12%;            /* navy near-black */
+    --foreground-muted: 215 22% 32%;
 
-    /* Cards */
     --card: 0 0% 100%;
-    --card-foreground: 215 30% 12%;
-    --card-border: 215 20% 86%;
+    --card-foreground: 212 74% 12%;
+    --card-border: 215 20% 88%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 30% 12%;
+    --popover-foreground: 212 74% 12%;
 
-    /* Primary - deeper blue for contrast on white */
-    --primary: 215 90% 48%;
-    --primary-glow: 213 95% 62%;
+    /* PRIMARY — Navy #0A2540 para máximo contraste em light */
+    --primary: 212 74% 15%;
+    --primary-glow: 167 100% 38%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - light neutral */
-    --secondary: 215 25% 92%;
-    --secondary-foreground: 215 30% 15%;
-
-    /* Muted - darkened for WCAG AA contrast (>=4.5:1 on white) */
-    --muted: 215 20% 94%;
-    --muted-foreground: 215 22% 24%;
-
-    /* Accent */
-    --accent: 215 90% 48%;
-
+    /* Accent — menta escurecida para legibilidade em branco */
+    --accent: 167 100% 30%;
     --accent-foreground: 0 0% 100%;
 
-    /* Semantic - darker tones to keep readable on light bg */
-    --success: 145 65% 32%;
-    --success-foreground: 0 0% 100%;
+    --secondary: 215 25% 92%;
+    --secondary-foreground: 212 74% 15%;
 
+    --muted: 215 20% 94%;
+    --muted-foreground: 215 22% 28%;
+
+    /* Semantic */
+    --success: 167 100% 28%;
+    --success-foreground: 0 0% 100%;
     --warning: 32 95% 42%;
     --warning-foreground: 0 0% 100%;
-
-    --destructive: 0 72% 45%;
+    --destructive: 4 74% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    /* UI Elements */
-    --border: 215 20% 86%;
-    --input: 215 20% 90%;
-    --ring: 215 90% 48%;
+    /* UI */
+    --border: 215 20% 88%;
+    --input: 215 20% 92%;
+    --ring: 212 74% 15%;
 
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 215 25% 18%;
-    --sidebar-primary: 215 90% 48%;
+    --sidebar-foreground: 212 60% 20%;
+    --sidebar-primary: 212 74% 15%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 215 25% 94%;
-    --sidebar-accent-foreground: 215 30% 12%;
+    --sidebar-accent-foreground: 212 74% 12%;
     --sidebar-border: 215 20% 88%;
-    --sidebar-ring: 215 90% 48%;
+    --sidebar-ring: 212 74% 15%;
 
-    /* Charts - vivid but readable on light bg */
-    --chart-1: 215 90% 48%;
-    --chart-2: 145 65% 35%;
+    /* Charts */
+    --chart-1: 212 74% 15%;
+    --chart-2: 167 100% 30%;
     --chart-3: 32 95% 45%;
     --chart-4: 280 65% 48%;
-    --chart-5: 0 72% 48%;
+    --chart-5: 4 74% 48%;
   }
 
-  /* Light mode shadow & glow overrides for proper depth on white */
+  /* Light mode shadow overrides */
   .light .shadow-elegant {
-    box-shadow: 0 10px 25px -5px hsl(215 30% 15% / 0.12),
-                0 4px 10px -3px hsl(215 30% 15% / 0.08);
+    box-shadow:
+      0 20px 40px -20px hsl(212 74% 15% / 0.18),
+      0 4px 12px -4px hsl(212 74% 15% / 0.08);
   }
   .light .shadow-premium {
-    box-shadow: 0 2px 12px -2px hsl(215 30% 15% / 0.08),
-                0 0 0 1px hsl(215 20% 86%);
+    box-shadow:
+      0 2px 12px -2px hsl(212 74% 15% / 0.08),
+      0 0 0 1px hsl(215 20% 88%);
   }
   .light .shadow-glow {
-    box-shadow: 0 0 30px hsl(215 90% 48% / 0.15);
+    box-shadow: 0 0 30px hsl(167 100% 30% / 0.20);
   }
   .light .glass {
     background: hsl(0 0% 100% / 0.85);
-    border: 1px solid hsl(215 20% 86%);
+    border: 1px solid hsl(215 20% 88%);
   }
   .light .gradient-dark {
-    background: linear-gradient(180deg, hsl(210 25% 98%) 0%, hsl(210 20% 94%) 100%);
+    background: linear-gradient(180deg, hsl(210 30% 98%) 0%, hsl(210 25% 94%) 100%);
   }
   .light .gradient-card {
-    background: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 20% 97%) 100%);
+    background: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 25% 97%) 100%);
+  }
+  .light .gradient-primary {
+    background: linear-gradient(135deg, hsl(212 74% 15%) 0%, hsl(167 100% 30%) 100%);
+  }
+  .light .gradient-text {
+    background: linear-gradient(135deg, hsl(212 74% 15%) 0%, hsl(167 100% 30%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
 
@@ -179,7 +183,21 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: '"Work Sans"', system-ui, sans-serif;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  /* Números em fonte monoespaçada — feel "fintech premium" */
+  .font-numeric {
+    font-family: '"JetBrains Mono"', ui-monospace, monospace;
+    font-feature-settings: "tnum", "zero";
+    letter-spacing: -0.02em;
+  }
+
+  /* Display serif — títulos hero, KPIs, momentos importantes */
+  .font-display {
+    font-family: '"Instrument Serif"', Georgia, serif;
+    letter-spacing: -0.01em;
   }
 }
 
