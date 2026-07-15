@@ -81,8 +81,8 @@ export async function enrichCompanyByWebsite(website: string): Promise<EnrichRes
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data?.success === false) {
       const bodyStr = JSON.stringify(data).slice(0, 400);
-      console.error(`[firecrawl] ${res.status}: ${bodyStr}`);
-      return { ok: false, status: res.status, error: data?.error ?? `Firecrawl respondeu ${res.status}` };
+      console.error(`[firecrawl] ${res.status} key=${_keyDiag}: ${bodyStr}`);
+      return { ok: false, status: res.status, error: `Firecrawl ${res.status} key=${_keyDiag}: ${data?.error ?? bodyStr}` };
     }
 
     // v2 response: { success: true, data: { json: {...}, metadata: {...} } }
