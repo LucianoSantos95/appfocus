@@ -18,8 +18,6 @@ import {
   HelpCircle,
   LogOut,
   Plug,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ProfileDialog } from "./ProfileDialog";
@@ -28,7 +26,7 @@ import { BillingPanel } from "./BillingPanel";
 import { SupportDialog } from "./SupportDialog";
 import { FeedbackDialog } from "./FeedbackDialog";
 import { IntegrationsPanel } from "@/components/settings/IntegrationsPanel";
-import { useTheme } from "@/contexts/ThemeContext";
+
 
 interface UserMenuProps {
   collapsed: boolean;
@@ -38,7 +36,7 @@ export function UserMenu({ collapsed }: UserMenuProps) {
   const { user, signOut } = useAuth();
   const { plan } = usePlan();
   const { isAdmin } = useTeamPermissions();
-  const { theme, toggleTheme } = useTheme();
+  
   const navigate = useNavigate();
 
   const [profileOpen, setProfileOpen] = useState(false);
@@ -110,13 +108,6 @@ export function UserMenu({ collapsed }: UserMenuProps) {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setIntegrationsOpen(true)}>
               <Plug className="w-4 h-4 mr-2" /> Integrações
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={(e) => { e.preventDefault(); toggleTheme(); }}>
-              {theme === "dark" ? (
-                <><Sun className="w-4 h-4 mr-2" /> Tema claro</>
-              ) : (
-                <><Moon className="w-4 h-4 mr-2" /> Tema escuro</>
-              )}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <div className="px-2 py-1.5 text-xs text-muted-foreground">
