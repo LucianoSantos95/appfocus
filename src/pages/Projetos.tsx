@@ -249,6 +249,7 @@ export default function Projetos() {
         {freemium.isNearLimit && (
           <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="Projetos" />
         )}
+        <ContextualIntegrationsHint module="projetos" />
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
