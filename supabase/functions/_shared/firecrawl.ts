@@ -45,7 +45,7 @@ export async function enrichCompanyByWebsite(website: string): Promise<EnrichRes
   }
 
   try {
-    console.log(`[firecrawl] key_prefix=${FIRECRAWL_API_KEY.slice(0, 5)} len=${FIRECRAWL_API_KEY.length}`);
+    console.error(`[firecrawl] DIAG key_prefix=${FIRECRAWL_API_KEY.slice(0, 6)} len=${FIRECRAWL_API_KEY.length}`);
     const res = await fetch(`${FIRECRAWL_V2}/scrape`, {
       method: "POST",
       headers: {
