@@ -734,7 +734,7 @@ function EditClienteDialog({
       if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
       setEnrichData((data as any).enrichment);
       if ((data as any).updated) {
-        toast({ title: "Cliente enriquecido!", description: "Campos vazios foram preenchidos com dados da Apollo." });
+        toast({ title: "Cliente enriquecido!", description: "Campos vazios foram preenchidos com dados do site da empresa." });
         onRecordingDone?.();
       } else {
         toast({ title: "Dados da empresa encontrados" });
@@ -779,11 +779,11 @@ function EditClienteDialog({
             </div>
           )}
 
-          {/* Enriquecimento via Apollo — busca dados da empresa e preenche campos vazios */}
+          {/* Enriquecimento — busca dados da empresa no site e preenche campos vazios */}
           <div className="rounded-lg border border-border p-3 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <Sparkles className="w-4 h-4 text-primary" /> Enriquecer com Apollo
+                <Sparkles className="w-4 h-4 text-primary" /> Enriquecer empresa
               </div>
               <Button size="sm" variant="outline" onClick={handleEnrich} disabled={enriching} className="gap-2">
                 {enriching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}

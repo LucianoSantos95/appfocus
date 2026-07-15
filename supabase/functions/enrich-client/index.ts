@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { enrichOrganizationByDomain, isApolloConfigured } from "../_shared/apollo.ts";
+import { enrichCompanyByWebsite, isFirecrawlConfigured } from "../_shared/firecrawl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,8 +45,8 @@ Deno.serve(async (req) => {
     if (claimsErr || !claims?.claims?.sub) return json({ error: "Token inválido" }, 401);
     const userId = claims.claims.sub as string;
 
-    if (!isApolloConfigured()) {
-      return json({ error: "Apollo não está conectado neste projeto. Conecte o Apollo no Lovable." }, 503);
+    if (!isFirecrawlConfigured()) {
+      return json({ error: "Firecrawl não está conectado neste projeto." }, 503);
     }
 
     const { cliente_id, domain: domainOverride } = await req.json();
@@ -75,9 +75,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const result = await enrichOrganizationByDomain(domain);
+    const result = await enrichCompanyByWebsite(`https://${domain}`);
     if (!result.ok || !result.data) {
-      return json({ error: result.error || "Apollo não retornou dados para este domínio." }, result.status || 502);
+      return json({ error: result.error || "Não foi possível extrair dados do site desta empresa." }, result.status || 502);
     }
 
     const enr = result.data;
