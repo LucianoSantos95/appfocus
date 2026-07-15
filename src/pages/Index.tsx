@@ -7,13 +7,13 @@ import { GuidedTour } from "@/components/guide/GuidedTour";
 import { ModuleCard } from "@/components/ui/module-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
-import { HealthSummary } from "@/components/dashboard/HealthSummary";
+import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { UsageLimitWidget } from "@/components/dashboard/UsageLimitWidget";
 import { PersistentCouponWidget } from "@/components/dashboard/PersistentCouponWidget";
 import { WorldCupBanner } from "@/components/dashboard/WorldCupBanner";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { IntegrationsPulse } from "@/components/dashboard/IntegrationsPulse";
-import { Stagger, StaggerItem, FadeIn } from "@/components/motion";
+import { Stagger, StaggerItem } from "@/components/motion";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -111,17 +111,8 @@ const Index = () => {
         <PersistentCouponWidget />
 
 
-        {/* Header — display serif "Instrument Serif" */}
-        <FadeIn className="hero-glow">
-          <h1 className="font-display text-5xl md:text-6xl text-foreground tracking-tight leading-none">
-            Painel <span className="gradient-text italic">Principal</span>
-          </h1>
-          <p className="text-muted-foreground mt-3 text-base">
-            Visão geral da sua operação em um só lugar
-          </p>
-        </FadeIn>
-
-        <HealthSummary />
+        {/* Hero redesenhado — saudação + KPI hero + sparkline + KPIs secundários */}
+        <DashboardHero />
 
         <UsageLimitWidget />
 
