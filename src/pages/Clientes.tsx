@@ -316,6 +316,7 @@ export default function Clientes() {
         {freemium.isNearLimit && (
           <FreemiumWarningBanner currentCount={freemium.currentCount} maxCount={freemium.maxCount} moduleName="CRM" />
         )}
+        <ContextualIntegrationsHint module="clientes" />
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
