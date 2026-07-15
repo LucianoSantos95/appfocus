@@ -95,10 +95,10 @@ export default {
         "2xl": "1.25rem",
       },
       boxShadow: {
-        elegant: "0 20px 25px -5px hsl(210 40% 1% / 0.5), 0 10px 10px -5px hsl(210 40% 1% / 0.2)",
-        glow: "0 0 50px hsl(213 94% 68% / 0.15)",
-        "glow-strong": "0 0 60px hsl(213 94% 68% / 0.25)",
-        premium: "0 4px 24px -4px hsl(210 40% 1% / 0.5), 0 0 0 1px hsl(210 15% 15%)",
+        elegant: "0 20px 40px -20px hsl(217 80% 3% / 0.55), 0 8px 16px -8px hsl(217 80% 3% / 0.35)",
+        glow: "0 0 50px hsl(167 100% 42% / 0.18)",
+        "glow-strong": "0 0 60px hsl(167 100% 42% / 0.30)",
+        premium: "0 4px 24px -4px hsl(217 80% 3% / 0.5), 0 0 0 1px hsl(217 30% 22%)",
       },
       keyframes: {
         "accordion-down": {
