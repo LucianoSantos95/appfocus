@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enrichCompanyByWebsite, isFirecrawlConfigured } from "../_shared/firecrawl.ts";
+// touch: 2026-07-15T14:45 force redeploy of shared firecrawl helper
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
