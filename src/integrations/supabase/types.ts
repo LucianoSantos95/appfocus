@@ -1962,6 +1962,15 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_integration_tokens: {
+        Args: { p_provider: string; p_user_id: string }
+        Returns: {
+          access_token: string
+          id: string
+          refresh_token: string
+          token_expires_at: string
+        }[]
+      }
       get_user_engagement: {
         Args: never
         Returns: {
@@ -2040,6 +2049,27 @@ export type Database = {
         }
       }
       record_login_attempt: { Args: { p_email: string }; Returns: undefined }
+      update_integration_access_token: {
+        Args: {
+          p_access_token: string
+          p_expires_at: string
+          p_provider: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      upsert_integration: {
+        Args: {
+          p_access_token: string
+          p_expires_at: string
+          p_metadata?: Json
+          p_provider: string
+          p_refresh_token: string
+          p_scopes?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       verify_cron_token: { Args: { p_token: string }; Returns: boolean }
     }
     Enums: {
