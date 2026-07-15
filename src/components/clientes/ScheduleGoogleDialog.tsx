@@ -161,21 +161,9 @@ export function ScheduleGoogleDialog({
 
       toast({
         title: "Reunião agendada! 📅",
-        description: (
-          <div className="flex flex-col gap-1">
-            <span>Evento criado no seu Google Agenda.</span>
-            {data.htmlLink && (
-              <a
-                href={data.htmlLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-primary hover:underline text-xs"
-              >
-                Ver no Google <ExternalLink className="w-3 h-3" />
-              </a>
-            )}
-          </div>
-        ),
+        description: data.htmlLink
+          ? `Evento criado no Google Agenda. Abra: ${data.htmlLink}`
+          : "Evento criado no seu Google Agenda.",
       });
       onOpenChange(false);
     } catch (e) {
