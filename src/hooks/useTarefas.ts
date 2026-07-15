@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useSharedResource } from "@/lib/sharedResource";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
@@ -31,30 +32,24 @@ export interface TarefaInput {
 export function useTarefas() {
   const { toast } = useToast();
   const { logEvent } = useAuditLog();
-  const [tarefas, setTarefas] = useState<Tarefa[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchTarefas = useCallback(async () => {
-    try {
+  const { user } = useAuth();
+  const { data: tarefas, isLoading, refetch, mutate } = useSharedResource<any[]>(
+    user ? "tarefas:" + user.id : null,
+    async () => {
       const { data, error } = await supabase.from("tarefas").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setTarefas((data as Tarefa[]) || []);
-    } catch (error) {
-      console.error("Error fetching tarefas:", error);
-      toast({ title: "Erro ao carregar tarefas", description: "Recarregue a página para tentar novamente.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+      return data || [];
+    },
+    { initial: [], enabled: !!user }
+  );
 
   const addTarefa = async (input: TarefaInput): Promise<Tarefa | null> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
       const { data, error } = await supabase.from("tarefas").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
       const newT = data as Tarefa;
-      setTarefas(prev => [newT, ...prev]);
+      mutate((prev) => [newT, ...(prev || [])]);
       toast({ title: "Tarefa adicionada!", description: `${input.title} foi criada.` });
       logEvent("create", "tarefas", newT.id, { title: input.title });
       return newT;
@@ -77,7 +72,7 @@ export function useTarefas() {
 
       const { error } = await supabase.from("tarefas").update(finalUpdates as never).eq("id", id);
       if (error) throw error;
-      setTarefas(prev => prev.map(t => t.id === id ? { ...t, ...finalUpdates } as Tarefa : t));
+      mutate((prev) => (prev || []).map(t => t.id === id ? { ...t, ...finalUpdates } as Tarefa : t));
       return true;
     } catch (error) {
       console.error("Error updating tarefa:", error);
@@ -90,7 +85,7 @@ export function useTarefas() {
     try {
       const { error } = await supabase.from("tarefas").delete().eq("id", id);
       if (error) throw error;
-      setTarefas(prev => prev.filter(t => t.id !== id));
+      mutate((prev) => (prev || []).filter(t => t.id !== id));
       toast({ title: "Tarefa excluída" });
       logEvent("delete", "tarefas", id);
       return true;
@@ -101,7 +96,6 @@ export function useTarefas() {
     }
   };
 
-  useEffect(() => { fetchTarefas(); }, [fetchTarefas]);
 
-  return { tarefas, isLoading, addTarefa, updateTarefa, deleteTarefa, refetch: fetchTarefas };
+  return { tarefas: tarefas || [], isLoading, addTarefa, updateTarefa, deleteTarefa, refetch };
 }

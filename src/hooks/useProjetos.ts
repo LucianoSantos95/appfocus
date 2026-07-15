@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useSharedResource } from "@/lib/sharedResource";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
@@ -33,30 +34,24 @@ export interface ProjetoInput {
 export function useProjetos() {
   const { toast } = useToast();
   const { logEvent } = useAuditLog();
-  const [projetos, setProjetos] = useState<Projeto[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchProjetos = useCallback(async () => {
-    try {
+  const { user } = useAuth();
+  const { data: projetos, isLoading, refetch, mutate } = useSharedResource<any[]>(
+    user ? "projetos:" + user.id : null,
+    async () => {
       const { data, error } = await supabase.from("projetos").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setProjetos((data as Projeto[]) || []);
-    } catch (error) {
-      console.error("Error fetching projetos:", error);
-      toast({ title: "Erro ao carregar projetos", description: "Recarregue a página para tentar novamente.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+      return data || [];
+    },
+    { initial: [], enabled: !!user }
+  );
 
   const addProjeto = async (input: ProjetoInput): Promise<Projeto | null> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
       const { data, error } = await supabase.from("projetos").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
       const newP = data as Projeto;
-      setProjetos(prev => [newP, ...prev]);
+      mutate((prev) => [newP, ...(prev || [])]);
       toast({ title: "Projeto adicionado!", description: `${input.name} foi criado.` });
       logEvent("create", "projetos", newP.id, { name: input.name });
       return newP;
@@ -71,7 +66,7 @@ export function useProjetos() {
     try {
       const { error } = await supabase.from("projetos").update(updates as never).eq("id", id);
       if (error) throw error;
-      setProjetos(prev => prev.map(p => p.id === id ? { ...p, ...updates } as Projeto : p));
+      mutate((prev) => (prev || []).map(p => p.id === id ? { ...p, ...updates } as Projeto : p));
       toast({ title: "Projeto atualizado!" });
       logEvent("update", "projetos", id);
       return true;
@@ -86,7 +81,7 @@ export function useProjetos() {
     try {
       const { error } = await supabase.from("projetos").delete().eq("id", id);
       if (error) throw error;
-      setProjetos(prev => prev.filter(p => p.id !== id));
+      mutate((prev) => (prev || []).filter(p => p.id !== id));
       toast({ title: "Projeto excluído" });
       logEvent("delete", "projetos", id);
       return true;
@@ -97,7 +92,6 @@ export function useProjetos() {
     }
   };
 
-  useEffect(() => { fetchProjetos(); }, [fetchProjetos]);
 
-  return { projetos, isLoading, addProjeto, updateProjeto, deleteProjeto, refetch: fetchProjetos };
+  return { projetos: projetos || [], isLoading, addProjeto, updateProjeto, deleteProjeto, refetch };
 }

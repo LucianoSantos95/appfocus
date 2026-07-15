@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useSharedResource } from "@/lib/sharedResource";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
@@ -33,30 +34,24 @@ export interface ColaboradorInput {
 export function useColaboradores() {
   const { toast } = useToast();
   const { logEvent } = useAuditLog();
-  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchColaboradores = useCallback(async () => {
-    try {
+  const { user } = useAuth();
+  const { data: colaboradores, isLoading, refetch, mutate } = useSharedResource<any[]>(
+    user ? "colaboradores:" + user.id : null,
+    async () => {
       const { data, error } = await supabase.from("colaboradores").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setColaboradores((data as Colaborador[]) || []);
-    } catch (error) {
-      console.error("Error fetching colaboradores:", error);
-      toast({ title: "Erro ao carregar colaboradores", description: "Recarregue a página para tentar novamente.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+      return data || [];
+    },
+    { initial: [], enabled: !!user }
+  );
 
   const addColaborador = async (input: ColaboradorInput): Promise<Colaborador | null> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
       const { data, error } = await supabase.from("colaboradores").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
       const newC = data as Colaborador;
-      setColaboradores(prev => [newC, ...prev]);
+      mutate((prev) => [newC, ...(prev || [])]);
       toast({ title: "Colaborador adicionado!", description: `${input.name} foi cadastrado.` });
       logEvent("create", "colaboradores", newC.id, { name: input.name });
       return newC;
@@ -71,7 +66,7 @@ export function useColaboradores() {
     try {
       const { error } = await supabase.from("colaboradores").update(updates as never).eq("id", id);
       if (error) throw error;
-      setColaboradores(prev => prev.map(c => c.id === id ? { ...c, ...updates } as Colaborador : c));
+      mutate((prev) => (prev || []).map(c => c.id === id ? { ...c, ...updates } as Colaborador : c));
       toast({ title: "Colaborador atualizado!" });
       return true;
     } catch (error) {
@@ -85,7 +80,7 @@ export function useColaboradores() {
     try {
       const { error } = await supabase.from("colaboradores").delete().eq("id", id);
       if (error) throw error;
-      setColaboradores(prev => prev.filter(c => c.id !== id));
+      mutate((prev) => (prev || []).filter(c => c.id !== id));
       toast({ title: "Colaborador excluído" });
       logEvent("delete", "colaboradores", id);
       return true;
@@ -96,7 +91,6 @@ export function useColaboradores() {
     }
   };
 
-  useEffect(() => { fetchColaboradores(); }, [fetchColaboradores]);
 
-  return { colaboradores, isLoading, addColaborador, updateColaborador, deleteColaborador, refetch: fetchColaboradores };
+  return { colaboradores: colaboradores || [], isLoading, addColaborador, updateColaborador, deleteColaborador, refetch };
 }

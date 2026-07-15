@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useSharedResource } from "@/lib/sharedResource";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
@@ -25,29 +26,24 @@ export interface ProcessoInput {
 export function useProcessos() {
   const { toast } = useToast();
   const { logEvent } = useAuditLog();
-  const [processos, setProcessos] = useState<Processo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchProcessos = useCallback(async () => {
-    try {
+  const { user } = useAuth();
+  const { data: processos, isLoading, refetch, mutate } = useSharedResource<any[]>(
+    user ? "processos:" + user.id : null,
+    async () => {
       const { data, error } = await supabase.from("processos").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setProcessos((data as Processo[]) || []);
-    } catch (error) {
-      console.error("Error fetching processos:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+      return data || [];
+    },
+    { initial: [], enabled: !!user }
+  );
 
   const addProcesso = async (input: ProcessoInput): Promise<Processo | null> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
       const { data, error } = await supabase.from("processos").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
       const newP = data as Processo;
-      setProcessos(prev => [newP, ...prev]);
+      mutate((prev) => [newP, ...(prev || [])]);
       toast({ title: "Processo adicionado!", description: `${input.name} foi criado.` });
       logEvent("create", "processos", newP.id, { name: input.name });
       return newP;
@@ -62,7 +58,7 @@ export function useProcessos() {
     try {
       const { error } = await supabase.from("processos").update(updates as never).eq("id", id);
       if (error) throw error;
-      setProcessos(prev => prev.map(p => p.id === id ? { ...p, ...updates } as Processo : p));
+      mutate((prev) => (prev || []).map(p => p.id === id ? { ...p, ...updates } as Processo : p));
       toast({ title: "Processo atualizado!" });
       return true;
     } catch (error) {
@@ -76,7 +72,7 @@ export function useProcessos() {
     try {
       const { error } = await supabase.from("processos").delete().eq("id", id);
       if (error) throw error;
-      setProcessos(prev => prev.filter(p => p.id !== id));
+      mutate((prev) => (prev || []).filter(p => p.id !== id));
       toast({ title: "Processo excluído" });
       logEvent("delete", "processos", id);
       return true;
@@ -87,7 +83,6 @@ export function useProcessos() {
     }
   };
 
-  useEffect(() => { fetchProcessos(); }, [fetchProcessos]);
 
-  return { processos, isLoading, addProcesso, updateProcesso, deleteProcesso, refetch: fetchProcessos };
+  return { processos: processos || [], isLoading, addProcesso, updateProcesso, deleteProcesso, refetch };
 }

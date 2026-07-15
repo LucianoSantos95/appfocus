@@ -13,19 +13,16 @@ interface Notification {
 
 export function useNotifications() {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchNotifications = useCallback(async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("notifications")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setNotifications((data as Notification[]) || []);
-    setIsLoading(false);
-  }, [user]);
+  const { user } = useAuth();
+  const { data: notifications, isLoading, refetch, mutate } = useSharedResource<any[]>(
+    user ? "notifications:" + user.id : null,
+    async () => {
+      const { data, error } = await supabase.from("notifications").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    { initial: [], enabled: !!user }
+  );
 
   useEffect(() => {
     fetchNotifications();
@@ -61,5 +58,5 @@ export function useNotifications() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, [notifications]);
 
-  return { notifications, unreadCount, isLoading, markAsRead, markAllAsRead, refetch: fetchNotifications };
+  return { notifications: notifications || [], unreadCount, isLoading, markAsRead, markAllAsRead, refetch };
 }

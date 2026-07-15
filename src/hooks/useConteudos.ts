@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useSharedResource } from "@/lib/sharedResource";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
@@ -29,29 +30,24 @@ export interface ConteudoInput {
 export function useConteudos() {
   const { toast } = useToast();
   const { logEvent } = useAuditLog();
-  const [conteudos, setConteudos] = useState<Conteudo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchConteudos = useCallback(async () => {
-    try {
-      const { data, error } = await supabase.from("conteudos").select("*").order("scheduled_date", { ascending: true });
+  const { user } = useAuth();
+  const { data: conteudos, isLoading, refetch, mutate } = useSharedResource<any[]>(
+    user ? "conteudos:" + user.id : null,
+    async () => {
+      const { data, error } = await supabase.from("conteudos").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setConteudos((data as Conteudo[]) || []);
-    } catch (error) {
-      console.error("Error fetching conteudos:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+      return data || [];
+    },
+    { initial: [], enabled: !!user }
+  );
 
   const addConteudo = async (input: ConteudoInput): Promise<Conteudo | null> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
       const { data, error } = await supabase.from("conteudos").insert({ ...input, user_id: user.id } as never).select().single();
       if (error) throw error;
       const newC = data as Conteudo;
-      setConteudos(prev => [...prev, newC]);
+      mutate((prev) => [...(prev || []), newC]);
       toast({ title: "Conteúdo adicionado!" });
       logEvent("create", "conteudos", newC.id, { title: input.title });
       return newC;
@@ -66,7 +62,7 @@ export function useConteudos() {
     try {
       const { error } = await supabase.from("conteudos").update(updates as never).eq("id", id);
       if (error) throw error;
-      setConteudos(prev => prev.map(c => c.id === id ? { ...c, ...updates } as Conteudo : c));
+      mutate((prev) => (prev || []).map(c => c.id === id ? { ...c, ...updates } as Conteudo : c));
       return true;
     } catch (error) {
       console.error("Error updating conteudo:", error);
@@ -79,7 +75,7 @@ export function useConteudos() {
     try {
       const { error } = await supabase.from("conteudos").delete().eq("id", id);
       if (error) throw error;
-      setConteudos(prev => prev.filter(c => c.id !== id));
+      mutate((prev) => (prev || []).filter(c => c.id !== id));
       toast({ title: "Conteúdo excluído" });
       logEvent("delete", "conteudos", id);
       return true;
@@ -90,7 +86,6 @@ export function useConteudos() {
     }
   };
 
-  useEffect(() => { fetchConteudos(); }, [fetchConteudos]);
 
-  return { conteudos, isLoading, addConteudo, updateConteudo, deleteConteudo, refetch: fetchConteudos };
+  return { conteudos: conteudos || [], isLoading, addConteudo, updateConteudo, deleteConteudo, refetch };
 }
