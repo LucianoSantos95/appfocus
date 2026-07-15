@@ -201,7 +201,27 @@ export function IntegrationsPanel({ open, onOpenChange }: IntegrationsPanelProps
         },
       });
       if (error) throw error;
+      // notify-slack retorna 200 com { error: "..." } em falhas do Slack (ex.: not_in_channel)
+      const slackErr = (data as { error?: string; ok?: boolean } | null)?.error;
+      if (slackErr) {
+        if (slackErr === "not_in_channel" || slackErr === "channel_not_found") {
+          toast({
+            title: "Bot não está no canal",
+            description: `Abra o Slack, entre no canal ${slackChannel.trim()} e digite: /invite @Hub Empresarial. Depois teste novamente.`,
+            variant: "destructive",
+          });
+        } else {
+          toast({ title: "Slack rejeitou o envio", description: slackErr, variant: "destructive" });
+        }
+        return;
+      }
       localStorage.setItem("hub:slack_channel", slackChannel.trim());
+      // Persistir também em user_preferences para uso por edge functions (alertas de lead quente etc.)
+      if (session?.user?.id) {
+        await supabase
+          .from("user_preferences")
+          .upsert({ user_id: session.user.id, slack_default_channel: slackChannel.trim() }, { onConflict: "user_id" });
+      }
       toast({ title: "Mensagem enviada!", description: "Confira seu Slack." });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Falha ao enviar";

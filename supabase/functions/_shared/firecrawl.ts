@@ -1,7 +1,7 @@
-// Shared Firecrawl helper — routes through the Lovable connector gateway.
-// Gateway path = /{connector} + the API path after the host (mirrors _shared/slack.ts).
-// Firecrawl's API is api.firecrawl.dev/v1/... → gateway /firecrawl/v1/...
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/firecrawl";
+// Firecrawl helper — direct API mode (v2).
+// The Firecrawl connection linked to this project is direct-API (not gateway),
+// so we call https://api.firecrawl.dev/v2/... with Authorization: Bearer FIRECRAWL_API_KEY.
+const FIRECRAWL_V2 = "https://api.firecrawl.dev/v2";
 
 export interface CompanyEnrichment {
   name?: string;
@@ -25,7 +25,7 @@ export interface EnrichResult {
 }
 
 export function isFirecrawlConfigured(): boolean {
-  return !!(Deno.env.get("LOVABLE_API_KEY") && Deno.env.get("FIRECRAWL_API_KEY"));
+  return !!Deno.env.get("FIRECRAWL_API_KEY");
 }
 
 function toNumber(v: unknown): number | undefined {
@@ -39,52 +39,60 @@ function toNumber(v: unknown): number | undefined {
 
 /** Enrich a company by scraping its website and extracting structured fields with AI. */
 export async function enrichCompanyByWebsite(website: string): Promise<EnrichResult> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
-  if (!LOVABLE_API_KEY || !FIRECRAWL_API_KEY) {
-    return { ok: false, status: 500, error: "Firecrawl connector não configurado." };
+  if (!FIRECRAWL_API_KEY) {
+    return { ok: false, status: 500, error: "Firecrawl não está configurado." };
   }
 
   try {
-    const res = await fetch(`${GATEWAY_URL}/v1/scrape`, {
+    const _keyDiag = `${FIRECRAWL_API_KEY.slice(0, 6)}(len${FIRECRAWL_API_KEY.length})`;
+    const res = await fetch(`${FIRECRAWL_V2}/scrape`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": FIRECRAWL_API_KEY,
+        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
       },
       body: JSON.stringify({
         url: website,
         onlyMainContent: true,
-        formats: ["json"],
-        jsonOptions: {
-          prompt:
-            "A partir do conteúdo do site desta empresa, extraia os dados solicitados. " +
-            "Responda em português. Se algum campo não estiver claro, deixe-o vazio.",
-          schema: {
-            type: "object",
-            properties: {
-              name: { type: "string", description: "Nome da empresa" },
-              industry: { type: "string", description: "Setor / segmento de atuação" },
-              description: { type: "string", description: "Descrição curta do que a empresa faz" },
-              services: { type: "array", items: { type: "string" }, description: "Principais serviços ou produtos" },
-              employees: { type: "string", description: "Número aproximado de funcionários, se mencionado" },
-              location: { type: "string", description: "Cidade/estado/país da sede" },
-              phone: { type: "string", description: "Telefone de contato" },
+        formats: [
+          {
+            type: "json",
+            prompt:
+              "A partir do conteúdo do site desta empresa, extraia os dados solicitados. " +
+              "Responda em português. Se algum campo não estiver claro, deixe-o vazio.",
+            schema: {
+              type: "object",
+              properties: {
+                name: { type: "string", description: "Nome da empresa" },
+                industry: { type: "string", description: "Setor / segmento de atuação" },
+                description: { type: "string", description: "Descrição curta do que a empresa faz" },
+                services: { type: "array", items: { type: "string" }, description: "Principais serviços ou produtos" },
+                employees: { type: "string", description: "Número aproximado de funcionários, se mencionado" },
+                location: { type: "string", description: "Cidade/estado/país da sede" },
+                phone: { type: "string", description: "Telefone de contato" },
+              },
             },
           },
-        },
+        ],
       }),
     });
 
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data?.success === false) {
-      console.error(`[firecrawl] ${res.status}: ${JSON.stringify(data).slice(0, 300)}`);
-      return { ok: false, status: res.status, error: data?.error ?? `Firecrawl respondeu ${res.status}` };
+      const bodyStr = JSON.stringify(data).slice(0, 400);
+      console.error(`[firecrawl] ${res.status} key=${_keyDiag}: ${bodyStr}`);
+      return { ok: false, status: res.status, error: `Firecrawl ${res.status} key=${_keyDiag}: ${data?.error ?? bodyStr}` };
     }
 
-    // Support both response shapes: newer { data: { json } } and older { data: { extract } }.
-    const ext = data?.data?.json ?? data?.data?.extract ?? data?.json ?? data?.extract ?? {};
+    // v2 response: { success: true, data: { json: {...}, metadata: {...} } }
+    // Fallback to older shapes for safety.
+    const ext =
+      data?.data?.json ??
+      data?.data?.extract ??
+      data?.json ??
+      data?.extract ??
+      {};
     const keywords = Array.isArray(ext.services) ? ext.services.slice(0, 12) : undefined;
 
     return {
