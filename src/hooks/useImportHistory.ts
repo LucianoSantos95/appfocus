@@ -1,5 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSharedResource } from "@/lib/sharedResource";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface ImportHistoryEntry {
   id: string;
@@ -14,25 +16,24 @@ export interface ImportHistoryEntry {
 }
 
 export function useImportHistory(module?: string) {
-  const [history, setHistory] = useState<ImportHistoryEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+  const key = user ? `import_history:${user.id}:${module ?? "all"}` : null;
 
-  const fetchHistory = useCallback(async () => {
-    setIsLoading(true);
-    let q = supabase
-      .from("import_history")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-    if (module) q = q.eq("module", module);
-    const { data, error } = await q;
-    if (!error && data) setHistory(data as ImportHistoryEntry[]);
-    setIsLoading(false);
-  }, [module]);
-
-  useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+  const { data: history, isLoading, refetch, mutate } = useSharedResource<ImportHistoryEntry[]>(
+    key,
+    async () => {
+      let q = supabase
+        .from("import_history")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (module) q = q.eq("module", module);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data as ImportHistoryEntry[]) || [];
+    },
+    { initial: [], enabled: !!user }
+  );
 
   const addEntry = useCallback(
     async (entry: {
@@ -44,13 +45,12 @@ export function useImportHistory(module?: string) {
       status?: string;
       metadata?: Record<string, unknown>;
     }) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return null;
+      if (!user) return null;
       const { data, error } = await supabase
         .from("import_history")
         .insert([
           {
-            user_id: userData.user.id,
+            user_id: user.id,
             module: entry.module,
             file_name: entry.file_name ?? null,
             total_records: entry.total_records,
@@ -63,17 +63,20 @@ export function useImportHistory(module?: string) {
         .select()
         .single();
       if (!error && data) {
-        setHistory((h) => [data as ImportHistoryEntry, ...h]);
+        mutate((h) => [data as ImportHistoryEntry, ...(h || [])]);
       }
       return data;
     },
-    []
+    [user, mutate]
   );
 
-  const deleteEntry = useCallback(async (id: string) => {
-    const { error } = await supabase.from("import_history").delete().eq("id", id);
-    if (!error) setHistory((h) => h.filter((e) => e.id !== id));
-  }, []);
+  const deleteEntry = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from("import_history").delete().eq("id", id);
+      if (!error) mutate((h) => (h || []).filter((e) => e.id !== id));
+    },
+    [mutate]
+  );
 
-  return { history, isLoading, refetch: fetchHistory, addEntry, deleteEntry };
+  return { history: history || [], isLoading, refetch, addEntry, deleteEntry };
 }
