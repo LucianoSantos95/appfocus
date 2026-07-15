@@ -725,13 +725,22 @@ function EditClienteDialog({
     name?: string; industry?: string; employees?: number; location?: string;
     website?: string; description?: string; keywords?: string[];
   } | null>(null);
+  // Default the enrichment domain to the client's email domain (unless it's a personal provider).
+  const [enrichDomain, setEnrichDomain] = useState(() => {
+    const e = cliente.email || "";
+    if (!e.includes("@")) return "";
+    const d = e.split("@")[1]?.trim().toLowerCase() || "";
+    const free = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com", "yahoo.com.br",
+      "icloud.com", "live.com", "bol.com.br", "uol.com.br", "terra.com.br", "proton.me"];
+    return d && !free.includes(d) ? d : "";
+  });
 
   const handleEnrich = async () => {
     setEnriching(true);
     try {
       const sb = (await import("@/integrations/supabase/client")).supabase;
       const { data, error } = await sb.functions.invoke("enrich-client", {
-        body: { cliente_id: cliente.id },
+        body: { cliente_id: cliente.id, domain: enrichDomain.trim() || undefined },
       });
       if (error) {
         // FunctionsHttpError hides the body — read error.context (the Response) to surface the real reason.
@@ -797,11 +806,29 @@ function EditClienteDialog({
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <Sparkles className="w-4 h-4 text-primary" /> Enriquecer empresa
               </div>
-              <Button size="sm" variant="outline" onClick={handleEnrich} disabled={enriching} className="gap-2">
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                value={enrichDomain}
+                onChange={(e) => setEnrichDomain(e.target.value)}
+                placeholder="site da empresa (ex: nubank.com.br)"
+                className="h-8 text-xs"
+                onKeyDown={(e) => e.key === "Enter" && enrichDomain.trim() && handleEnrich()}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleEnrich}
+                disabled={enriching || !enrichDomain.trim()}
+                className="gap-2 shrink-0"
+              >
                 {enriching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                Buscar dados da empresa
+                Buscar
               </Button>
             </div>
+            <p className="text-[11px] text-muted-foreground">
+              Informe o site da empresa (sem http). O enriquecimento busca dados públicos do site.
+            </p>
             {enrichData && (
               <div className="text-xs text-muted-foreground space-y-1 border-t border-border pt-2">
                 {enrichData.name && <div className="text-sm font-medium text-foreground">{enrichData.name}</div>}
