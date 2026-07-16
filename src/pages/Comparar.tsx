@@ -14,6 +14,7 @@ const rows = [
   { feature: "Preço acessível (a partir de R$69)", hub: true, planilhas: true, trello: true, erp: false },
   { feature: "100% em português brasileiro", hub: true, planilhas: true, trello: false, erp: true },
   { feature: "Sem necessidade de TI para configurar", hub: true, planilhas: true, trello: true, erp: false },
+  { feature: "Integração nativa com ChatGPT/Claude via MCP", hub: true, planilhas: false, trello: false, erp: false },
 ];
 
 const Cell = ({ value }: { value: boolean }) => (
