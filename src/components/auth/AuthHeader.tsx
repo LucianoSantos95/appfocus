@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Bot } from "lucide-react";
 
 export default function AuthHeader() {
   return (
@@ -9,13 +9,23 @@ export default function AuthHeader() {
         <img src={logo} alt="Hub Empresarial — Logotipo Focus Inteligente" className="h-8 w-auto" />
         <span className="text-sm font-semibold text-foreground hidden sm:inline">Hub Empresarial</span>
       </Link>
-      <Link
-        to="/planos"
-        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-      >
-        Ver Preços
-        <ArrowRight className="w-3.5 h-3.5" />
-      </Link>
+      <nav className="flex items-center gap-5">
+        <Link
+          to="/mcp"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
+          <Bot className="w-3.5 h-3.5" />
+          ChatGPT / Claude
+        </Link>
+        <Link
+          to="/planos"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
+          Ver Preços
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </nav>
     </header>
   );
 }
+
