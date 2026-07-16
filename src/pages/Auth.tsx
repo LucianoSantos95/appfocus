@@ -251,10 +251,16 @@ export default function Auth() {
           </Link>
           <Link
             to="/mcp"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+            className="group inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-foreground bg-gradient-to-r from-primary/15 via-accent/15 to-primary/15 border border-primary/40 hover:border-primary/70 shadow-[0_0_24px_-6px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_32px_-4px_hsl(var(--primary)/0.7)] transition-all hover:scale-[1.02]"
           >
-            Conectar ao ChatGPT / Claude
-            <ArrowRight className="w-3.5 h-3.5" />
+            <span className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 leading-none tracking-wide">
+              NOVO
+            </span>
+            Use seu Hub direto no ChatGPT e Claude
+            <span className="text-[10px] font-medium text-primary/80 border-l border-primary/30 pl-2 ml-0.5">
+              Grátis p/ clientes
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
 
