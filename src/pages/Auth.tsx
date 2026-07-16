@@ -240,14 +240,23 @@ export default function Auth() {
           </Button>
         </div>
 
-        {/* Ver Preços link */}
-        <Link
-          to="/planos"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-10"
-        >
-          Ver Preços
-          <ArrowDown className="w-3.5 h-3.5" />
-        </Link>
+        {/* Links secundários */}
+        <div className="flex items-center justify-center gap-6 mb-10">
+          <Link
+            to="/planos"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            Ver Preços
+            <ArrowDown className="w-3.5 h-3.5" />
+          </Link>
+          <Link
+            to="/mcp"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            Conectar ao ChatGPT / Claude
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
 
         {/* Social proof with fake logos */}
         <div className="flex items-center justify-center gap-3 mb-6">
