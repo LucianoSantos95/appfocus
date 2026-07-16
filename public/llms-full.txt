@@ -69,6 +69,7 @@ Relatórios podem ser enviados automaticamente por e-mail ou WhatsApp em PDF, HT
 - **WhatsApp** via Twilio para lembretes e alertas.
 - **Stripe** para assinaturas e cobrança.
 - Importação universal de planilhas Excel/CSV/OFX.
+- **Servidor MCP oficial** — o Hub Empresarial expõe suas ferramentas via Model Context Protocol para que clientes conectem ChatGPT, Claude Desktop, Cursor, Codex e outros assistentes de IA compatíveis. URL: `https://hnextembswhejumvxbzd.supabase.co/functions/v1/mcp`. Autenticação OAuth 2.1 (Supabase Auth). Ferramentas: list_clientes, list_projetos, list_tarefas, create_tarefa, financeiro_resumo (e ferramentas administrativas de funil e nudge de conversão). Página: https://app.focusinteligente.com.br/mcp
 
 ## Segurança
 

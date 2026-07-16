@@ -21,6 +21,7 @@ O Hub Empresarial é uma plataforma SaaS 100% em português que substitui o uso 
 - Relatórios automáticos para apresentar a clientes (PDF, e-mail, WhatsApp)
 - Dashboards de BI por módulo (DRE, Inadimplência, Funil, Engajamento, Produtividade)
 - 100% em português, focado em operações brasileiras
+- **Servidor MCP oficial** — clientes conectam ChatGPT, Claude, Cursor e Codex diretamente ao Hub via `https://hnextembswhejumvxbzd.supabase.co/functions/v1/mcp` (OAuth 2.1). Ferramentas: list_clientes, list_projetos, list_tarefas, create_tarefa, financeiro_resumo. Página: https://app.focusinteligente.com.br/mcp
 
 ## Planos
 

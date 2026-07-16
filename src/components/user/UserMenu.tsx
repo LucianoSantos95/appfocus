@@ -18,6 +18,7 @@ import {
   HelpCircle,
   LogOut,
   Plug,
+  Bot,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ProfileDialog } from "./ProfileDialog";
@@ -108,6 +109,9 @@ export function UserMenu({ collapsed }: UserMenuProps) {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setIntegrationsOpen(true)}>
               <Plug className="w-4 h-4 mr-2" /> Integrações
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { navigate("/mcp"); }}>
+              <Bot className="w-4 h-4 mr-2" /> Conectar ao ChatGPT/Claude
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <div className="px-2 py-1.5 text-xs text-muted-foreground">

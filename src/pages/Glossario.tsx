@@ -22,6 +22,10 @@ const terms = [
   { term: "Equipe e Freelancers", def: "Modelo de time híbrido típico de agências: colaboradores fixos somados a freelancers por projeto. Suportado no módulo RH." },
   { term: "Lifetime Value (LTV)", def: "Receita total esperada de um cliente ao longo do relacionamento. Acompanhado no painel de assinantes." },
   { term: "Churn", def: "Taxa de cancelamento de clientes. Indicador-chave de saúde do negócio." },
+  { term: "MCP (Model Context Protocol)", def: "Padrão aberto que permite que assistentes de IA como ChatGPT, Claude e Cursor conectem-se a aplicações externas. O Hub Empresarial expõe suas ferramentas via servidor MCP oficial." },
+  { term: "OAuth 2.1", def: "Padrão de autorização usado pelo Hub para permitir que clientes de IA (ChatGPT, Claude) acessem seus dados sem receber sua senha, com escopo por usuário e revogação a qualquer momento." },
+  { term: "Assistente Externo", def: "Aplicação de IA de terceiros (como ChatGPT ou Claude) que se conecta ao Hub via MCP e pode executar ações reais na sua operação." },
+  { term: "Server-side Tools", def: "Ferramentas expostas pelo Hub que rodam no servidor com RLS por usuário — o assistente de IA pede, o Hub executa e devolve o resultado sem expor tokens ou dados de outros usuários." },
 ];
 
 export default function Glossario() {
