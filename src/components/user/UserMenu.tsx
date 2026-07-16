@@ -73,9 +73,9 @@ export function UserMenu({ collapsed }: UserMenuProps) {
       <div className={collapsed ? "flex justify-center" : "px-2 py-3"}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-sidebar-accent transition-colors text-left">
-              <Avatar className="h-8 w-8 flex-shrink-0">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+            <button className="group flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-sidebar-accent hover:shadow-md hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-300 ease-out text-left">
+              <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-transparent group-hover:ring-primary/40 transition-all duration-300 group-hover:rotate-6">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold group-hover:bg-primary/20 transition-colors">
                   {initials}
                 </AvatarFallback>
               </Avatar>
