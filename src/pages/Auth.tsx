@@ -258,7 +258,7 @@ export default function Auth() {
             </span>
             Use seu Hub direto no ChatGPT e Claude
             <span className="text-[10px] font-medium text-primary/80 border-l border-primary/30 pl-2 ml-0.5">
-              Grátis p/ clientes
+              Incluso em todos os planos
             </span>
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
           </Link>

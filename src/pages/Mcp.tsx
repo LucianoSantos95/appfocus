@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const MCP_URL =
   "https://hnextembswhejumvxbzd.supabase.co/functions/v1/mcp";
@@ -29,10 +30,6 @@ const TOOLS: Array<{
   { name: "list_tarefas", title: "Listar tarefas", desc: "Filtra tarefas por status (pendente, em andamento, concluída)." },
   { name: "create_tarefa", title: "Criar tarefa", desc: "Cria tarefa com título, prioridade, prazo e categoria." },
   { name: "financeiro_resumo", title: "Resumo financeiro", desc: "Soma receitas, despesas e saldo em um período." },
-  { name: "funnel_summary", title: "Funil de conversão", desc: "Contagem por estágio e taxa de conversão.", badge: "admin" },
-  { name: "list_hot_leads", title: "Leads quentes", desc: "Usuários prontos para conversão comercial.", badge: "admin" },
-  { name: "mark_contacted", title: "Registrar contato", desc: "Registra touchpoint (call, e-mail, WhatsApp).", badge: "admin" },
-  { name: "send_conversion_nudge", title: "Nudge de conversão", desc: "Envia cupom 20% OFF via notificação in-app.", badge: "admin" },
 ];
 
 const FAQ = [
@@ -42,7 +39,7 @@ const FAQ = [
   },
   {
     q: "Preciso pagar algo a mais?",
-    a: "Não. O acesso via MCP está incluso em qualquer plano ativo do Hub Empresarial, incluindo o teste gratuito.",
+    a: "Não há cobrança extra. O acesso via MCP está incluso em qualquer plano ativo do Hub Empresarial (Plus, Pro ou Enterprise), incluindo os 7 dias de teste grátis. É necessário ter uma assinatura ativa para conectar.",
   },
   {
     q: "Meus dados ficam seguros?",
@@ -172,7 +169,7 @@ export default function Mcp() {
         <section className="mb-20">
           <h2 className="text-3xl md:text-4xl font-bold mb-3">Ferramentas disponíveis</h2>
           <p className="text-muted-foreground mb-8 max-w-2xl">
-            9 ferramentas prontas para uso — consulta e ação nos módulos principais do Hub.
+            5 ferramentas prontas para uso — consulta e ação nos módulos principais do Hub.
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {TOOLS.map((t) => (
@@ -282,14 +279,22 @@ export default function Mcp() {
         {/* FAQ */}
         <section className="mt-20">
           <h2 className="text-3xl md:text-4xl font-bold mb-8">Perguntas frequentes</h2>
-          <div className="space-y-4">
-            {FAQ.map((f) => (
-              <div key={f.q} className="rounded-xl border border-border/60 bg-card/40 p-5">
-                <h3 className="font-semibold mb-2">{f.q}</h3>
-                <p className="text-sm text-muted-foreground">{f.a}</p>
-              </div>
+          <Accordion type="single" collapsible className="space-y-3">
+            {FAQ.map((f, i) => (
+              <AccordionItem
+                key={f.q}
+                value={`item-${i}`}
+                className="rounded-xl border border-border/60 bg-card/40 px-5"
+              >
+                <AccordionTrigger className="text-left font-semibold hover:no-underline">
+                  {f.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  {f.a}
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
         </section>
       </main>
     </div>
