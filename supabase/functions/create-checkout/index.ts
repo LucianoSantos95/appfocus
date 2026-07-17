@@ -110,9 +110,17 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
+      payment_method_types: ["card", "boleto"],
+      subscription_data: {
+        trial_period_days: 7,
+        trial_settings: {
+          end_behavior: { missing_payment_method: "pause" },
+        },
+      },
       success_url: `${origin}/planos?success=true`,
       cancel_url: `${origin}/planos?canceled=true`,
     };
+
 
     if (promotionCode && typeof promotionCode === "string") {
       sessionParams.discounts = [{ promotion_code: promotionCode }];

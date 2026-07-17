@@ -196,7 +196,14 @@ export default function Planos() {
 
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-4">Escolha o plano ideal</h1>
-          <p className="text-muted-foreground text-lg mb-8">Desbloqueie todo o potencial da sua operação</p>
+          <p className="text-muted-foreground text-lg mb-4">Desbloqueie todo o potencial da sua operação</p>
+
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+            <Badge variant="secondary" className="gap-1">💳 Cartão</Badge>
+            <Badge variant="secondary" className="gap-1">🧾 Boleto</Badge>
+            <Badge variant="secondary" className="gap-1">✨ 7 dias grátis para testar</Badge>
+          </div>
+
 
           {/* Coupon banner */}
           {hasCoupon && (
