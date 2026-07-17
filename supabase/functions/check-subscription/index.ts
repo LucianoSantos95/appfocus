@@ -53,18 +53,23 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found customer", { customerId });
 
+    // Include both `active` and `trialing` so users in trial keep access.
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "active",
-      limit: 1,
+      status: "all",
+      limit: 10,
     });
 
-    const hasActiveSub = subscriptions.data.length > 0;
+    const validSub = subscriptions.data.find(
+      (s) => s.status === "active" || s.status === "trialing"
+    );
+    const hasActiveSub = !!validSub;
     let productId: string | null = null;
     let subscriptionEnd: string | null = null;
 
     if (hasActiveSub) {
-      const sub = subscriptions.data[0];
+      const sub = validSub!;
+
       try {
         const endTimestamp = sub.current_period_end;
         if (typeof endTimestamp === "number") {
