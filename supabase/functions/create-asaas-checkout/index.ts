@@ -40,6 +40,18 @@ Deno.serve(async (req) => {
     // externalReference guarda contexto para o webhook processar (user|plan|cycle|mode)
     const externalReference = `${user.id}|${plan}|${billingCycle}|${paymentMode}`;
 
+    // Nome do cliente — obrigatório no checkout hospedado do Asaas
+    const supabaseSrv = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? SUPABASE_ANON_KEY);
+    const { data: profile } = await supabaseSrv
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const customerName =
+      (profile?.display_name && String(profile.display_name).trim()) ||
+      (user.user_metadata?.full_name && String(user.user_metadata.full_name).trim()) ||
+      (user.email ? user.email.split("@")[0] : "Cliente");
+
     const baseBody: Record<string, unknown> = {
       minutesToExpire: 60,
       expiresAt,
@@ -54,7 +66,7 @@ Deno.serve(async (req) => {
         quantity: 1,
         value,
       }],
-      customerData: { email: user.email },
+      customerData: { name: customerName, email: user.email },
       externalReference,
     };
 
@@ -71,11 +83,11 @@ Deno.serve(async (req) => {
         },
       };
     } else {
-      // Cobrança avulsa — aceita os 3 meios; renovação por link é gerada pelo cron
+      // Cobrança avulsa — UNDEFINED faz o Asaas mostrar Pix, Boleto e Cartão na página
       checkoutBody = {
         ...baseBody,
         chargeTypes: ["DETACHED"],
-        billingTypes: ["PIX", "BOLETO", "CREDIT_CARD"],
+        billingTypes: ["UNDEFINED"],
         dueDateLimitDays: 3,
       };
     }
