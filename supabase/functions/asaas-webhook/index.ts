@@ -3,10 +3,9 @@ import { asaas } from "../_shared/asaas.ts";
 
 const log = (step: string, d?: unknown) => console.log(`[ASAAS-WEBHOOK] ${step}${d ? ` - ${JSON.stringify(d)}` : ""}`);
 
-// Events that mean "money received → grant the plan".
 const PAID_EVENTS = new Set(["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"]);
-// Events that mean "access should stop".
 const LOST_EVENTS = new Set(["SUBSCRIPTION_DELETED", "PAYMENT_REFUNDED", "PAYMENT_CHARGEBACK_REQUESTED"]);
+const OVERDUE_EVENTS = new Set(["PAYMENT_OVERDUE"]);
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
@@ -15,7 +14,6 @@ Deno.serve(async (req) => {
   const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const WEBHOOK_TOKEN = Deno.env.get("ASAAS_WEBHOOK_TOKEN");
 
-  // Asaas sends the token you configured in the webhook settings.
   if (WEBHOOK_TOKEN) {
     const sent = req.headers.get("asaas-access-token");
     if (sent !== WEBHOOK_TOKEN) {
@@ -32,7 +30,6 @@ Deno.serve(async (req) => {
   const event: string = body?.event ?? "";
   const payment = body?.payment ?? {};
 
-  // Audit trail — reuse the payment-events table (also used by Stripe).
   const { data: logRow } = await admin
     .from("stripe_webhook_events")
     .insert({ type: `asaas:${event}`, status: "received", payload: body })
@@ -47,9 +44,11 @@ Deno.serve(async (req) => {
   };
 
   try {
-    if (!PAID_EVENTS.has(event) && !LOST_EVENTS.has(event)) return finish("ignored");
+    const isPaid = PAID_EVENTS.has(event);
+    const isLost = LOST_EVENTS.has(event);
+    const isOverdue = OVERDUE_EVENTS.has(event);
+    if (!isPaid && !isLost && !isOverdue) return finish("ignored");
 
-    // externalReference is "userId|plan" (set on the subscription; inherited by its payments).
     let ext: string | null = payment.externalReference ?? null;
     if (!ext && payment.subscription) {
       const sub = await asaas(`/subscriptions/${payment.subscription}`);
@@ -59,22 +58,25 @@ Deno.serve(async (req) => {
     const [userId, plan] = ext.split("|");
     if (!userId || !plan) return finish("error", "userId/plan não resolvidos");
 
-    const paid = PAID_EVENTS.has(event);
-    const newPlan = paid ? plan : "gratuito";
-    const newStatus = paid ? "active" : "canceled";
+    let newPlan: string;
+    let newStatus: string;
+    if (isPaid) { newPlan = plan; newStatus = "active"; }
+    else if (isOverdue) { newPlan = plan; newStatus = "past_due"; }
+    else { newPlan = "gratuito"; newStatus = "canceled"; }
 
     const { data: current } = await admin
-      .from("subscriptions").select("id").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      .from("subscriptions").select("id").eq("user_id", userId)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
     const patch = { plan: newPlan, status: newStatus, updated_at: new Date().toISOString() };
     if (current?.id) await admin.from("subscriptions").update(patch).eq("id", current.id);
     else await admin.from("subscriptions").insert({ user_id: userId, ...patch });
 
-    if (paid) {
+    if (isPaid) {
       await admin.from("user_funnel_stage").update({ stage: "convertido", converted_at: new Date().toISOString() }).eq("user_id", userId);
       await admin.from("user_milestones").insert({ user_id: userId, milestone_key: "upgrade_completed", metadata: { plan, gateway: "asaas" } });
     }
 
-    log("Processed", { event, userId, plan: newPlan });
+    log("Processed", { event, userId, plan: newPlan, status: newStatus });
     return finish("processed");
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

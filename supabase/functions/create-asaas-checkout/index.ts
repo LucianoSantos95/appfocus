@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { asaas, findOrCreateCustomer, isAsaasConfigured, PLAN_VALUES } from "../_shared/asaas.ts";
+import { asaas, findOrCreateCustomer, isAsaasConfigured, PLAN_VALUES, toBillingType } from "../_shared/asaas.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,39 +26,43 @@ Deno.serve(async (req) => {
     if (userErr || !userData?.user?.email) return json({ error: "Não foi possível validar sua sessão." }, 401);
     const user = userData.user;
 
-    if (!isAsaasConfigured()) return json({ error: "Pix (Asaas) não está configurado neste projeto." }, 503);
+    if (!isAsaasConfigured()) return json({ error: "Gateway de pagamento não está configurado." }, 503);
 
-    const { plan, cycle } = await req.json();
+    const { plan, cycle, method } = await req.json();
     if (!plan || !PLAN_VALUES[plan]) return json({ error: "Plano inválido." }, 400);
     const billingCycle: "monthly" | "annual" = cycle === "annual" ? "annual" : "monthly";
     const value = PLAN_VALUES[plan][billingCycle];
+    const billingType = toBillingType(method); // PIX | BOLETO | CREDIT_CARD | UNDEFINED
 
-    // Name from profile (best-effort).
+    // Nome do perfil (best-effort)
     const service = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const { data: profile } = await service.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle();
     const name = profile?.display_name || (user.user_metadata as any)?.full_name || user.email;
 
     const customerId = await findOrCreateCustomer(user.id, name, user.email);
-    if (!customerId) return json({ error: "Falha ao criar cliente no Asaas." }, 502);
+    if (!customerId) return json({ error: "Falha ao criar cliente no gateway." }, 502);
 
     const today = new Date().toISOString().slice(0, 10);
-    // externalReference carries user + plan so the webhook can map the payment back with no local lookup.
+    // externalReference carrega user+plano para o webhook mapear sem lookup local.
     const sub = await asaas("/subscriptions", "POST", {
       customer: customerId,
-      billingType: "PIX",
+      billingType,
       value,
       nextDueDate: today,
       cycle: billingCycle === "annual" ? "YEARLY" : "MONTHLY",
       externalReference: `${user.id}|${plan}`,
       description: `Hub Empresarial — plano ${plan} (${billingCycle === "annual" ? "anual" : "mensal"})`,
     });
-    if (!sub.ok || !sub.data?.id) return json({ error: sub.data?.errors?.[0]?.description || "Falha ao criar a assinatura Pix." }, sub.status || 502);
+    if (!sub.ok || !sub.data?.id) {
+      return json({ error: sub.data?.errors?.[0]?.description || "Falha ao criar assinatura." }, sub.status || 502);
+    }
 
-    // The first charge is generated with the subscription — return its hosted Pix page.
+    // A primeira cobrança é gerada junto — retorna a página hospedada (invoiceUrl)
+    // que apresenta Pix + Boleto + Cartão quando billingType=UNDEFINED.
     const payments = await asaas(`/subscriptions/${sub.data.id}/payments?limit=1`);
     const first = payments.ok && Array.isArray(payments.data?.data) ? payments.data.data[0] : null;
     const url = first?.invoiceUrl ?? sub.data?.invoiceUrl ?? null;
-    if (!url) return json({ error: "Assinatura criada, mas não retornou a URL de pagamento." }, 502);
+    if (!url) return json({ error: "Assinatura criada mas sem URL de pagamento." }, 502);
 
     return json({ url, subscription_id: sub.data.id });
   } catch (e) {

@@ -12,9 +12,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useMilestones } from "@/hooks/useMilestones";
 import { supabase } from "@/integrations/supabase/client";
-import { STRIPE_PLANS } from "@/lib/stripe-plans";
 import { toast } from "sonner";
-import { getActiveCampaignCoupon, getCouponStripeId, isWorldCupActive } from "@/lib/campaigns";
+import { isWorldCupActive } from "@/lib/campaigns";
 
 const plans = [
   {
@@ -97,21 +96,15 @@ export default function Planos() {
   const { recordMilestone } = useMilestones();
   const navigate = useNavigate();
 
-  // Determine if user has an active coupon from onboarding
   const hasCoupon = onbSession?.coupon_code &&
     onbSession?.coupon_expires_at &&
     new Date(onbSession.coupon_expires_at).getTime() > Date.now();
 
-  // Campaign coupon from URL (?coupon=XXXX) — overrides onboarding coupon
-  const urlCoupon = new URLSearchParams(window.location.search).get("coupon");
-
   useEffect(() => {
-    // Handle Stripe success redirect (?success=true) — must run once on mount,
-    // not on every render, to avoid duplicate toasts and milestone records.
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "true") {
-      toast.success("Assinatura realizada com sucesso!");
-      void recordMilestone("upgrade_completed", { source: "plan_page" });
+      toast.success("Redirecionamento concluído. Assim que confirmarmos o pagamento, seu plano é liberado.");
+      void recordMilestone("checkout_returned", { source: "plan_page" });
       refreshSubscription();
       window.history.replaceState({}, "", "/planos");
     }
@@ -120,7 +113,6 @@ export default function Planos() {
   }, []);
 
   const handleSubscribe = async (planId: "plus" | "pro" | "enterprise") => {
-    // Refresh session so the token sent to the edge function is always valid
     const { data: { session: freshSession } } = await supabase.auth.getSession();
     const accessToken = freshSession?.access_token ?? authSession?.access_token;
 
@@ -135,99 +127,40 @@ export default function Planos() {
       await recordMilestone("checkout_started", {
         plan: planId,
         billing_cycle: annual ? "annual" : "monthly",
-        has_coupon: Boolean(hasCoupon),
+        gateway: "asaas",
       });
 
-      const interval = annual ? "annual" : "monthly";
-      const priceId = STRIPE_PLANS[planId][interval].priceId;
-
-      const body: any = { priceId };
-      // Priority: URL coupon (campaign) > onboarding coupon.
-      // Always resolve the Stripe coupon ID — human-readable codes (e.g. "HEXA")
-      // are not valid Stripe coupon IDs and would cause the checkout to fail.
-      if (urlCoupon) {
-        body.couponId = getCouponStripeId(urlCoupon) ?? urlCoupon;
-      } else if (hasCoupon && onbSession?.coupon_code) {
-        body.couponId = getCouponStripeId(onbSession.coupon_code) ?? getActiveCampaignCoupon().stripeId;
-      }
-
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body,
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      // Edge function may return { error } in the body even on non-2xx
-      const serverMsg = (data as any)?.error;
-      if (serverMsg) throw new Error(serverMsg);
-
-      if (error) {
-        // Try to extract a readable message from the FunctionsHttpError response
-        let detail = "";
-        try {
-          const ctx: any = (error as any).context;
-          if (ctx && typeof ctx.json === "function") {
-            const j = await ctx.json();
-            detail = j?.error || "";
-          } else if (ctx && typeof ctx.text === "function") {
-            detail = await ctx.text();
-          }
-        } catch { /* ignore */ }
-        throw new Error(detail || error.message || "Erro ao criar sessão de pagamento");
-      }
-
-      if (!data?.url) throw new Error("Resposta inválida do servidor de pagamento.");
-
-      // Same-tab redirect to avoid popup blockers after awaits
-      window.location.href = data.url;
-    } catch (err: any) {
-      console.error("[create-checkout]", err);
-      toast.error(err.message || "Erro ao iniciar checkout");
-      setLoadingPlan(null);
-    }
-  };
-
-  // Pix via Asaas — recurring Pix that the Stripe checkout can't offer.
-  const handlePix = async (planId: "plus" | "pro" | "enterprise") => {
-    const { data: { session: freshSession } } = await supabase.auth.getSession();
-    const accessToken = freshSession?.access_token ?? authSession?.access_token;
-    if (!accessToken) {
-      toast.error("Faça login para assinar.");
-      navigate("/auth");
-      return;
-    }
-    setLoadingPlan(planId);
-    try {
-      await recordMilestone("checkout_started", {
-        plan: planId,
-        billing_cycle: annual ? "annual" : "monthly",
-        gateway: "asaas_pix",
-      });
       const { data, error } = await supabase.functions.invoke("create-asaas-checkout", {
+        // method omitido → Asaas mostra Pix + Boleto + Cartão na página hospedada
         body: { plan: planId, cycle: annual ? "annual" : "monthly" },
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+
       const serverMsg = (data as any)?.error;
       if (serverMsg) throw new Error(serverMsg);
+
       if (error) {
         let detail = "";
         try {
           const ctx: any = (error as any).context;
           if (ctx && typeof ctx.json === "function") detail = (await ctx.json())?.error || "";
+          else if (ctx && typeof ctx.text === "function") detail = await ctx.text();
         } catch { /* ignore */ }
-        throw new Error(detail || error.message || "Erro ao gerar cobrança Pix");
+        throw new Error(detail || error.message || "Erro ao criar cobrança");
       }
-      if (!data?.url) throw new Error("Resposta inválida do servidor de pagamento.");
+
+      if (!data?.url) throw new Error("Resposta inválida do gateway.");
       window.location.href = data.url;
     } catch (err: any) {
       console.error("[create-asaas-checkout]", err);
-      toast.error(err.message || "Erro ao iniciar Pix");
+      toast.error(err.message || "Erro ao iniciar pagamento");
       setLoadingPlan(null);
     }
   };
 
   return (
     <div className="min-h-screen bg-background p-6 lg:p-12">
-      <PageMeta path="/planos" title="Planos e Preços" description="Escolha o plano ideal para sua agência ou consultoria. Plus, Pro ou Enterprise. A partir de R$55/mês." />
+      <PageMeta path="/planos" title="Planos e Preços" description="Escolha o plano ideal para sua agência ou consultoria. Plus, Pro ou Enterprise. A partir de R$55/mês, pague com Pix, Boleto ou Cartão." />
       <div className="max-w-5xl mx-auto">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-8 gap-2">
           <ArrowLeft className="w-4 h-4" /> Voltar
@@ -238,13 +171,11 @@ export default function Planos() {
           <p className="text-muted-foreground text-lg mb-4">Desbloqueie todo o potencial da sua operação</p>
 
           <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-            <Badge variant="secondary" className="gap-1">💳 Cartão</Badge>
+            <Badge variant="secondary" className="gap-1">⚡ Pix</Badge>
             <Badge variant="secondary" className="gap-1">🧾 Boleto</Badge>
-            <Badge variant="secondary" className="gap-1">✨ 7 dias grátis para testar</Badge>
+            <Badge variant="secondary" className="gap-1">💳 Cartão de crédito</Badge>
           </div>
 
-
-          {/* Coupon banner */}
           {hasCoupon && (
             <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-5 py-2.5 mb-6 animate-fade-in">
               <Gift className="h-5 w-5 text-primary" />
@@ -277,7 +208,6 @@ export default function Planos() {
               const isCurrent = currentPlan === p.id;
               const isLoading = loadingPlan === p.id;
 
-              // Calculate discounted prices
               const displayMonthly = hasCoupon ? Math.round(p.monthlyPrice * 0.8) : p.monthlyPrice;
               const displayAnnualTotal = hasCoupon ? Math.round(p.annualTotal * 0.8) : p.annualTotal;
               const displayAnnualPrice = hasCoupon ? Math.round(p.annualPrice * 0.8) : p.annualPrice;
@@ -352,22 +282,13 @@ export default function Planos() {
                         <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
                       ) : isCurrent ? (
                         "Plano Atual"
-                      ) : hasCoupon ? (
-                        <><Gift className="w-4 h-4 mr-1" /> Assinar com 20% OFF</>
                       ) : (
-                        "Assinar com cartão/boleto"
+                        "Assinar agora"
                       )}
                     </Button>
-                    {!isCurrent && (
-                      <Button
-                        variant="ghost"
-                        className="w-full mt-2 text-primary"
-                        disabled={isLoading}
-                        onClick={() => handlePix(p.id)}
-                      >
-                        Pagar com Pix
-                      </Button>
-                    )}
+                    <p className="text-xs text-center text-muted-foreground">
+                      Escolha Pix, Boleto ou Cartão na próxima tela
+                    </p>
                   </CardContent>
                 </Card>
               );

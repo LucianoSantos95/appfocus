@@ -1,5 +1,5 @@
-// Asaas gateway helper — Pix (and recurring Pix) for the Brazilian market.
-// Sandbox by default; set ASAAS_ENV=prod to go live. Auth is the `access_token` header.
+// Asaas gateway helper — Pix, Boleto e Cartão (recorrentes) para o mercado BR.
+// Sandbox por padrão; defina ASAAS_ENV=prod para produção. Auth via header `access_token`.
 const ASAAS_BASE = (Deno.env.get("ASAAS_ENV") ?? "sandbox") === "prod"
   ? "https://api.asaas.com/v3"
   : "https://api-sandbox.asaas.com/v3";
@@ -23,7 +23,7 @@ export async function asaas(path: string, method = "GET", body?: unknown): Promi
   return { ok: res.ok, status: res.status, data };
 }
 
-/** Find the Asaas customer for a user (by externalReference) or create one. */
+/** Localiza cliente Asaas por externalReference (=user.id) ou cria um. */
 export async function findOrCreateCustomer(userId: string, name: string, email: string): Promise<string | null> {
   const found = await asaas(`/customers?externalReference=${encodeURIComponent(userId)}&limit=1`);
   if (found.ok && Array.isArray(found.data?.data) && found.data.data.length > 0) {
@@ -38,7 +38,31 @@ export async function findOrCreateCustomer(userId: string, name: string, email: 
   return created.ok ? (created.data.id as string) : null;
 }
 
-// Monthly / annual price per plan (BRL), mirroring src/lib/stripe-plans + Planos.tsx.
+/** Lista assinaturas ativas do cliente. */
+export async function listActiveSubscriptions(customerId: string): Promise<any[]> {
+  const r = await asaas(`/subscriptions?customer=${encodeURIComponent(customerId)}&status=ACTIVE&limit=20`);
+  return r.ok && Array.isArray(r.data?.data) ? r.data.data : [];
+}
+
+/** Cancela (deleta) uma assinatura Asaas. */
+export async function deleteSubscription(subscriptionId: string): Promise<boolean> {
+  const r = await asaas(`/subscriptions/${subscriptionId}`, "DELETE");
+  return r.ok;
+}
+
+/** Converte o `method` do frontend em `billingType` do Asaas. */
+export function toBillingType(method?: string): "PIX" | "BOLETO" | "CREDIT_CARD" | "UNDEFINED" {
+  switch ((method ?? "").toLowerCase()) {
+    case "pix": return "PIX";
+    case "boleto": return "BOLETO";
+    case "credit_card":
+    case "card":
+    case "cartao": return "CREDIT_CARD";
+    default: return "UNDEFINED"; // Asaas exibe as 3 opções na página hospedada
+  }
+}
+
+// Preços por plano (BRL) — espelham src/pages/Planos.tsx.
 export const PLAN_VALUES: Record<string, { monthly: number; annual: number }> = {
   plus: { monthly: 69, annual: 660 },
   pro: { monthly: 149, annual: 1428 },

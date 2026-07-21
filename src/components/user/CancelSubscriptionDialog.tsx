@@ -65,8 +65,8 @@ export function CancelSubscriptionDialog({ open, onOpenChange }: CancelSubscript
       });
       if (feedbackError) throw feedbackError;
 
-      // 2. Cancel subscription
-      const { error: cancelError } = await supabase.functions.invoke("cancel-subscription", {
+      // 2. Cancel subscription (Asaas)
+      const { error: cancelError } = await supabase.functions.invoke("cancel-asaas-subscription", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (cancelError) throw cancelError;

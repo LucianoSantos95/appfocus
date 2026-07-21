@@ -1,16 +1,11 @@
 import { useState } from "react";
 import { usePlan } from "@/contexts/PlanContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Sparkles, ExternalLink, Loader2, XCircle } from "lucide-react";
+import { CreditCard, Sparkles, XCircle } from "lucide-react";
 import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 interface BillingPanelProps {
   open: boolean;
@@ -19,34 +14,16 @@ interface BillingPanelProps {
 
 const planDetails: Record<string, { label: string; price: string; color: string }> = {
   gratuito: { label: "Gratuito", price: "R$0", color: "secondary" },
-  plus: { label: "Plus", price: "R$119/mês", color: "default" },
-  pro: { label: "Pro", price: "R$249/mês", color: "default" },
-  enterprise: { label: "Enterprise", price: "R$497/mês", color: "default" },
+  plus: { label: "Plus", price: "R$69/mês", color: "default" },
+  pro: { label: "Pro", price: "R$149/mês", color: "default" },
+  enterprise: { label: "Enterprise", price: "R$297/mês", color: "default" },
 };
 
 export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
-  const { plan, subscriptionEnd } = usePlan();
-  const { session } = useAuth();
+  const { plan } = usePlan();
   const navigate = useNavigate();
   const details = planDetails[plan] || planDetails.gratuito;
-  const [portalLoading, setPortalLoading] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
-
-  const handleManageSubscription = async () => {
-    if (!session?.access_token) return;
-    setPortalLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (error || !data?.url) throw new Error("Erro ao abrir portal");
-      // Mesma aba evita bloqueio de popup após await
-      window.location.href = data.url;
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao abrir portal de gerenciamento");
-      setPortalLoading(false);
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -64,11 +41,9 @@ export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
               <Badge variant={details.color as any}>{details.label}</Badge>
             </div>
             <p className="text-2xl font-bold text-foreground">{details.price}</p>
-            {plan !== "gratuito" && subscriptionEnd && (
-              <p className="text-sm text-muted-foreground">
-                Próximo pagamento: {format(new Date(subscriptionEnd), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              Pagamento via Pix, Boleto ou Cartão de crédito
+            </p>
           </div>
 
           {plan === "gratuito" && (
@@ -89,16 +64,10 @@ export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
             <div className="space-y-2">
               <Button
                 variant="outline"
-                className="w-full gap-2"
-                onClick={handleManageSubscription}
-                disabled={portalLoading}
+                className="w-full"
+                onClick={() => { onOpenChange(false); navigate("/planos"); }}
               >
-                {portalLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <ExternalLink className="w-4 h-4" />
-                )}
-                Gerenciar Assinatura
+                Trocar de plano
               </Button>
               <Button
                 variant="ghost"
@@ -108,6 +77,9 @@ export function BillingPanel({ open, onOpenChange }: BillingPanelProps) {
                 <XCircle className="w-4 h-4" />
                 Cancelar Plano
               </Button>
+              <p className="text-xs text-muted-foreground text-center pt-2">
+                Para trocar o método de pagamento (Pix/Boleto/Cartão), cancele e assine novamente.
+              </p>
             </div>
           )}
         </div>
