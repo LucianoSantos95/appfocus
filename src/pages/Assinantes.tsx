@@ -69,22 +69,13 @@ export default function Assinantes() {
   const fetchAssinantes = useCallback(async (options?: { sync?: boolean; silent?: boolean }) => {
     if (!isOwner) return;
 
-    const shouldSync = options?.sync && session?.access_token;
+    // Sync Stripe removido — fonte é a tabela local `subscriptions`,
+    // atualizada em tempo real pelo webhook do Asaas.
+    void options;
 
     if (!options?.silent) {
       setLoading(true);
     }
-
-    try {
-      if (shouldSync) {
-        const { error: syncError } = await supabase.functions.invoke("sync-subscribers", {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-
-        if (syncError) {
-          console.warn("Falha ao sincronizar assinantes", syncError);
-        }
-      }
 
       const { data, error } = await supabase
         .from("vw_assinantes" as any)
