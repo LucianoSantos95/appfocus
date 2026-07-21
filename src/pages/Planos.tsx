@@ -25,7 +25,7 @@ const plans = [
     annualTotal: 660,
     description: "Para agências e consultorias que precisam de gestão completa",
     features: [
-      "Criar e editar dados em todos os módulos",
+      "Registros ilimitados (grátis vai até 10 por módulo)",
       "Até 5 usuários por conta",
       "Importação de planilhas (Excel/CSV/OFX)",
       "Guia de Uso completo",

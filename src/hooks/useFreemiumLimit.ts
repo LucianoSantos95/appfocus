@@ -1,8 +1,10 @@
 import { usePlan } from "@/contexts/PlanContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 
-const FREE_LIMIT = 20;
-const WARNING_THRESHOLD = Math.floor(FREE_LIMIT * 0.8); // 16/20
+// Lowered 20 → 10 so the free ceiling is actually FELT (nobody ever hit 20).
+// This is the primary upgrade-pressure lever; tune this single number as needed.
+const FREE_LIMIT = 10;
+const WARNING_THRESHOLD = Math.floor(FREE_LIMIT * 0.8); // 8/10
 
 export function useFreemiumLimit(currentCount: number) {
   const { plan } = usePlan();
