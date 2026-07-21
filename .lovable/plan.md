@@ -1,52 +1,83 @@
+# Migração Stripe → Asaas
 
-## Decisão
+Substituir o gateway atual (Stripe) pelo Asaas como único meio de pagamento, com suporte a **Pix recorrente**, **Boleto** e **Cartão de crédito**. Planos e valores mantidos (Plus R$69/mês · Pro R$149/mês · Enterprise R$297/mês, com anuais equivalentes).
 
-Manter Stripe como gateway e adicionar **PIX** e **Boleto** ao checkout — o Stripe já processa ambos no Brasil de forma nativa. Isso resolve a limitação de "só cartão" sem refatorar edge functions, PlanContext, webhook, portal e cancelamento (que já estão prontos e estáveis).
+## Pré-requisito (você)
 
-Cupons, Portal do Cliente e webhooks de status **já existem hoje** — nada a fazer aí.
+1. Criar conta no Asaas: https://www.asaas.com/ (sandbox primeiro é recomendado — https://sandbox.asaas.com/)
+2. Em **Integrações → API** copiar a chave (`$aact_...`)
+3. Quando eu pedir, colar em:
+   - `ASAAS_API_KEY` (chave)
+   - `ASAAS_ENV` (`sandbox` ou `prod`)
+   - `ASAAS_WEBHOOK_TOKEN` (string aleatória que você define; usada para validar callbacks)
 
-## O que muda no código
+Depois no painel Asaas: **Configurações → Integrações → Webhooks** apontar para a URL da função `asaas-webhook` (te entrego após deploy) usando o mesmo token.
 
-### 1. `supabase/functions/create-checkout/index.ts`
-Adicionar métodos de pagamento à sessão de checkout Stripe:
+## Etapa 1 — Backend Asaas (expandir o que já existe)
 
-- Incluir `payment_method_types: ["card", "boleto"]` para **planos mensais e à vista**.
-  - PIX no Stripe **não é aceito em `mode: subscription`** (limitação da própria Stripe). Portanto:
-    - **Assinatura recorrente (mensal/anual)** → `card` + `boleto`.
-    - Se no futuro houver checkout one-off (`mode: payment`) → aí sim `card` + `boleto` + `pix`.
-- Manter `allow_promotion_codes: true` (cupons já funcionam).
-- Adicionar `subscription_data.trial_period_days: 7` como padrão (configurável por plano).
-- Ajustar `payment_method_collection` conforme necessário para trial (permitir iniciar sem cartão se desejado, ou exigir).
+Já temos `create-asaas-checkout` (Pix) e `asaas-webhook`. Vou:
 
-### 2. `src/pages/Planos.tsx` (leve)
-- Adicionar badges "Aceita PIX, Boleto e Cartão" e "7 dias grátis" próximo aos planos, para o usuário saber antes de clicar.
-- Nenhuma mudança de lógica — o Stripe Checkout renderiza os métodos automaticamente.
+1. **`supabase/functions/_shared/asaas.ts`** — adicionar suporte a `billingType`: `PIX`, `BOLETO`, `CREDIT_CARD` e `UNDEFINED` (deixa o cliente escolher na página hospedada do Asaas).
+2. **`create-asaas-checkout`** — aceitar `method` no body (`pix` | `boleto` | `credit_card` | `any`). Padrão `UNDEFINED` para dar ao usuário a escolha dos três na tela do Asaas (melhor UX).
+3. **Nova função `check-asaas-subscription`** — substitui `check-subscription`. Busca cliente pelo `externalReference = user.id`, lista assinaturas ativas, retorna `{ subscribed, plan, subscription_end }`.
+4. **Nova função `cancel-asaas-subscription`** — substitui `cancel-subscription`. Deleta a assinatura Asaas ativa do usuário e rebaixa `subscriptions` para `gratuito`.
+5. **`asaas-webhook`** — já cobre `PAYMENT_CONFIRMED/RECEIVED` e cancelamentos; adicionar tratamento de `PAYMENT_OVERDUE` (marca `past_due`) e `SUBSCRIPTION_UPDATED`.
 
-### 3. `src/components/user/BillingPanel.tsx`
-- Nenhuma mudança obrigatória. Se houver trial ativo, o `check-subscription` já retorna `subscription_end`; adicionar apenas um rótulo "Em período de teste" quando `trial_end > now` (opcional, cosmético).
+## Etapa 2 — Remover Stripe
 
-### 4. `supabase/functions/check-subscription/index.ts`
-- Já reconhece assinaturas `active`. Adicionar `trialing` ao status considerado válido para liberar plano durante o teste:
-  ```ts
-  status: "active" // → passar a listar active E trialing
-  ```
+Deletar:
+- Edge functions: `create-checkout`, `check-subscription`, `customer-portal`, `cancel-subscription`, `stripe-webhook`
+- `src/lib/stripe-plans.ts`
+- Segredo `STRIPE_SECRET_KEY` (via UI de Secrets — te aviso quando)
 
-### 5. Pré-requisitos no dashboard Stripe (ação do usuário — 1x)
-Explicar no chat ao aprovar o plano:
-- Ativar **Boleto** em Stripe Dashboard → Settings → Payment methods → Boleto.
-- (Opcional futuro) Ativar PIX no mesmo lugar, para uso quando houver produtos one-off.
-- Nenhuma nova secret. `STRIPE_SECRET_KEY` continua a mesma.
+Referências a limpar/substituir:
+- `src/pages/Planos.tsx` — trocar chamadas de `create-checkout` por `create-asaas-checkout`, remover badges/textos Stripe, adicionar seletor Pix/Boleto/Cartão
+- `src/components/user/BillingPanel.tsx` — trocar `check-subscription` → `check-asaas-subscription`, remover botão "Portal Stripe", trocar por "Cancelar assinatura" (nova função)
+- `src/components/user/CancelSubscriptionDialog.tsx` — apontar para `cancel-asaas-subscription`
+- `src/contexts/PlanContext.tsx` (se chama check-subscription) — atualizar
+- Qualquer badge/UI que mencione "Stripe", "cartão apenas", "portal Stripe"
 
-## O que NÃO muda
-- Nada de trocar gateway, nada de novo webhook, nada de migração de assinantes (não há base ativa).
-- `customer-portal`, `cancel-subscription`, `stripe-webhook`, PlanContext, cupons — permanecem intactos.
-- Preços e produtos existentes no Stripe continuam válidos.
+## Etapa 3 — UI Planos
 
-## Fora de escopo
-- PIX em assinatura recorrente (limitação da Stripe, não do código).
-- Migração para Asaas/Mercado Pago/Pagar.me (descartado nesta resposta).
-- Ajustes visuais de checkout — o UI do checkout é hospedado pela Stripe.
+Em `src/pages/Planos.tsx`:
+- Substituir subtexto por: **"Pague com Pix, Boleto ou Cartão"** com ícones
+- Manter toggle mensal/anual
+- Botão "Assinar" → abre `create-asaas-checkout` (método `UNDEFINED` — Asaas mostra as 3 opções na página hospedada, evita fricção)
+- Manter trial? **Não** — Asaas não tem trial nativo em assinaturas; posso implementar via `nextDueDate = hoje + 7d` se quiser (te pergunto depois se necessário)
 
-## Riscos
-- **Boleto tem D+1 a D+3 para compensar.** Isso afeta trial: se o usuário assinar com boleto no fim do trial, o acesso pode expirar antes do pagamento cair. Mitigação: `subscription_data.trial_settings.end_behavior.missing_payment_method = "pause"` para pausar assinatura em vez de cancelar.
-- Boleto **não renova automaticamente** em assinaturas — o Stripe emite novo boleto a cada ciclo e o cliente precisa pagar. Deixar isso claro na copy do plano.
+## Etapa 4 — Migração de assinantes atuais Stripe
+
+Você optou por **remover Stripe totalmente**. Impactos:
+- Assinantes Stripe atuais **param de renovar** (Stripe segue cobrando até você cancelar no painel Stripe)
+- Eles precisam refazer assinatura via Asaas
+- **Recomendo**: rodar um script único que marca todos como `gratuito` na tabela `subscriptions` e dispara e-mail avisando + link para reassinar. Posso preparar depois.
+
+## Etapa 5 — Deploy + validação
+
+1. Deploy das funções Asaas
+2. Você configura webhook no painel Asaas
+3. Teste sandbox: assinar Plus mensal via Pix → confirmar pagamento no painel sandbox → conferir `subscriptions.plan = 'plus'`
+4. Repetir com boleto e cartão
+5. Trocar `ASAAS_ENV` para `prod` com chave de produção
+
+## Detalhes técnicos
+
+**Mapeamento plano ↔ Asaas**: usamos `externalReference = "{user_id}|{plan}"` na assinatura Asaas (já implementado). O webhook faz o parse e atualiza `public.subscriptions`.
+
+**Estados de assinatura** na tabela `subscriptions`:
+- `active` — pagamento confirmado
+- `past_due` — boleto/pix vencido (novo)
+- `canceled` — cancelamento manual ou falha crônica
+
+**Segurança**: webhook valida header `asaas-access-token` contra `ASAAS_WEBHOOK_TOKEN` (já implementado). Funções client-facing validam JWT do usuário.
+
+**Rate limit**: Asaas permite 20 req/s no sandbox e 100 req/s em prod — suficiente.
+
+## Ordem de execução
+
+1. Você cria conta Asaas + pega API key sandbox
+2. Eu peço `ASAAS_API_KEY` + `ASAAS_ENV=sandbox` + `ASAAS_WEBHOOK_TOKEN` (via add_secret)
+3. Eu implemento etapas 1–3 e faço deploy
+4. Te passo a URL do webhook para configurar no painel Asaas
+5. Você testa em sandbox
+6. Aprovado → trocamos para chave de produção e removemos Stripe
