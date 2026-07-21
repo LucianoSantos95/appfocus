@@ -104,7 +104,7 @@ export default function Planos() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "true") {
       toast.success("Redirecionamento concluído. Assim que confirmarmos o pagamento, seu plano é liberado.");
-      void recordMilestone("checkout_returned", { source: "plan_page" });
+      void recordMilestone("upgrade_completed", { source: "plan_page" });
       refreshSubscription();
       window.history.replaceState({}, "", "/planos");
     }
