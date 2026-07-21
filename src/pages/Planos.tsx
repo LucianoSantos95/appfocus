@@ -211,7 +211,9 @@ export default function Planos() {
           <div className="grid md:grid-cols-3 gap-6">
             {plans.map((p) => {
               const isCurrent = currentPlan === p.id;
-              const isLoading = loadingPlan === p.id;
+              const loadingRec = loadingPlan === `${p.id}:recurring`;
+              const loadingOne = loadingPlan === `${p.id}:one_time`;
+              const isLoading = loadingRec || loadingOne;
 
               const displayMonthly = hasCoupon ? Math.round(p.monthlyPrice * 0.8) : p.monthlyPrice;
               const displayAnnualTotal = hasCoupon ? Math.round(p.annualTotal * 0.8) : p.annualTotal;
