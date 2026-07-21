@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { asaas, findOrCreateCustomer, isAsaasConfigured, PLAN_VALUES, toBillingType } from "../_shared/asaas.ts";
+import { asaas, isAsaasConfigured, PLAN_VALUES } from "../_shared/asaas.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,7 +16,6 @@ Deno.serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) return json({ error: "Sessão expirada. Faça login novamente." }, 401);
@@ -28,43 +27,54 @@ Deno.serve(async (req) => {
 
     if (!isAsaasConfigured()) return json({ error: "Gateway de pagamento não está configurado." }, 503);
 
-    const { plan, cycle, method } = await req.json();
+    const { plan, cycle } = await req.json();
     if (!plan || !PLAN_VALUES[plan]) return json({ error: "Plano inválido." }, 400);
     const billingCycle: "monthly" | "annual" = cycle === "annual" ? "annual" : "monthly";
     const value = PLAN_VALUES[plan][billingCycle];
-    const billingType = toBillingType(method); // PIX | BOLETO | CREDIT_CARD | UNDEFINED
 
-    // Nome do perfil (best-effort)
-    const service = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-    const { data: profile } = await service.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle();
-    const name = profile?.display_name || (user.user_metadata as any)?.full_name || user.email;
-
-    const customerId = await findOrCreateCustomer(user.id, name, user.email);
-    if (!customerId) return json({ error: "Falha ao criar cliente no gateway." }, 502);
-
+    const origin = req.headers.get("origin") ?? "https://app.focusinteligente.com.br";
     const today = new Date().toISOString().slice(0, 10);
-    // externalReference carrega user+plano para o webhook mapear sem lookup local.
-    const sub = await asaas("/subscriptions", "POST", {
-      customer: customerId,
-      billingType,
-      value,
-      nextDueDate: today,
-      cycle: billingCycle === "annual" ? "YEARLY" : "MONTHLY",
-      externalReference: `${user.id}|${plan}`,
-      description: `Hub Empresarial — plano ${plan} (${billingCycle === "annual" ? "anual" : "mensal"})`,
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 60 min
+
+    // Checkout hospedado: o próprio cliente preenche nome/CPF/CNPJ/telefone
+    // e escolhe entre Pix, Boleto ou Cartão na página do Asaas.
+    const checkout = await asaas("/checkouts", "POST", {
+      billingTypes: ["CREDIT_CARD", "PIX", "BOLETO"],
+      chargeTypes: ["RECURRENT"],
+      minutesToExpire: 60,
+      expiresAt,
+      callback: {
+        successUrl: `${origin}/planos?success=true`,
+        cancelUrl: `${origin}/planos?canceled=true`,
+        expiredUrl: `${origin}/planos?expired=true`,
+      },
+      items: [{
+        name: `Hub Empresarial — ${plan}`,
+        description: `Assinatura ${billingCycle === "annual" ? "anual" : "mensal"} do plano ${plan}`,
+        quantity: 1,
+        value,
+      }],
+      subscription: {
+        cycle: billingCycle === "annual" ? "YEARLY" : "MONTHLY",
+        nextDueDate: today,
+      },
+      customerData: {
+        email: user.email,
+      },
+      externalReference: `${user.id}|${plan}|${billingCycle}`,
     });
-    if (!sub.ok || !sub.data?.id) {
-      return json({ error: sub.data?.errors?.[0]?.description || "Falha ao criar assinatura." }, sub.status || 502);
+
+    if (!checkout.ok) {
+      const msg = checkout.data?.errors?.[0]?.description
+        || checkout.data?.message
+        || "Falha ao criar checkout no gateway.";
+      return json({ error: msg }, checkout.status || 502);
     }
 
-    // A primeira cobrança é gerada junto — retorna a página hospedada (invoiceUrl)
-    // que apresenta Pix + Boleto + Cartão quando billingType=UNDEFINED.
-    const payments = await asaas(`/subscriptions/${sub.data.id}/payments?limit=1`);
-    const first = payments.ok && Array.isArray(payments.data?.data) ? payments.data.data[0] : null;
-    const url = first?.invoiceUrl ?? sub.data?.invoiceUrl ?? null;
-    if (!url) return json({ error: "Assinatura criada mas sem URL de pagamento." }, 502);
+    const url = checkout.data?.link ?? checkout.data?.url ?? null;
+    if (!url) return json({ error: "Checkout criado mas sem URL de pagamento." }, 502);
 
-    return json({ url, subscription_id: sub.data.id });
+    return json({ url, checkout_id: checkout.data?.id });
   } catch (e) {
     console.error("create-asaas-checkout error:", e);
     return json({ error: e instanceof Error ? e.message : "Erro interno" }, 500);
