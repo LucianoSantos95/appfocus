@@ -38,8 +38,10 @@ Deno.serve(async (req) => {
 
     // Checkout hospedado: o próprio cliente preenche nome/CPF/CNPJ/telefone
     // e escolhe entre Pix, Boleto ou Cartão na página do Asaas.
+    // Asaas Checkout recorrente aceita apenas CREDIT_CARD em billingTypes.
+    // Pix/Boleto só são permitidos em checkouts avulsos (DETACHED).
     const checkout = await asaas("/checkouts", "POST", {
-      billingTypes: ["CREDIT_CARD", "PIX", "BOLETO"],
+      billingTypes: ["CREDIT_CARD"],
       chargeTypes: ["RECURRENT"],
       minutesToExpire: 60,
       expiresAt,
