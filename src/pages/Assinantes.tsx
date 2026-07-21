@@ -76,7 +76,7 @@ export default function Assinantes() {
     if (!options?.silent) {
       setLoading(true);
     }
-
+    try {
       const { data, error } = await supabase
         .from("vw_assinantes" as any)
         .select("*")
