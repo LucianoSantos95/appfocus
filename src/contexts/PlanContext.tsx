@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
-import { PRODUCT_TO_PLAN } from "@/lib/stripe-plans";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 
 interface PlanContextType {
@@ -23,7 +22,7 @@ interface PlanFeature {
 const PlanContext = createContext<PlanContextType | undefined>(undefined);
 
 export function PlanProvider({ children }: { children: ReactNode }) {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   const { isAdmin } = useTeamPermissions();
   const [plan, setPlan] = useState("gratuito");
   const [features, setFeatures] = useState<PlanFeature[]>([]);
@@ -39,36 +38,22 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshSubscription = useCallback(async () => {
-    if (!session?.access_token) return;
+    if (!user) return;
+    // Fonte de verdade: tabela local (o webhook Asaas mantém atualizada).
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("plan, updated_at")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    try {
-      const { data, error } = await supabase.functions.invoke("check-subscription", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (error) {
-        console.warn("check-subscription error, falling back to local", error);
-        return;
-      }
-      if (!data || data.error) {
-        console.warn("check-subscription returned error, using local data", data?.error);
-        return;
-      }
-
-      if (data.subscribed && data.product_id) {
-        const stripePlan = PRODUCT_TO_PLAN[data.product_id] || "gratuito";
-        setPlan(stripePlan);
-        setSubscriptionEnd(data.subscription_end || null);
-        await fetchFeatures(stripePlan);
-      } else {
-        setPlan("gratuito");
-        setSubscriptionEnd(null);
-        await fetchFeatures("gratuito");
-      }
-    } catch (err) {
-      console.warn("Failed to check subscription", err);
-    }
-  }, [session?.access_token, fetchFeatures]);
+    const currentPlan = sub?.plan || "gratuito";
+    setPlan(currentPlan);
+    setSubscriptionEnd(null);
+    await fetchFeatures(currentPlan);
+  }, [user, fetchFeatures]);
 
   useEffect(() => {
     if (!user) {
@@ -79,33 +64,18 @@ export function PlanProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const init = async () => {
-      // First load local subscription as fallback
-      const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("plan")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .maybeSingle();
-
-      const localPlan = sub?.plan || "gratuito";
-      setPlan(localPlan);
-      await fetchFeatures(localPlan);
-      setIsLoading(false);
-
-      // Then check Stripe for real status
+    (async () => {
       await refreshSubscription();
-    };
+      setIsLoading(false);
+    })();
+  }, [user, refreshSubscription]);
 
-    init();
-  }, [user, fetchFeatures, refreshSubscription]);
-
-  // Periodic refresh every 5 minutes
+  // Refresh periódico (5 min) para pegar mudanças do webhook.
   useEffect(() => {
-    if (!session?.access_token) return;
+    if (!user) return;
     const interval = setInterval(refreshSubscription, 5 * 60_000);
     return () => clearInterval(interval);
-  }, [session?.access_token, refreshSubscription]);
+  }, [user, refreshSubscription]);
 
   const canAccess = (module: string, action: string): boolean => {
     if (isAdmin) return true;
