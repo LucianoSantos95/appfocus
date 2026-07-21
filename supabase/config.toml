@@ -11,6 +11,10 @@ project_id = "hnextembswhejumvxbzd"
     verify_jwt = false
   [functions.stripe-webhook]
     verify_jwt = false
+  [functions.create-asaas-checkout]
+    verify_jwt = false
+  [functions.asaas-webhook]
+    verify_jwt = false
   [functions.customer-portal]
     verify_jwt = false
   [functions.send-followup-email]

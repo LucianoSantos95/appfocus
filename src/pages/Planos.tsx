@@ -186,6 +186,45 @@ export default function Planos() {
     }
   };
 
+  // Pix via Asaas — recurring Pix that the Stripe checkout can't offer.
+  const handlePix = async (planId: "plus" | "pro" | "enterprise") => {
+    const { data: { session: freshSession } } = await supabase.auth.getSession();
+    const accessToken = freshSession?.access_token ?? authSession?.access_token;
+    if (!accessToken) {
+      toast.error("Faça login para assinar.");
+      navigate("/auth");
+      return;
+    }
+    setLoadingPlan(planId);
+    try {
+      await recordMilestone("checkout_started", {
+        plan: planId,
+        billing_cycle: annual ? "annual" : "monthly",
+        gateway: "asaas_pix",
+      });
+      const { data, error } = await supabase.functions.invoke("create-asaas-checkout", {
+        body: { plan: planId, cycle: annual ? "annual" : "monthly" },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const serverMsg = (data as any)?.error;
+      if (serverMsg) throw new Error(serverMsg);
+      if (error) {
+        let detail = "";
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx && typeof ctx.json === "function") detail = (await ctx.json())?.error || "";
+        } catch { /* ignore */ }
+        throw new Error(detail || error.message || "Erro ao gerar cobrança Pix");
+      }
+      if (!data?.url) throw new Error("Resposta inválida do servidor de pagamento.");
+      window.location.href = data.url;
+    } catch (err: any) {
+      console.error("[create-asaas-checkout]", err);
+      toast.error(err.message || "Erro ao iniciar Pix");
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background p-6 lg:p-12">
       <PageMeta path="/planos" title="Planos e Preços" description="Escolha o plano ideal para sua agência ou consultoria. Plus, Pro ou Enterprise. A partir de R$55/mês." />
@@ -316,9 +355,19 @@ export default function Planos() {
                       ) : hasCoupon ? (
                         <><Gift className="w-4 h-4 mr-1" /> Assinar com 20% OFF</>
                       ) : (
-                        "Assinar"
+                        "Assinar com cartão/boleto"
                       )}
                     </Button>
+                    {!isCurrent && (
+                      <Button
+                        variant="ghost"
+                        className="w-full mt-2 text-primary"
+                        disabled={isLoading}
+                        onClick={() => handlePix(p.id)}
+                      >
+                        Pagar com Pix
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               );
