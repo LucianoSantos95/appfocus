@@ -286,7 +286,7 @@ export default function Planos() {
                       )}
                     </Button>
                     <p className="text-xs text-center text-muted-foreground">
-                      Escolha Pix, Boleto ou Cartão na próxima tela
+                      Pagamento recorrente no cartão de crédito
                     </p>
                   </CardContent>
                 </Card>
