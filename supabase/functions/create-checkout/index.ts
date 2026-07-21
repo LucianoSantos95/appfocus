@@ -110,19 +110,16 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
-<<<<<<< Updated upstream
       payment_method_types: ["card", "boleto"],
+      // Link the payment back to the internal user so the webhook can upgrade the right account.
+      client_reference_id: user.id,
       subscription_data: {
+        metadata: { user_id: user.id },
         trial_period_days: 7,
         trial_settings: {
           end_behavior: { missing_payment_method: "pause" },
         },
       },
-=======
-      // Link the payment back to the internal user so the webhook can upgrade the right account.
-      client_reference_id: user.id,
-      subscription_data: { metadata: { user_id: user.id } },
->>>>>>> Stashed changes
       success_url: `${origin}/planos?success=true`,
       cancel_url: `${origin}/planos?canceled=true`,
     };
