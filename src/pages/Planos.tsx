@@ -279,23 +279,37 @@ export default function Planos() {
                         </li>
                       ))}
                     </ul>
-                    <Button
-                      className="w-full mt-6"
-                      variant={p.popular ? "default" : "outline"}
-                      disabled={isCurrent || isLoading}
-                      onClick={() => handleSubscribe(p.id)}
-                    >
-                      {isLoading ? (
-                        <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
-                      ) : isCurrent ? (
-                        "Plano Atual"
-                      ) : (
-                        "Assinar agora"
-                      )}
-                    </Button>
-                    <p className="text-xs text-center text-muted-foreground">
-                      Pagamento recorrente no cartão de crédito
-                    </p>
+                    <div className="space-y-2 pt-4">
+                      <Button
+                        className="w-full"
+                        variant={p.popular ? "default" : "outline"}
+                        disabled={isCurrent || isLoading}
+                        onClick={() => handleSubscribe(p.id, "recurring")}
+                      >
+                        {loadingRec ? (
+                          <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
+                        ) : isCurrent ? (
+                          "Plano Atual"
+                        ) : (
+                          <>💳 Assinar com cartão automático</>
+                        )}
+                      </Button>
+                      <Button
+                        className="w-full"
+                        variant="secondary"
+                        disabled={isCurrent || isLoading}
+                        onClick={() => handleSubscribe(p.id, "one_time")}
+                      >
+                        {loadingOne ? (
+                          <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
+                        ) : (
+                          <>⚡ Pix / 🧾 Boleto / 💳 Cartão avulso</>
+                        )}
+                      </Button>
+                      <p className="text-[11px] text-center text-muted-foreground pt-1">
+                        Cartão: cobra sozinho todo ciclo · Avulso: link de renovação a cada ciclo
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               );
