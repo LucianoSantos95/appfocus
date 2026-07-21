@@ -112,7 +112,10 @@ export default function Planos() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSubscribe = async (planId: "plus" | "pro" | "enterprise") => {
+  const handleSubscribe = async (
+    planId: "plus" | "pro" | "enterprise",
+    mode: "recurring" | "one_time",
+  ) => {
     const { data: { session: freshSession } } = await supabase.auth.getSession();
     const accessToken = freshSession?.access_token ?? authSession?.access_token;
 
@@ -122,17 +125,18 @@ export default function Planos() {
       return;
     }
 
-    setLoadingPlan(planId);
+    const key = `${planId}:${mode}`;
+    setLoadingPlan(key);
     try {
       await recordMilestone("checkout_started", {
         plan: planId,
         billing_cycle: annual ? "annual" : "monthly",
         gateway: "asaas",
+        mode,
       });
 
       const { data, error } = await supabase.functions.invoke("create-asaas-checkout", {
-        // method omitido → Asaas mostra Pix + Boleto + Cartão na página hospedada
-        body: { plan: planId, cycle: annual ? "annual" : "monthly" },
+        body: { plan: planId, cycle: annual ? "annual" : "monthly", mode },
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -171,8 +175,10 @@ export default function Planos() {
           <p className="text-muted-foreground text-lg mb-4">Desbloqueie todo o potencial da sua operação</p>
 
           <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-            <Badge variant="secondary" className="gap-1">💳 Cartão de crédito recorrente</Badge>
-            <Badge variant="outline" className="gap-1">🔒 Assinatura gerenciada pelo Asaas</Badge>
+            <Badge variant="secondary" className="gap-1">💳 Cartão automático</Badge>
+            <Badge variant="secondary" className="gap-1">⚡ Pix</Badge>
+            <Badge variant="secondary" className="gap-1">🧾 Boleto</Badge>
+            <Badge variant="outline" className="gap-1">🔒 Pagamento seguro via Asaas</Badge>
           </div>
 
           {hasCoupon && (
@@ -205,7 +211,9 @@ export default function Planos() {
           <div className="grid md:grid-cols-3 gap-6">
             {plans.map((p) => {
               const isCurrent = currentPlan === p.id;
-              const isLoading = loadingPlan === p.id;
+              const loadingRec = loadingPlan === `${p.id}:recurring`;
+              const loadingOne = loadingPlan === `${p.id}:one_time`;
+              const isLoading = loadingRec || loadingOne;
 
               const displayMonthly = hasCoupon ? Math.round(p.monthlyPrice * 0.8) : p.monthlyPrice;
               const displayAnnualTotal = hasCoupon ? Math.round(p.annualTotal * 0.8) : p.annualTotal;
@@ -271,23 +279,37 @@ export default function Planos() {
                         </li>
                       ))}
                     </ul>
-                    <Button
-                      className="w-full mt-6"
-                      variant={p.popular ? "default" : "outline"}
-                      disabled={isCurrent || isLoading}
-                      onClick={() => handleSubscribe(p.id)}
-                    >
-                      {isLoading ? (
-                        <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
-                      ) : isCurrent ? (
-                        "Plano Atual"
-                      ) : (
-                        "Assinar agora"
-                      )}
-                    </Button>
-                    <p className="text-xs text-center text-muted-foreground">
-                      Pagamento recorrente no cartão de crédito
-                    </p>
+                    <div className="space-y-2 pt-4">
+                      <Button
+                        className="w-full"
+                        variant={p.popular ? "default" : "outline"}
+                        disabled={isCurrent || isLoading}
+                        onClick={() => handleSubscribe(p.id, "recurring")}
+                      >
+                        {loadingRec ? (
+                          <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
+                        ) : isCurrent ? (
+                          "Plano Atual"
+                        ) : (
+                          <>💳 Assinar com cartão automático</>
+                        )}
+                      </Button>
+                      <Button
+                        className="w-full"
+                        variant="secondary"
+                        disabled={isCurrent || isLoading}
+                        onClick={() => handleSubscribe(p.id, "one_time")}
+                      >
+                        {loadingOne ? (
+                          <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
+                        ) : (
+                          <>⚡ Pix / 🧾 Boleto / 💳 Cartão avulso</>
+                        )}
+                      </Button>
+                      <p className="text-[11px] text-center text-muted-foreground pt-1">
+                        Cartão: cobra sozinho todo ciclo · Avulso: link de renovação a cada ciclo
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               );

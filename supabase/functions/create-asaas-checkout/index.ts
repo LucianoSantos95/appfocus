@@ -27,22 +27,20 @@ Deno.serve(async (req) => {
 
     if (!isAsaasConfigured()) return json({ error: "Gateway de pagamento não está configurado." }, 503);
 
-    const { plan, cycle } = await req.json();
+    const { plan, cycle, mode } = await req.json();
     if (!plan || !PLAN_VALUES[plan]) return json({ error: "Plano inválido." }, 400);
     const billingCycle: "monthly" | "annual" = cycle === "annual" ? "annual" : "monthly";
+    const paymentMode: "recurring" | "one_time" = mode === "recurring" ? "recurring" : "one_time";
     const value = PLAN_VALUES[plan][billingCycle];
 
     const origin = req.headers.get("origin") ?? "https://app.focusinteligente.com.br";
     const today = new Date().toISOString().slice(0, 10);
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 60 min
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-    // Checkout hospedado: o próprio cliente preenche nome/CPF/CNPJ/telefone
-    // e escolhe entre Pix, Boleto ou Cartão na página do Asaas.
-    // Asaas Checkout recorrente aceita apenas CREDIT_CARD em billingTypes.
-    // Pix/Boleto só são permitidos em checkouts avulsos (DETACHED).
-    const checkout = await asaas("/checkouts", "POST", {
-      billingTypes: ["CREDIT_CARD"],
-      chargeTypes: ["RECURRENT"],
+    // externalReference guarda contexto para o webhook processar (user|plan|cycle|mode)
+    const externalReference = `${user.id}|${plan}|${billingCycle}|${paymentMode}`;
+
+    const baseBody: Record<string, unknown> = {
       minutesToExpire: 60,
       expiresAt,
       callback: {
@@ -52,19 +50,37 @@ Deno.serve(async (req) => {
       },
       items: [{
         name: `Hub Empresarial — ${plan}`,
-        description: `Assinatura ${billingCycle === "annual" ? "anual" : "mensal"} do plano ${plan}`,
+        description: `Plano ${plan} ${billingCycle === "annual" ? "anual" : "mensal"}${paymentMode === "recurring" ? " (cartão automático)" : " (Pix/Boleto/Cartão)"}`,
         quantity: 1,
         value,
       }],
-      subscription: {
-        cycle: billingCycle === "annual" ? "YEARLY" : "MONTHLY",
-        nextDueDate: today,
-      },
-      customerData: {
-        email: user.email,
-      },
-      externalReference: `${user.id}|${plan}|${billingCycle}`,
-    });
+      customerData: { email: user.email },
+      externalReference,
+    };
+
+    let checkoutBody: Record<string, unknown>;
+    if (paymentMode === "recurring") {
+      // Cartão recorrente — Asaas só aceita CREDIT_CARD para RECURRENT
+      checkoutBody = {
+        ...baseBody,
+        chargeTypes: ["RECURRENT"],
+        billingTypes: ["CREDIT_CARD"],
+        subscription: {
+          cycle: billingCycle === "annual" ? "YEARLY" : "MONTHLY",
+          nextDueDate: today,
+        },
+      };
+    } else {
+      // Cobrança avulsa — aceita os 3 meios; renovação por link é gerada pelo cron
+      checkoutBody = {
+        ...baseBody,
+        chargeTypes: ["DETACHED"],
+        billingTypes: ["PIX", "BOLETO", "CREDIT_CARD"],
+        dueDateLimitDays: 3,
+      };
+    }
+
+    const checkout = await asaas("/checkouts", "POST", checkoutBody);
 
     if (!checkout.ok) {
       const msg = checkout.data?.errors?.[0]?.description
@@ -76,7 +92,7 @@ Deno.serve(async (req) => {
     const url = checkout.data?.link ?? checkout.data?.url ?? null;
     if (!url) return json({ error: "Checkout criado mas sem URL de pagamento." }, 502);
 
-    return json({ url, checkout_id: checkout.data?.id });
+    return json({ url, checkout_id: checkout.data?.id, mode: paymentMode });
   } catch (e) {
     console.error("create-asaas-checkout error:", e);
     return json({ error: e instanceof Error ? e.message : "Erro interno" }, 500);

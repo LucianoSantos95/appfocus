@@ -1431,9 +1431,15 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          asaas_subscription_id: string | null
+          cancel_at_period_end: boolean
           created_at: string
+          current_period_end: string | null
           ends_at: string | null
           id: string
+          last_payment_id: string | null
+          payment_mode: string | null
+          pending_renewal_url: string | null
           plan: string
           started_at: string
           status: string
@@ -1442,9 +1448,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          asaas_subscription_id?: string | null
+          cancel_at_period_end?: boolean
           created_at?: string
+          current_period_end?: string | null
           ends_at?: string | null
           id?: string
+          last_payment_id?: string | null
+          payment_mode?: string | null
+          pending_renewal_url?: string | null
           plan?: string
           started_at?: string
           status?: string
@@ -1453,9 +1465,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          asaas_subscription_id?: string | null
+          cancel_at_period_end?: boolean
           created_at?: string
+          current_period_end?: string | null
           ends_at?: string | null
           id?: string
+          last_payment_id?: string | null
+          payment_mode?: string | null
+          pending_renewal_url?: string | null
           plan?: string
           started_at?: string
           status?: string
