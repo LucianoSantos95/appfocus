@@ -112,7 +112,10 @@ export default function Planos() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSubscribe = async (planId: "plus" | "pro" | "enterprise") => {
+  const handleSubscribe = async (
+    planId: "plus" | "pro" | "enterprise",
+    mode: "recurring" | "one_time",
+  ) => {
     const { data: { session: freshSession } } = await supabase.auth.getSession();
     const accessToken = freshSession?.access_token ?? authSession?.access_token;
 
@@ -122,17 +125,18 @@ export default function Planos() {
       return;
     }
 
-    setLoadingPlan(planId);
+    const key = `${planId}:${mode}`;
+    setLoadingPlan(key);
     try {
       await recordMilestone("checkout_started", {
         plan: planId,
         billing_cycle: annual ? "annual" : "monthly",
         gateway: "asaas",
+        mode,
       });
 
       const { data, error } = await supabase.functions.invoke("create-asaas-checkout", {
-        // method omitido → Asaas mostra Pix + Boleto + Cartão na página hospedada
-        body: { plan: planId, cycle: annual ? "annual" : "monthly" },
+        body: { plan: planId, cycle: annual ? "annual" : "monthly", mode },
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
