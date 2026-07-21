@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { deleteSubscription, findOrCreateCustomer, isAsaasConfigured, listActiveSubscriptions } from "../_shared/asaas.ts";
+import { deleteSubscription, isAsaasConfigured } from "../_shared/asaas.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,27 +26,40 @@ Deno.serve(async (req) => {
     if (userErr || !userData?.user?.email) return json({ error: "Sessão inválida." }, 401);
     const user = userData.user;
 
-    if (!isAsaasConfigured()) return json({ error: "Gateway não configurado." }, 503);
+    const service = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    // Cliente Asaas por externalReference
-    const customerId = await findOrCreateCustomer(user.id, user.email, user.email);
-    if (customerId) {
-      const subs = await listActiveSubscriptions(customerId);
-      for (const s of subs) {
-        try { await deleteSubscription(s.id); } catch (e) { console.error("delete sub failed", s.id, e); }
-      }
+    const { data: current } = await service
+      .from("subscriptions")
+      .select("id, payment_mode, asaas_subscription_id, current_period_end")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+
+    // Cartão recorrente: cancela no Asaas para parar o débito automático
+    if (isAsaasConfigured() && current?.payment_mode === "recurring" && current.asaas_subscription_id) {
+      try { await deleteSubscription(current.asaas_subscription_id); }
+      catch (e) { console.error("delete asaas subscription failed", e); }
     }
 
-    // Rebaixa para gratuito localmente
-    const service = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-    const { data: current } = await service
-      .from("subscriptions").select("id").eq("user_id", user.id)
-      .order("created_at", { ascending: false }).limit(1).maybeSingle();
-    const patch = { plan: "gratuito", status: "canceled", updated_at: new Date().toISOString() };
-    if (current?.id) await service.from("subscriptions").update(patch).eq("id", current.id);
-    else await service.from("subscriptions").insert({ user_id: user.id, ...patch });
+    // Marca cancelamento no fim do ciclo (mantém acesso até current_period_end)
+    const patch = {
+      cancel_at_period_end: true,
+      updated_at: new Date().toISOString(),
+    };
+    if (current?.id) {
+      await service.from("subscriptions").update(patch).eq("id", current.id);
+    } else {
+      await service.from("subscriptions").insert({
+        user_id: user.id, plan: "gratuito", status: "canceled", ...patch,
+      });
+    }
 
-    return json({ success: true });
+    return json({
+      success: true,
+      access_until: current?.current_period_end ?? null,
+      message: current?.current_period_end
+        ? "Cancelado. Você mantém acesso até o fim do ciclo pago."
+        : "Cancelado.",
+    });
   } catch (e) {
     console.error("cancel-asaas-subscription error:", e);
     return json({ error: e instanceof Error ? e.message : "Erro interno" }, 500);
