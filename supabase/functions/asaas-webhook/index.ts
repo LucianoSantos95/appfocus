@@ -4,8 +4,14 @@ import { asaas } from "../_shared/asaas.ts";
 const log = (step: string, d?: unknown) => console.log(`[ASAAS-WEBHOOK] ${step}${d ? ` - ${JSON.stringify(d)}` : ""}`);
 
 const PAID_EVENTS = new Set(["PAYMENT_CONFIRMED", "PAYMENT_RECEIVED"]);
-const LOST_EVENTS = new Set(["SUBSCRIPTION_DELETED", "PAYMENT_REFUNDED", "PAYMENT_CHARGEBACK_REQUESTED"]);
+const LOST_EVENTS = new Set(["PAYMENT_REFUNDED", "PAYMENT_CHARGEBACK_REQUESTED"]);
 const OVERDUE_EVENTS = new Set(["PAYMENT_OVERDUE"]);
+const SUB_DELETED = new Set(["SUBSCRIPTION_DELETED"]);
+
+function computePeriodEnd(cycle: string): string {
+  const ms = cycle === "annual" ? 365 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
+  return new Date(Date.now() + ms).toISOString();
+}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
@@ -29,6 +35,7 @@ Deno.serve(async (req) => {
 
   const event: string = body?.event ?? "";
   const payment = body?.payment ?? {};
+  const subscriptionPayload = body?.subscription ?? {};
 
   const { data: logRow } = await admin
     .from("stripe_webhook_events")
@@ -47,36 +54,58 @@ Deno.serve(async (req) => {
     const isPaid = PAID_EVENTS.has(event);
     const isLost = LOST_EVENTS.has(event);
     const isOverdue = OVERDUE_EVENTS.has(event);
-    if (!isPaid && !isLost && !isOverdue) return finish("ignored");
+    const isSubDeleted = SUB_DELETED.has(event);
+    if (!isPaid && !isLost && !isOverdue && !isSubDeleted) return finish("ignored");
 
-    let ext: string | null = payment.externalReference ?? null;
+    // externalReference: user|plan|cycle|mode  (mode/cycle podem faltar em registros antigos)
+    let ext: string | null = payment.externalReference ?? subscriptionPayload.externalReference ?? null;
     if (!ext && payment.subscription) {
       const sub = await asaas(`/subscriptions/${payment.subscription}`);
       ext = sub.ok ? (sub.data?.externalReference ?? null) : null;
     }
     if (!ext || !ext.includes("|")) return finish("error", "externalReference ausente/inválido");
-    const [userId, plan] = ext.split("|");
+    const parts = ext.split("|");
+    const [userId, plan, cycle = "monthly", mode = "recurring"] = parts;
     if (!userId || !plan) return finish("error", "userId/plan não resolvidos");
 
-    let newPlan: string;
-    let newStatus: string;
-    if (isPaid) { newPlan = plan; newStatus = "active"; }
-    else if (isOverdue) { newPlan = plan; newStatus = "past_due"; }
-    else { newPlan = "gratuito"; newStatus = "canceled"; }
-
+    // Buscar/criar linha de assinatura
     const { data: current } = await admin
-      .from("subscriptions").select("id").eq("user_id", userId)
+      .from("subscriptions").select("id, current_period_end")
+      .eq("user_id", userId)
       .order("created_at", { ascending: false }).limit(1).maybeSingle();
-    const patch = { plan: newPlan, status: newStatus, updated_at: new Date().toISOString() };
+
+    let patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+
+    if (isPaid) {
+      patch = {
+        ...patch,
+        plan,
+        status: "active",
+        payment_mode: mode,
+        current_period_end: computePeriodEnd(cycle),
+        last_payment_id: payment.id ?? null,
+        pending_renewal_url: null,
+        asaas_subscription_id: payment.subscription ?? subscriptionPayload.id ?? null,
+      };
+    } else if (isOverdue) {
+      patch = { ...patch, status: "past_due" };
+    } else if (isSubDeleted) {
+      // Cancela ciclo recorrente ao fim do período
+      patch = { ...patch, cancel_at_period_end: true };
+    } else {
+      // refund / chargeback → derruba imediatamente
+      patch = { ...patch, plan: "gratuito", status: "canceled", current_period_end: new Date().toISOString() };
+    }
+
     if (current?.id) await admin.from("subscriptions").update(patch).eq("id", current.id);
     else await admin.from("subscriptions").insert({ user_id: userId, ...patch });
 
     if (isPaid) {
       await admin.from("user_funnel_stage").update({ stage: "convertido", converted_at: new Date().toISOString() }).eq("user_id", userId);
-      await admin.from("user_milestones").insert({ user_id: userId, milestone_key: "upgrade_completed", metadata: { plan, gateway: "asaas" } });
+      await admin.from("user_milestones").insert({ user_id: userId, milestone_key: "upgrade_completed", metadata: { plan, gateway: "asaas", mode } });
     }
 
-    log("Processed", { event, userId, plan: newPlan, status: newStatus });
+    log("Processed", { event, userId, plan, mode });
     return finish("processed");
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
