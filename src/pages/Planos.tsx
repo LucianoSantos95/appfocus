@@ -171,9 +171,8 @@ export default function Planos() {
           <p className="text-muted-foreground text-lg mb-4">Desbloqueie todo o potencial da sua operação</p>
 
           <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-            <Badge variant="secondary" className="gap-1">⚡ Pix</Badge>
-            <Badge variant="secondary" className="gap-1">🧾 Boleto</Badge>
-            <Badge variant="secondary" className="gap-1">💳 Cartão de crédito</Badge>
+            <Badge variant="secondary" className="gap-1">💳 Cartão de crédito recorrente</Badge>
+            <Badge variant="outline" className="gap-1">🔒 Assinatura gerenciada pelo Asaas</Badge>
           </div>
 
           {hasCoupon && (
