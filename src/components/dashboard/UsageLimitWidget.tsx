@@ -9,6 +9,9 @@ import { useTarefas } from "@/hooks/useTarefas";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { useCampanhas } from "@/hooks/useCampanhas";
 import { useProcessos } from "@/hooks/useProcessos";
+import { isDemoMode } from "@/lib/demo-fixtures";
+import { Sparkles } from "lucide-react";
+
 
 const FREE_LIMIT = 20;
 
