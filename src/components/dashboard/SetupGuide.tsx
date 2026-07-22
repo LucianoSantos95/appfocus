@@ -60,7 +60,7 @@ export function SetupGuide() {
     // Count REAL data only — exclude "[DEMO]" rows so activation reflects the user's own work.
     const results = await Promise.all(
       keys.map((k) =>
-        supabase.from(STEPS[k].table).select("id", { count: "exact", head: true })
+        (supabase as any).from(STEPS[k].table).select("id", { count: "exact", head: true })
           .eq("user_id", user.id).not(STEPS[k].demoCol, "ilike", "%[DEMO]%")
       )
     );

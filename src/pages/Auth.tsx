@@ -1,92 +1,65 @@
 import { useState, useEffect } from "react";
 import { PageMeta } from "@/components/seo/PageMeta";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { lovable } from "@/integrations/lovable/index";
 import { useToast } from "@/hooks/use-toast";
-import AuthHeader from "@/components/auth/AuthHeader";
-import AuthFooter from "@/components/auth/AuthFooter";
 import AuthLoginDialog from "@/components/auth/AuthLoginDialog";
 import AuthSignupDialog from "@/components/auth/AuthSignupDialog";
-import WorldCupPromoStrip from "@/components/auth/WorldCupPromoStrip";
 
-import { ArrowRight, ArrowDown, Shield, XCircle, DollarSign, FolderKanban, Users, UserCog, Megaphone, CheckSquare, Cog, GraduationCap, Copy, Loader2, Slack, Calendar, MessageCircle, Sparkles, CreditCard, Bot } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import LandingNav from "@/components/landing/LandingNav";
+import LandingHero from "@/components/landing/LandingHero";
+import SocialProofBar from "@/components/landing/SocialProofBar";
+import ReplacesSection from "@/components/landing/ReplacesSection";
+import ThreePillars from "@/components/landing/ThreePillars";
+import AiTerminalSection from "@/components/landing/AiTerminalSection";
+import McpSection from "@/components/landing/McpSection";
+import ModulesGrid from "@/components/landing/ModulesGrid";
+import PricingSection from "@/components/landing/PricingSection";
+import FinalCta from "@/components/landing/FinalCta";
+import LandingFooter from "@/components/landing/LandingFooter";
 
 const DEMO_EMAIL = "demo@focusinteligente.com.br";
 const DEMO_PASSWORD = "LovableDemo2026!";
-
-const rotatingWords = ["escalar", "organizar", "automatizar", "crescer", "faturar"];
-
-const modules = [
-  { icon: DollarSign, label: "Finanças", desc: "Controle total de receitas, despesas e fluxo de caixa." },
-  { icon: FolderKanban, label: "Projetos", desc: "Gerencie entregas, prazos e equipes em um só lugar." },
-  { icon: Users, label: "Clientes", desc: "CRM inteligente com histórico e insights por IA." },
-  { icon: UserCog, label: "RH", desc: "Colaboradores, documentos e folha simplificados." },
-  { icon: Megaphone, label: "Marketing", desc: "Campanhas, conteúdos e calendário editorial." },
-  { icon: CheckSquare, label: "Tarefas", desc: "To-dos, prioridades e acompanhamento de atividades." },
-  { icon: Cog, label: "Processos", desc: "Mapeie e otimize os processos da sua operação." },
-];
-
-const fakeLogos = [
-  { initials: "MK", color: "bg-blue-500" },
-  { initials: "DS", color: "bg-emerald-500" },
-  { initials: "AT", color: "bg-violet-500" },
-  { initials: "NX", color: "bg-amber-500" },
-  { initials: "VP", color: "bg-rose-500" },
-];
-
-// Integrações reais do produto — exibidas na landing (proposta de valor)
-const integrations = [
-  { icon: Calendar, label: "Google Agenda & Gmail" },
-  { icon: Slack, label: "Slack" },
-  { icon: MessageCircle, label: "WhatsApp" },
-  { icon: Sparkles, label: "Enriquecimento de empresas" },
-  { icon: CreditCard, label: "Pagamentos (Stripe)" },
-  { icon: Bot, label: "Assistente de IA" },
-  { icon: DollarSign, label: "Importação bancária (OFX)" },
-];
 
 export default function Auth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get("invite");
   const { signIn, signUp } = useAuth();
-
-  // Capture UTM params on first visit and persist for 24h
-  useEffect(() => {
-    const source = searchParams.get("utm_source");
-    if (!source) return;
-    localStorage.setItem("hub_utm", JSON.stringify({
-      utm_source: source,
-      utm_medium: searchParams.get("utm_medium"),
-      utm_campaign: searchParams.get("utm_campaign"),
-      captured_at: Date.now(),
-    }));
-  }, [searchParams]);
+  const { setTheme } = useTheme();
   const { toast } = useToast();
+
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(!!inviteToken);
   const [demoLoading, setDemoLoading] = useState(false);
-  const [wordIndex, setWordIndex] = useState(0);
-  const [fadeClass, setFadeClass] = useState("animate-rotate-word-in");
 
+  // Force light mode on the landing (mock is claro), sem persistir preferências futuras
   useEffect(() => {
-    const interval = setInterval(() => {
-      setFadeClass("animate-rotate-word-out");
-      setTimeout(() => {
-        setWordIndex((prev) => (prev + 1) % rotatingWords.length);
-        setFadeClass("animate-rotate-word-in");
-      }, 400);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+    setTheme("light");
+  }, [setTheme]);
+
+  // Capture UTM params on first visit and persist for 24h
+  useEffect(() => {
+    const source = searchParams.get("utm_source");
+    if (!source) return;
+    localStorage.setItem(
+      "hub_utm",
+      JSON.stringify({
+        utm_source: source,
+        utm_medium: searchParams.get("utm_medium"),
+        utm_campaign: searchParams.get("utm_campaign"),
+        captured_at: Date.now(),
+      })
+    );
+  }, [searchParams]);
 
   const nextParam = searchParams.get("next");
-  const safeNext = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
+  const safeNext =
+    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -120,7 +93,7 @@ export default function Auth() {
     if (error) {
       toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Cadastro realizado!", description: "Verifique seu email para confirmar o cadastro." });
+      toast({ title: "Cadastro realizado!", description: "Verifique seu email para confirmar." });
       setSignupOpen(false);
     }
   };
@@ -130,192 +103,45 @@ export default function Auth() {
     const { error } = await signIn(DEMO_EMAIL, DEMO_PASSWORD);
     setDemoLoading(false);
     if (error) {
-      toast({ title: "Erro ao entrar como avaliador", description: error.message, variant: "destructive" });
+      toast({
+        title: "Erro ao entrar como avaliador",
+        description: error.message,
+        variant: "destructive",
+      });
     } else {
-      toast({ title: "Bem-vindo, avaliador!", description: "Acesso completo liberado para exploração." });
+      toast({ title: "Bem-vindo, avaliador!", description: "Acesso completo liberado." });
       navigate("/");
     }
   };
 
-  const copyCredentials = async () => {
-    try {
-      await navigator.clipboard.writeText(`${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
-      toast({ title: "Credenciais copiadas" });
-    } catch {
-      toast({ title: "Não foi possível copiar", variant: "destructive" });
-    }
-  };
-
   const loading = isLoading || googleLoading;
+  const openSignup = () => setSignupOpen(true);
+  const openLogin = () => setLoginOpen(true);
 
   return (
-    <div className="min-h-screen flex flex-col gradient-dark relative overflow-hidden">
-      <PageMeta path="/auth" title="Login" description="Acesse o Hub Empresarial. Sistema de gestão integrado para agências, consultorias e pequenas empresas." />
-      {/* Background pattern */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Grid principal */}
-        <div className="absolute inset-0 opacity-[0.08]" style={{
-          backgroundImage: `
-            linear-gradient(hsl(var(--primary)) 1px, transparent 1px),
-            linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px',
-        }} />
-        {/* Formas geométricas simulando dashboards/cards */}
-        <div className="absolute inset-0 opacity-[0.06]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect x='20' y='20' width='120' height='80' rx='8' fill='none' stroke='%236EA8FE' stroke-width='1'/%3E%3Crect x='260' y='50' width='100' height='60' rx='8' fill='none' stroke='%236EA8FE' stroke-width='1'/%3E%3Crect x='40' y='250' width='140' height='90' rx='8' fill='none' stroke='%236EA8FE' stroke-width='1'/%3E%3Crect x='240' y='220' width='120' height='70' rx='8' fill='none' stroke='%236EA8FE' stroke-width='1'/%3E%3Cline x1='30' y1='140' x2='170' y2='140' stroke='%236EA8FE' stroke-width='1'/%3E%3Cline x1='30' y1='155' x2='130' y2='155' stroke='%236EA8FE' stroke-width='1'/%3E%3Cline x1='30' y1='170' x2='150' y2='170' stroke='%236EA8FE' stroke-width='1'/%3E%3Cline x1='250' y1='160' x2='370' y2='160' stroke='%236EA8FE' stroke-width='1'/%3E%3Cline x1='250' y1='175' x2='340' y2='175' stroke='%236EA8FE' stroke-width='1'/%3E%3Ccircle cx='300' cy='350' r='25' fill='none' stroke='%236EA8FE' stroke-width='1'/%3E%3Crect x='60' y='370' width='80' height='10' rx='4' fill='%236EA8FE' opacity='0.3'/%3E%3C/svg%3E")`,
-        }} />
-        {/* Blur blobs mais intensos */}
-        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl" />
-        {/* Signature radial gradient (identidade Focus) */}
-        <div
-          className="absolute -top-40 -right-20 w-[720px] h-[720px] opacity-40 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(closest-side, hsl(var(--primary) / 0.22), transparent 70%)",
-          }}
-        />
-      </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <PageMeta
+        path="/auth"
+        title="Hub Empresarial · Gestão com IA para agências e PMEs"
+        description="Um Hub pra substituir suas 6 ferramentas de gestão. Finanças, clientes, projetos e IA num lugar só — conectado ao Google, WhatsApp e ChatGPT."
+      />
 
-      <WorldCupPromoStrip onCadastrar={() => setSignupOpen(true)} />
-      <AuthHeader />
+      <LandingNav onLogin={openLogin} onSignup={openSignup} />
 
-      {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
-
-        {/* Headline with rotating word — tipografia Instrument Serif italic para acabar com cara Lovable genérica */}
-        <h1 className="text-4xl md:text-6xl xl:text-7xl leading-[1.05] mb-4 text-center max-w-4xl">
-          <span className="text-foreground font-extrabold tracking-tight">Gestão inteligente para</span>
-          <br />
-          <span
-            key={wordIndex}
-            className={`font-display italic font-normal gradient-text text-glow inline-block ${fadeClass}`}
-          >
-            {rotatingWords[wordIndex]}
-          </span>
-          <span className="font-display italic text-foreground/40">.</span>
-        </h1>
-
-        {/* Subtitle */}
-        <p className="text-base md:text-lg text-muted-foreground mb-8 max-w-md mx-auto text-center">
-          Tudo que sua agência precisa em um só lugar.
-        </p>
-
-        {/* 7 Module icons with tooltips */}
-        <TooltipProvider delayDuration={200}>
-          <div className="flex items-center justify-center gap-3 mb-10 flex-wrap">
-            {modules.map((mod) => (
-              <Tooltip key={mod.label}>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 bg-secondary/50 cursor-default hover:border-primary/40 hover:bg-primary/10 transition-all duration-200">
-                    <mod.icon className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-xs text-muted-foreground">{mod.label}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[200px] text-center">
-                  <p className="text-xs">{mod.desc}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
-        </TooltipProvider>
-
-        {/* CTAs */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-          <Button
-            className="btn-hero text-foreground font-semibold h-12 px-8 text-base"
-            onClick={() => setSignupOpen(true)}
-          >
-            Cadastrar
-            <ArrowRight className="w-4 h-4 ml-1" />
-          </Button>
-          <Button
-            variant="outline"
-            className="h-12 px-8 text-base font-semibold"
-            onClick={() => setLoginOpen(true)}
-          >
-            Entrar
-          </Button>
-        </div>
-
-        {/* Links secundários */}
-        <div className="flex items-center justify-center gap-6 mb-10">
-          <Link
-            to="/planos"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            Ver Preços
-            <ArrowDown className="w-3.5 h-3.5" />
-          </Link>
-          <Link
-            to="/mcp"
-            className="group inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-foreground bg-gradient-to-r from-primary/15 via-accent/15 to-primary/15 border border-primary/40 hover:border-primary/70 shadow-[0_0_24px_-6px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_32px_-4px_hsl(var(--primary)/0.7)] transition-all hover:scale-[1.02]"
-          >
-            <span className="inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 leading-none tracking-wide">
-              NOVO
-            </span>
-            Use seu Hub direto no ChatGPT e Claude
-            <span className="text-[10px] font-medium text-primary/80 border-l border-primary/30 pl-2 ml-0.5">
-              Incluso em todos os planos
-            </span>
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-          </Link>
-        </div>
-
-        {/* Social proof with fake logos */}
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="flex -space-x-2">
-            {fakeLogos.map((logo, i) => (
-              <div
-                key={i}
-                className={`w-8 h-8 rounded-full ${logo.color} border-2 border-background flex items-center justify-center text-[9px] font-black text-white tracking-tight`}
-              >
-                {logo.initials}
-              </div>
-            ))}
-          </div>
-          <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">+100 usuários</span> já utilizam
-          </span>
-        </div>
-
-        {/* Trust badges */}
-        <div className="flex items-center justify-center gap-4 mb-6">
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Shield className="w-3.5 h-3.5 text-primary" />
-            Sem cartão de crédito
-          </span>
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <XCircle className="w-3.5 h-3.5 text-primary" />
-            Cancele quando quiser
-          </span>
-        </div>
-
-        {/* Integrações — proposta de valor: conecta com as ferramentas do usuário */}
-        <div className="w-full max-w-3xl mt-4">
-          <p className="text-center text-[11px] uppercase tracking-[0.15em] text-muted-foreground mb-4">
-            Conecta com as ferramentas que você já usa
-          </p>
-          <div className="flex items-center justify-center gap-2.5 flex-wrap">
-            {integrations.map((it) => (
-              <div
-                key={it.label}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 bg-secondary/40 hover:border-primary/40 hover:bg-primary/10 transition-all duration-200"
-              >
-                <it.icon className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs text-muted-foreground">{it.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
+      <main>
+        <LandingHero onSignup={openSignup} onDemo={handleDemoLogin} demoLoading={demoLoading} />
+        <SocialProofBar />
+        <ReplacesSection />
+        <ThreePillars />
+        <AiTerminalSection />
+        <McpSection />
+        <ModulesGrid />
+        <PricingSection onSignup={openSignup} />
+        <FinalCta onSignup={openSignup} onDemo={handleDemoLogin} demoLoading={demoLoading} />
       </main>
 
-      <AuthFooter />
+      <LandingFooter />
 
-      {/* Dialogs */}
       <AuthLoginDialog
         open={loginOpen}
         onOpenChange={setLoginOpen}
@@ -324,7 +150,10 @@ export default function Auth() {
         googleLoading={googleLoading}
         onLogin={handleLogin}
         onGoogleLogin={handleGoogleLogin}
-        onSwitchToSignup={() => { setLoginOpen(false); setSignupOpen(true); }}
+        onSwitchToSignup={() => {
+          setLoginOpen(false);
+          setSignupOpen(true);
+        }}
       />
       <AuthSignupDialog
         open={signupOpen}
@@ -335,7 +164,10 @@ export default function Auth() {
         onSignup={handleSignup}
         onGoogleLogin={handleGoogleLogin}
         toast={toast}
-        onSwitchToLogin={() => { setSignupOpen(false); setLoginOpen(true); }}
+        onSwitchToLogin={() => {
+          setSignupOpen(false);
+          setLoginOpen(true);
+        }}
       />
     </div>
   );
