@@ -155,8 +155,8 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
         {/* Step 1.5 — phone */}
         {step === "phone" && (
           <div
-            className="rounded-[14px] border p-8 flex flex-col gap-5"
-            style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.10)" }}
+            className="rounded-[14px] border shadow-lg shadow-black/40 p-8 flex flex-col gap-5"
+            style={{ background: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)" }}
           >
             <div className="text-4xl text-center">📱</div>
             <div>
