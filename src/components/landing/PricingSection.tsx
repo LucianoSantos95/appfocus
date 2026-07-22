@@ -55,6 +55,7 @@ const plans = [
     features: ["Ilimitado tudo", "Usuários ilimitados", "SLA + suporte dedicado", "Onboarding assistido"],
     cta: "Falar com vendas",
     action: "planos" as const,
+    planId: "enterprise" as const,
   },
 ];
 
