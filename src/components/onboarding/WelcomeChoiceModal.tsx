@@ -44,17 +44,17 @@ function CardButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="group text-left p-6 rounded-[14px] border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-      style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.10)" }}
+      className="group text-left p-7 rounded-[14px] border shadow-lg shadow-black/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
+      style={{ background: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)" }}
       onMouseEnter={(e) => {
         if (!disabled) {
-          e.currentTarget.style.borderColor = "rgba(79,126,255,0.40)";
-          e.currentTarget.style.background = "rgba(79,126,255,0.06)";
+          e.currentTarget.style.borderColor = "rgba(79,126,255,0.55)";
+          e.currentTarget.style.background = "rgba(79,126,255,0.10)";
         }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
-        e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+        e.currentTarget.style.background = "rgba(255,255,255,0.08)";
       }}
     >
       {children}
