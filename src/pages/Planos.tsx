@@ -108,9 +108,29 @@ export default function Planos() {
       refreshSubscription();
       window.history.replaceState({}, "", "/planos");
     }
+    const cycleParam = params.get("cycle");
+    if (cycleParam === "annual") setAnnual(true);
+    else if (cycleParam === "monthly") setAnnual(false);
     void recordMilestone("plan_page_viewed", { from: window.location.pathname });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-resume checkout after login (came from landing with ?plan=&autostart=1)
+  useEffect(() => {
+    if (!authSession?.access_token) return;
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get("plan");
+    const autostart = params.get("autostart");
+    const mode = params.get("mode");
+    if (autostart !== "1") return;
+    if (plan !== "plus" && plan !== "pro" && plan !== "enterprise") return;
+    const resolvedMode = mode === "one_time" ? "one_time" : "recurring";
+    // Clean URL to avoid re-trigger
+    const cleanCycle = params.get("cycle") ? `?cycle=${params.get("cycle")}` : "";
+    window.history.replaceState({}, "", `/planos${cleanCycle}`);
+    void handleSubscribe(plan, resolvedMode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authSession?.access_token]);
 
   const handleSubscribe = async (
     planId: "plus" | "pro" | "enterprise",
