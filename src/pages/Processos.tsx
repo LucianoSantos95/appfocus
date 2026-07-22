@@ -108,6 +108,7 @@ export default function Processos() {
   const freemium = useFreemiumLimit(dbProcessos.length);
   const [expandedProcesso, setExpandedProcesso] = useState<string | null>(null);
   const [editingStep, setEditingStep] = useState<{ processoId: string; step: ProcessoStep } | null>(null);
+  const [showAllProcessos, setShowAllProcessos] = useState(false);
 
   // Map DB processos to local type
   const processos: Processo[] = dbProcessos.map(p => ({
