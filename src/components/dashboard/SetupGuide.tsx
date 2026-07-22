@@ -40,6 +40,10 @@ const ORDER_BY_SEGMENT: Record<string, StepKey[]> = {
 const DEFAULT_ORDER: StepKey[] = ["clientes", "transacoes", "projetos", "tarefas"];
 
 export function SetupGuide() {
+  // Em modo demonstração, o guia de setup não faz sentido (não há dados reais para completar).
+  const isDemo = typeof window !== "undefined" && sessionStorage.getItem("demo_mode") === "1";
+  if (isDemo) return null;
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const [done, setDone] = useState<Record<StepKey, boolean> | null>(null);
@@ -48,10 +52,6 @@ export function SetupGuide() {
   const [clearing, setClearing] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  // Em modo demonstração, o guia de setup não faz sentido (não há dados reais para completar).
-  if (typeof window !== "undefined" && sessionStorage.getItem("demo_mode") === "1") {
-    return null;
-  }
 
 
   const dismissKey = user ? `hub_setupguide_done_${user.id}` : "";
