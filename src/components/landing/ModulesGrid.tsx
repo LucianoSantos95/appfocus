@@ -2,12 +2,42 @@ import { DollarSign, Users, FolderKanban, CheckSquare, Megaphone, UserCog } from
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion";
 
 const modules = [
-  { icon: DollarSign, title: "Finanças", desc: "Feche o mês em minutos" },
-  { icon: Users, title: "Clientes", desc: "Nunca perca um follow-up" },
-  { icon: FolderKanban, title: "Projetos", desc: "Entregue no prazo" },
-  { icon: CheckSquare, title: "Tarefas", desc: "Organize a rotina" },
-  { icon: Megaphone, title: "Marketing", desc: "Planeje o conteúdo" },
-  { icon: UserCog, title: "RH · Processos", desc: "Padronize a casa" },
+  {
+    icon: DollarSign,
+    eyebrow: "FINANÇAS",
+    title: "Feche o mês em minutos",
+    desc: "Importe o OFX, veja DRE, fluxo e inadimplência prontos.",
+  },
+  {
+    icon: Users,
+    eyebrow: "CLIENTES",
+    title: "Nunca perca um follow-up",
+    desc: "CRM com IA que classifica e enriquece cada cliente.",
+  },
+  {
+    icon: FolderKanban,
+    eyebrow: "PROJETOS",
+    title: "Entregue no prazo",
+    desc: "Kanban com prazos, orçamento e responsáveis.",
+  },
+  {
+    icon: CheckSquare,
+    eyebrow: "TAREFAS",
+    title: "Organize a rotina",
+    desc: "To-dos, prioridades e acompanhamento da operação.",
+  },
+  {
+    icon: Megaphone,
+    eyebrow: "MARKETING",
+    title: "Planeje o conteúdo",
+    desc: "Calendário editorial e campanhas por cliente.",
+  },
+  {
+    icon: UserCog,
+    eyebrow: "RH · PROCESSOS",
+    title: "Padronize a casa",
+    desc: "Equipe, documentos e playbooks documentados.",
+  },
 ];
 
 export default function ModulesGrid() {
@@ -28,13 +58,18 @@ export default function ModulesGrid() {
 
         <Stagger className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {modules.map((m) => (
-            <StaggerItem key={m.title}>
+            <StaggerItem key={m.eyebrow}>
               <div className="group h-full rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-accent/40 hover:shadow-elegant">
                 <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
                   <m.icon className="w-5 h-5 text-accent" />
                 </div>
-                <h3 className="text-base font-semibold text-foreground">{m.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{m.desc}</p>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent font-semibold">
+                  {m.eyebrow}
+                </span>
+                <h3 className="mt-1.5 text-lg font-semibold text-foreground leading-snug">
+                  {m.title}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{m.desc}</p>
               </div>
             </StaggerItem>
           ))}
