@@ -253,7 +253,7 @@ export default function Processos() {
               description="Documente seus playbooks e fluxos internos para padronizar a operação. Clique em 'Novo Processo' acima para começar."
             />
           )}
-          {processos.map((p) => (
+          {(showAllProcessos ? processos : processos.slice(0, 5)).map((p) => (
             <Collapsible
               key={p.id}
               open={expandedProcesso === p.id}
