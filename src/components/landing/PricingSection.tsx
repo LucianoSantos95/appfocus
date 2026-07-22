@@ -76,8 +76,37 @@ export default function PricingSection({ onSignup }: Props) {
           </div>
         </FadeIn>
 
-        <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {plans.map((p) => (
+        <div className="mt-8 flex justify-center">
+          <div className="inline-flex items-center gap-1 rounded-full border border-border bg-card p-1">
+            <button
+              type="button"
+              onClick={() => setAnnual(false)}
+              className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all ${
+                !annual ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Mensal
+            </button>
+            <button
+              type="button"
+              onClick={() => setAnnual(true)}
+              className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-1.5 ${
+                annual ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Anual
+              <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                annual ? "bg-accent-foreground/15" : "bg-accent/15 text-accent"
+              }`}>-20%</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {plans.map((p) => {
+            const price = annual ? p.annual : p.monthly;
+            const cadence = annual ? p.cadenceAnnual : p.cadenceMonthly;
+            return (
             <div
               key={p.name}
               className={`relative rounded-2xl border p-6 flex flex-col transition-all hover:-translate-y-1 ${
@@ -93,9 +122,10 @@ export default function PricingSection({ onSignup }: Props) {
               )}
               <h3 className="text-lg font-semibold text-foreground">{p.name}</h3>
               <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-3xl font-semibold text-foreground font-mono tabular-nums">{p.price}</span>
-                <span className="text-xs text-muted-foreground">{p.cadence}</span>
+                <span className="text-3xl font-semibold text-foreground font-mono tabular-nums">R$ {price}</span>
+                <span className="text-xs text-muted-foreground">{cadence}</span>
               </div>
+
               <ul className="mt-5 space-y-2 flex-1">
                 {p.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm text-foreground/80">
