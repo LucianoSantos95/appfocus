@@ -229,7 +229,7 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
         )}
 
         {!isLoading && (
-          <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.45)" }}>
+          <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.70)" }}>
             {footers[step]}
           </p>
         )}
