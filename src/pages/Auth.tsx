@@ -20,8 +20,7 @@ import PricingSection from "@/components/landing/PricingSection";
 import FinalCta from "@/components/landing/FinalCta";
 import LandingFooter from "@/components/landing/LandingFooter";
 
-const DEMO_EMAIL = "demo@focusinteligente.com.br";
-const DEMO_PASSWORD = "LovableDemo2026!";
+// Removido login demo compartilhado; agora usa rota /demo (sessão anônima, read-only)
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -98,20 +97,9 @@ export default function Auth() {
     }
   };
 
-  const handleDemoLogin = async () => {
+  const handleDemoLogin = () => {
     setDemoLoading(true);
-    const { error } = await signIn(DEMO_EMAIL, DEMO_PASSWORD);
-    setDemoLoading(false);
-    if (error) {
-      toast({
-        title: "Erro ao entrar como avaliador",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({ title: "Bem-vindo, avaliador!", description: "Acesso completo liberado." });
-      navigate("/");
-    }
+    navigate("/demo");
   };
 
   const loading = isLoading || googleLoading;
