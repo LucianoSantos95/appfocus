@@ -138,7 +138,14 @@ export default function PricingSection({ onSignup }: Props) {
                 ))}
               </ul>
               <Button
-                onClick={() => (p.action === "signup" ? onSignup() : navigate("/planos"))}
+                onClick={() => {
+                  if (p.action === "signup") {
+                    onSignup();
+                  } else {
+                    const cycle = annual ? "annual" : "monthly";
+                    navigate(`/planos?plan=${p.planId}&cycle=${cycle}`);
+                  }
+                }}
                 className={`group mt-6 w-full transition-all hover:-translate-y-0.5 ${
                   p.highlight
                     ? "bg-accent text-accent-foreground hover:bg-accent/90"
