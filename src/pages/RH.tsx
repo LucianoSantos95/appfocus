@@ -502,13 +502,16 @@ export default function RH() {
 
             {["aberta", "em_analise", "processo_recrutamento", "todas"].map((filter) => {
               const list = vagas.filter((v) => filter === "todas" || v.status === filter);
+              const expanded = !!showAllVagas[filter];
+              const shown = expanded ? list : list.slice(0, 5);
               return (
                 <TabsContent key={filter} value={filter} className="space-y-4">
                   {list.length === 0 ? (
                     <EmptyState icon={Briefcase} title="Sem dados" description="Cadastre vagas em aberto para acompanhar seu processo seletivo." />
                   ) : (
+                    <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {list.map((v) => (
+                      {shown.map((v) => (
                         <div
                           key={v.id}
                           className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
@@ -542,6 +545,14 @@ export default function RH() {
                         </div>
                       ))}
                     </div>
+                    {list.length > 5 && (
+                      <div className="flex justify-center pt-2">
+                        <Button variant="ghost" size="sm" onClick={() => setShowAllVagas((s) => ({ ...s, [filter]: !expanded }))}>
+                          {expanded ? "Ver menos" : `Ver mais (${list.length - 5})`}
+                        </Button>
+                      </div>
+                    )}
+                    </>
                   )}
                 </TabsContent>
               );
