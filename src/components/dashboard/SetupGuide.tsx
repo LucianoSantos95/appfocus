@@ -48,6 +48,12 @@ export function SetupGuide() {
   const [clearing, setClearing] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
+  // Em modo demonstração, o guia de setup não faz sentido (não há dados reais para completar).
+  if (typeof window !== "undefined" && sessionStorage.getItem("demo_mode") === "1") {
+    return null;
+  }
+
+
   const dismissKey = user ? `hub_setupguide_done_${user.id}` : "";
 
   const load = useCallback(async () => {
