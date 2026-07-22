@@ -70,7 +70,7 @@ export function WowMomentCard({ moment, onDismiss }: Props) {
           <div className="space-y-2 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-semibold tracking-wider uppercase text-primary">
-                Momento WOW
+                Demo configurada
               </span>
               <TrendingUp className="h-3 w-3 text-primary" />
             </div>
