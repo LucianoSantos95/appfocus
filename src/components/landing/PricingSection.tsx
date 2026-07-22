@@ -31,6 +31,7 @@ const plans = [
     features: ["Registros ilimitados", "5 usuários", "Integrações Google + WhatsApp", "Suporte prioritário"],
     cta: "Assinar Plus",
     action: "planos" as const,
+    planId: "plus" as const,
   },
   {
     name: "Pro",
@@ -42,6 +43,7 @@ const plans = [
     features: ["IA + exports ilimitados", "10 usuários", "Relatórios personalizados", "Automações avançadas"],
     cta: "Assinar Pro",
     action: "planos" as const,
+    planId: "pro" as const,
   },
   {
     name: "Enterprise",
@@ -53,6 +55,7 @@ const plans = [
     features: ["Ilimitado tudo", "Usuários ilimitados", "SLA + suporte dedicado", "Onboarding assistido"],
     cta: "Falar com vendas",
     action: "planos" as const,
+    planId: "enterprise" as const,
   },
 ];
 
@@ -135,7 +138,14 @@ export default function PricingSection({ onSignup }: Props) {
                 ))}
               </ul>
               <Button
-                onClick={() => (p.action === "signup" ? onSignup() : navigate("/planos"))}
+                onClick={() => {
+                  if (p.action === "signup") {
+                    onSignup();
+                  } else {
+                    const cycle = annual ? "annual" : "monthly";
+                    navigate(`/planos?plan=${p.planId}&cycle=${cycle}`);
+                  }
+                }}
                 className={`group mt-6 w-full transition-all hover:-translate-y-0.5 ${
                   p.highlight
                     ? "bg-accent text-accent-foreground hover:bg-accent/90"
