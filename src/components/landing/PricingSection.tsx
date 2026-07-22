@@ -31,6 +31,7 @@ const plans = [
     features: ["Registros ilimitados", "5 usuários", "Integrações Google + WhatsApp", "Suporte prioritário"],
     cta: "Assinar Plus",
     action: "planos" as const,
+    planId: "plus" as const,
   },
   {
     name: "Pro",

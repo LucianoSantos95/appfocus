@@ -1,17 +1,23 @@
-## Ajustes solicitados
+## Problema
 
-**1. WowMomentCard — trocar rótulo "Momento WOW"**
-Em `src/components/onboarding/WowMomentCard.tsx` (linhas 72-74), trocar o texto da label superior de `Momento WOW` para `Demo configurada`. Manter o ícone `TrendingUp` ao lado. Nada mais no card muda (título, métrica, subline e insight continuam iguais).
+Na landing, clicar em **"Assinar Plus"** (ou Pro/Enterprise) leva o visitante deslogado para `/planos`. Lá, ao clicar em "Assinar com cartão automático" ou "Pix/Boleto", o `handleSubscribe` não encontra sessão, dispara `toast("Faça login")` e faz `navigate("/auth")` — que é a landing. Resultado: parece que o botão "volta para a página inicial".
 
-**2. WelcomeChoiceModal — mais visibilidade**
-Em `src/components/onboarding/WelcomeChoiceModal.tsx`, aumentar contraste dos cards de seleção (Segmento e Módulo) e do bloco de telefone:
+Causa raiz confirmada em `src/pages/Planos.tsx` linhas 119-126: sem `access_token` → redireciona para `/auth` sem preservar a intenção de assinar.
 
-- `CardButton` (linhas 44-62): elevar opacidade do fundo (`rgba(255,255,255,0.08)` em vez de `0.04`), engrossar a borda base (`rgba(255,255,255,0.18)`), aumentar padding para `p-7`, adicionar leve `shadow-lg shadow-black/40` e um `scale-[1.02]` no hover para dar mais "peso".
-- Títulos dos cards (`h3`) passam de `text-base` para `text-lg`.
-- Descrições sobem de `rgba(255,255,255,0.65)` para `rgba(255,255,255,0.80)`.
-- Bloco de telefone (linhas 157-198): mesmo tratamento — fundo `0.08`, borda `0.18`, `shadow-lg shadow-black/40`. Input com borda `0.30` (em vez de `0.15`).
-- Subtítulo do header (linha 113) passa de `rgba(255,255,255,0.75)` para `rgba(255,255,255,0.90)`.
-- Labels dos passos (dots, linhas 126-132): estado inativo sobe para `text-foreground/70` (hoje é `text-muted-foreground`, praticamente invisível no fundo escuro).
-- Footer inferior (linha 232): de `rgba(255,255,255,0.45)` para `rgba(255,255,255,0.70)`.
+## Correção
 
-Sem mudanças de lógica, apenas visuais.
+**1. `src/pages/Planos.tsx`**
+- No `handleSubscribe`, quando não houver sessão: navegar para `/auth?next=/planos&plan=<id>&cycle=<mensal|anual>&mode=<recurring|one_time>` em vez de `/auth` puro. Mostrar toast mais claro ("Crie sua conta para assinar o Plus").
+- Adicionar `useEffect` que, após login (quando `authSession` existir) e houver `?plan=` na URL, dispara `handleSubscribe` automaticamente e limpa os params. Isso completa o fluxo sem exigir novo clique.
+
+**2. `src/components/landing/PricingSection.tsx`**
+- Passar o plano escolhido na navegação: `navigate("/planos?plan=plus&cycle=monthly")` (idem Pro/Enterprise). Assim, mesmo se o usuário já estiver logado, o CTA da landing pré-seleciona a intenção.
+
+**3. `src/pages/Auth.tsx`**
+- Já existe `safeNext` a partir de `?next=`. Garantir que, após signup/login bem-sucedido, o `navigate(safeNext)` preserve também os query params extras (`plan`, `cycle`, `mode`). Ajuste: usar o valor completo de `nextParam` (incluindo query string) ao validar — hoje só valida que começa com `/`, então já funciona; apenas confirmar que `PricingSection` monta a URL como `next=/planos%3Fplan%3Dplus...` (encoded).
+
+## Resultado esperado
+
+Deslogado clica "Assinar Plus" na landing → abre `/planos?plan=plus&cycle=monthly` → clica em "Assinar com cartão" → vai para `/auth?next=/planos?plan=plus&cycle=monthly&mode=recurring` → após cadastro/login, volta em `/planos` e o checkout Asaas é disparado automaticamente.
+
+Sem alterações no gateway Asaas nem nas edge functions.
