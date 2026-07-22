@@ -1706,6 +1706,24 @@ export type Database = {
           },
         ]
       }
+      user_daily_activity: {
+        Row: {
+          created_at: string
+          day: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_funnel_stage: {
         Row: {
           activated_at: string | null

@@ -107,10 +107,10 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-8">
           <img src={hubLogo} alt="Hub Empresarial" className="h-16 w-16 rounded-2xl mb-5 ring-2 ring-primary/30" />
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
             {step === "phone" ? `Quase lá, ${firstName}!` : `Olá, ${firstName} 👋`}
           </h1>
-          <p className="mt-2 text-base text-muted-foreground">{subtitles[step]}</p>
+          <p className="mt-3 text-lg" style={{ color: "rgba(255,255,255,0.75)" }}>{subtitles[step]}</p>
 
           {/* Progress dots */}
           <div className="flex items-center gap-3 mt-4">
@@ -145,8 +145,8 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
             {SEGMENTS.map((s) => (
               <CardButton key={s.id} onClick={() => handleSegmentClick(s.id)}>
                 <span className="text-3xl leading-none mb-3 block">{s.emoji}</span>
-                <h3 className="text-base font-semibold text-foreground mb-1">{s.label}</h3>
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.50)" }}>{s.desc}</p>
+                <h3 className="text-base font-semibold text-white mb-1">{s.label}</h3>
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.65)" }}>{s.desc}</p>
               </CardButton>
             ))}
           </div>
@@ -212,8 +212,8 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
                     <span className="text-3xl leading-none">{c.emoji}</span>
                     <Icon className="h-6 w-6 text-primary/70 group-hover:text-primary transition-colors" />
                   </div>
-                  <h3 className="text-base font-semibold text-foreground mb-1">{c.title}</h3>
-                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.50)" }}>{c.desc}</p>
+                  <h3 className="text-base font-semibold text-white mb-1">{c.title}</h3>
+                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.65)" }}>{c.desc}</p>
                 </CardButton>
               );
             })}
