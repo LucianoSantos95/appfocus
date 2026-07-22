@@ -69,7 +69,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!user) {
+  if (!user && !demo) {
     return <Navigate to="/auth" replace />;
   }
 
