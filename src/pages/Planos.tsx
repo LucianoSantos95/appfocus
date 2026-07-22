@@ -120,8 +120,10 @@ export default function Planos() {
     const accessToken = freshSession?.access_token ?? authSession?.access_token;
 
     if (!accessToken) {
-      toast.error("Faça login para assinar.");
-      navigate("/auth");
+      const cycle = annual ? "annual" : "monthly";
+      const next = `/planos?plan=${planId}&cycle=${cycle}&mode=${mode}&autostart=1`;
+      toast.info(`Crie sua conta para assinar o ${planId.charAt(0).toUpperCase() + planId.slice(1)}.`);
+      navigate(`/auth?next=${encodeURIComponent(next)}`);
       return;
     }
 
