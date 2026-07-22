@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
+import { isDemoMode } from "@/lib/demo-fixtures";
+
 
 interface PlanContextType {
   plan: string;
