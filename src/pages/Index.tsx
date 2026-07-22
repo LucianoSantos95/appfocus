@@ -13,6 +13,7 @@ import { PersistentCouponWidget } from "@/components/dashboard/PersistentCouponW
 import { WorldCupBanner } from "@/components/dashboard/WorldCupBanner";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { IntegrationsPulse } from "@/components/dashboard/IntegrationsPulse";
+import { SetupGuide } from "@/components/dashboard/SetupGuide";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useNavigate } from "react-router-dom";
@@ -113,6 +114,9 @@ const Index = () => {
 
         {/* Hero redesenhado — saudação + KPI hero + sparkline + KPIs secundários */}
         <DashboardHero />
+
+        {/* Guia de ativação — sumível quando concluído/dispensado */}
+        <SetupGuide />
 
         <UsageLimitWidget />
 
