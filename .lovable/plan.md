@@ -1,40 +1,55 @@
-## 1. Diminuir levemente logo + wordmark na landing
 
-`src/components/landing/LandingNav.tsx`:
-- Logo `h-12` → `h-10`
-- Texto `text-xl md:text-2xl` → `text-lg md:text-xl`
-- Mantém o `font-bold tracking-tight` e o resto do layout.
+## Diagnóstico
 
-## 2. Dashboard demo: injetar fixtures nos widgets que hoje falam direto com Supabase
+O motivo real de o dashboard aparecer com R$ 0 / 0 tarefas / 0/20 é que o `AuthProvider` monta **antes** do usuário clicar em "Ver demo". Quando `DemoEntry` seta `sessionStorage.demo_mode=1` e chama `navigate("/")`, o `AuthContext` já está em execução com o valor inicial `demo=false` capturado no primeiro render — nunca troca o `user` para o `DEMO_USER` sintético.
 
-Hoje os módulos (Clientes, Projetos, Tarefas, Financeiro, RH, Marketing, Processos) já enxergam os dados demo via `sharedResource.ts` + `demo-fixtures.ts`. O que aparece vazio é o **Dashboard** (rota `/`), porque estes componentes usam `supabase.from(...)` direto, fora do cache com fixtures:
+Sem `user`, todos os hooks (`useTransacoes`, `useClientes`, `useProjetos`, `useTarefas`, `useCampanhas`, `useConteudos`, `useColaboradores`, `useProcessos`, `useContasBancarias`) ficam com `enabled: false` e retornam `[]`. Fixtures existem no `demo-fixtures.ts` mas nunca chegam a ser consultadas.
 
-- `src/components/dashboard/AgendaWidget.tsx` — em modo demo, popular `items` com `demoAgenda` e pular o fetch. Mutations (add/edit/delete) exibem toast "Ação desabilitada no modo demonstração".
-- `src/components/dashboard/BulletinBoard.tsx` — mesmo padrão com `demoBulletin`.
-- `src/components/dashboard/IntegrationsPulse.tsx` — em modo demo, montar um estado sintético mostrando Google conectado (com "3 eventos criados"), Slack conectado (com "5 alertas enviados"), Firecrawl "12 leads enriquecidos".
-- `src/components/dashboard/ActivityTimeline.tsx` — em modo demo, retornar 6 eventos fictícios (cliente criado, projeto atualizado, tarefa concluída, transação registrada, colaborador adicionado, campanha lançada) datados nos últimos 7 dias.
-- `src/components/dashboard/HealthSummary.tsx` — se ele calcular via `supabase.from`, forçar valores derivados dos fixtures em modo demo (MRR, clientes ativos, tarefas atrasadas, projetos em andamento) — verificar no arquivo se já usa hooks; se sim, nada a fazer.
-- `src/components/dashboard/SetupGuide.tsx` — em modo demo, esconder (retornar `null`) já que o guia pede login real.
-- `src/components/dashboard/DashboardHero.tsx` — se lê Supabase direto, popular com os totais dos fixtures (receita 11.090, despesa 20.330, 7 clientes, 6 projetos).
+Além disso o `PlanContext` fica em `gratuito`, então o BI (`PlanGate module="bi"`) aparece bloqueado com cadeado.
 
-Padrão de implementação (em todos): no `useEffect` que dispara `fetchItems`, verificar `isDemoMode()` e curto-circuitar com o fixture, `setLoading(false)`. Mutations viram `if (isDemoMode()) { toast(...); return; }`.
+## O que fazer
 
-## 3. Fixtures adicionais necessários
+### 1. Boot correto do modo demo (`src/pages/DemoEntry.tsx`)
 
-Adicionar em `src/lib/demo-fixtures.ts`:
-- `demoActivityTimeline` — 6 entradas com `{ action, module, created_at, actor_name }`.
-- `demoIntegrationsPulse` — objeto com status de Google/Slack/Firecrawl + métricas.
-- Exportar helpers `demoHealthMetrics` calculando totais a partir dos fixtures existentes.
+Trocar `navigate("/")` por `window.location.assign("/")` (hard reload). Assim o `AuthProvider` remonta com `isDemoMode() === true` e injeta `DEMO_USER` imediatamente. O botão "Sair da demo" no `DemoBanner` deve fazer o mesmo (limpar flag + hard reload para `/auth`).
 
-## 4. Fora de escopo (não mexer)
+### 2. Desbloquear BI e recursos pagos no demo (`src/contexts/PlanContext.tsx`)
 
-- Asaas / Stripe / Google / Slack / Firecrawl edge functions.
-- Autenticação real, migrations, MCP.
-- Estrutura das listas (o "Ver mais / 5 primeiros" continua igual).
-- Sidebar do app logado, tema.
+Quando `isDemoMode()`:
+- forçar `plan = "enterprise"`
+- `canAccess = () => true`
+- pular o fetch de `subscriptions` e `plan_features` (não tem sessão Supabase)
+
+Efeito: todos os `PlanGate` (BI de Finanças, Clientes, Projetos, Marketing, Tarefas, RH) renderizam o conteúdo real, sem cadeado.
+
+### 3. Neutralizar o widget de limite (`src/components/dashboard/UsageLimitWidget.tsx` + `src/hooks/useFreemiumLimit.ts`)
+
+Em demo:
+- `useFreemiumLimit` retorna `{ canAdd: true, limitReached: false, isFree: false, ... }`
+- `UsageLimitWidget` mostra badge "Modo demonstração — sem limites" no lugar dos `0/20`
+
+### 4. Verificar que os fixtures estão completos
+
+O `demo-fixtures.ts` já cobre:
+`clientes` (7), `projetos` (6), `tarefas` (7), `transacoes` (8), `colaboradores` (6), `campanhas` (6), `conteudos` (6), `processos` (6), `contas_bancarias` (3), `agenda` (5), `bulletin` (3), `audit_log` (6), `integrations_pulse` (4).
+
+Ajustes de contagem para dar consistência com o BI:
+- Adicionar `receita_atribuida`, `leads_gerados`, `conversoes` nas campanhas (BI de Marketing lê esses campos).
+- Adicionar 2–3 `transacoes` extras no mês anterior (para o `deltaPct` de "vs mês passado" no Hero).
+- Adicionar em `demoClientes` alguns com `status="inativo"` e `ultima_interacao` antiga (para o KPI "clientes sem contato 30d+" mostrar algo > 0).
+
+### 5. Ativar os BIs no demo (`src/pages/Financas.tsx`, `Clientes.tsx`, `Projetos.tsx`, `Marketing.tsx`, `Tarefas.tsx`, `RH.tsx`)
+
+Nada a mudar na página em si — o passo 2 já libera. Apenas conferir que os componentes `*BIPanel.tsx` consomem os mesmos hooks (já consomem), portanto os fixtures alimentam os gráficos automaticamente.
+
+## Fora de escopo
+
+- Não mudar schema, RLS, edge functions, Asaas/Stripe.
+- Não persistir nada no banco — demo continua 100% em memória.
+- Não mudar a landing.
 
 ## Detalhes técnicos
 
-- `isDemoMode()` já disponível em `@/lib/demo-fixtures`; usar no início dos `useEffect` para curto-circuito.
-- Nenhuma request ao Supabase pode disparar em modo demo — evita erros de RLS e ruído no console.
-- Todos os `handleAdd/handleEdit/handleDelete` em widgets devem chamar `toast` de "Ação desabilitada no modo demonstração" e retornar cedo, sem chamar `supabase`.
+- `PlanContext` precisa importar `isDemoMode` de `@/lib/demo-fixtures` e curto-circuitar no `useEffect` inicial.
+- Como `isDemoMode()` lê `sessionStorage` de forma síncrona, o hard-reload do passo 1 garante que todos os providers (`AuthProvider`, `PlanProvider`) inicializem com o valor correto sem depender de effects.
+- `useFreemiumLimit` é um hook puro que já lê `usePlan()` — se o passo 2 forçar `plan="enterprise"` no demo, `isFree` já vira `false` e o `canAdd` fica sempre `true`. Ainda assim mudamos o widget para dizer explicitamente "Modo demonstração" ao invés de "Plano Enterprise", para não confundir o avaliador.
