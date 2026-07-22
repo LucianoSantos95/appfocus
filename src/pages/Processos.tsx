@@ -393,6 +393,13 @@ export default function Processos() {
               </div>
             </Collapsible>
           ))}
+          {processos.length > 5 && (
+            <div className="flex justify-center pt-2">
+              <Button variant="ghost" size="sm" onClick={() => setShowAllProcessos((v) => !v)}>
+                {showAllProcessos ? "Ver menos" : `Ver mais (${processos.length - 5})`}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
