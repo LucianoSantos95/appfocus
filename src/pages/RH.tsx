@@ -136,6 +136,8 @@ export default function RH() {
   const [vagas, setVagas] = useState<Vaga[]>([]);
   const [selectedColaborador, setSelectedColaborador] = useState<Colaborador | null>(null);
   const [selectedVaga, setSelectedVaga] = useState<Vaga | null>(null);
+  const [showAllColab, setShowAllColab] = useState<Record<string, boolean>>({});
+  const [showAllVagas, setShowAllVagas] = useState<Record<string, boolean>>({});
 
   // Map DB colaboradores to local type
   const colaboradores: Colaborador[] = dbColaboradores.map(c => ({
@@ -389,13 +391,16 @@ export default function RH() {
 
             {["ativo", "ferias", "licenca", "todos"].map((filter) => {
               const list = getFilteredColaboradores(filter as any);
+              const expanded = !!showAllColab[filter];
+              const shown = expanded ? list : list.slice(0, 5);
               return (
                 <TabsContent key={filter} value={filter} className="space-y-4">
                   {list.length === 0 ? (
                     <EmptyState icon={Users} title="Sem dados" description="Nenhum colaborador nesta categoria. Clique em 'Novo Colaborador' para começar." />
                   ) : (
+                    <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {list.map((c) => (
+                      {shown.map((c) => (
                         <div
                           key={c.id}
                           className="bg-card rounded-xl border border-border/50 shadow-premium p-5 hover:border-primary/30 transition-colors cursor-pointer"
@@ -437,6 +442,14 @@ export default function RH() {
                         </div>
                       ))}
                     </div>
+                    {list.length > 5 && (
+                      <div className="flex justify-center pt-2">
+                        <Button variant="ghost" size="sm" onClick={() => setShowAllColab((s) => ({ ...s, [filter]: !expanded }))}>
+                          {expanded ? "Ver menos" : `Ver mais (${list.length - 5})`}
+                        </Button>
+                      </div>
+                    )}
+                    </>
                   )}
                 </TabsContent>
               );
