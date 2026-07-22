@@ -2,19 +2,22 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { wipeDemoData, markDemoCleared } from "@/lib/demo-seed";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   CheckCircle2, Circle, X, Users, DollarSign, FolderKanban, ListTodo,
-  Sparkles, ArrowRight, Gift, type LucideIcon,
+  Sparkles, ArrowRight, Gift, Trash2, Loader2, type LucideIcon,
 } from "lucide-react";
 
 // Activation checklist — HubSpot-style: each item is a BUSINESS OUTCOME, not a feature.
-// Personalised order by segment, self-detecting completion from real data, reward on 100%.
+// Personalised order by segment, self-detecting completion from REAL data
+// (demo rows tagged "[DEMO]" are excluded), progress bar, reward on 100%.
 type StepKey = "clientes" | "transacoes" | "projetos" | "tarefas";
 
 interface StepDef {
   table: string;
+  demoCol: string; // column that carries the "[DEMO]" tag, for exclusion
   title: string;
   outcome: string;
   path: string;
@@ -22,13 +25,12 @@ interface StepDef {
 }
 
 const STEPS: Record<StepKey, StepDef> = {
-  clientes:   { table: "clientes",   title: "Cadastre seu primeiro cliente",     outcome: "Comece seu CRM com histórico e insights", path: "/clientes",   icon: Users },
-  transacoes: { table: "transacoes", title: "Lance sua primeira movimentação",   outcome: "Veja seu fluxo de caixa na hora",          path: "/financas",   icon: DollarSign },
-  projetos:   { table: "projetos",   title: "Crie seu primeiro projeto",         outcome: "Acompanhe prazos e entregas dos clientes", path: "/projetos",   icon: FolderKanban },
-  tarefas:    { table: "tarefas",    title: "Adicione sua primeira tarefa",      outcome: "Organize a rotina da operação",            path: "/atividades", icon: ListTodo },
+  clientes:   { table: "clientes",   demoCol: "nome",        title: "Cadastre seu primeiro cliente",   outcome: "Comece seu CRM com histórico e insights", path: "/clientes",   icon: Users },
+  transacoes: { table: "transacoes", demoCol: "description", title: "Lance sua primeira movimentação", outcome: "Veja seu fluxo de caixa na hora",          path: "/financas",   icon: DollarSign },
+  projetos:   { table: "projetos",   demoCol: "name",        title: "Crie seu primeiro projeto",       outcome: "Acompanhe prazos e entregas dos clientes", path: "/projetos",   icon: FolderKanban },
+  tarefas:    { table: "tarefas",    demoCol: "title",       title: "Adicione sua primeira tarefa",    outcome: "Organize a rotina da operação",            path: "/atividades", icon: ListTodo },
 };
 
-// Segment-personalised order — the most relevant first action leads.
 const ORDER_BY_SEGMENT: Record<string, StepKey[]> = {
   agencia:     ["clientes", "projetos", "transacoes", "tarefas"],
   consultoria: ["projetos", "clientes", "transacoes", "tarefas"],
@@ -42,6 +44,8 @@ export function SetupGuide() {
   const navigate = useNavigate();
   const [done, setDone] = useState<Record<StepKey, boolean> | null>(null);
   const [order, setOrder] = useState<StepKey[]>(DEFAULT_ORDER);
+  const [hasDemo, setHasDemo] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
   const dismissKey = user ? `hub_setupguide_done_${user.id}` : "";
@@ -53,18 +57,39 @@ export function SetupGuide() {
     setOrder(ORDER_BY_SEGMENT[seg] ?? DEFAULT_ORDER);
 
     const keys: StepKey[] = ["clientes", "transacoes", "projetos", "tarefas"];
+    // Count REAL data only — exclude "[DEMO]" rows so activation reflects the user's own work.
     const results = await Promise.all(
-      keys.map((k) => supabase.from(STEPS[k].table).select("id", { count: "exact", head: true }).eq("user_id", user.id))
+      keys.map((k) =>
+        supabase.from(STEPS[k].table).select("id", { count: "exact", head: true })
+          .eq("user_id", user.id).not(STEPS[k].demoCol, "ilike", "%[DEMO]%")
+      )
     );
     const d = { clientes: false, transacoes: false, projetos: false, tarefas: false } as Record<StepKey, boolean>;
     keys.forEach((k, i) => { d[k] = (results[i].count ?? 0) > 0; });
     setDone(d);
+
+    // Does the user still have demo/example data? (offer to clear it)
+    const { count: demoCount } = await supabase.from("clientes").select("id", { count: "exact", head: true })
+      .eq("user_id", user.id).ilike("nome", "%[DEMO]%");
+    setHasDemo((demoCount ?? 0) > 0);
   }, [user]);
 
   useEffect(() => {
     if (dismissKey && localStorage.getItem(dismissKey) === "1") setDismissed(true);
     load();
   }, [load, dismissKey]);
+
+  const clearDemoData = async () => {
+    if (!user) return;
+    setClearing(true);
+    try {
+      await wipeDemoData("painel", user.id); // apaga todas as linhas "[DEMO]"
+      markDemoCleared(user.id);              // impede o re-seed ("voltam tudo")
+      await load();
+    } finally {
+      setClearing(false);
+    }
+  };
 
   if (dismissed || !done) return null;
 
@@ -90,7 +115,7 @@ export function SetupGuide() {
               {allDone ? "Operação configurada! 🎉" : "Coloque sua operação no ar"}
             </h3>
             <p className="text-xs text-muted-foreground">
-              {allDone ? "Você preencheu os módulos essenciais." : `${completed} de ${total} passos · leva ~5 minutos`}
+              {allDone ? "Você preencheu os módulos essenciais com dados reais." : `${completed} de ${total} passos · leva ~5 minutos`}
             </p>
           </div>
         </div>
@@ -142,6 +167,21 @@ export function SetupGuide() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* D3 — dados de exemplo: rótulo claro + limpar de vez (sem "voltar") */}
+      {hasDemo && (
+        <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground border-t border-border/50 pt-3">
+          <span>Os itens marcados com <span className="font-mono text-foreground">[DEMO]</span> são exemplos.</span>
+          <button
+            onClick={clearDemoData}
+            disabled={clearing}
+            className="inline-flex items-center gap-1 text-destructive hover:underline disabled:opacity-50"
+          >
+            {clearing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+            Limpar dados de exemplo
+          </button>
         </div>
       )}
     </div>

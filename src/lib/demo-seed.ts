@@ -3,6 +3,16 @@ import type { DemoModule } from "@/lib/demo-data";
 
 export const DEMO_TAG = "[DEMO]";
 
+// Once the user clears the demo data, we must never re-seed it (fixes the
+// "excluo os exemplos e eles voltam" support ticket).
+export const demoClearedKey = (userId: string) => `hub_demo_cleared_${userId}`;
+export function isDemoCleared(userId: string): boolean {
+  return typeof window !== "undefined" && localStorage.getItem(demoClearedKey(userId)) === "1";
+}
+export function markDemoCleared(userId: string) {
+  if (typeof window !== "undefined") localStorage.setItem(demoClearedKey(userId), "1");
+}
+
 function daysFromNow(offset: number) {
   const d = new Date();
   d.setDate(d.getDate() + offset);
@@ -252,6 +262,9 @@ export async function wipeDemoData(module: DemoModule, userId: string) {
 }
 
 export async function seedDemoData(module: DemoModule, userId: string, segment = "pme") {
+  // Guard: never re-seed demo data if the user has already cleared it.
+  if (isDemoCleared(userId)) return;
+
   // Normalise to a valid SegmentKey (WelcomeChoiceModal sends the raw id)
   const seg: SegmentKey = (["agencia", "consultoria", "freelancer", "pme"].includes(segment)
     ? segment
