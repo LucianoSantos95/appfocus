@@ -83,6 +83,17 @@ export function ActivityTimeline() {
   useEffect(() => {
     if (!user) return;
     const fetchEntries = async () => {
+      // Demo mode: usa fixtures locais, sem tocar Supabase
+      const { isDemoMode, demoActivityTimeline } = await import("@/lib/demo-fixtures");
+      if (isDemoMode()) {
+        const typed = demoActivityTimeline as unknown as AuditEntry[];
+        setEntries(typed);
+        setAllEntries(typed);
+        const names: Record<string, string> = {};
+        (demoActivityTimeline as any[]).forEach((e) => { names[e.user_id] = e.actor_name; });
+        setUserNames(names);
+        return;
+      }
       const { data } = await supabase
         .from("audit_log")
         .select("*")

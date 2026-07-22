@@ -118,6 +118,22 @@ export const demoBulletin = [
   { id: "d-bn3", content: "Meta do mês: fechar 3 propostas de consultoria.", author: "Ana Costa", is_pinned: false, created_at: isoDays(-3), updated_at: isoDays(-3) },
 ];
 
+export const demoActivityTimeline = [
+  { id: "d-al1", action: "create", module: "clientes", record_id: "d-c7", details: {}, created_at: isoDays(-1), user_id: "demo-user", actor_name: "Ana Costa" },
+  { id: "d-al2", action: "update", module: "projetos", record_id: "d-p1", details: {}, created_at: isoDays(-1), user_id: "demo-user", actor_name: "Carlos Oliveira" },
+  { id: "d-al3", action: "update", module: "tarefas", record_id: "d-t6", details: {}, created_at: isoDays(-2), user_id: "demo-user", actor_name: "Ana Costa" },
+  { id: "d-al4", action: "create", module: "transacoes", record_id: "d-tr5", details: {}, created_at: isoDays(-3), user_id: "demo-user", actor_name: "Juliana Neves" },
+  { id: "d-al5", action: "create", module: "colaboradores", record_id: "d-cl6", details: {}, created_at: isoDays(-4), user_id: "demo-user", actor_name: "Ana Costa" },
+  { id: "d-al6", action: "create", module: "campanhas", record_id: "d-cp1", details: {}, created_at: isoDays(-5), user_id: "demo-user", actor_name: "Mariana Santos" },
+];
+
+export const demoIntegrationsPulse = [
+  { icon: "google", label: "3 eventos no Google Agenda", meta: "Próximo: Reunião de alinhamento semanal", color: "text-primary", href: "/atividades" },
+  { icon: "slack", label: "Slack ativo", meta: "Última notificação há 2 horas", color: "text-[#E01E5A]", href: "/atividades" },
+  { icon: "sparkles", label: "12 clientes enriquecidos por IA", meta: "Últimos 7 dias — Firecrawl + Lovable AI", color: "text-primary-glow", href: "/clientes" },
+  { icon: "mail", label: "2 relatórios enviados hoje", meta: "Via e-mail transacional", color: "text-warning", href: "/atividades" },
+];
+
 /**
  * Registry por prefixo do key do useSharedResource.
  * Chaves geradas com user.id === "demo-user".
@@ -136,6 +152,8 @@ export const DEMO_REGISTRY: Record<string, unknown> = {
   agenda_items: demoAgenda,
   bulletin: demoBulletin,
   bulletin_notes: demoBulletin,
+  notifications: [],
+  audit_log: demoActivityTimeline,
 };
 
 export function isDemoMode(): boolean {

@@ -38,10 +38,19 @@ export function IntegrationsPulse() {
   const [googleConnected, setGoogleConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!session?.user?.id) return;
-    const userId = session.user.id;
-
     (async () => {
+      // Demo mode: sinais sintéticos, sem tocar Supabase
+      const { isDemoMode, demoIntegrationsPulse } = await import("@/lib/demo-fixtures");
+      if (isDemoMode()) {
+        const iconMap: Record<string, typeof Chrome> = { google: Chrome, slack: Slack, sparkles: Sparkles, mail: Mail };
+        setSignals(demoIntegrationsPulse.map((s: any) => ({ ...s, icon: iconMap[s.icon] || Chrome })));
+        setGoogleConnected(true);
+        setLoading(false);
+        return;
+      }
+      if (!session?.user?.id) return;
+      const userId = session.user.id;
+
       const results: PulseSignal[] = [];
 
       // 1. Google Agenda — buscar user_integrations + último agenda_items sync
