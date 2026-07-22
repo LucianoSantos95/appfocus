@@ -19,7 +19,9 @@ export default function DemoEntry() {
       try {
         sessionStorage.setItem("demo_mode", "1");
       } catch { /* ignore */ }
-      navigate("/", { replace: true });
+      // Hard reload — garante que AuthProvider e PlanProvider remontam
+      // já enxergando isDemoMode() === true (não dá pra depender de effects).
+      window.location.assign("/");
     })();
   }, [navigate]);
 
@@ -29,3 +31,4 @@ export default function DemoEntry() {
     </div>
   );
 }
+

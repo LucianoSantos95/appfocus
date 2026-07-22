@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
+import { isDemoMode } from "@/lib/demo-fixtures";
+
 
 interface PlanContextType {
   plan: string;
@@ -24,9 +26,10 @@ const PlanContext = createContext<PlanContextType | undefined>(undefined);
 export function PlanProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { isAdmin } = useTeamPermissions();
-  const [plan, setPlan] = useState("gratuito");
+  const demo = isDemoMode();
+  const [plan, setPlan] = useState(demo ? "enterprise" : "gratuito");
   const [features, setFeatures] = useState<PlanFeature[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!demo);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
 
   const fetchFeatures = useCallback(async (currentPlan: string) => {
@@ -38,6 +41,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshSubscription = useCallback(async () => {
+    if (demo) return;
     if (!user) return;
     // Fonte de verdade: tabela local (o webhook Asaas mantém atualizada).
     const { data: sub } = await supabase
@@ -53,9 +57,10 @@ export function PlanProvider({ children }: { children: ReactNode }) {
     setPlan(currentPlan);
     setSubscriptionEnd(null);
     await fetchFeatures(currentPlan);
-  }, [user, fetchFeatures]);
+  }, [user, fetchFeatures, demo]);
 
   useEffect(() => {
+    if (demo) return; // Demo: plano/enterprise fixo, sem fetch.
     if (!user) {
       setPlan("gratuito");
       setFeatures([]);
@@ -68,23 +73,26 @@ export function PlanProvider({ children }: { children: ReactNode }) {
       await refreshSubscription();
       setIsLoading(false);
     })();
-  }, [user, refreshSubscription]);
+  }, [user, refreshSubscription, demo]);
 
   // Refresh periódico (5 min) para pegar mudanças do webhook.
   useEffect(() => {
-    if (!user) return;
+    if (demo || !user) return;
     const interval = setInterval(refreshSubscription, 5 * 60_000);
     return () => clearInterval(interval);
-  }, [user, refreshSubscription]);
+  }, [user, refreshSubscription, demo]);
 
-  const canAccess = (module: string, action: string): boolean => {
+  const canAccess = (_module: string, _action: string): boolean => {
+    if (demo) return true; // Demo libera todos os módulos, incluindo BI.
     if (isAdmin) return true;
-    if (module === "guia") return true;
+    if (_module === "guia") return true;
     const feature = features.find(
-      (f) => f.module === module && f.action === action
+      (f) => f.module === _module && f.action === _action
     );
     return feature?.enabled ?? false;
   };
+
+
 
   return (
     <PlanContext.Provider value={{ plan, isLoading, canAccess, features, subscriptionEnd, refreshSubscription }}>

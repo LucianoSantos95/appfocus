@@ -9,6 +9,9 @@ import { useTarefas } from "@/hooks/useTarefas";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { useCampanhas } from "@/hooks/useCampanhas";
 import { useProcessos } from "@/hooks/useProcessos";
+import { isDemoMode } from "@/lib/demo-fixtures";
+import { Sparkles } from "lucide-react";
+
 
 const FREE_LIMIT = 20;
 
@@ -37,7 +40,25 @@ export function UsageLimitWidget() {
   const { campanhas } = useCampanhas();
   const { processos } = useProcessos();
 
+  // Modo demonstração — mostra badge "sem limites" no lugar de 0/20 e não redireciona.
+  if (isDemoMode()) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-5">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold text-foreground">Uso do seu plano</h3>
+          <span className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+            <Sparkles className="w-3 h-3" /> Modo demonstração
+          </span>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Todos os módulos e BI liberados — sem limites de registros nesta demo.
+        </p>
+      </div>
+    );
+  }
+
   if (plan !== "gratuito" || isAdmin) return null;
+
 
   const modules = [
     { name: "Clientes",      count: clientes.length },
