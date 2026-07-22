@@ -125,7 +125,7 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
                   />
                   <span
                     className={`text-xs transition-colors ${
-                      step === s ? "text-foreground" : "text-muted-foreground"
+                      step === s ? "text-foreground" : "text-foreground/70"
                     }`}
                   >
                     {dotLabels[i]}
