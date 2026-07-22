@@ -110,7 +110,7 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
           <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
             {step === "phone" ? `Quase lá, ${firstName}!` : `Olá, ${firstName} 👋`}
           </h1>
-          <p className="mt-3 text-lg" style={{ color: "rgba(255,255,255,0.75)" }}>{subtitles[step]}</p>
+          <p className="mt-3 text-lg" style={{ color: "rgba(255,255,255,0.90)" }}>{subtitles[step]}</p>
 
           {/* Progress dots */}
           <div className="flex items-center gap-3 mt-4">
