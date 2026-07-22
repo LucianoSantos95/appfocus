@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { isDemoMode, demoBulletin } from "@/lib/demo-fixtures";
 
 interface Note {
   id: string;
@@ -34,6 +35,21 @@ export function BulletinBoard() {
   const [newNote, setNewNote] = useState({ content: "", author: "", isPinned: false });
 
   const fetchNotes = useCallback(async () => {
+    if (isDemoMode()) {
+      setNotes(
+        demoBulletin.map((d: any) => ({
+          id: d.id,
+          content: d.content,
+          author: d.author,
+          date: new Date(d.created_at).toLocaleDateString("pt-BR", {
+            day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+          }),
+          isPinned: d.is_pinned,
+        }))
+      );
+      setLoading(false);
+      return;
+    }
     try {
       const { data, error } = await sb
         .from("bulletin_notes")
@@ -65,6 +81,11 @@ export function BulletinBoard() {
   useEffect(() => { fetchNotes(); }, [fetchNotes]);
 
   const handleAdd = async () => {
+    if (isDemoMode()) {
+      toast({ title: "Ação desabilitada no modo demonstração" });
+      setOpen(false);
+      return;
+    }
     if (!newNote.content || !newNote.author) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -86,6 +107,11 @@ export function BulletinBoard() {
   };
 
   const handleUpdate = async () => {
+    if (isDemoMode()) {
+      toast({ title: "Ação desabilitada no modo demonstração" });
+      setEditingNote(null);
+      return;
+    }
     if (!editingNote) return;
     try {
       const { error } = await sb
@@ -105,6 +131,11 @@ export function BulletinBoard() {
   };
 
   const handleDelete = async (id: string) => {
+    if (isDemoMode()) {
+      toast({ title: "Ação desabilitada no modo demonstração" });
+      setEditingNote(null);
+      return;
+    }
     try {
       const { error } = await sb.from("bulletin_notes").delete().eq("id", id);
       if (error) throw error;

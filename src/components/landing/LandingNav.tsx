@@ -12,9 +12,9 @@ export default function LandingNav({ onLogin, onSignup }: Props) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-6 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
-          <img src={logo} alt="Hub Empresarial" className="h-12 w-auto" />
-          <span className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Hub Empresarial</span>
+        <Link to="/" className="flex items-center gap-2.5">
+          <img src={logo} alt="Hub Empresarial" className="h-10 w-auto" />
+          <span className="text-lg md:text-xl font-bold tracking-tight text-foreground">Hub Empresarial</span>
         </Link>
         <nav className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
           <a href="#por-que" className="hover:text-foreground transition-colors">Por que o Hub</a>

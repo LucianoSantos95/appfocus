@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { isDemoMode, demoAgenda } from "@/lib/demo-fixtures";
 
 interface AgendaItem {
   id: string;
@@ -55,6 +56,20 @@ export function AgendaWidget() {
   const [pushToGoogle, setPushToGoogle] = useState(false);
 
   const fetchItems = useCallback(async () => {
+    if (isDemoMode()) {
+      setItems(
+        demoAgenda.map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          date: new Date(d.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+          time: d.time?.substring(0, 5) || "",
+          type: d.type,
+          priority: d.priority,
+        }))
+      );
+      setLoading(false);
+      return;
+    }
     try {
       const { data, error } = await sb
         .from("agenda_items")
@@ -82,6 +97,11 @@ export function AgendaWidget() {
   useEffect(() => { fetchItems(); }, [fetchItems]);
 
   const handleAdd = async () => {
+    if (isDemoMode()) {
+      toast({ title: "Ação desabilitada no modo demonstração" });
+      setOpen(false);
+      return;
+    }
     if (!newItem.title || !newItem.date || !newItem.time) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -130,6 +150,11 @@ export function AgendaWidget() {
   };
 
   const handleUpdate = async () => {
+    if (isDemoMode()) {
+      toast({ title: "Ação desabilitada no modo demonstração" });
+      setEditingItem(null);
+      return;
+    }
     if (!editingItem) return;
     try {
       const { error } = await sb
@@ -150,6 +175,11 @@ export function AgendaWidget() {
   };
 
   const handleDelete = async (id: string) => {
+    if (isDemoMode()) {
+      toast({ title: "Ação desabilitada no modo demonstração" });
+      setEditingItem(null);
+      return;
+    }
     try {
       const { error } = await sb.from("agenda_items").delete().eq("id", id);
       if (error) throw error;
