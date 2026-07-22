@@ -43,6 +43,7 @@ const plans = [
     features: ["IA + exports ilimitados", "10 usuários", "Relatórios personalizados", "Automações avançadas"],
     cta: "Assinar Pro",
     action: "planos" as const,
+    planId: "pro" as const,
   },
   {
     name: "Enterprise",
