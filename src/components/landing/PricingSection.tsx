@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Check, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FadeIn } from "@/components/motion";
+import { useState } from "react";
 
 interface Props {
   onSignup: () => void;
@@ -10,8 +11,10 @@ interface Props {
 const plans = [
   {
     name: "Grátis",
-    price: "R$ 0",
-    cadence: "para sempre",
+    monthly: 0,
+    annual: 0,
+    cadenceMonthly: "para sempre",
+    cadenceAnnual: "para sempre",
     highlight: false,
     features: ["Até 10 registros/módulo", "1 usuário", "MCP incluso", "Sem cartão"],
     cta: "Começar grátis",
@@ -19,8 +22,10 @@ const plans = [
   },
   {
     name: "Plus",
-    price: "R$ 69",
-    cadence: "/mês",
+    monthly: 69,
+    annual: 55,
+    cadenceMonthly: "/mês",
+    cadenceAnnual: "/mês · anual",
     highlight: true,
     badge: "Mais popular",
     features: ["Registros ilimitados", "5 usuários", "Integrações Google + WhatsApp", "Suporte prioritário"],
@@ -29,8 +34,10 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "R$ 149",
-    cadence: "/mês",
+    monthly: 149,
+    annual: 119,
+    cadenceMonthly: "/mês",
+    cadenceAnnual: "/mês · anual",
     highlight: false,
     features: ["IA + exports ilimitados", "10 usuários", "Relatórios personalizados", "Automações avançadas"],
     cta: "Assinar Pro",
@@ -38,8 +45,10 @@ const plans = [
   },
   {
     name: "Enterprise",
-    price: "R$ 297",
-    cadence: "/mês",
+    monthly: 297,
+    annual: 237,
+    cadenceMonthly: "/mês",
+    cadenceAnnual: "/mês · anual",
     highlight: false,
     features: ["Ilimitado tudo", "Usuários ilimitados", "SLA + suporte dedicado", "Onboarding assistido"],
     cta: "Falar com vendas",
@@ -49,6 +58,8 @@ const plans = [
 
 export default function PricingSection({ onSignup }: Props) {
   const navigate = useNavigate();
+  const [annual, setAnnual] = useState(false);
+
 
   return (
     <section id="precos" className="py-20 md:py-28 border-t border-border/60">
