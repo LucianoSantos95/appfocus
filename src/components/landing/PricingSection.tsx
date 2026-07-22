@@ -146,7 +146,8 @@ export default function PricingSection({ onSignup }: Props) {
                 <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
               </Button>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
