@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
       checkoutBody = {
         ...baseBody,
         chargeTypes: ["DETACHED"],
-        billingTypes: ["PIX", "BOLETO", "CREDIT_CARD"],
+        billingTypes: ["PIX"],
         dueDateLimitDays: 3,
       };
     }
