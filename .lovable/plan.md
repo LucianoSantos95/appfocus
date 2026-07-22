@@ -1,73 +1,81 @@
-## Fluxo Híbrido — Cartão recorrente OU Pix/Boleto/Cartão avulso
+# Nova landing `/` e `/auth` — Hub Empresarial
 
-Na página de planos, cada plano mostra **duas opções de pagamento**:
+Reescreve `src/pages/Auth.tsx` do zero como landing de alta conversão no modelo "all-in-one que substitui suas ferramentas" + diferencial IA/MCP. Zero mudança em lógica de auth, pagamento, MCP ou banco. Só página + subcomponentes visuais.
 
-- **"Assinar com cartão (automático)"** → checkout Asaas `RECURRENT` (`CREDIT_CARD`). Cobra sozinho todo mês/ano.
-- **"Pagar com Pix, Boleto ou Cartão"** → checkout Asaas `DETACHED` com os 3 meios. Renovação por link a cada ciclo.
+## Design system (o real, sem inventar)
 
-## Backend
+- Fontes já carregadas: **Instrument Serif itálico** (`.font-display`) nos títulos-herói, **Work Sans** no corpo, **JetBrains Mono** (`font-mono`) em eyebrows, métricas e bloco de código.
+- Paleta: usa tokens `--background`, `--foreground`, `--primary` (teal do light mode, `167 100% 42%`), `--muted-foreground`, `--border`. Nada de hex hardcoded. Destaque = `.gradient-text` ou `text-primary italic font-display`.
+- Marca: **Hub Empresarial**, logo real `src/assets/logo.png`. Rodapé: "© 2026 Focus Gestão Inteligente · São Paulo · BR".
+- Componentes reutilizados: `Button`, `Card`, `Accordion`, `FadeIn`/`Stagger`/`CountUp` de `src/components/motion`. Respeita `prefers-reduced-motion` (já embutido nesses componentes).
+- Força **light mode** na entrada da landing (via `ThemeContext.setTheme('light')` no mount, sem persistir), já que o mock é claro.
 
-### 1. `create-asaas-checkout` (edge function)
-Aceita novo parâmetro `mode: "recurring" | "one_time"`.
-- `recurring`: `chargeTypes: ["RECURRENT"]`, `billingTypes: ["CREDIT_CARD"]`, `subscriptionCycle` (MONTHLY/YEARLY).
-- `one_time`: `chargeTypes: ["DETACHED"]`, `billingTypes: ["PIX","BOLETO","CREDIT_CARD"]`, `value`, `dueDateLimitDays: 3`.
-- `externalReference` sempre carrega `{ user_id, plan, mode, cycle }`.
+## CTAs (ligados aos fluxos que já existem)
 
-### 2. `asaas-webhook`
-Já trata `PAYMENT_CONFIRMED`/`PAYMENT_RECEIVED`. Ajustes:
-- Ler `mode` do `externalReference`.
-- Atualizar `subscriptions`: `status='active'`, `plan`, `provider='asaas'`, `payment_mode`, `current_period_end = now() + interval` (30d mensal / 365d anual), `last_payment_id`.
-- `PAYMENT_OVERDUE` → `status='past_due'` (mantém acesso até `current_period_end`).
-- `SUBSCRIPTION_DELETED` → só afeta usuários no modo recurring: `cancel_at_period_end=true`.
+- "Começar grátis" → `setSignupOpen(true)` (AuthSignupDialog atual).
+- "Entrar" → `setLoginOpen(true)` (AuthLoginDialog atual).
+- "Ver demo ao vivo" → `handleDemoLogin()` atual (demo@focusinteligente.com.br).
+- Preços → `create-asaas-checkout` já usado em `/planos` (importa o mesmo helper OU navega para `/planos` com plano pré-selecionado — usar `navigate('/planos')` para não duplicar a lógica).
+- "Ver página completa do MCP →" → `<Link to="/mcp">`.
 
-### 3. `asaas-renew-charges` (nova edge function + cron diário)
-Só para `payment_mode='one_time'` com `current_period_end` entre hoje e +5 dias e `cancel_at_period_end=false`:
-- Cria novo checkout `DETACHED`, salva `pending_renewal_url`.
-- Envia e-mail (Resend) + notificação in-app com o link.
-- Se `current_period_end < now() - 7d` sem pagamento novo → downgrade para `gratuito`.
+## Estrutura de arquivos
 
-Cron via `pg_cron` + `pg_net` (uma vez por dia às 09:00 BRT), inserido via ferramenta de insert (não migration).
+Um arquivo `Auth.tsx` fica gigante. Split em subcomponentes dentro de `src/components/landing/`:
 
-### 4. `cancel-asaas-subscription`
-- `recurring`: chama `DELETE /subscriptions/{id}` no Asaas + marca `cancel_at_period_end=true` local.
-- `one_time`: só marca `cancel_at_period_end=true` (job de renovação para de gerar cobrança).
-
-## Schema (`subscriptions`) — migration
-
-Adicionar colunas:
-- `current_period_end timestamptz`
-- `cancel_at_period_end boolean default false`
-- `payment_mode text` (`'recurring' | 'one_time'`)
-- `last_payment_id text`
-- `pending_renewal_url text`
-- `asaas_subscription_id text` (só quando modo recurring)
-
-## Frontend
-
-### `Planos.tsx`
-Cada card de plano vira dois botões:
+```text
+src/components/landing/
+├─ LandingNav.tsx
+├─ LandingHero.tsx
+├─ InteractivePanel.tsx       (o card do hero que cicla 4 meses)
+├─ SocialProofBar.tsx
+├─ ReplacesSection.tsx        (seção "1 Hub. 6 assinaturas a menos")
+├─ ThreePillars.tsx
+├─ AiTerminalSection.tsx      (terminal fake com Q&A)
+├─ McpSection.tsx
+├─ ModulesGrid.tsx
+├─ PricingSection.tsx
+├─ FinalCta.tsx
+└─ LandingFooter.tsx
 ```
-[ Assinar com cartão automático → ]   Débito recorrente. Cancela quando quiser.
-[ Pix / Boleto / Cartão avulso →  ]   Renovação por link a cada ciclo.
-```
-Selos Pix/Boleto/Cartão restaurados no card "avulso".
 
-### `MinhaAssinatura` (ou seção de conta)
-Se `payment_mode='one_time'` e existe `pending_renewal_url`, mostrar banner "Renovar agora" com o link. Botão de cancelar chama a mesma edge function nos dois modos.
+`src/pages/Auth.tsx` vira orquestrador: mantém os dialogs (`AuthLoginDialog`, `AuthSignupDialog`), `handleDemoLogin`, `handleGoogleLogin`, captura UTM e monta as seções na ordem.
 
-### `PlanContext.tsx`
-Nenhuma mudança de API. Já lê `subscriptions.plan` + `status`.
+Também garantir que `/` renderiza esta mesma landing (verificar `src/App.tsx` — se `/` já aponta para outra coisa quando não logado, ajustar route). Se `/` já cai em `Auth` para deslogados, não mexer.
 
-## Ordem de execução
+## Seções (ordem final)
 
-1. Migration schema `subscriptions`.
-2. Editar `create-asaas-checkout`, `cancel-asaas-subscription`, `asaas-webhook`.
-3. Criar `asaas-renew-charges` + cron (via insert tool com URL/anon key).
-4. Atualizar `Planos.tsx` e banner de renovação.
-5. Testar: (a) recurring cartão em produção, (b) one_time Pix — confirmar no painel Asaas → webhook libera plano.
+1. **Nav** — logo + "Hub Empresarial" · links âncora (Por que o Hub, IA & MCP, Módulos, Preços) · Entrar + "Começar grátis".
+2. **Hero** — duas colunas. Eyebrow mono teal "GESTÃO COM IA · FEITO NO BRASIL". Título Instrument Serif: "Um Hub pra substituir suas *6 ferramentas* de gestão." Subtítulo, dois CTAs, microtrust mono. À direita: `InteractivePanel`.
+3. **InteractivePanel** — 4 estados (Jul/Ago/Set/Out) cicla a cada 3.4s com `AnimatePresence`. Mostra Receita/Despesa/Saldo/Delta + mini-gráfico SVG de linha que redesenha via `motion.path` com `pathLength` de 0→1, ponto final animado, delta muda cor (teal ↑ / laranja `--destructive` ↓), texto "Insight da IA" troca em sincronia. `useReducedMotion` → troca sem animar.
+4. **Social proof** — "+100 operações já rodam no Hub Empresarial" + badges de segmento com hover subindo.
+5. **Substitui tudo isso** — título + lista com itens riscados (line-through) dos concorrentes.
+6. **Três pilares** — cards com hover-lift.
+7. **AI Terminal** — grid 2 col; à esquerda copy "Converse com a sua *operação*"; à direita card `bg-slate-900 text-slate-50 font-mono` com prompt teal (`text-primary`), respostas com números reais dos meses do painel, cursor `▋` piscando (CSS keyframe já existe).
+8. **MCP** — badge NOVO + explicação + 3 passos + bloco de código com `https://hnextembswhejumvxbzd.supabase.co/functions/v1/mcp` (botão copy) + badges (ChatGPT, Claude, Cursor, Codex) + link `→ /mcp`.
+9. **Módulos** — grid 6 cards (Finanças, Clientes, Projetos, Tarefas, Marketing, RH·Processos) com ícone + título + subtítulo de resultado. Hover-lift.
+10. **Preços** — 4 cards (Grátis, Plus R$69 "MAIS POPULAR", Pro R$149, Enterprise R$297). Botão do card gratuito abre signup; demais → `navigate('/planos')`.
+11. **CTA final** + **Footer**.
 
-## Não vou tocar
+## Interações e movimento
 
-- Stripe (já removido).
-- Lógica de `plan_features`, `PlanGate`, gating.
-- Fluxo de admin manual de assinaturas.
+- Botões primários: classe utilitária local — `transition-all hover:-translate-y-0.5 hover:shadow-premium` + seta `→` com `group-hover:translate-x-1`.
+- Cards (pilares/módulos/preços): `hover:-translate-y-1 hover:border-primary/40 transition-all`.
+- Badges: `hover:-translate-y-0.5 hover:border-primary` transition.
+- Todas as seções envolvidas em `FadeIn` + `Stagger` (já existentes) para reveal on-mount.
+
+## Guardrails
+
+- Não mexer: `AuthContext`, `AuthLoginDialog`, `AuthSignupDialog`, checkout Asaas, edge functions, `Mcp.tsx`, tokens de `index.css`.
+- Manter `PageMeta` no topo com título/descrição atuais.
+- Não introduzir libs novas (framer-motion, lucide, radix já estão).
+- Sem hardcode de cor — só tokens.
+- MCP url: usar a existente em `src/pages/Mcp.tsx` (`https://hnextembswhejumvxbzd.supabase.co/functions/v1/mcp`) — colar como constante, não deixar hardcoded no meio do JSX.
+
+## Verificação após build
+
+1. `/auth` deslogado renderiza a nova landing em light mode.
+2. Signup, Login e "Ver demo ao vivo" abrem os fluxos atuais.
+3. Painel interativo cicla 4 estados e para com `prefers-reduced-motion`.
+4. Link MCP vai para `/mcp` real.
+5. Botões de preço abrem `/planos` (checkout Asaas existente).
+6. Sem erros no console; sem warnings de token hardcoded.
