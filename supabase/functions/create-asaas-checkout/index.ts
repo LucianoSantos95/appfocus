@@ -33,7 +33,10 @@ Deno.serve(async (req) => {
     const paymentMode: "recurring" | "one_time" = mode === "recurring" ? "recurring" : "one_time";
     const value = PLAN_VALUES[plan][billingCycle];
 
-    const origin = req.headers.get("origin") ?? "https://app.focusinteligente.com.br";
+    // Asaas rejeita URLs de localhost/preview — força domínio público em dev
+    const rawOrigin = req.headers.get("origin") ?? "";
+    const isPublic = /^https:\/\/(app\.focusinteligente\.com\.br|[^/]+\.lovable\.app)/i.test(rawOrigin);
+    const origin = isPublic ? rawOrigin : "https://app.focusinteligente.com.br";
     const today = new Date().toISOString().slice(0, 10);
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
