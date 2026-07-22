@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [demo]);
 
   const signIn = async (email: string, password: string) => {
     // Rate limit check + record attempt em paralelo (record é fire-and-forget)
