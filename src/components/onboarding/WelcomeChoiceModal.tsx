@@ -145,8 +145,8 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
             {SEGMENTS.map((s) => (
               <CardButton key={s.id} onClick={() => handleSegmentClick(s.id)}>
                 <span className="text-3xl leading-none mb-3 block">{s.emoji}</span>
-                <h3 className="text-base font-semibold text-white mb-1">{s.label}</h3>
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.65)" }}>{s.desc}</p>
+                <h3 className="text-lg font-semibold text-white mb-1">{s.label}</h3>
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.80)" }}>{s.desc}</p>
               </CardButton>
             ))}
           </div>
