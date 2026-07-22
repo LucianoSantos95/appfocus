@@ -175,7 +175,7 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
                 placeholder="(11) 99999-9999"
                 autoFocus
                 className="w-full rounded-[10px] border bg-transparent px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
-                style={{ borderColor: "rgba(255,255,255,0.15)" }}
+                style={{ borderColor: "rgba(255,255,255,0.30)" }}
               />
             </div>
             <button
