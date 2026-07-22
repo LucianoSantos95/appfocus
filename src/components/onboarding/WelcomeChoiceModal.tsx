@@ -44,17 +44,17 @@ function CardButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="group text-left p-6 rounded-[14px] border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-      style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.10)" }}
+      className="group text-left p-7 rounded-[14px] border shadow-lg shadow-black/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
+      style={{ background: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)" }}
       onMouseEnter={(e) => {
         if (!disabled) {
-          e.currentTarget.style.borderColor = "rgba(79,126,255,0.40)";
-          e.currentTarget.style.background = "rgba(79,126,255,0.06)";
+          e.currentTarget.style.borderColor = "rgba(79,126,255,0.55)";
+          e.currentTarget.style.background = "rgba(79,126,255,0.10)";
         }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
-        e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+        e.currentTarget.style.background = "rgba(255,255,255,0.08)";
       }}
     >
       {children}
@@ -110,7 +110,7 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
           <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
             {step === "phone" ? `Quase lá, ${firstName}!` : `Olá, ${firstName} 👋`}
           </h1>
-          <p className="mt-3 text-lg" style={{ color: "rgba(255,255,255,0.75)" }}>{subtitles[step]}</p>
+          <p className="mt-3 text-lg" style={{ color: "rgba(255,255,255,0.90)" }}>{subtitles[step]}</p>
 
           {/* Progress dots */}
           <div className="flex items-center gap-3 mt-4">
@@ -125,7 +125,7 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
                   />
                   <span
                     className={`text-xs transition-colors ${
-                      step === s ? "text-foreground" : "text-muted-foreground"
+                      step === s ? "text-foreground" : "text-foreground/70"
                     }`}
                   >
                     {dotLabels[i]}
@@ -145,8 +145,8 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
             {SEGMENTS.map((s) => (
               <CardButton key={s.id} onClick={() => handleSegmentClick(s.id)}>
                 <span className="text-3xl leading-none mb-3 block">{s.emoji}</span>
-                <h3 className="text-base font-semibold text-white mb-1">{s.label}</h3>
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.65)" }}>{s.desc}</p>
+                <h3 className="text-lg font-semibold text-white mb-1">{s.label}</h3>
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.80)" }}>{s.desc}</p>
               </CardButton>
             ))}
           </div>
@@ -155,8 +155,8 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
         {/* Step 1.5 — phone */}
         {step === "phone" && (
           <div
-            className="rounded-[14px] border p-8 flex flex-col gap-5"
-            style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.10)" }}
+            className="rounded-[14px] border shadow-lg shadow-black/40 p-8 flex flex-col gap-5"
+            style={{ background: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)" }}
           >
             <div className="text-4xl text-center">📱</div>
             <div>
@@ -175,7 +175,7 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
                 placeholder="(11) 99999-9999"
                 autoFocus
                 className="w-full rounded-[10px] border bg-transparent px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
-                style={{ borderColor: "rgba(255,255,255,0.15)" }}
+                style={{ borderColor: "rgba(255,255,255,0.30)" }}
               />
             </div>
             <button
@@ -212,8 +212,8 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
                     <span className="text-3xl leading-none">{c.emoji}</span>
                     <Icon className="h-6 w-6 text-primary/70 group-hover:text-primary transition-colors" />
                   </div>
-                  <h3 className="text-base font-semibold text-white mb-1">{c.title}</h3>
-                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.65)" }}>{c.desc}</p>
+                  <h3 className="text-lg font-semibold text-white mb-1">{c.title}</h3>
+                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.80)" }}>{c.desc}</p>
                 </CardButton>
               );
             })}
@@ -229,7 +229,7 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
         )}
 
         {!isLoading && (
-          <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.45)" }}>
+          <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.70)" }}>
             {footers[step]}
           </p>
         )}
