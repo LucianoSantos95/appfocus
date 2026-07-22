@@ -12,10 +12,10 @@ export default function DemoBanner() {
       sessionStorage.removeItem("demo_mode");
     } catch { /* ignore */ }
     clearAllResources();
-    navigate("/auth", { replace: true });
-    // Reload garante que AuthContext limpa o usuário sintético
-    setTimeout(() => window.location.reload(), 50);
+    // Hard reload garante que AuthProvider/PlanProvider soltem o usuário sintético.
+    window.location.assign("/auth");
   };
+
 
   return (
     <div className="sticky top-0 z-50 w-full bg-accent text-accent-foreground border-b border-accent/40">
