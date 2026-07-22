@@ -60,7 +60,13 @@ export const demoTransacoes = [
   { id: "d-tr6", description: "Salários equipe", value: 16500, type: "despesa", category: "Folha", status: "confirmado", date: addDays(-3), payment_method: "Transferência", client: null, provider: null, notes: null, bank_account_id: "d-b1", created_at: isoDays(-3), updated_at: isoDays(-3) },
   { id: "d-tr7", description: "Assinatura Nova Escola", value: 1500, type: "receita", category: "Serviços", status: "pendente", date: addDays(7), payment_method: "Boleto", client: "Nova Escola", provider: null, notes: null, bank_account_id: "d-b2", created_at: isoDays(-1), updated_at: isoDays(-1) },
   { id: "d-tr8", description: "Ferramentas SaaS", value: 780, type: "despesa", category: "Software", status: "confirmado", date: addDays(-8), payment_method: "Cartão", client: null, provider: "Diversos", notes: null, bank_account_id: "d-b1", created_at: isoDays(-8), updated_at: isoDays(-8) },
+  // Mês anterior — dá base para o delta % "vs mês passado" no Hero e para gráficos de comparação.
+  { id: "d-tr9",  description: "Projeto site Boutique M", value: 6800, type: "receita", category: "Serviços", status: "confirmado", date: addDays(-38), payment_method: "Transferência", client: "Boutique M",   provider: null, notes: null, bank_account_id: "d-b1", created_at: isoDays(-38), updated_at: isoDays(-38) },
+  { id: "d-tr10", description: "Retainer Instituto Rê",   value: 1800, type: "receita", category: "Serviços", status: "confirmado", date: addDays(-45), payment_method: "Pix",          client: "Instituto Rê", provider: null, notes: null, bank_account_id: "d-b1", created_at: isoDays(-45), updated_at: isoDays(-45) },
+  { id: "d-tr11", description: "Google Workspace",        value: 320,  type: "despesa", category: "Software", status: "confirmado", date: addDays(-40), payment_method: "Cartão",       client: null,           provider: "Google", notes: null, bank_account_id: "d-b1", created_at: isoDays(-40), updated_at: isoDays(-40) },
+  { id: "d-tr12", description: "Consultoria Café da Vila", value: 990, type: "receita", category: "Serviços", status: "confirmado", date: addDays(-50), payment_method: "Pix",          client: "Café da Vila", provider: null, notes: null, bank_account_id: "d-b2", created_at: isoDays(-50), updated_at: isoDays(-50) },
 ];
+
 
 export const demoColaboradores = [
   { id: "d-cl1", name: "Ana Costa", role: "Gerente de Projetos", department: "Operações", email: "ana@focus.demo", phone: "(11) 98765-4321", status: "ativo", salary: 6500, start_date: addDays(-365), manager: null, created_at: isoDays(-365), updated_at: isoDays(-30) },
