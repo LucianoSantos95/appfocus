@@ -212,8 +212,8 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
                     <span className="text-3xl leading-none">{c.emoji}</span>
                     <Icon className="h-6 w-6 text-primary/70 group-hover:text-primary transition-colors" />
                   </div>
-                  <h3 className="text-base font-semibold text-foreground mb-1">{c.title}</h3>
-                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.50)" }}>{c.desc}</p>
+                  <h3 className="text-base font-semibold text-white mb-1">{c.title}</h3>
+                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.65)" }}>{c.desc}</p>
                 </CardButton>
               );
             })}
