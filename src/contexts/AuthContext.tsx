@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearAllResources } from "@/lib/sharedResource";
+import { isDemoMode, DEMO_USER } from "@/lib/demo-fixtures";
 
 interface AuthContextType {
   user: User | null;
@@ -15,11 +16,13 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const demo = isDemoMode();
+  const [user, setUser] = useState<User | null>(demo ? (DEMO_USER as unknown as User) : null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!demo);
 
   useEffect(() => {
+    if (demo) return; // Modo demo não usa Supabase auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
@@ -57,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [demo]);
 
   const signIn = async (email: string, password: string) => {
     // Rate limit check + record attempt em paralelo (record é fire-and-forget)

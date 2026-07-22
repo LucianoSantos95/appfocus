@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { MfaChallenge } from "@/components/auth/MfaChallenge";
+import { isDemoMode } from "@/lib/demo-fixtures";
 
 const MFA_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -13,11 +14,12 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
+  const demo = isDemoMode();
   const [mfaRequired, setMfaRequired] = useState<boolean | null>(null);
   const [mfaVerified, setMfaVerified] = useState(false);
 
   useEffect(() => {
-    if (!user) {
+    if (demo || !user) {
       setMfaRequired(false);
       return;
     }
@@ -67,7 +69,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!user) {
+  if (!user && !demo) {
     return <Navigate to="/auth" replace />;
   }
 

@@ -1,81 +1,68 @@
-# Nova landing `/` e `/auth` — Hub Empresarial
 
-Reescreve `src/pages/Auth.tsx` do zero como landing de alta conversão no modelo "all-in-one que substitui suas ferramentas" + diferencial IA/MCP. Zero mudança em lógica de auth, pagamento, MCP ou banco. Só página + subcomponentes visuais.
+## 1. Logo e wordmark maiores na landing
 
-## Design system (o real, sem inventar)
+Em `src/components/landing/LandingNav.tsx`:
+- Aumentar o ícone/logo do Hub (~+40%) e o texto "Hub Empresarial" (fonte maior, mais peso). Sem alterações no sidebar do app logado.
 
-- Fontes já carregadas: **Instrument Serif itálico** (`.font-display`) nos títulos-herói, **Work Sans** no corpo, **JetBrains Mono** (`font-mono`) em eyebrows, métricas e bloco de código.
-- Paleta: usa tokens `--background`, `--foreground`, `--primary` (teal do light mode, `167 100% 42%`), `--muted-foreground`, `--border`. Nada de hex hardcoded. Destaque = `.gradient-text` ou `text-primary italic font-display`.
-- Marca: **Hub Empresarial**, logo real `src/assets/logo.png`. Rodapé: "© 2026 Focus Gestão Inteligente · São Paulo · BR".
-- Componentes reutilizados: `Button`, `Card`, `Accordion`, `FadeIn`/`Stagger`/`CountUp` de `src/components/motion`. Respeita `prefers-reduced-motion` (já embutido nesses componentes).
-- Força **light mode** na entrada da landing (via `ThemeContext.setTheme('light')` no mount, sem persistir), já que o mock é claro.
+## 2. Modo demo anônimo (sem login, read-only)
 
-## CTAs (ligados aos fluxos que já existem)
+Trocar `handleDemoLogin` da landing por navegação para uma nova rota `/demo` — nada de Supabase, nada de conta compartilhada.
 
-- "Começar grátis" → `setSignupOpen(true)` (AuthSignupDialog atual).
-- "Entrar" → `setLoginOpen(true)` (AuthLoginDialog atual).
-- "Ver demo ao vivo" → `handleDemoLogin()` atual (demo@focusinteligente.com.br).
-- Preços → `create-asaas-checkout` já usado em `/planos` (importa o mesmo helper OU navega para `/planos` com plano pré-selecionado — usar `navigate('/planos')` para não duplicar a lógica).
-- "Ver página completa do MCP →" → `<Link to="/mcp">`.
+**Novos arquivos:**
+- `src/contexts/DemoModeContext.tsx` — provider global expondo `isDemoMode: boolean`. Ligado quando a rota começa com `/demo` OU quando existe flag `sessionStorage.demo_mode`.
+- `src/lib/demo-fixtures.ts` — datasets fictícios completos (clientes, projetos, tarefas, transações, colaboradores, campanhas, conteúdos, processos, agenda, mural, contas bancárias) reaproveitando a estrutura já usada em `populate_demo_data`.
+- `src/pages/DemoEntry.tsx` — seta `sessionStorage.demo_mode=1`, redireciona para `/`.
+- `src/components/demo/DemoBanner.tsx` — barra fixa no topo: "Modo demonstração · dados fictícios · sair da demo".
 
-## Estrutura de arquivos
+**Integração:**
+- `src/App.tsx`: envolver árvore com `DemoModeProvider`; adicionar rota `/demo`; permitir acesso a rotas protegidas quando `isDemoMode` (ajuste em `ProtectedRoute.tsx`).
+- Hooks de dados (`useClientes`, `useProjetos`, `useTarefas`, `useTransacoes`, `useColaboradores`, `useCampanhas`, `useConteudos`, `useProcessos`, `useContasBancarias`, e a agenda/mural do dashboard): early-return retornando os fixtures quando `isDemoMode`, sem chamar Supabase; funções de mutation viram no-ops que exibem toast "Ação desabilitada no modo demonstração".
+- `AuthContext`: quando em demo, `user` fica como objeto sintético `{ id: "demo", email: "demo@..." }` só para o layout renderizar.
+- `UserMenu`: em demo, botão "Sair" chama `sessionStorage.removeItem` e navega para `/auth`.
+- Botões críticos (novo cliente, nova tarefa, etc.): usar um hook `useDemoGuard()` que desabilita o botão com tooltip "Somente leitura na demo".
 
-Um arquivo `Auth.tsx` fica gigante. Split em subcomponentes dentro de `src/components/landing/`:
+## 3. Limite "5 primeiros + Ver mais" em todas as listas do app
 
-```text
-src/components/landing/
-├─ LandingNav.tsx
-├─ LandingHero.tsx
-├─ InteractivePanel.tsx       (o card do hero que cicla 4 meses)
-├─ SocialProofBar.tsx
-├─ ReplacesSection.tsx        (seção "1 Hub. 6 assinaturas a menos")
-├─ ThreePillars.tsx
-├─ AiTerminalSection.tsx      (terminal fake com Q&A)
-├─ McpSection.tsx
-├─ ModulesGrid.tsx
-├─ PricingSection.tsx
-├─ FinalCta.tsx
-└─ LandingFooter.tsx
+Criar componente reutilizável `src/components/ui/ExpandableList.tsx`:
+```tsx
+<ExpandableList items={rows} initialCount={5} renderItem={(row) => <Card ... />} />
 ```
+Renderiza os 5 primeiros; se `items.length > 5`, mostra botão "Ver mais (N)" que expande para todos. Estado local.
 
-`src/pages/Auth.tsx` vira orquestrador: mantém os dialogs (`AuthLoginDialog`, `AuthSignupDialog`), `handleDemoLogin`, `handleGoogleLogin`, captura UTM e monta as seções na ordem.
+Aplicar nas listas/grids principais:
+- Clientes (grid e kanban — no kanban, 5 por coluna)
+- Projetos (mesmo padrão)
+- Tarefas (por coluna do kanban)
+- Finanças → transações
+- RH → colaboradores
+- Marketing → campanhas e conteúdos
+- Processos
+- Dashboard → agenda e mural
 
-Também garantir que `/` renderiza esta mesma landing (verificar `src/App.tsx` — se `/` já aponta para outra coisa quando não logado, ajustar route). Se `/` já cai em `Auth` para deslogados, não mexer.
+Não afeta gráficos/BI (que já usam agregados).
 
-## Seções (ordem final)
+## 4. Cards de Módulos com título + descrição (estilo do print)
 
-1. **Nav** — logo + "Hub Empresarial" · links âncora (Por que o Hub, IA & MCP, Módulos, Preços) · Entrar + "Começar grátis".
-2. **Hero** — duas colunas. Eyebrow mono teal "GESTÃO COM IA · FEITO NO BRASIL". Título Instrument Serif: "Um Hub pra substituir suas *6 ferramentas* de gestão." Subtítulo, dois CTAs, microtrust mono. À direita: `InteractivePanel`.
-3. **InteractivePanel** — 4 estados (Jul/Ago/Set/Out) cicla a cada 3.4s com `AnimatePresence`. Mostra Receita/Despesa/Saldo/Delta + mini-gráfico SVG de linha que redesenha via `motion.path` com `pathLength` de 0→1, ponto final animado, delta muda cor (teal ↑ / laranja `--destructive` ↓), texto "Insight da IA" troca em sincronia. `useReducedMotion` → troca sem animar.
-4. **Social proof** — "+100 operações já rodam no Hub Empresarial" + badges de segmento com hover subindo.
-5. **Substitui tudo isso** — título + lista com itens riscados (line-through) dos concorrentes.
-6. **Três pilares** — cards com hover-lift.
-7. **AI Terminal** — grid 2 col; à esquerda copy "Converse com a sua *operação*"; à direita card `bg-slate-900 text-slate-50 font-mono` com prompt teal (`text-primary`), respostas com números reais dos meses do painel, cursor `▋` piscando (CSS keyframe já existe).
-8. **MCP** — badge NOVO + explicação + 3 passos + bloco de código com `https://hnextembswhejumvxbzd.supabase.co/functions/v1/mcp` (botão copy) + badges (ChatGPT, Claude, Cursor, Codex) + link `→ /mcp`.
-9. **Módulos** — grid 6 cards (Finanças, Clientes, Projetos, Tarefas, Marketing, RH·Processos) com ícone + título + subtítulo de resultado. Hover-lift.
-10. **Preços** — 4 cards (Grátis, Plus R$69 "MAIS POPULAR", Pro R$149, Enterprise R$297). Botão do card gratuito abre signup; demais → `navigate('/planos')`.
-11. **CTA final** + **Footer**.
+Em `src/components/landing/ModulesGrid.tsx`, ajustar cada item para ter `eyebrow` (em teal mono uppercase), `title` (Instrument Serif ou Work Sans bold) e `desc` (uma frase objetiva). Mantém os ícones atuais. Copy conforme o print:
 
-## Interações e movimento
+- **FINANÇAS** — Feche o mês em minutos — Importe o OFX, veja DRE, fluxo e inadimplência prontos.
+- **CLIENTES** — Nunca perca um follow-up — CRM com IA que classifica e enriquece cada cliente.
+- **PROJETOS** — Entregue no prazo — Kanban com prazos, orçamento e responsáveis.
+- **TAREFAS** — Organize a rotina — To-dos, prioridades e acompanhamento da operação.
+- **MARKETING** — Planeje o conteúdo — Calendário editorial e campanhas por cliente.
+- **RH · PROCESSOS** — Padronize a casa — Equipe, documentos e playbooks documentados.
 
-- Botões primários: classe utilitária local — `transition-all hover:-translate-y-0.5 hover:shadow-premium` + seta `→` com `group-hover:translate-x-1`.
-- Cards (pilares/módulos/preços): `hover:-translate-y-1 hover:border-primary/40 transition-all`.
-- Badges: `hover:-translate-y-0.5 hover:border-primary` transition.
-- Todas as seções envolvidas em `FadeIn` + `Stagger` (já existentes) para reveal on-mount.
+Ajustar grid para `sm:grid-cols-2 lg:grid-cols-3` (já é) e altura uniforme.
 
-## Guardrails
+## Detalhes técnicos
 
-- Não mexer: `AuthContext`, `AuthLoginDialog`, `AuthSignupDialog`, checkout Asaas, edge functions, `Mcp.tsx`, tokens de `index.css`.
-- Manter `PageMeta` no topo com título/descrição atuais.
-- Não introduzir libs novas (framer-motion, lucide, radix já estão).
-- Sem hardcode de cor — só tokens.
-- MCP url: usar a existente em `src/pages/Mcp.tsx` (`https://hnextembswhejumvxbzd.supabase.co/functions/v1/mcp`) — colar como constante, não deixar hardcoded no meio do JSX.
+- Nenhuma mudança de schema, nenhum edge function tocado, nenhuma migration. Asaas/Stripe/Google/Slack intocados.
+- `DemoModeContext` precede `AuthProvider` na árvore para que `AuthContext` possa consultar `isDemoMode` sem loop (ou usar leitura direta de `sessionStorage` no `AuthContext` para evitar dependência circular).
+- `ExpandableList` respeita `prefers-reduced-motion`; expansão com `AnimatePresence` leve.
+- Rota `/demo` limpa qualquer sessão Supabase antes de setar a flag, garantindo que um usuário logado que clica em "Ver demo" entra em modo demo isolado.
 
-## Verificação após build
+## Fora de escopo (não faremos agora)
 
-1. `/auth` deslogado renderiza a nova landing em light mode.
-2. Signup, Login e "Ver demo ao vivo" abrem os fluxos atuais.
-3. Painel interativo cicla 4 estados e para com `prefers-reduced-motion`.
-4. Link MCP vai para `/mcp` real.
-5. Botões de preço abrem `/planos` (checkout Asaas existente).
-6. Sem erros no console; sem warnings de token hardcoded.
+- Popular novos dados no banco.
+- Alterar sidebar/tema do app.
+- Mudar comportamento das listas em contexto read-only pré-existente (BI, admin).

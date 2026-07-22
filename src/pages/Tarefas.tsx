@@ -116,6 +116,7 @@ export default function Tarefas() {
   const freemium = useFreemiumLimit(dbTarefas.length);
   const [selectedAtividade, setSelectedAtividade] = useState<Atividade | null>(null);
   const [dragOverPriority, setDragOverPriority] = useState<Atividade["priority"] | null>(null);
+  const [showAllKanban, setShowAllKanban] = useState<Record<string, boolean>>({});
 
   // Map DB tarefas to local Atividade type
   const atividades: Atividade[] = dbTarefas.map(t => ({
@@ -236,6 +237,8 @@ export default function Tarefas() {
 
   const renderKanbanColumn = (priority: Atividade["priority"], label: string) => {
     const items = getAtividadesByPriority(priority);
+    const expanded = !!showAllKanban[priority];
+    const visibleItems = expanded ? items : items.slice(0, 5);
     const isOver = dragOverPriority === priority;
     return (
       <div
@@ -260,7 +263,7 @@ export default function Tarefas() {
           </span>
         </div>
         <div className="space-y-2">
-          {items.map((a) => (
+          {visibleItems.map((a) => (
             <div
               key={a.id}
               draggable
@@ -300,6 +303,15 @@ export default function Tarefas() {
           ))}
           {items.length === 0 && (
             <EmptyState size="sm" icon={ClipboardList} title="Sem dados" description="Arraste tarefas para esta coluna para repriorizar." />
+          )}
+          {items.length > 5 && (
+            <button
+              type="button"
+              onClick={() => setShowAllKanban((s) => ({ ...s, [priority]: !expanded }))}
+              className="w-full text-xs text-muted-foreground hover:text-foreground py-1.5 rounded-md hover:bg-muted/50 transition-colors"
+            >
+              {expanded ? "Ver menos" : `Ver mais (${items.length - 5})`}
+            </button>
           )}
         </div>
       </div>

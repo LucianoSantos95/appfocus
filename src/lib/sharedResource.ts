@@ -1,4 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { isDemoMode, getDemoFixture } from "@/lib/demo-fixtures";
 
 /**
  * Lightweight in-memory cache with subscription for Supabase-style list hooks.
@@ -46,6 +47,20 @@ function notify(entry: Entry<any>) {
 
 async function runFetch<T>(key: string, fetcher: Fetcher<T>, entry: Entry<T>) {
   if (entry.inflight) return entry.inflight;
+
+  // Demo mode: short-circuit — nunca toca no Supabase.
+  if (isDemoMode()) {
+    const fixture = getDemoFixture(key);
+    if (fixture !== undefined) {
+      entry.data = fixture as T;
+      entry.error = null;
+      entry.fetchedAt = Date.now();
+      entry.isLoading = false;
+      notify(entry);
+      return fixture as T;
+    }
+  }
+
   entry.isLoading = entry.data === undefined || entry.data === null || (Array.isArray(entry.data) && entry.data.length === 0);
   notify(entry);
   const p = (async () => {
