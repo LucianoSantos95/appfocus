@@ -72,13 +72,14 @@ export const demoColaboradores = [
 ];
 
 export const demoCampanhas = [
-  { id: "d-cp1", name: "Lançamento Produto X", objective: "Gerar leads qualificados", platforms: "Instagram, Google Ads", status: "ativa", budget: 3500, start_date: addDays(-10), end_date: addDays(20), responsible: "Mariana Santos", created_at: isoDays(-10), updated_at: isoDays(-2) },
-  { id: "d-cp2", name: "Black Friday 2026", objective: "Aumentar vendas em 30%", platforms: "Facebook, E-mail", status: "planejamento", budget: 5000, start_date: addDays(30), end_date: addDays(45), responsible: "Ana Costa", created_at: isoDays(-3), updated_at: isoDays(-3) },
-  { id: "d-cp3", name: "Webinar de Gestão", objective: "Nutrir base", platforms: "YouTube, E-mail", status: "ativa", budget: 1200, start_date: addDays(-5), end_date: addDays(15), responsible: "Mariana Santos", created_at: isoDays(-5), updated_at: isoDays(-1) },
-  { id: "d-cp4", name: "Retargeting Q4", objective: "Reconquistar leads frios", platforms: "Meta Ads", status: "ativa", budget: 2100, start_date: addDays(-15), end_date: addDays(15), responsible: "Ricardo Menezes", created_at: isoDays(-15), updated_at: isoDays(-1) },
-  { id: "d-cp5", name: "Parceria Educacional", objective: "Co-marketing", platforms: "LinkedIn", status: "planejamento", budget: 800, start_date: addDays(20), end_date: addDays(60), responsible: "Ana Costa", created_at: isoDays(-1), updated_at: isoDays(-1) },
-  { id: "d-cp6", name: "Campanha SEO Local", objective: "Ranquear cidades-alvo", platforms: "Google", status: "ativa", budget: 1500, start_date: addDays(-30), end_date: addDays(60), responsible: "Mariana Santos", created_at: isoDays(-30), updated_at: isoDays(-2) },
+  { id: "d-cp1", name: "Lançamento Produto X", objective: "Gerar leads qualificados", platforms: "Instagram, Google Ads", status: "ativa", budget: 3500, start_date: addDays(-10), end_date: addDays(20), responsible: "Mariana Santos", leads_gerados: 148, conversoes: 22, receita_atribuida: 18500, created_at: isoDays(-10), updated_at: isoDays(-2) },
+  { id: "d-cp2", name: "Black Friday 2026", objective: "Aumentar vendas em 30%", platforms: "Facebook, E-mail", status: "planejamento", budget: 5000, start_date: addDays(30), end_date: addDays(45), responsible: "Ana Costa", leads_gerados: 0, conversoes: 0, receita_atribuida: 0, created_at: isoDays(-3), updated_at: isoDays(-3) },
+  { id: "d-cp3", name: "Webinar de Gestão", objective: "Nutrir base", platforms: "YouTube, E-mail", status: "ativa", budget: 1200, start_date: addDays(-5), end_date: addDays(15), responsible: "Mariana Santos", leads_gerados: 86, conversoes: 9, receita_atribuida: 7200, created_at: isoDays(-5), updated_at: isoDays(-1) },
+  { id: "d-cp4", name: "Retargeting Q4", objective: "Reconquistar leads frios", platforms: "Meta Ads", status: "ativa", budget: 2100, start_date: addDays(-15), end_date: addDays(15), responsible: "Ricardo Menezes", leads_gerados: 54, conversoes: 12, receita_atribuida: 9600, created_at: isoDays(-15), updated_at: isoDays(-1) },
+  { id: "d-cp5", name: "Parceria Educacional", objective: "Co-marketing", platforms: "LinkedIn", status: "planejamento", budget: 800, start_date: addDays(20), end_date: addDays(60), responsible: "Ana Costa", leads_gerados: 0, conversoes: 0, receita_atribuida: 0, created_at: isoDays(-1), updated_at: isoDays(-1) },
+  { id: "d-cp6", name: "Campanha SEO Local", objective: "Ranquear cidades-alvo", platforms: "Google", status: "ativa", budget: 1500, start_date: addDays(-30), end_date: addDays(60), responsible: "Mariana Santos", leads_gerados: 210, conversoes: 31, receita_atribuida: 24800, created_at: isoDays(-30), updated_at: isoDays(-2) },
 ];
+
 
 export const demoConteudos = [
   { id: "d-co1", title: "Post: 5 dicas de produtividade", description: "Carrossel prático para PMEs", platform: "Instagram", status: "agendado", scheduled_date: addDays(2), created_at: isoDays(-1), updated_at: isoDays(-1) },
