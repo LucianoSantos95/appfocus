@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, X, TrendingUp } from "lucide-react";
+import { Sparkles, X, TrendingUp, Check, Loader2 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { isDemoMode } from "@/lib/demo-fixtures";
 
 export interface WowMoment {
   module: string;
@@ -21,27 +24,60 @@ interface Props {
 /**
  * Quantified victory card shown right after a meaningful action in onboarding.
  * Triggers confetti on appear to anchor the "aha" moment.
+ * Also captures WhatsApp opt-in AFTER the user has seen value (not before).
  */
 export function WowMomentCard({ moment, onDismiss }: Props) {
+  const { user } = useAuth();
   const [visible, setVisible] = useState(false);
+  const [phoneNeeded, setPhoneNeeded] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [phoneSaving, setPhoneSaving] = useState(false);
+  const [phoneSaved, setPhoneSaved] = useState(false);
 
   useEffect(() => {
     if (!moment) return;
     setVisible(true);
+    setPhoneSaved(false);
+    setPhone("");
     confetti({
       particleCount: 80,
       spread: 60,
       origin: { y: 0.7 },
       colors: ["#3b82f6", "#60a5fa", "#a78bfa"],
     });
-    const t = setTimeout(() => handleClose(), 9000);
+    const t = setTimeout(() => handleClose(), 15000);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moment]);
 
+  // Fetch profile phone once to decide whether to show the WhatsApp prompt.
+  useEffect(() => {
+    if (!moment || !user || isDemoMode()) { setPhoneNeeded(false); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("phone")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!cancelled) setPhoneNeeded(!data?.phone);
+    })();
+    return () => { cancelled = true; };
+  }, [moment, user]);
+
   const handleClose = () => {
     setVisible(false);
     setTimeout(onDismiss, 250);
+  };
+
+  const handleSavePhone = async () => {
+    if (!user) return;
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 10) return;
+    setPhoneSaving(true);
+    await supabase.from("profiles").update({ phone: digits }).eq("user_id", user.id);
+    setPhoneSaving(false);
+    setPhoneSaved(true);
   };
 
   if (!moment) return null;
@@ -88,6 +124,38 @@ export function WowMomentCard({ moment, onDismiss }: Props) {
                 <span className="font-medium">{moment.emoji || "✨"} Insight imediato:</span> {moment.insight}
               </div>
             )}
+
+            {phoneNeeded && !phoneSaved && (
+              <div className="mt-2 rounded-lg border border-primary/30 bg-card/70 p-3 space-y-2">
+                <p className="text-[11px] font-medium text-foreground">
+                  📱 Receber alertas no WhatsApp?
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="(11) 99999-9999"
+                    className="flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSavePhone}
+                    disabled={phoneSaving || phone.replace(/\D/g, "").length < 10}
+                    className="h-8 px-3 text-xs"
+                  >
+                    {phoneSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : "Ativar"}
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Só avisos úteis. Sem spam.</p>
+              </div>
+            )}
+            {phoneSaved && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-primary">
+                <Check className="h-3.5 w-3.5" /> WhatsApp cadastrado
+              </div>
+            )}
+
             <Button size="sm" variant="ghost" onClick={handleClose} className="h-7 px-2 text-xs mt-1">
               Continuar
             </Button>
