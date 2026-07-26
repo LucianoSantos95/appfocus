@@ -1,23 +1,52 @@
-## Problema
 
-Na landing, clicar em **"Assinar Plus"** (ou Pro/Enterprise) leva o visitante deslogado para `/planos`. Lá, ao clicar em "Assinar com cartão automático" ou "Pix/Boleto", o `handleSubscribe` não encontra sessão, dispara `toast("Faça login")` e faz `navigate("/auth")` — que é a landing. Resultado: parece que o botão "volta para a página inicial".
+# Refatoração do Onboarding — 2 frentes
 
-Causa raiz confirmada em `src/pages/Planos.tsx` linhas 119-126: sem `access_token` → redireciona para `/auth` sem preservar a intenção de assinar.
+Escopo enxuto: landing já cobre "ver como fica" via demo pública, então o onboarding do usuário logado passa a mirar em **reduzir atrito** e **converter no momento certo**.
 
-## Correção
+---
 
-**1. `src/pages/Planos.tsx`**
-- No `handleSubscribe`, quando não houver sessão: navegar para `/auth?next=/planos&plan=<id>&cycle=<mensal|anual>&mode=<recurring|one_time>` em vez de `/auth` puro. Mostrar toast mais claro ("Crie sua conta para assinar o Plus").
-- Adicionar `useEffect` que, após login (quando `authSession` existir) e houver `?plan=` na URL, dispara `handleSubscribe` automaticamente e limpa os params. Isso completa o fluxo sem exigir novo clique.
+## Frente 1 — Reordenar passos e aliviar atrito do WhatsApp
+**Problema:** pedir telefone antes de mostrar valor é o maior ponto de abandono. O passo "Contato" está entre "Perfil" e "Módulo", quebrando o momentum.
 
-**2. `src/components/landing/PricingSection.tsx`**
-- Passar o plano escolhido na navegação: `navigate("/planos?plan=plus&cycle=monthly")` (idem Pro/Enterprise). Assim, mesmo se o usuário já estiver logado, o CTA da landing pré-seleciona a intenção.
+**O que muda:**
+- Novo fluxo: **Perfil → Módulo → (redireciona e seeda) → Momento Wow → Prompt opcional de WhatsApp dentro do WowMomentCard**.
+- Remover o step `phone` do `WelcomeChoiceModal`. Reduz de 3 dots para 2 (Perfil / Início).
+- Adicionar campo opcional de telefone no `WowMomentCard`, com CTA "Receber alertas no WhatsApp" — só aparece depois do wow (usuário já viu valor).
+- Salvar telefone via `profiles.update({ phone })` como já é feito hoje.
+- Confirmar nome quando vier truncado de email (ex.: `joao.silva`) — input inline no header do modal, pré-preenchido, editável.
 
-**3. `src/pages/Auth.tsx`**
-- Já existe `safeNext` a partir de `?next=`. Garantir que, após signup/login bem-sucedido, o `navigate(safeNext)` preserve também os query params extras (`plan`, `cycle`, `mode`). Ajuste: usar o valor completo de `nextParam` (incluindo query string) ao validar — hoje só valida que começa com `/`, então já funciona; apenas confirmar que `PricingSection` monta a URL como `next=/planos%3Fplan%3Dplus...` (encoded).
+**Arquivos:**
+- `src/components/onboarding/WelcomeChoiceModal.tsx` — remover step `phone`, ajustar dots, adicionar input de nome quando derivado de email.
+- `src/components/onboarding/OnboardingFlow.tsx` — `onChoose` recebe `phone: null` nessa etapa; wow ganha callback para gravar telefone depois.
+- `src/components/onboarding/WowMomentCard.tsx` — bloco opcional de captura de telefone.
 
-## Resultado esperado
+---
 
-Deslogado clica "Assinar Plus" na landing → abre `/planos?plan=plus&cycle=monthly` → clica em "Assinar com cartão" → vai para `/auth?next=/planos?plan=plus&cycle=monthly&mode=recurring` → após cadastro/login, volta em `/planos` e o checkout Asaas é disparado automaticamente.
+## Frente 2 — Cupom por gatilho de engajamento
+**Problema:** cupom de 20% dispara no primeiro segundo dentro do módulo. Usuário ainda não percebeu valor → cupom vira ruído e desvaloriza a oferta.
 
-Sem alterações no gateway Asaas nem nas edge functions.
+**O que muda:**
+- No `useOnboardingSession.createSession`, **não** setar `coupon_shown: true` nem `coupon_expires_at` imediatamente.
+- Criar `useEngagementCoupon` que observa `user_milestones` (já existe): ao atingir **3 ações reais** (criar/editar cliente, transação ou tarefa não-demo), ativa o cupom via `updateSession({ coupon_shown: true, coupon_expires_at: now+48h })`.
+- `OnboardingCouponBanner` continua reagindo a `coupon_shown` — só o momento da ativação muda.
+- Corrigir bug conceitual: `priority_pain` hoje recebe `DemoModule`. Passar a receber uma **dor real** via dropdown curto no passo Perfil ("Perder tempo com planilha", "Não sei se dou lucro", "Perco prazo", "Não tenho pipeline"). Alimenta emails/in-app depois.
+
+**Arquivos:**
+- `src/hooks/useOnboardingSession.ts` — remover ativação imediata do cupom no `createSession`.
+- `src/hooks/useEngagementCoupon.ts` — novo hook.
+- `src/components/onboarding/WelcomeChoiceModal.tsx` — trocar `priority_pain` por seletor de dor.
+- Montar o hook no `MainLayout` (ou `Index`) para observar milestones em background.
+
+---
+
+## Detalhes técnicos
+
+- Ordem de merge: **F1 → F2**. Independentes, sem conflito de arquivo além do `WelcomeChoiceModal`.
+- F2 depende de `user_milestones` — usar `useMilestones` já existente para contagem.
+- Aditivo em `onboarding_sessions`: nenhum campo novo obrigatório; comportamento muda só no momento do update.
+- Nada muda em Asaas/Stripe, `google-integration`, `user_integrations`, Slack ou nas migrations marcadas como obsoletas.
+
+## Fora do escopo
+- Preview de seed e rota "já tenho dados" — desnecessários porque a landing já oferece a demo pública.
+- A/B test de copy dos cards.
+- Personalização do WowMoment por dor selecionada (próxima iteração).
