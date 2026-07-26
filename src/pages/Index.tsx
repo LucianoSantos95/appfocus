@@ -85,6 +85,7 @@ const modules = [
 const Index = () => {
   const navigate = useNavigate();
   const { needsOnboarding, session, loading: onbLoading } = useOnboardingSession();
+  useEngagementCoupon();
   const [forceTour, setForceTour] = useState(false);
 
   // Redirect new users to onboarding
