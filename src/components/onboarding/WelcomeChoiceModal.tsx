@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DollarSign, Users, FolderKanban, Rocket, Loader2, ArrowRight } from "lucide-react";
 import hubLogo from "@/assets/logo.png";
 import type { DemoModule } from "@/lib/demo-data";
 
 interface Props {
   firstName: string;
-  onChoose: (module: DemoModule, segment: string, phone: string | null) => void;
+  onChoose: (module: DemoModule, segment: string, pain: string, userName: string) => void;
   isLoading?: boolean;
 }
 
@@ -14,6 +14,14 @@ const SEGMENTS = [
   { id: "consultoria", emoji: "🧠", label: "Consultoria",  desc: "Serviços estratégicos ou especializados" },
   { id: "freelancer",  emoji: "💻", label: "Freelancer",   desc: "Trabalho autônomo ou serviços avulsos" },
   { id: "pme",         emoji: "🏬", label: "PME / Outro",  desc: "Pequena empresa ou outro tipo de negócio" },
+];
+
+const PAINS = [
+  { id: "planilha",  label: "Perder tempo com planilha" },
+  { id: "lucro",     label: "Não sei se dou lucro" },
+  { id: "prazo",     label: "Perco prazo com frequência" },
+  { id: "pipeline",  label: "Não tenho pipeline organizado" },
+  { id: "outro",     label: "Outro" },
 ];
 
 const CHOICES: Array<{
@@ -29,32 +37,39 @@ const CHOICES: Array<{
   { module: "painel",     icon: Rocket,       emoji: "🚀", title: "Ver tudo",      desc: "Me mostre como o Hub funciona todo" },
 ];
 
-type Step = "segment" | "phone" | "module";
+type Step = "profile" | "module";
 
 function CardButton({
   onClick,
   disabled,
   children,
+  selected,
 }: {
   onClick: () => void;
   disabled?: boolean;
   children: React.ReactNode;
+  selected?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       className="group text-left p-7 rounded-[14px] border shadow-lg shadow-black/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
-      style={{ background: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)" }}
+      style={{
+        background: selected ? "rgba(79,126,255,0.14)" : "rgba(255,255,255,0.08)",
+        borderColor: selected ? "rgba(79,126,255,0.65)" : "rgba(255,255,255,0.18)",
+      }}
       onMouseEnter={(e) => {
-        if (!disabled) {
+        if (!disabled && !selected) {
           e.currentTarget.style.borderColor = "rgba(79,126,255,0.55)";
           e.currentTarget.style.background = "rgba(79,126,255,0.10)";
         }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
-        e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+        if (!selected) {
+          e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+          e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+        }
       }}
     >
       {children}
@@ -62,40 +77,48 @@ function CardButton({
   );
 }
 
+/** True if a display name looks like it was derived from the email local-part (e.g. "joao.silva"). */
+function looksTruncated(name: string): boolean {
+  if (!name) return true;
+  if (name.length < 2) return true;
+  if (/[._@]/.test(name)) return true;
+  if (!/[a-zA-Z]/.test(name)) return true;
+  return false;
+}
+
 export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: Props) {
-  const [step, setStep] = useState<Step>("segment");
+  const [step, setStep] = useState<Step>("profile");
   const [segment, setSegment] = useState<string | null>(null);
-  const [phone, setPhone] = useState("");
+  const [pain, setPain] = useState<string | null>(null);
+  const initialName = useMemo(() => (looksTruncated(firstName) ? "" : firstName), [firstName]);
+  const [name, setName] = useState<string>(initialName);
+  const needsNameConfirm = looksTruncated(firstName);
+
+  const canContinueProfile = !!segment && !!pain && name.trim().length >= 2;
 
   const subtitles: Record<Step, string> = {
-    segment: "Como você descreveria sua operação?",
-    phone:   "Quer receber alertas do Hub pelo WhatsApp?",
+    profile: "Vamos personalizar seu Hub em 2 passos.",
     module:  "O que você quer resolver primeiro na sua operação?",
   };
 
   const footers: Record<Step, string> = {
-    segment: "Isso nos ajuda a personalizar sua experiência no Hub.",
-    phone:   "Só enviamos avisos úteis do seu negócio. Sem spam.",
+    profile: "Isso nos ajuda a personalizar sua experiência no Hub.",
     module:  "Você pode explorar todas as áreas depois — isso é só o começo.",
   };
 
-  const dotSteps: Step[] = ["segment", "phone", "module"];
-  const dotLabels = ["Perfil", "Contato", "Início"];
+  const dotSteps: Step[] = ["profile", "module"];
+  const dotLabels = ["Perfil", "Início"];
 
-  const handleSegmentClick = (id: string) => {
-    setSegment(id);
-    setStep("phone");
-  };
+  const displayName = name.trim() || firstName;
 
-  const handlePhoneContinue = (skipPhone = false) => {
+  const handleContinueProfile = () => {
+    if (!canContinueProfile) return;
     setStep("module");
-    if (skipPhone) setPhone("");
   };
 
   const handleModuleClick = (module: DemoModule) => {
-    if (!segment) return;
-    const trimmedPhone = phone.replace(/\D/g, "");
-    onChoose(module, segment, trimmedPhone.length >= 10 ? trimmedPhone : null);
+    if (!segment || !pain) return;
+    onChoose(module, segment, pain, name.trim());
   };
 
   return (
@@ -108,7 +131,7 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
         <div className="flex flex-col items-center text-center mb-8">
           <img src={hubLogo} alt="Hub Empresarial" className="h-16 w-16 rounded-2xl mb-5 ring-2 ring-primary/30" />
           <h1 className="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
-            {step === "phone" ? `Quase lá, ${firstName}!` : `Olá, ${firstName} 👋`}
+            Olá, {displayName} 👋
           </h1>
           <p className="mt-3 text-lg" style={{ color: "rgba(255,255,255,0.90)" }}>{subtitles[step]}</p>
 
@@ -139,60 +162,73 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
           </div>
         </div>
 
-        {/* Step 1 — segment */}
-        {step === "segment" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {SEGMENTS.map((s) => (
-              <CardButton key={s.id} onClick={() => handleSegmentClick(s.id)}>
-                <span className="text-3xl leading-none mb-3 block">{s.emoji}</span>
-                <h3 className="text-lg font-semibold text-white mb-1">{s.label}</h3>
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.80)" }}>{s.desc}</p>
-              </CardButton>
-            ))}
-          </div>
-        )}
-
-        {/* Step 1.5 — phone */}
-        {step === "phone" && (
-          <div
-            className="rounded-[14px] border shadow-lg shadow-black/40 p-8 flex flex-col gap-5"
-            style={{ background: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)" }}
-          >
-            <div className="text-4xl text-center">📱</div>
-            <div>
-              <label
-                htmlFor="phone-input"
-                className="block text-sm font-medium text-foreground mb-2"
+        {/* Step 1 — profile (segment + pain + optional name confirm) */}
+        {step === "profile" && (
+          <div className="space-y-5">
+            {needsNameConfirm && (
+              <div
+                className="rounded-[14px] border shadow-lg shadow-black/40 p-5"
+                style={{ background: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)" }}
               >
-                Número do WhatsApp
-              </label>
-              <input
-                id="phone-input"
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handlePhoneContinue()}
-                placeholder="(11) 99999-9999"
-                autoFocus
-                className="w-full rounded-[10px] border bg-transparent px-4 py-3 text-base text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
-                style={{ borderColor: "rgba(255,255,255,0.30)" }}
-              />
+                <label htmlFor="name-input" className="block text-sm font-medium text-white mb-2">
+                  Como devemos te chamar?
+                </label>
+                <input
+                  id="name-input"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Seu primeiro nome"
+                  autoFocus
+                  className="w-full rounded-[10px] border bg-transparent px-4 py-3 text-base text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
+                  style={{ borderColor: "rgba(255,255,255,0.30)" }}
+                />
+              </div>
+            )}
+
+            <div>
+              <p className="text-sm font-medium text-white/80 mb-3 px-1">Como você descreveria sua operação?</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {SEGMENTS.map((s) => (
+                  <CardButton key={s.id} onClick={() => setSegment(s.id)} selected={segment === s.id}>
+                    <span className="text-3xl leading-none mb-3 block">{s.emoji}</span>
+                    <h3 className="text-lg font-semibold text-white mb-1">{s.label}</h3>
+                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.80)" }}>{s.desc}</p>
+                  </CardButton>
+                ))}
+              </div>
             </div>
+
+            <div
+              className={`rounded-[14px] border shadow-lg shadow-black/40 p-5 transition-opacity ${
+                segment ? "opacity-100" : "opacity-50 pointer-events-none"
+              }`}
+              style={{ background: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)" }}
+            >
+              <label htmlFor="pain-select" className="block text-sm font-medium text-white mb-2">
+                Qual sua principal dor hoje?
+              </label>
+              <select
+                id="pain-select"
+                value={pain ?? ""}
+                onChange={(e) => setPain(e.target.value || null)}
+                className="w-full rounded-[10px] border bg-transparent px-4 py-3 text-base text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
+                style={{ borderColor: "rgba(255,255,255,0.30)" }}
+              >
+                <option value="" className="bg-neutral-900">Selecione…</option>
+                {PAINS.map((p) => (
+                  <option key={p.id} value={p.id} className="bg-neutral-900">{p.label}</option>
+                ))}
+              </select>
+            </div>
+
             <button
-              onClick={() => handlePhoneContinue()}
-              className="flex items-center justify-center gap-2 w-full rounded-[10px] bg-primary py-3 text-sm font-semibold text-white hover:bg-primary/90 transition"
+              onClick={handleContinueProfile}
+              disabled={!canContinueProfile}
+              className="flex items-center justify-center gap-2 w-full rounded-[10px] bg-primary py-3 text-sm font-semibold text-white hover:bg-primary/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continuar
               <ArrowRight className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => handlePhoneContinue(true)}
-              className="text-xs text-center transition"
-              style={{ color: "rgba(255,255,255,0.40)" }}
-              onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.65)"; }}
-              onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.40)"; }}
-            >
-              Pular esta etapa →
             </button>
           </div>
         )}

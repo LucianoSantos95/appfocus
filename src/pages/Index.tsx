@@ -16,6 +16,7 @@ import { IntegrationsPulse } from "@/components/dashboard/IntegrationsPulse";
 import { SetupGuide } from "@/components/dashboard/SetupGuide";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
+import { useEngagementCoupon } from "@/hooks/useEngagementCoupon";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
@@ -84,6 +85,7 @@ const modules = [
 const Index = () => {
   const navigate = useNavigate();
   const { needsOnboarding, session, loading: onbLoading } = useOnboardingSession();
+  useEngagementCoupon();
   const [forceTour, setForceTour] = useState(false);
 
   // Redirect new users to onboarding

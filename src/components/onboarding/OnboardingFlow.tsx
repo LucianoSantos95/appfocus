@@ -56,29 +56,33 @@ export function OnboardingFlow() {
   }, [loading, session, navigate]);
 
   const handleChoose = useCallback(
-    async (module: DemoModule, segment: string, phone: string | null) => {
+    async (module: DemoModule, segment: string, pain: string, chosenName: string) => {
       setIsSeeding(true);
       const seedStart = Date.now();
       try {
-        let userName: string | null = null;
+        let userName: string | null = chosenName || null;
         if (user) {
-          const { data: prof } = await supabase
-            .from("profiles")
-            .select("display_name")
-            .eq("user_id", user.id)
-            .maybeSingle();
-          userName =
-            prof?.display_name ??
-            (user.user_metadata as any)?.full_name ??
-            user.email ??
-            null;
-
-          if (phone) {
-            await supabase.from("profiles").update({ phone }).eq("user_id", user.id);
+          if (chosenName) {
+            await supabase
+              .from("profiles")
+              .update({ display_name: chosenName })
+              .eq("user_id", user.id);
+          } else {
+            const { data: prof } = await supabase
+              .from("profiles")
+              .select("display_name")
+              .eq("user_id", user.id)
+              .maybeSingle();
+            userName =
+              prof?.display_name ??
+              (user.user_metadata as any)?.full_name ??
+              user.email ??
+              null;
           }
         }
 
-        await createSession(segment, module, userName);
+        // priority_pain now stores the real pain the user selected (not the module)
+        await createSession(segment, pain, userName);
         localStorage.setItem("onb_just_completed", "1");
 
         if (user) {
