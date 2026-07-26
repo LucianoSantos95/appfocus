@@ -50,10 +50,10 @@ export function useOnboardingSession() {
         segment,
         priority_pain: priorityPain,
         current_step: "demo",
-        // Coupon is activated as soon as demo starts so the countdown begins immediately
+        // Coupon is NOT activated on session start. useEngagementCoupon triggers it
+        // after the user reaches 3 real actions, so it lands at a real "aha" moment.
         coupon_code: COUPON_CODE,
-        coupon_expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-        coupon_shown: true,
+        coupon_shown: false,
       } as any)
       .select()
       .order("created_at", { ascending: false })
