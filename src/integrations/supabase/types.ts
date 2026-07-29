@@ -2022,6 +2022,7 @@ export type Database = {
     }
     Functions: {
       check_login_rate_limit: { Args: { p_email: string }; Returns: Json }
+      cleanup_old_client_errors: { Args: never; Returns: undefined }
       cleanup_rate_limits: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
