@@ -79,7 +79,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error ? new Error(error.message) : null };
+    if (error) {
+      // Normalize errors to prevent user enumeration (email vs. senha).
+      // Preserva mensagens específicas de MFA/email não confirmado.
+      const msg = error.message.toLowerCase();
+      if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials") || msg.includes("email not confirmed") === false && msg.includes("password")) {
+        return { error: new Error("Credenciais inválidas. Verifique e-mail e senha.") };
+      }
+      return { error: new Error(error.message) };
+    }
+    return { error: null };
   };
 
   const signUp = async (email: string, password: string, name?: string, inviteToken?: string) => {
