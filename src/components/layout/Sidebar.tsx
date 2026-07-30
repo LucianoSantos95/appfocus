@@ -20,7 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Lock as LockIcon,
-  Target, BarChart2,
+  BarChart2,
 } from "lucide-react";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -47,7 +47,6 @@ export function Sidebar() {
   const location = useLocation();
   const { isAdmin, isTeamMember, allowedPages, isLoading } = useTeamPermissions();
   const { user } = useAuth();
-  const isOwnerEmail = (user?.email || "").toLowerCase() === "oluciano.dosantos@gmail.com";
 
   const hasAccess = (slug: string) => {
     if (slug === "" || slug === "guia") return true; // Painel and Guia always accessible
