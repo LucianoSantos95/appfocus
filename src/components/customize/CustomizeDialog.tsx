@@ -25,7 +25,7 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
   const { toast } = useToast();
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
-  const [form, setForm] = useState({ nome: "", email: "", empresa: "", atuacao: "", customizacao: "" });
+  const [form, setForm] = useState({ nome: "", email: "", empresa: "", site: "", customizacao: "" });
 
   // Pré-preenche com o que já sabemos de quem está logado
   useEffect(() => {
@@ -37,18 +37,31 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
     }));
   }, [user, open]);
 
-  const canSend = form.nome.trim() && /\S+@\S+\.\S+/.test(form.email) && form.customizacao.trim();
+  const normalizeSite = (v: string) => {
+    const s = v.trim();
+    if (!s) return "";
+    return /^https?:\/\//i.test(s) ? s : `https://${s}`;
+  };
+  const siteValido = /^[^\s.]+\.[^\s]{2,}$/.test(form.site.trim().replace(/^https?:\/\//i, ""));
+
+  const canSend =
+    !!form.nome.trim() &&
+    /\S+@\S+\.\S+/.test(form.email) &&
+    !!form.empresa.trim() &&
+    siteValido &&
+    !!form.customizacao.trim();
 
   const handleSubmit = async () => {
     if (!canSend) return;
     setSending(true);
     try {
+      const site = normalizeSite(form.site);
       const { error } = await sb.from("custom_requests").insert({
         user_id: user?.id ?? null,
         nome: form.nome.trim(),
         email: form.email.trim(),
-        empresa: form.empresa.trim() || null,
-        atuacao: form.atuacao.trim() || null,
+        empresa: form.empresa.trim(),
+        site,
         customizacao: form.customizacao.trim(),
         origem,
       });
@@ -57,9 +70,10 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
       // Avisa no Slack (best-effort — não bloqueia o usuário)
       supabase.functions.invoke("notify-slack", {
         body: {
-          text: `🎯 Novo lead — sistema sob medida\n*${form.nome}* (${form.email})${form.empresa ? ` — ${form.empresa}` : ""}\n${form.atuacao ? `Atuação: ${form.atuacao}\n` : ""}Dor: ${form.customizacao}`,
+          text: `🎯 Novo lead — sistema sob medida\n*${form.nome}* (${form.email}) — ${form.empresa}\nSite: ${site}\nDor: ${form.customizacao}`,
         },
       }).catch(() => {});
+
 
       setDone(true);
     } catch (err: any) {
