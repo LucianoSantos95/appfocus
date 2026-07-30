@@ -119,7 +119,8 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           <Separator />
 
           <WhatsAppSettings />
-
+        </div>
+        <div className="px-6 py-4 border-t border-border shrink-0 bg-background">
           <Button onClick={handleSave} className="w-full" disabled={loading}>
             {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
             Salvar
