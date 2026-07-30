@@ -75,10 +75,8 @@ export function UserMenu({ collapsed }: UserMenuProps) {
                   <p className="text-sm font-medium text-foreground truncate">
                     {user.user_metadata?.full_name || user.email}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    Acesso completo · grátis
-                  </p>
                 </div>
+
               )}
             </button>
           </DropdownMenuTrigger>
