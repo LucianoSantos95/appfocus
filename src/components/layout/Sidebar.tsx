@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { CustomizeDialog } from "@/components/customize/CustomizeDialog";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
