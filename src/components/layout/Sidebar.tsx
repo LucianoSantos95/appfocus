@@ -20,7 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Lock as LockIcon,
-  Target, BarChart2,
+  BarChart2,
 } from "lucide-react";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -47,7 +47,6 @@ export function Sidebar() {
   const location = useLocation();
   const { isAdmin, isTeamMember, allowedPages, isLoading } = useTeamPermissions();
   const { user } = useAuth();
-  const isOwnerEmail = (user?.email || "").toLowerCase() === "oluciano.dosantos@gmail.com";
 
   const hasAccess = (slug: string) => {
     if (slug === "" || slug === "guia") return true; // Painel and Guia always accessible
@@ -143,24 +142,6 @@ export function Sidebar() {
             );
           })}
 
-          {/* Admin-only: Leads de sistema sob medida */}
-          {isOwnerEmail && (
-            <li>
-              <NavLink
-                to="/leads"
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-                  "text-sm font-medium",
-                  location.pathname === "/leads"
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
-                )}
-              >
-                <Target className={cn("w-5 h-5 flex-shrink-0", location.pathname === "/leads" && "text-primary")} />
-                {!collapsed && <span>Leads</span>}
-              </NavLink>
-            </li>
-          )}
         </ul>
       </nav>
 
