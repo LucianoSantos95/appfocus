@@ -64,13 +64,13 @@ const Planos = () => {
 
         {/* CTA de customização */}
         <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.07] to-transparent p-6 md:p-8 text-center">
-          <h2 className="font-display text-2xl tracking-tight mb-2">Falta algo para a sua operação?</h2>
+          <h2 className="font-display text-2xl tracking-tight mb-2">Sua operação precisa de algo próprio?</h2>
           <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-            Cada negócio tem um detalhe que nenhum sistema pronto resolve. Conte o que é —
-            a gente estuda construir sob medida para você.
+            Se existe um processo que nenhum sistema pronto atende, dá pra construir algo
+            sob medida pro seu negócio. Conte a dor da sua operação e a gente conversa.
           </p>
           <Button size="lg" onClick={() => setOpen(true)} className="gap-2 group">
-            Quero o Hub do meu jeito
+            Quero um sistema sob medida
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>

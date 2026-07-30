@@ -20,8 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Lock as LockIcon,
-  Crown,
-  BarChart2,
+  Target, BarChart2,
 } from "lucide-react";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -144,21 +143,21 @@ export function Sidebar() {
             );
           })}
 
-          {/* Admin-only: Assinantes */}
+          {/* Admin-only: Leads de sistema sob medida */}
           {isOwnerEmail && (
             <li>
               <NavLink
-                to="/assinantes"
+                to="/leads"
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                   "text-sm font-medium",
-                  location.pathname === "/assinantes"
+                  location.pathname === "/leads"
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
                 )}
               >
-                <Crown className={cn("w-5 h-5 flex-shrink-0", location.pathname === "/assinantes" && "text-primary")} />
-                {!collapsed && <span>Assinantes</span>}
+                <Target className={cn("w-5 h-5 flex-shrink-0", location.pathname === "/leads" && "text-primary")} />
+                {!collapsed && <span>Leads</span>}
               </NavLink>
             </li>
           )}

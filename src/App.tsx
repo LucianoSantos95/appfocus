@@ -34,7 +34,7 @@ const Glossario = lazy(() => import("./pages/Glossario"));
 const Comparar = lazy(() => import("./pages/Comparar"));
 const Mcp = lazy(() => import("./pages/Mcp"));
 const OQueEHubEmpresarial = lazy(() => import("./pages/OQueEHubEmpresarial"));
-const Assinantes = lazy(() => import("./pages/Assinantes"));
+const Leads = lazy(() => import("./pages/Leads"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OnboardingPage = lazy(() => import("./pages/Onboarding"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
@@ -93,7 +93,7 @@ const App = () => (
                     <Route path="/processos" element={<ProtectedRoute><ErrorBoundary><Processos /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/guia" element={<ProtectedRoute><ErrorBoundary><Guia /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/onboarding" element={<ProtectedRoute><ErrorBoundary><OnboardingPage /></ErrorBoundary></ProtectedRoute>} />
-                    <Route path="/assinantes" element={<ProtectedRoute><ErrorBoundary><Assinantes /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/leads" element={<ProtectedRoute><ErrorBoundary><Leads /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

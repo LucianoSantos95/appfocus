@@ -9,8 +9,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 
-// Captura de pedidos de customização — substitui os antigos CTAs de upgrade.
-// O Hub é 100% gratuito; este é o único ponto de conversão do produto.
+// Captura de leads para CONSULTORIA / sistema sob medida.
+// O Hub gratuito é a porta de entrada; aqui a pessoa pede um sistema construído
+// para a operação dela — pode ser o Hub adaptado ou algo do zero.
 const sb = supabase as any;
 
 interface Props {
@@ -53,10 +54,10 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
       });
       if (error) throw error;
 
-      // Avisa o time no Slack (best-effort — não bloqueia o usuário)
+      // Avisa no Slack (best-effort — não bloqueia o usuário)
       supabase.functions.invoke("notify-slack", {
         body: {
-          text: `🎯 Novo pedido de customização\n*${form.nome}* (${form.email})${form.empresa ? ` — ${form.empresa}` : ""}\n${form.atuacao ? `Atuação: ${form.atuacao}\n` : ""}Quer: ${form.customizacao}`,
+          text: `🎯 Novo lead — sistema sob medida\n*${form.nome}* (${form.email})${form.empresa ? ` — ${form.empresa}` : ""}\n${form.atuacao ? `Atuação: ${form.atuacao}\n` : ""}Dor: ${form.customizacao}`,
         },
       }).catch(() => {});
 
@@ -74,21 +75,21 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
 
   const close = () => {
     onOpenChange(false);
-    // Reseta depois da animação de saída
     setTimeout(() => { setDone(false); setForm((f) => ({ ...f, empresa: "", atuacao: "", customizacao: "" })); }, 250);
   };
 
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="sm:max-w-[540px]">
         {done ? (
           <div className="py-6 text-center flex flex-col items-center gap-3">
             <div className="w-14 h-14 rounded-full bg-success/10 flex items-center justify-center">
               <CheckCircle2 className="w-7 h-7 text-success" />
             </div>
-            <h3 className="font-display text-2xl tracking-tight">Recebemos seu pedido</h3>
+            <h3 className="font-display text-2xl tracking-tight">Recebemos seu contato</h3>
             <p className="text-sm text-muted-foreground max-w-sm">
-              Vamos analisar o que você precisa e responder no e-mail <span className="text-foreground">{form.email}</span>.
+              Vou analisar o que sua operação precisa e responder em{" "}
+              <span className="text-foreground">{form.email}</span> para conversarmos sobre como construir isso.
             </p>
             <Button onClick={close} className="mt-2">Voltar ao Hub</Button>
           </div>
@@ -97,10 +98,12 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
             <DialogHeader>
               <DialogTitle className="font-display text-2xl tracking-tight flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
-                O Hub do seu jeito
+                Um sistema sob medida pro seu negócio
               </DialogTitle>
               <DialogDescription>
-                O Hub é gratuito e completo. Conte o que falta para ele encaixar na sua operação — a gente estuda customizar pra você.
+                O Hub é gratuito e resolve a gestão do dia a dia. Mas se a sua operação tem uma dor
+                específica — um processo que nenhum sistema pronto atende — dá pra construir algo
+                sob medida. Conte o que você precisa e eu retorno pra conversarmos.
               </DialogDescription>
             </DialogHeader>
 
@@ -127,12 +130,12 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="cr-custom">O que você gostaria de customizar *</Label>
+                <Label htmlFor="cr-custom">Qual dor da sua operação você quer resolver? *</Label>
                 <Textarea
                   id="cr-custom"
                   value={form.customizacao}
                   onChange={(e) => setForm({ ...form, customizacao: e.target.value })}
-                  placeholder="Ex: um módulo de propostas com aprovação do cliente, integração com meu ERP, relatório específico..."
+                  placeholder="Ex: perco horas montando proposta e cobrando aprovação do cliente; meu estoque não conversa com o financeiro; preciso de um portal onde meu cliente acompanhe as entregas..."
                   rows={4}
                 />
               </div>
@@ -141,7 +144,7 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={close} disabled={sending}>Agora não</Button>
               <Button onClick={handleSubmit} disabled={!canSend || sending} className="gap-2">
-                {sending ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando…</> : "Enviar pedido"}
+                {sending ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando…</> : "Quero conversar"}
               </Button>
             </div>
           </>

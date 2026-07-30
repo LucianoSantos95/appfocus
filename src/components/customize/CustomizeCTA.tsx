@@ -18,7 +18,7 @@ export function CustomizeCTA() {
             size="lg"
           >
             <Sparkles className="w-4 h-4" />
-            Quero o Hub do meu jeito
+            Quero um sistema sob medida
           </Button>
         </div>
       </div>

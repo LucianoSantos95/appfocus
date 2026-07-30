@@ -75,19 +75,19 @@ export default function PricingSection({ onSignup }: Props) {
           <FadeIn className="lg:col-span-2">
             <div className="rounded-2xl border border-accent/30 bg-card p-6 md:p-8 flex flex-col h-full transition-all hover:-translate-y-1 hover:border-accent/60">
               <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-accent/10 text-accent font-mono text-[10px] uppercase tracking-wider px-2.5 py-1">
-                <Sparkles className="w-3 h-3" /> Sob medida
+                <Sparkles className="w-3 h-3" /> Consultoria
               </span>
-              <h3 className="mt-4 text-lg font-semibold text-foreground">Falta algo pra sua operação?</h3>
+              <h3 className="mt-4 text-lg font-semibold text-foreground">Sua operação precisa de algo próprio?</h3>
               <p className="mt-2 text-sm text-muted-foreground flex-1">
-                Cada negócio tem um detalhe que nenhum sistema pronto resolve. Conte o que é —
-                a gente estuda construir sob medida pra você.
+                Se existe um processo que nenhum sistema pronto atende, dá pra construir algo
+                sob medida pro seu negócio. Conte a dor da sua operação e a gente conversa.
               </p>
               <Button
                 onClick={() => setCustomizeOpen(true)}
                 variant="secondary"
                 className="group mt-6 w-full transition-all hover:-translate-y-0.5"
               >
-                Quero o Hub do meu jeito
+                Quero um sistema sob medida
                 <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
               </Button>
             </div>

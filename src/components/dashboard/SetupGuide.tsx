@@ -138,11 +138,11 @@ export function SetupGuide() {
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex items-center gap-3">
           <Gift className="w-5 h-5 text-primary shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Falta algo pra sua operação?</p>
-            <p className="text-xs text-muted-foreground">O Hub é todo seu, de graça. Conte o que você quer sob medida.</p>
+            <p className="text-sm font-medium text-foreground">Precisa de algo sob medida?</p>
+            <p className="text-xs text-muted-foreground">O Hub é grátis. Se sua operação tem uma dor específica, a gente constrói.</p>
           </div>
           <Button size="sm" onClick={() => setCustomizeOpen(true)} className="gap-1 shrink-0">
-            Personalizar <ArrowRight className="w-3.5 h-3.5" />
+            Conversar <ArrowRight className="w-3.5 h-3.5" />
           </Button>
         </div>
       ) : (
