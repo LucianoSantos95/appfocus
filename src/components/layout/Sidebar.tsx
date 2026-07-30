@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Lock as LockIcon,
   BarChart2,
+  Sparkles,
 } from "lucide-react";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -49,6 +50,7 @@ export function Sidebar() {
   const location = useLocation();
   const { isAdmin, isTeamMember, allowedPages, isLoading } = useTeamPermissions();
   const { user } = useAuth();
+  const [customOpen, setCustomOpen] = useState(false);
 
   const hasAccess = (slug: string) => {
     if (slug === "" || slug === "guia") return true; // Painel and Guia always accessible
