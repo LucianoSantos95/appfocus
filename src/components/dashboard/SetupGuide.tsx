@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { wipeDemoData, markDemoCleared } from "@/lib/demo-seed";
+import { CustomizeDialog } from "@/components/customize/CustomizeDialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -51,6 +52,7 @@ export function SetupGuide() {
   const [hasDemo, setHasDemo] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
 
 
 
@@ -136,11 +138,11 @@ export function SetupGuide() {
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex items-center gap-3">
           <Gift className="w-5 h-5 text-primary shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Desbloqueie tudo com 20% OFF</p>
-            <p className="text-xs text-muted-foreground">Registros ilimitados, exports e IA — cupom aplicado no checkout.</p>
+            <p className="text-sm font-medium text-foreground">Falta algo pra sua operação?</p>
+            <p className="text-xs text-muted-foreground">O Hub é todo seu, de graça. Conte o que você quer sob medida.</p>
           </div>
-          <Button size="sm" onClick={() => navigate("/planos")} className="gap-1 shrink-0">
-            Ver planos <ArrowRight className="w-3.5 h-3.5" />
+          <Button size="sm" onClick={() => setCustomizeOpen(true)} className="gap-1 shrink-0">
+            Personalizar <ArrowRight className="w-3.5 h-3.5" />
           </Button>
         </div>
       ) : (
@@ -190,6 +192,8 @@ export function SetupGuide() {
           </button>
         </div>
       )}
+
+      <CustomizeDialog open={customizeOpen} onOpenChange={setCustomizeOpen} origem="app" />
     </div>
   );
 }

@@ -2,21 +2,18 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { OnboardingPrompt } from "@/components/guide/OnboardingPrompt";
 import { OnboardingFeedbackPrompt } from "@/components/onboarding/OnboardingFeedbackPrompt";
-import { OnboardingCouponBanner } from "@/components/onboarding/OnboardingCouponBanner";
 import { GuidedTour } from "@/components/guide/GuidedTour";
 import { ModuleCard } from "@/components/ui/module-card";
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { BulletinBoard } from "@/components/dashboard/BulletinBoard";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
-import { UsageLimitWidget } from "@/components/dashboard/UsageLimitWidget";
-import { PersistentCouponWidget } from "@/components/dashboard/PersistentCouponWidget";
 import { WorldCupBanner } from "@/components/dashboard/WorldCupBanner";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { IntegrationsPulse } from "@/components/dashboard/IntegrationsPulse";
 import { SetupGuide } from "@/components/dashboard/SetupGuide";
+import { TodayPanel } from "@/components/dashboard/TodayPanel";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
-import { useEngagementCoupon } from "@/hooks/useEngagementCoupon";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
@@ -85,7 +82,6 @@ const modules = [
 const Index = () => {
   const navigate = useNavigate();
   const { needsOnboarding, session, loading: onbLoading } = useOnboardingSession();
-  useEngagementCoupon();
   const [forceTour, setForceTour] = useState(false);
 
   // Redirect new users to onboarding
@@ -111,16 +107,15 @@ const Index = () => {
       <PageMeta path="/" title="Painel Principal" description="Visão geral da sua operação em um só lugar. Gerencie finanças, equipe, marketing, entregas e clientes." />
       <div className="space-y-8">
         <WorldCupBanner />
-        <PersistentCouponWidget />
 
+        {/* Painel "Hoje" — gancho diário (recompensa variável). Primeiro olhar da tela. */}
+        <TodayPanel />
 
-        {/* Hero redesenhado — saudação + KPI hero + sparkline + KPIs secundários */}
+        {/* KPI hero + sparkline + KPIs secundários (logo abaixo do "Hoje") */}
         <DashboardHero />
 
         {/* Guia de ativação — sumível quando concluído/dispensado */}
         <SetupGuide />
-
-        <UsageLimitWidget />
 
         {/* Integrações vivas + BulletinBoard rápido */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -153,7 +148,6 @@ const Index = () => {
 
         <OnboardingPrompt />
         <OnboardingFeedbackPrompt />
-        {session && <OnboardingCouponBanner session={session} />}
       </div>
       <GuidedTour forceRun={forceTour} onTourComplete={() => setForceTour(false)} />
     </MainLayout>

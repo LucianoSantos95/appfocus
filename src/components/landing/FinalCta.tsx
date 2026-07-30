@@ -24,7 +24,7 @@ export default function FinalCta({ onSignup, onDemo, demoLoading }: Props) {
                 <span className="font-display italic font-normal text-accent">ainda hoje</span>.
               </h2>
               <p className="mt-4 text-muted-foreground max-w-lg mx-auto">
-                Setup em 2 minutos. Sem cartão. Grátis pra sempre até 10 registros por módulo.
+                Setup em 2 minutos. Sem cartão. Tudo liberado, de graça, pra sempre.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Button

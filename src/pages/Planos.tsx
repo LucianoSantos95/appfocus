@@ -1,344 +1,88 @@
-import { useState, useEffect } from "react";
-import { PageMeta } from "@/components/seo/PageMeta";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Check, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Check, Sparkles, ArrowLeft, Loader2, Gift } from "lucide-react";
-import { usePlan } from "@/contexts/PlanContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { useOnboardingSession } from "@/hooks/useOnboardingSession";
-import { useMilestones } from "@/hooks/useMilestones";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { isWorldCupActive } from "@/lib/campaigns";
+import { PageMeta } from "@/components/seo/PageMeta";
+import { CustomizeDialog } from "@/components/customize/CustomizeDialog";
 
-const plans = [
-  {
-    id: "plus" as const,
-    name: "Plus",
-    monthlyPrice: 69,
-    annualPrice: 55,
-    annualTotal: 660,
-    description: "Para agências e consultorias que precisam de gestão completa",
-    features: [
-      "Registros ilimitados (grátis vai até 10 por módulo)",
-      "Até 5 usuários por conta",
-      "Importação de planilhas (Excel/CSV/OFX)",
-      "Guia de Uso completo",
-      "Suporte por email",
-    ],
-    popular: false,
-  },
-  {
-    id: "pro" as const,
-    name: "Pro",
-    monthlyPrice: 149,
-    annualPrice: 119,
-    annualTotal: 1428,
-    description: "Para operações em crescimento com necessidades avançadas",
-    features: [
-      "Tudo do Plus",
-      "Exportar relatórios (PDF/Excel)",
-      "Análise de IA para Clientes",
-      "Assistente de IA integrado",
-      "Até 10 usuários por conta",
-      "Suporte prioritário",
-    ],
-    popular: true,
-  },
-  {
-    id: "enterprise" as const,
-    name: "Enterprise",
-    monthlyPrice: 297,
-    annualPrice: 237,
-    annualTotal: 2844,
-    description: "Para agências com múltiplos times e clientes",
-    features: [
-      "Tudo do Pro",
-      "Integração Google Workspace",
-      "Automação WhatsApp (lembretes)",
-      "Usuários ilimitados",
-      "Suporte dedicado + onboarding",
-    ],
-    popular: false,
-  },
+// O Hub Empresarial é 100% gratuito. Esta rota era a página de planos pagos;
+// agora comunica a gratuidade e captura pedidos de customização.
+// A rota /planos foi preservada por causa de links externos e SEO já indexado.
+
+const INCLUSO = [
+  "Registros ilimitados em todos os módulos",
+  "Finanças, CRM, Projetos, Atividades, RH, Marketing e Processos",
+  "Relatórios e exportações",
+  "Análises com IA",
+  "Integrações (Google, Slack, WhatsApp)",
+  "Servidor MCP para conectar sua IA ao Hub",
+  "Suporte e atualizações contínuas",
 ];
 
-function PlanCardSkeleton() {
-  return (
-    <Card className="border border-border">
-      <CardHeader className="text-center pt-8 space-y-3">
-        <Skeleton className="h-7 w-20 mx-auto" />
-        <Skeleton className="h-4 w-48 mx-auto" />
-        <Skeleton className="h-10 w-32 mx-auto mt-4" />
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-4 w-full" />
-          ))}
-        </div>
-        <Skeleton className="h-10 w-full mt-6" />
-      </CardContent>
-    </Card>
-  );
-}
-
-export default function Planos() {
-  const [annual, setAnnual] = useState(true);
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const { plan: currentPlan, isLoading: isPlanLoading, refreshSubscription } = usePlan();
-  const { session: authSession } = useAuth();
-  const { session: onbSession } = useOnboardingSession();
-  const { recordMilestone } = useMilestones();
+const Planos = () => {
   const navigate = useNavigate();
-
-  const hasCoupon = onbSession?.coupon_code &&
-    onbSession?.coupon_expires_at &&
-    new Date(onbSession.coupon_expires_at).getTime() > Date.now();
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("success") === "true") {
-      toast.success("Redirecionamento concluído. Assim que confirmarmos o pagamento, seu plano é liberado.");
-      void recordMilestone("upgrade_completed", { source: "plan_page" });
-      refreshSubscription();
-      window.history.replaceState({}, "", "/planos");
-    }
-    const cycleParam = params.get("cycle");
-    if (cycleParam === "annual") setAnnual(true);
-    else if (cycleParam === "monthly") setAnnual(false);
-    void recordMilestone("plan_page_viewed", { from: window.location.pathname });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Auto-resume checkout after login (came from landing with ?plan=&autostart=1)
-  useEffect(() => {
-    if (!authSession?.access_token) return;
-    const params = new URLSearchParams(window.location.search);
-    const plan = params.get("plan");
-    const autostart = params.get("autostart");
-    const mode = params.get("mode");
-    if (autostart !== "1") return;
-    if (plan !== "plus" && plan !== "pro" && plan !== "enterprise") return;
-    const resolvedMode = mode === "one_time" ? "one_time" : "recurring";
-    // Clean URL to avoid re-trigger
-    const cleanCycle = params.get("cycle") ? `?cycle=${params.get("cycle")}` : "";
-    window.history.replaceState({}, "", `/planos${cleanCycle}`);
-    void handleSubscribe(plan, resolvedMode);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authSession?.access_token]);
-
-  const handleSubscribe = async (
-    planId: "plus" | "pro" | "enterprise",
-    mode: "recurring" | "one_time",
-  ) => {
-    const { data: { session: freshSession } } = await supabase.auth.getSession();
-    const accessToken = freshSession?.access_token ?? authSession?.access_token;
-
-    if (!accessToken) {
-      const cycle = annual ? "annual" : "monthly";
-      const next = `/planos?plan=${planId}&cycle=${cycle}&mode=${mode}&autostart=1`;
-      toast.info(`Crie sua conta para assinar o ${planId.charAt(0).toUpperCase() + planId.slice(1)}.`);
-      navigate(`/auth?next=${encodeURIComponent(next)}`);
-      return;
-    }
-
-    const key = `${planId}:${mode}`;
-    setLoadingPlan(key);
-    try {
-      await recordMilestone("checkout_started", {
-        plan: planId,
-        billing_cycle: annual ? "annual" : "monthly",
-        gateway: "asaas",
-        mode,
-      });
-
-      const { data, error } = await supabase.functions.invoke("create-asaas-checkout", {
-        body: { plan: planId, cycle: annual ? "annual" : "monthly", mode },
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      const serverMsg = (data as any)?.error;
-      if (serverMsg) throw new Error(serverMsg);
-
-      if (error) {
-        let detail = "";
-        try {
-          const ctx: any = (error as any).context;
-          if (ctx && typeof ctx.json === "function") detail = (await ctx.json())?.error || "";
-          else if (ctx && typeof ctx.text === "function") detail = await ctx.text();
-        } catch { /* ignore */ }
-        throw new Error(detail || error.message || "Erro ao criar cobrança");
-      }
-
-      if (!data?.url) throw new Error("Resposta inválida do gateway.");
-      window.location.href = data.url;
-    } catch (err: any) {
-      console.error("[create-asaas-checkout]", err);
-      toast.error(err.message || "Erro ao iniciar pagamento");
-      setLoadingPlan(null);
-    }
-  };
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background p-6 lg:p-12">
-      <PageMeta path="/planos" title="Planos e Preços" description="Escolha o plano ideal para sua agência ou consultoria. Plus, Pro ou Enterprise. A partir de R$55/mês, pague com Pix, Boleto ou Cartão." />
-      <div className="max-w-5xl mx-auto">
+      <PageMeta
+        path="/planos"
+        title="Gratuito para sempre"
+        description="O Hub Empresarial é 100% gratuito: todos os módulos, relatórios, IA e integrações liberados. Precisa de algo sob medida para sua operação? Conte pra gente."
+      />
+      <div className="max-w-3xl mx-auto">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-8 gap-2">
           <ArrowLeft className="w-4 h-4" /> Voltar
         </Button>
 
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Escolha o plano ideal</h1>
-          <p className="text-muted-foreground text-lg mb-4">Desbloqueie todo o potencial da sua operação</p>
-
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-            <Badge variant="secondary" className="gap-1">💳 Cartão automático</Badge>
-            <Badge variant="secondary" className="gap-1">⚡ Pix</Badge>
-            <Badge variant="secondary" className="gap-1">🧾 Boleto</Badge>
-            <Badge variant="outline" className="gap-1">🔒 Pagamento seguro via Asaas</Badge>
-          </div>
-
-          {hasCoupon && (
-            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-5 py-2.5 mb-6 animate-fade-in">
-              <Gift className="h-5 w-5 text-primary" />
-              <span className="text-sm font-semibold text-primary">
-                {isWorldCupActive()
-                  ? "🏆 Cupom HEXA — 20% OFF nos 3 primeiros meses aplicado automaticamente!"
-                  : "🎉 Cupom de 20% OFF aplicado automaticamente!"}
-              </span>
-            </div>
-          )}
-
-          <div className="flex items-center justify-center gap-3">
-            <span className={`text-sm ${!annual ? "text-foreground font-semibold" : "text-muted-foreground"}`}>Mensal</span>
-            <Switch checked={annual} onCheckedChange={setAnnual} />
-            <span className={`text-sm ${annual ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
-              Anual <Badge variant="secondary" className="ml-1 text-xs">-20%</Badge>
-            </span>
-          </div>
+        <div className="text-center mb-10">
+          <Badge variant="secondary" className="mb-5 gap-1.5 px-4 py-1.5 text-sm">
+            <Sparkles className="w-3.5 h-3.5" /> Gratuito para sempre
+          </Badge>
+          <h1 className="font-display text-4xl md:text-5xl leading-tight tracking-tight text-foreground mb-4">
+            O Hub inteiro, <span className="gradient-text italic">sem custo</span>.
+          </h1>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            Sem plano, sem cartão, sem limite de registros. Tudo o que existe no Hub está liberado
+            para a sua operação desde o primeiro dia.
+          </p>
         </div>
 
-        {isPlanLoading ? (
-          <div className="grid md:grid-cols-3 gap-6">
-            <PlanCardSkeleton />
-            <PlanCardSkeleton />
-            <PlanCardSkeleton />
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-3 gap-6">
-            {plans.map((p) => {
-              const isCurrent = currentPlan === p.id;
-              const loadingRec = loadingPlan === `${p.id}:recurring`;
-              const loadingOne = loadingPlan === `${p.id}:one_time`;
-              const isLoading = loadingRec || loadingOne;
+        {/* O que está incluso */}
+        <div className="rounded-2xl border border-border bg-card shadow-premium p-6 md:p-8 mb-8">
+          <h2 className="font-display text-xl tracking-tight mb-5">O que você tem acesso</h2>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+            {INCLUSO.map((item) => (
+              <li key={item} className="flex items-start gap-2.5 text-sm text-foreground">
+                <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-              const displayMonthly = hasCoupon ? Math.round(p.monthlyPrice * 0.8) : p.monthlyPrice;
-              const displayAnnualTotal = hasCoupon ? Math.round(p.annualTotal * 0.8) : p.annualTotal;
-              const displayAnnualPrice = hasCoupon ? Math.round(p.annualPrice * 0.8) : p.annualPrice;
+        {/* CTA de customização */}
+        <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.07] to-transparent p-6 md:p-8 text-center">
+          <h2 className="font-display text-2xl tracking-tight mb-2">Falta algo para a sua operação?</h2>
+          <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+            Cada negócio tem um detalhe que nenhum sistema pronto resolve. Conte o que é —
+            a gente estuda construir sob medida para você.
+          </p>
+          <Button size="lg" onClick={() => setOpen(true)} className="gap-2 group">
+            Quero o Hub do meu jeito
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </div>
 
-              return (
-                <Card
-                  key={p.id}
-                  className={`relative card-hover border ${
-                    p.popular ? "border-primary shadow-glow" : "border-border"
-                  }`}
-                >
-                  {p.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <Badge className="gradient-primary text-foreground gap-1">
-                        <Sparkles className="w-3 h-3" /> Mais popular
-                      </Badge>
-                    </div>
-                  )}
-                  <CardHeader className="text-center pt-8">
-                    <CardTitle className="text-2xl">{p.name}</CardTitle>
-                    <CardDescription className="mt-2">{p.description}</CardDescription>
-                    <div className="mt-4">
-                      {annual ? (
-                        <>
-                          {hasCoupon && (
-                            <span className="text-lg text-muted-foreground line-through mr-2">
-                              R${p.annualTotal.toLocaleString("pt-BR")}
-                            </span>
-                          )}
-                          <span className="text-4xl font-bold text-foreground">
-                            R${displayAnnualTotal.toLocaleString("pt-BR")}
-                          </span>
-                          <span className="text-muted-foreground">/ano</span>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            equivale a R${displayAnnualPrice}/mês
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          {hasCoupon && (
-                            <span className="text-lg text-muted-foreground line-through mr-2">
-                              R${p.monthlyPrice}
-                            </span>
-                          )}
-                          <span className="text-4xl font-bold text-foreground">R${displayMonthly}</span>
-                          <span className="text-muted-foreground">/mês</span>
-                          {hasCoupon && (
-                            <p className="text-xs text-primary mt-1">
-                              {isWorldCupActive() ? "20% OFF nos 3 primeiros meses" : "Primeiro mês com 20% OFF"}
-                            </p>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <ul className="space-y-3">
-                      {p.features.map((f) => (
-                        <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="space-y-2 pt-4">
-                      <Button
-                        className="w-full"
-                        variant={p.popular ? "default" : "outline"}
-                        disabled={isCurrent || isLoading}
-                        onClick={() => handleSubscribe(p.id, "recurring")}
-                      >
-                        {loadingRec ? (
-                          <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
-                        ) : isCurrent ? (
-                          "Plano Atual"
-                        ) : (
-                          <>💳 Assinar com cartão automático</>
-                        )}
-                      </Button>
-                      <Button
-                        className="w-full"
-                        variant="secondary"
-                        disabled={isCurrent || isLoading}
-                        onClick={() => handleSubscribe(p.id, "one_time")}
-                      >
-                        {loadingOne ? (
-                          <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processando...</>
-                        ) : (
-                          <>⚡ Pix / 🧾 Boleto / 💳 Cartão avulso</>
-                        )}
-                      </Button>
-                      <p className="text-[11px] text-center text-muted-foreground pt-1">
-                        Cartão: cobra sozinho todo ciclo · Avulso: link de renovação a cada ciclo
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+        <p className="text-center text-xs text-muted-foreground mt-8">
+          Sem cobrança, sem período de teste, sem pegadinha.
+        </p>
       </div>
+
+      <CustomizeDialog open={open} onOpenChange={setOpen} origem="planos" />
     </div>
   );
-}
+};
+
+export default Planos;

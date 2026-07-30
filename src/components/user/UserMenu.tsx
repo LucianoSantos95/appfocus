@@ -23,7 +23,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { ProfileDialog } from "./ProfileDialog";
 import { AdminPanel } from "./AdminPanel";
-import { BillingPanel } from "./BillingPanel";
 import { SupportDialog } from "./SupportDialog";
 import { FeedbackDialog } from "./FeedbackDialog";
 import { IntegrationsPanel } from "@/components/settings/IntegrationsPanel";
@@ -42,7 +41,6 @@ export function UserMenu({ collapsed }: UserMenuProps) {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
-  const [billingOpen, setBillingOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [integrationsOpen, setIntegrationsOpen] = useState(false);
@@ -59,13 +57,6 @@ export function UserMenu({ collapsed }: UserMenuProps) {
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
-  };
-
-  const planLabel: Record<string, string> = {
-    gratuito: "Gratuito",
-    plus: "Plus",
-    pro: "Pro",
-    enterprise: "Enterprise",
   };
 
   return (
@@ -85,7 +76,7 @@ export function UserMenu({ collapsed }: UserMenuProps) {
                     {user.user_metadata?.full_name || user.email}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Plano {planLabel[plan] || plan}
+                    Acesso completo · grátis
                   </p>
                 </div>
               )}
@@ -97,9 +88,6 @@ export function UserMenu({ collapsed }: UserMenuProps) {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setAdminOpen(true)}>
               <Shield className="w-4 h-4 mr-2" /> Admin
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setBillingOpen(true)}>
-              <CreditCard className="w-4 h-4 mr-2" /> Faturamento
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setFeedbackOpen(true)}>
               <MessageSquare className="w-4 h-4 mr-2" /> Feedback
@@ -127,7 +115,6 @@ export function UserMenu({ collapsed }: UserMenuProps) {
 
       <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
       <AdminPanel open={adminOpen} onOpenChange={setAdminOpen} />
-      <BillingPanel open={billingOpen} onOpenChange={setBillingOpen} />
       <SupportDialog open={supportOpen} onOpenChange={setSupportOpen} />
       <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
       <IntegrationsPanel open={integrationsOpen} onOpenChange={setIntegrationsOpen} />

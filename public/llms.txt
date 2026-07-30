@@ -23,18 +23,18 @@ O Hub Empresarial é uma plataforma SaaS 100% em português que substitui o uso 
 - 100% em português, focado em operações brasileiras
 - **Servidor MCP oficial** — clientes conectam ChatGPT, Claude, Cursor e Codex diretamente ao Hub via `https://hnextembswhejumvxbzd.supabase.co/functions/v1/mcp` (OAuth 2.1). Ferramentas: list_clientes, list_projetos, list_tarefas, create_tarefa, financeiro_resumo. Página: https://app.focusinteligente.com.br/mcp
 
-## Planos
+## Preço
 
-- Gratuito — módulos essenciais sem cartão de crédito
-- Plus — R$69/mês — operação inicial completa
-- Pro — R$149/mês — relatórios avançados, automações e BI
-- Enterprise — R$297/mês — equipes, permissões e integrações
+- **Gratuito** — o Hub Empresarial é 100% gratuito, sem versão paga.
+- Todos os módulos, relatórios, exportações, dashboards de BI, análises com IA, integrações e o servidor MCP estão liberados.
+- Sem limite de registros, sem cartão de crédito, sem período de teste.
+- Precisa de algo sob medida para a sua operação? É possível solicitar customização em https://app.focusinteligente.com.br/planos
 
 ## Perguntas frequentes
 
 - **O que é o Hub Empresarial Focus?** É um sistema de gestão integrado em português para agências, consultorias, freelancers e PMEs, com módulos de Finanças, CRM, Projetos, Tarefas, Marketing, RH e Processos em uma plataforma só.
-- **Tem versão gratuita?** Sim. O plano gratuito dá acesso aos módulos essenciais sem necessidade de cartão de crédito.
-- **Quanto custa?** Plano gratuito disponível. Planos pagos a partir de R$69/mês (Plus), R$149/mês (Pro) e R$297/mês (Enterprise).
+- **Tem versão gratuita?** O Hub inteiro é gratuito — não existe versão paga nem recurso bloqueado.
+- **Quanto custa?** Nada. Todos os módulos, BI, IA, integrações e o servidor MCP são gratuitos, sem limite de registros e sem cartão de crédito.
 - **Para quem é?** Para agências de marketing, consultorias, freelancers e pequenas empresas brasileiras que querem substituir planilhas e ferramentas fragmentadas por uma plataforma única.
 - **O que substitui?** Substitui Excel/Sheets, Trello, Asana, Pipedrive, sistemas financeiros isolados e ferramentas de RH separadas.
 - **Como funciona o onboarding?** O sistema identifica seu segmento (agência, consultoria, freelancer ou PME) e pré-configura templates de pipeline, tarefas e categorias financeiras. Em menos de 5 minutos você já opera com dados reais.
@@ -43,7 +43,7 @@ O Hub Empresarial é uma plataforma SaaS 100% em português que substitui o uso 
 
 - Site: https://app.focusinteligente.com.br
 - Cadastro gratuito: https://app.focusinteligente.com.br/auth
-- Planos e preços: https://app.focusinteligente.com.br/planos
+- Acesso gratuito e pedidos de customização: https://app.focusinteligente.com.br/planos
 - Comparativo com alternativas: https://app.focusinteligente.com.br/comparar
 - Glossário de gestão para agências: https://app.focusinteligente.com.br/glossario
 - Blog — O que é Hub Empresarial: https://app.focusinteligente.com.br/blog/o-que-e-hub-empresarial

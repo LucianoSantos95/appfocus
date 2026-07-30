@@ -494,7 +494,7 @@ export default function Financas() {
               <TooltipProvider>
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={() => { if (plan === "gratuito" && !isAdmin) setBiUpgradeOpen(true); else setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                    <button onClick={() => { setBiPanelOpen(true); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
                       <Maximize2 className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </TooltipTrigger>

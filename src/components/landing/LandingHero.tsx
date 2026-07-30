@@ -59,7 +59,7 @@ export default function LandingHero({ onSignup, onDemo, demoLoading }: Props) {
             </div>
 
             <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-              Sem cartão · plano grátis pra sempre · cancele quando quiser
+              Sem cartão · tudo liberado · grátis pra sempre
             </p>
           </div>
         </FadeIn>

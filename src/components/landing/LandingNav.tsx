@@ -20,7 +20,7 @@ export default function LandingNav({ onLogin, onSignup }: Props) {
           <a href="#por-que" className="hover:text-foreground transition-colors">Por que o Hub</a>
           <a href="#ia-mcp" className="hover:text-foreground transition-colors">IA & MCP</a>
           <a href="#modulos" className="hover:text-foreground transition-colors">Módulos</a>
-          <a href="#precos" className="hover:text-foreground transition-colors">Preços</a>
+          <a href="#precos" className="hover:text-foreground transition-colors">Grátis</a>
         </nav>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={onLogin} className="text-foreground">

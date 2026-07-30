@@ -1,6 +1,8 @@
 project_id = "hnextembswhejumvxbzd"
 
 [functions]
+  [functions.cron-daily-brief]
+    verify_jwt = false
   [functions.analyze-client]
     verify_jwt = false
   [functions.auth-email-hook]

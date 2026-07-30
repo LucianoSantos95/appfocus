@@ -16,7 +16,7 @@ export default function LandingFooter() {
           <Link to="/termos" className="hover:text-foreground transition-colors">Termos</Link>
           <Link to="/privacidade" className="hover:text-foreground transition-colors">Privacidade</Link>
           <Link to="/mcp" className="hover:text-foreground transition-colors">MCP</Link>
-          <Link to="/planos" className="hover:text-foreground transition-colors">Preços</Link>
+          <Link to="/planos" className="hover:text-foreground transition-colors">Grátis</Link>
         </div>
       </div>
     </footer>

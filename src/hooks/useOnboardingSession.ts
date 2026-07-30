@@ -50,10 +50,7 @@ export function useOnboardingSession() {
         segment,
         priority_pain: priorityPain,
         current_step: "demo",
-        // Coupon is NOT activated on session start. useEngagementCoupon triggers it
-        // after the user reaches 3 real actions, so it lands at a real "aha" moment.
-        coupon_code: COUPON_CODE,
-        coupon_shown: false,
+        // O Hub é 100% gratuito — não há mais cupom de desconto no onboarding.
       } as any)
       .select()
       .order("created_at", { ascending: false })
