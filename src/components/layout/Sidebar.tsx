@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { CustomizeDialog } from "@/components/customize/CustomizeDialog";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
@@ -21,6 +23,7 @@ import {
   ChevronRight,
   Lock as LockIcon,
   BarChart2,
+  Sparkles,
 } from "lucide-react";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -47,6 +50,7 @@ export function Sidebar() {
   const location = useLocation();
   const { isAdmin, isTeamMember, allowedPages, isLoading } = useTeamPermissions();
   const { user } = useAuth();
+  const [customOpen, setCustomOpen] = useState(false);
 
   const hasAccess = (slug: string) => {
     if (slug === "" || slug === "guia") return true; // Painel and Guia always accessible
@@ -142,8 +146,38 @@ export function Sidebar() {
             );
           })}
 
+          {/* Sistema sob medida */}
+          <li className="pt-2">
+            {collapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setCustomOpen(true)}
+                    aria-label="Sistema sob medida"
+                    className="w-full flex items-center justify-center px-3 py-2.5 rounded-lg text-primary hover:bg-primary/10 transition-colors"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Sistema sob medida</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <button
+                onClick={() => setCustomOpen(true)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-primary/30 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+              >
+                <Sparkles className="w-5 h-5 flex-shrink-0" />
+                <span>Sistema sob medida</span>
+              </button>
+            )}
+          </li>
         </ul>
       </nav>
+
+      <CustomizeDialog open={customOpen} onOpenChange={setCustomOpen} origem="app" />
+
 
       {/* Notification Bell + User Menu */}
       <div className={cn(
