@@ -25,7 +25,7 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
   const { toast } = useToast();
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
-  const [form, setForm] = useState({ nome: "", email: "", empresa: "", atuacao: "", customizacao: "" });
+  const [form, setForm] = useState({ nome: "", email: "", empresa: "", site: "", customizacao: "" });
 
   // Pré-preenche com o que já sabemos de quem está logado
   useEffect(() => {
@@ -37,18 +37,31 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
     }));
   }, [user, open]);
 
-  const canSend = form.nome.trim() && /\S+@\S+\.\S+/.test(form.email) && form.customizacao.trim();
+  const normalizeSite = (v: string) => {
+    const s = v.trim();
+    if (!s) return "";
+    return /^https?:\/\//i.test(s) ? s : `https://${s}`;
+  };
+  const siteValido = /^[^\s.]+\.[^\s]{2,}$/.test(form.site.trim().replace(/^https?:\/\//i, ""));
+
+  const canSend =
+    !!form.nome.trim() &&
+    /\S+@\S+\.\S+/.test(form.email) &&
+    !!form.empresa.trim() &&
+    siteValido &&
+    !!form.customizacao.trim();
 
   const handleSubmit = async () => {
     if (!canSend) return;
     setSending(true);
     try {
+      const site = normalizeSite(form.site);
       const { error } = await sb.from("custom_requests").insert({
         user_id: user?.id ?? null,
         nome: form.nome.trim(),
         email: form.email.trim(),
-        empresa: form.empresa.trim() || null,
-        atuacao: form.atuacao.trim() || null,
+        empresa: form.empresa.trim(),
+        site,
         customizacao: form.customizacao.trim(),
         origem,
       });
@@ -57,9 +70,10 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
       // Avisa no Slack (best-effort — não bloqueia o usuário)
       supabase.functions.invoke("notify-slack", {
         body: {
-          text: `🎯 Novo lead — sistema sob medida\n*${form.nome}* (${form.email})${form.empresa ? ` — ${form.empresa}` : ""}\n${form.atuacao ? `Atuação: ${form.atuacao}\n` : ""}Dor: ${form.customizacao}`,
+          text: `🎯 Novo lead — sistema sob medida\n*${form.nome}* (${form.email}) — ${form.empresa}\nSite: ${site}\nDor: ${form.customizacao}`,
         },
       }).catch(() => {});
+
 
       setDone(true);
     } catch (err: any) {
@@ -75,7 +89,7 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
 
   const close = () => {
     onOpenChange(false);
-    setTimeout(() => { setDone(false); setForm((f) => ({ ...f, empresa: "", atuacao: "", customizacao: "" })); }, 250);
+    setTimeout(() => { setDone(false); setForm((f) => ({ ...f, empresa: "", site: "", customizacao: "" })); }, 250);
   };
 
   return (
@@ -120,13 +134,13 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="cr-empresa">Empresa</Label>
+                <Label htmlFor="cr-empresa">Empresa *</Label>
                 <Input id="cr-empresa" value={form.empresa} onChange={(e) => setForm({ ...form, empresa: e.target.value })} placeholder="Nome da sua empresa" />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="cr-atuacao">O que sua empresa faz</Label>
-                <Input id="cr-atuacao" value={form.atuacao} onChange={(e) => setForm({ ...form, atuacao: e.target.value })} placeholder="Ex: agência de marketing para clínicas" />
+                <Label htmlFor="cr-site">Site da empresa *</Label>
+                <Input id="cr-site" value={form.site} onChange={(e) => setForm({ ...form, site: e.target.value })} placeholder="https://suaempresa.com.br" />
               </div>
 
               <div className="space-y-1.5">

@@ -540,6 +540,7 @@ export type Database = {
           id: string
           nome: string
           origem: string | null
+          site: string | null
           status: string
           user_id: string | null
         }
@@ -552,6 +553,7 @@ export type Database = {
           id?: string
           nome: string
           origem?: string | null
+          site?: string | null
           status?: string
           user_id?: string | null
         }
@@ -564,6 +566,7 @@ export type Database = {
           id?: string
           nome?: string
           origem?: string | null
+          site?: string | null
           status?: string
           user_id?: string | null
         }
