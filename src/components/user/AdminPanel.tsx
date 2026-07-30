@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTeamPermissions } from "@/hooks/useTeamPermissions";
 import { usePlan } from "@/contexts/PlanContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,9 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, UserPlus, Trash2, Mail, CreditCard, Search, Activity, TrendingUp, Gauge, Users, Rocket } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Mail } from "lucide-react";
 
 interface AdminPanelProps {
   open: boolean;
@@ -36,13 +34,6 @@ const planLimits: Record<string, number> = {
   enterprise: 999,
 };
 
-const planOptions = [
-  { value: "gratuito", label: "Gratuito" },
-  { value: "plus", label: "Plus" },
-  { value: "pro", label: "Pro" },
-  { value: "enterprise", label: "Enterprise" },
-];
-
 interface TeamMember {
   id: string;
   member_email: string;
@@ -50,28 +41,8 @@ interface TeamMember {
   member_user_id: string | null;
 }
 
-interface SubscriptionRecord {
-  id: string;
-  user_id: string;
-  plan: string;
-  status: string;
-  display_name: string | null;
-  email: string | null;
-}
-
-interface FunnelMetrics {
-  signup: number;
-  onboarding_started: number;
-  first_real_data: number;
-  onboarding_complete: number;
-  plan_page_viewed: number;
-  checkout_started: number;
-  upgrade_completed: number;
-}
-
 export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const { user } = useAuth();
-  const { isAdmin } = useTeamPermissions();
   const { plan } = usePlan();
   const { toast } = useToast();
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -81,117 +52,12 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const [allSelected, setAllSelected] = useState(false);
   const [sending, setSending] = useState(false);
 
-  // Subscription management state
-  const [subSearch, setSubSearch] = useState("");
-  const [subResults, setSubResults] = useState<SubscriptionRecord[]>([]);
-  const [subLoading, setSubLoading] = useState(false);
-  const [updatingSubId, setUpdatingSubId] = useState<string | null>(null);
-  const [funnelMetrics, setFunnelMetrics] = useState<FunnelMetrics | null>(null);
-  const [funnelLoading, setFunnelLoading] = useState(false);
-  const [engagement, setEngagement] = useState<Array<{ user_id: string; display_name: string | null; email: string | null; plan: string | null; total_actions_30d: number; active_days_30d: number; last_active_at: string | null; classificacao: string }>>([]);
-  const [engagementLoading, setEngagementLoading] = useState(false);
-  const [onboardingRows, setOnboardingRows] = useState<Array<{ id: string; user_id: string; segment: string | null; priority_pain: string | null; current_step: string; completed_modules: any; started_at: string; completed_at: string | null; display_name: string | null; company_name: string | null }>>([]);
-  const [onboardingLoading, setOnboardingLoading] = useState(false);
-  const [onboardingOrder, setOnboardingOrder] = useState<"desc" | "asc">("desc");
-
   const limit = planLimits[plan] || 1;
 
   useEffect(() => {
     if (!open || !user) return;
     fetchMembers();
-    if (isAdmin) {
-      fetchFunnelMetrics();
-      fetchEngagement();
-      fetchOnboardingSessions(onboardingOrder);
-    }
   }, [open, user]);
-
-  const fetchOnboardingSessions = async (order: "desc" | "asc" = "desc") => {
-    setOnboardingLoading(true);
-    const { data: sessions } = await supabase
-      .from("onboarding_sessions" as any)
-      .select("id, user_id, segment, priority_pain, current_step, completed_modules, started_at, completed_at")
-      .order("started_at", { ascending: order === "asc" })
-      .limit(200);
-    const rows = (sessions || []) as any[];
-    const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
-    let profilesMap = new Map<string, { display_name: string | null; company_name: string | null }>();
-    if (userIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, display_name, company_name")
-        .in("user_id", userIds);
-      (profiles || []).forEach((p: any) => profilesMap.set(p.user_id, { display_name: p.display_name, company_name: p.company_name }));
-    }
-    setOnboardingRows(
-      rows.map((r) => ({
-        ...r,
-        display_name: profilesMap.get(r.user_id)?.display_name || null,
-        company_name: profilesMap.get(r.user_id)?.company_name || null,
-      })),
-    );
-    setOnboardingLoading(false);
-  };
-
-  const toggleOnboardingOrder = () => {
-    const next = onboardingOrder === "desc" ? "asc" : "desc";
-    setOnboardingOrder(next);
-    fetchOnboardingSessions(next);
-  };
-
-  const fetchEngagement = async () => {
-    setEngagementLoading(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase as any).rpc("get_user_engagement");
-    const rows = (data || []) as typeof engagement;
-    rows.sort((a, b) => (b.active_days_30d || 0) - (a.active_days_30d || 0));
-    setEngagement(rows);
-    setEngagementLoading(false);
-  };
-
-  const classBadge = (c: string) => {
-    if (c === "power") return <Badge className="bg-success text-success-foreground">Power</Badge>;
-    if (c === "recorrente") return <Badge className="bg-primary text-primary-foreground">Recorrente</Badge>;
-    if (c === "casual") return <Badge variant="secondary">Casual</Badge>;
-    return <Badge variant="outline" className="text-muted-foreground">Inativo</Badge>;
-  };
-
-  const fetchFunnelMetrics = async () => {
-    setFunnelLoading(true);
-    const trackedKeys = [
-      "signup",
-      "onboarding_started",
-      "first_real_data",
-      "onboarding_complete",
-      "plan_page_viewed",
-      "checkout_started",
-      "upgrade_completed",
-    ];
-
-    const { data } = await supabase
-      .from("user_milestones" as any)
-      .select("user_id, milestone_key")
-      .in("milestone_key", trackedKeys as any);
-
-    const metrics = trackedKeys.reduce((acc, key) => ({ ...acc, [key]: 0 }), {} as FunnelMetrics);
-    const uniqueByStep = new Map<string, Set<string>>();
-
-    trackedKeys.forEach((key) => uniqueByStep.set(key, new Set<string>()));
-    (data || []).forEach((row: any) => {
-      uniqueByStep.get(row.milestone_key)?.add(row.user_id);
-    });
-    trackedKeys.forEach((key) => {
-      metrics[key as keyof FunnelMetrics] = uniqueByStep.get(key)?.size || 0;
-    });
-
-    setFunnelMetrics(metrics);
-    setFunnelLoading(false);
-  };
-
-  const conversionRate = (from: number, to: number) => {
-    if (!from) return "—";
-    return `${Math.round((to / from) * 100)}%`;
-  };
 
   const fetchMembers = async () => {
     if (!user) return;
@@ -291,259 +157,13 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     fetchMembers();
   };
 
-  // --- Subscription management ---
-  const searchSubscriptions = async () => {
-    const q = subSearch.trim();
-    if (!q) return;
-    setSubLoading(true);
-    try {
-      // Search profiles by display_name, then join with subscriptions
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, display_name")
-        .ilike("display_name", `%${q}%`)
-        .limit(10);
-
-      if (!profiles || profiles.length === 0) {
-        setSubResults([]);
-        setSubLoading(false);
-        return;
-      }
-
-      const userIds = profiles.map((p) => p.user_id);
-      const { data: subs } = await supabase
-        .from("subscriptions")
-        .select("id, user_id, plan, status")
-        .in("user_id", userIds);
-
-      const results: SubscriptionRecord[] = (subs || []).map((s) => {
-        const profile = profiles.find((p) => p.user_id === s.user_id);
-        return {
-          ...s,
-          display_name: profile?.display_name || null,
-          email: null,
-        };
-      });
-
-      setSubResults(results);
-    } catch {
-      toast({ title: "Erro ao buscar", variant: "destructive" });
-    } finally {
-      setSubLoading(false);
-    }
-  };
-
-  const updateSubscriptionPlan = async (subId: string, newPlan: string) => {
-    setUpdatingSubId(subId);
-    try {
-      const { error } = await supabase
-        .from("subscriptions")
-        .update({ plan: newPlan, updated_at: new Date().toISOString() })
-        .eq("id", subId);
-
-      if (error) throw error;
-
-      setSubResults((prev) =>
-        prev.map((s) => (s.id === subId ? { ...s, plan: newPlan } : s))
-      );
-      toast({ title: "Plano atualizado!", description: `Plano alterado para ${newPlan}` });
-    } catch (err: any) {
-      toast({ title: "Erro ao atualizar", description: err.message, variant: "destructive" });
-    } finally {
-      setUpdatingSubId(null);
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Painel Admin</DialogTitle>
+          <DialogTitle>Equipe</DialogTitle>
         </DialogHeader>
 
-        {/* Subscription Management - only for system admin */}
-        {isAdmin && (
-          <div className="space-y-3 mt-2">
-            <div className="p-4 rounded-xl border border-border bg-card/50 space-y-4">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold">Métricas do Funil</span>
-              </div>
-
-              {funnelLoading || !funnelMetrics ? (
-                <div className="grid grid-cols-2 gap-3">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="rounded-lg border border-border bg-card/30 p-3">
-                      <div className="h-4 w-20 animate-pulse rounded bg-secondary mb-2" />
-                      <div className="h-6 w-12 animate-pulse rounded bg-secondary" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg border border-border bg-card/30 p-3 space-y-1">
-                      <p className="text-xs text-muted-foreground">Signups</p>
-                      <p className="text-2xl font-semibold">{funnelMetrics.signup}</p>
-                    </div>
-                    <div className="rounded-lg border border-border bg-card/30 p-3 space-y-1">
-                      <p className="text-xs text-muted-foreground">Onboarding iniciado</p>
-                      <p className="text-2xl font-semibold">{funnelMetrics.onboarding_started}</p>
-                    </div>
-                    <div className="rounded-lg border border-border bg-card/30 p-3 space-y-1">
-                      <p className="text-xs text-muted-foreground">1º valor</p>
-                      <p className="text-2xl font-semibold">{funnelMetrics.first_real_data}</p>
-                    </div>
-                    <div className="rounded-lg border border-border bg-card/30 p-3 space-y-1">
-                      <p className="text-xs text-muted-foreground">Upgrade concluído</p>
-                      <p className="text-2xl font-semibold">{funnelMetrics.upgrade_completed}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-2 text-sm">
-                    <div className="flex items-center justify-between rounded-lg border border-border bg-card/30 px-3 py-2">
-                      <span className="inline-flex items-center gap-2 text-muted-foreground"><TrendingUp className="w-4 h-4" /> Signup → onboarding</span>
-                      <span className="font-medium">{conversionRate(funnelMetrics.signup, funnelMetrics.onboarding_started)}</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border border-border bg-card/30 px-3 py-2">
-                      <span className="inline-flex items-center gap-2 text-muted-foreground"><Gauge className="w-4 h-4" /> Onboarding → 1º valor</span>
-                      <span className="font-medium">{conversionRate(funnelMetrics.onboarding_started, funnelMetrics.first_real_data)}</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border border-border bg-card/30 px-3 py-2">
-                      <span className="inline-flex items-center gap-2 text-muted-foreground"><CreditCard className="w-4 h-4" /> Planos → checkout</span>
-                      <span className="font-medium">{conversionRate(funnelMetrics.plan_page_viewed, funnelMetrics.checkout_started)}</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border border-border bg-card/30 px-3 py-2">
-                      <span className="inline-flex items-center gap-2 text-muted-foreground"><CreditCard className="w-4 h-4" /> Checkout → upgrade</span>
-                      <span className="font-medium">{conversionRate(funnelMetrics.checkout_started, funnelMetrics.upgrade_completed)}</span>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Engajamento de usuários */}
-            <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Users className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold">Usuários que mais voltam (30d)</span>
-              </div>
-              {engagementLoading ? (
-                <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
-              ) : engagement.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-2">Sem dados de atividade ainda.</p>
-              ) : (
-                <ul className="space-y-2 max-h-[300px] overflow-y-auto">
-                  {engagement.slice(0, 20).map((u) => (
-                    <li key={u.user_id} className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border bg-card/30">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{u.display_name || u.email || "—"}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {u.active_days_30d} dias ativos · {u.total_actions_30d} ações
-                          {u.last_active_at && ` · último: ${new Date(u.last_active_at).toLocaleDateString("pt-BR")}`}
-                        </p>
-                      </div>
-                      {classBadge(u.classificacao)}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Base de Onboarding */}
-            <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Rocket className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold">Base de Onboarding</span>
-                <Badge variant="secondary" className="ml-auto text-xs">{onboardingRows.length}</Badge>
-                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={toggleOnboardingOrder}>
-                  {onboardingOrder === "desc" ? "Mais recentes" : "Mais antigos"}
-                </Button>
-              </div>
-              {onboardingLoading ? (
-                <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
-              ) : onboardingRows.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-2">Nenhuma sessão de onboarding registrada.</p>
-              ) : (
-                <ul className="space-y-2 max-h-[320px] overflow-y-auto">
-                  {onboardingRows.map((o) => {
-                    const completedCount = Array.isArray(o.completed_modules) ? o.completed_modules.length : 0;
-                    const isComplete = !!o.completed_at;
-                    return (
-                      <li key={o.id} className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border bg-card/30">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate">
-                            {o.display_name || o.company_name || `Usuário ${o.user_id.slice(0, 8)}`}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {o.segment || "—"} · {completedCount}/3 módulos · iniciado em {new Date(o.started_at).toLocaleString("pt-BR")}
-                            {o.completed_at && ` · concluído em ${new Date(o.completed_at).toLocaleString("pt-BR")}`}
-                          </p>
-                        </div>
-                        {isComplete ? (
-                          <Badge className="bg-success text-success-foreground">Concluído</Badge>
-                        ) : (
-                          <Badge variant="secondary">{o.current_step}</Badge>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-
-
-
-            <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <CreditCard className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold">Gerenciar Assinaturas</span>
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Buscar por nome do usuário..."
-                  value={subSearch}
-                  onChange={(e) => setSubSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && searchSubscriptions()}
-                />
-                <Button size="icon" variant="outline" onClick={searchSubscriptions} disabled={subLoading}>
-                  {subLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                </Button>
-              </div>
-              {subResults.length > 0 && (
-                <ul className="space-y-2">
-                  {subResults.map((s) => (
-                    <li key={s.id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-card/30 gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{s.display_name || "Sem nome"}</p>
-                        <Badge variant="secondary" className="text-xs mt-1">{s.plan}</Badge>
-                      </div>
-                      <Select
-                        value={s.plan}
-                        onValueChange={(val) => updateSubscriptionPlan(s.id, val)}
-                        disabled={updatingSubId === s.id}
-                      >
-                        <SelectTrigger className="w-[130px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {planOptions.map((p) => (
-                            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {subResults.length === 0 && subSearch && !subLoading && (
-                <p className="text-sm text-muted-foreground text-center py-2">Nenhum usuário encontrado.</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Invite Section */}
         <div className="space-y-4">
           <div className="p-4 rounded-xl border border-border bg-card/50 space-y-3">
             <div className="flex items-center gap-2 mb-1">
