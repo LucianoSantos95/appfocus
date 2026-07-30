@@ -20,11 +20,25 @@ const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 const TWILIO_WHATSAPP_NUMBER = Deno.env.get("TWILIO_WHATSAPP_NUMBER");
 
+// Normaliza para E.164 brasileiro. Muita gente salva "(12) 99999-9999" — sem o
+// código do país o Twilio interpreta como +1 (EUA) e a mensagem falha.
+function toE164BR(raw: string): string {
+  let d = (raw || "").replace(/\D/g, "");
+  if (d.startsWith("00")) d = d.slice(2);
+  // 10 dígitos (fixo com DDD) ou 11 (celular com DDD) => falta o 55
+  if (d.length === 10 || d.length === 11) d = "55" + d;
+  return d;
+}
+
 async function sendWhatsApp(to: string, message: string): Promise<boolean> {
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_WHATSAPP_NUMBER) {
     throw new Error("Twilio credentials not configured");
   }
-  const cleanNumber = to.replace(/\D/g, "");
+  const cleanNumber = toE164BR(to);
+  if (cleanNumber.length < 12) {
+    console.error(`Número inválido para WhatsApp: ${to}`);
+    return false;
+  }
   const fromNumber = TWILIO_WHATSAPP_NUMBER.startsWith("+") ? TWILIO_WHATSAPP_NUMBER : "+" + TWILIO_WHATSAPP_NUMBER;
   const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
   const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
