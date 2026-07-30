@@ -89,7 +89,7 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
 
   const close = () => {
     onOpenChange(false);
-    setTimeout(() => { setDone(false); setForm((f) => ({ ...f, empresa: "", atuacao: "", customizacao: "" })); }, 250);
+    setTimeout(() => { setDone(false); setForm((f) => ({ ...f, empresa: "", site: "", customizacao: "" })); }, 250);
   };
 
   return (
@@ -134,13 +134,13 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="cr-empresa">Empresa</Label>
+                <Label htmlFor="cr-empresa">Empresa *</Label>
                 <Input id="cr-empresa" value={form.empresa} onChange={(e) => setForm({ ...form, empresa: e.target.value })} placeholder="Nome da sua empresa" />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="cr-atuacao">O que sua empresa faz</Label>
-                <Input id="cr-atuacao" value={form.atuacao} onChange={(e) => setForm({ ...form, atuacao: e.target.value })} placeholder="Ex: agência de marketing para clínicas" />
+                <Label htmlFor="cr-site">Site da empresa *</Label>
+                <Input id="cr-site" value={form.site} onChange={(e) => setForm({ ...form, site: e.target.value })} placeholder="https://suaempresa.com.br" />
               </div>
 
               <div className="space-y-1.5">
