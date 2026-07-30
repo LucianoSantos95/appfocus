@@ -530,6 +530,45 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_requests: {
+        Row: {
+          atuacao: string | null
+          created_at: string
+          customizacao: string | null
+          email: string
+          empresa: string | null
+          id: string
+          nome: string
+          origem: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          atuacao?: string | null
+          created_at?: string
+          customizacao?: string | null
+          email: string
+          empresa?: string | null
+          id?: string
+          nome: string
+          origem?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          atuacao?: string | null
+          created_at?: string
+          customizacao?: string | null
+          email?: string
+          empresa?: string | null
+          id?: string
+          nome?: string
+          origem?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       data_export_requests: {
         Row: {
           created_at: string
