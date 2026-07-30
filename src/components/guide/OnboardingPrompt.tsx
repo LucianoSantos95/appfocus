@@ -67,7 +67,7 @@ export function OnboardingPrompt() {
 
   return (
     <div className="fixed bottom-24 right-6 z-[49] animate-in slide-in-from-bottom-4 fade-in duration-500">
-      <Card className="w-80 p-5 shadow-lg border-primary/20 bg-card">
+      <Card className="relative w-[22rem] max-w-[calc(100vw-3rem)] p-5 pr-10 shadow-lg border-primary/20 bg-card">
         <button onClick={dismiss} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground" aria-label="Fechar">
           <X className="h-4 w-4" />
         </button>
@@ -75,12 +75,12 @@ export function OnboardingPrompt() {
           <div className="rounded-full bg-primary/10 p-2 shrink-0">
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
-          <div className="space-y-3">
+          <div className="flex-1 min-w-0 space-y-3">
             <div>
-              <p className="font-semibold text-sm text-foreground">{copy.title}</p>
-              <p className="text-xs text-muted-foreground mt-1">{copy.body}</p>
+              <p className="font-semibold text-sm text-foreground leading-snug">{copy.title}</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{copy.body}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" onClick={() => { dismiss(); navigate("/onboarding"); }}>
                 Continuar onboarding
               </Button>
@@ -92,5 +92,6 @@ export function OnboardingPrompt() {
         </div>
       </Card>
     </div>
+
   );
 }
