@@ -1,29 +1,65 @@
-## 1. Painel Admin — só colaboradores
+# Copy do e-mail: "O Hub agora é gratuito"
 
-Em `src/components/user/AdminPanel.tsx`, remover todos os blocos exclusivos de admin (Métricas do Funil, Usuários que mais voltam, Base de Onboarding, Gerenciar Assinaturas) e o estado/fetches que os alimentam (`funnelMetrics`, `engagement`, `onboardingRows`, busca de assinaturas e `updateSubscriptionPlan`).
+Envio manual pela sua ferramenta de e-mail marketing. Nada será alterado no código do app.
 
-Fica apenas:
-- **Adicionar Colaborador** (e-mail + permissões por página + Enviar convite)
-- **Colaboradores** (lista com status e remover)
+## Assunto (escolha um)
 
-Título do diálogo passa a "Equipe". Imports e ícones não usados são limpos. Nenhuma tabela ou política é alterada — só a UI deixa de exibir esses dados.
+1. O Hub Empresarial agora é gratuito
+2. Boa notícia: seu acesso ao Hub virou gratuito
+3. Liberamos tudo: Hub Empresarial 100% gratuito
 
-## 2. Enquadramento de "Meu Perfil"
+Pré-header: Sem limite de registros, sem cobrança. Sua conta já está liberada.
 
-Em `src/components/user/ProfileDialog.tsx`, o conteúdo hoje corta no rodapé (o bloco de WhatsApp e o botão Salvar ficam escondidos abaixo do limite de altura).
+## Corpo (HTML simples, tom do Hub)
 
-Ajustes:
-- Cabeçalho fixo, área de conteúdo com rolagem própria e rodapé fixo com o botão **Salvar** sempre visível.
-- Altura máxima passa a `90vh` com padding inferior, para não colar nas bordas.
-- Espaçamento uniforme entre seções (dados, senha, 2FA, WhatsApp).
+Olá, {{nome}}.
 
-## 3. Formulário "Sistema sob medida"
+Temos uma novidade direta: **o Hub Empresarial agora é gratuito**.
 
-Em `src/components/customize/CustomizeDialog.tsx`:
-- Trocar o campo "O que sua empresa faz" por **"Site da empresa"** (input com placeholder `https://suaempresa.com.br`).
-- **Todos os campos passam a obrigatórios**: Nome, E-mail, Empresa, Site da empresa e a dor da operação — todos com `*` no rótulo.
-- Botão "Quero conversar" só habilita quando todos estiverem preenchidos e o e-mail for válido; o site é validado como URL simples (aceita com ou sem `https://`, normalizando no envio).
-- A mensagem enviada ao Slack passa a incluir o site.
+Você não precisa fazer nada. Sua conta já está com acesso liberado a todos os módulos:
 
-### Detalhe técnico
-A tabela `custom_requests` já tem as colunas `empresa` e `atuacao`; o site será gravado numa nova coluna `site` (texto), adicionada por migration, mantendo `atuacao` intacta para os registros antigos.
+- Clientes (CRM) e funil de vendas
+- Finanças, contas e fluxo de caixa
+- Projetos, tarefas e processos
+- Marketing, conteúdo e campanhas
+- Equipe e relatórios
+- Assistente de IA e servidor MCP (ChatGPT, Claude, Cursor)
+
+Sem limite de registros. Sem cobrança. Sem cartão.
+
+Por que fizemos isso: preferimos que a operação inteira esteja no Hub, e não uma parte dela travada por plano. Quem precisa de algo específico do próprio negócio pode pedir um sistema sob medida direto dentro do app.
+
+[Entrar no Hub](https://app.focusinteligente.com.br)
+
+Se algo não estiver funcionando como esperado, responda este e-mail — a gente lê.
+
+Abraço,
+Time Focus
+
+## Versão texto puro
+
+```text
+Olá, {{nome}}.
+
+O Hub Empresarial agora é gratuito.
+
+Você não precisa fazer nada — sua conta já está liberada, com todos os módulos:
+CRM, Finanças, Projetos, Tarefas, Processos, Marketing, Equipe, Relatórios,
+Assistente de IA e servidor MCP (ChatGPT, Claude, Cursor).
+
+Sem limite de registros. Sem cobrança. Sem cartão.
+
+Entrar no Hub: https://app.focusinteligente.com.br
+
+Precisa de algo sob medida para o seu negócio? É só pedir dentro do app.
+
+Abraço,
+Time Focus
+```
+
+## Observações de envio
+
+- Anúncio de produto para lista é e-mail de marketing: dispare por uma ferramenta dedicada (Mailchimp, Brevo, Resend Broadcasts), nunca pela infraestrutura transacional do Hub — protege a entregabilidade de confirmação de conta e recuperação de senha.
+- Use domínio/subdomínio de envio separado do usado pelos e-mails do app.
+- Inclua link de descadastro (exigido para marketing).
+- {{nome}} com fallback para "por aí" quando o cadastro não tiver nome.
