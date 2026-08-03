@@ -94,12 +94,36 @@ function renderTemplate(opts: {
 </table></td></tr></table></body></html>`;
 }
 
-async function listRecipients(admin: any, audience: Audience) {
-  let q = admin.from("subscriptions").select("user_id, plan");
-  if (audience === "free") q = q.eq("plan", "gratuito");
-  const { data: subs, error } = await q;
-  if (error) throw error;
-  const userIds: string[] = (subs ?? []).map((s: any) => s.user_id);
+async function listRecipients(admin: any, audience: Audience, limit = 70) {
+  let userIds: string[] = [];
+  const nameMap = new Map<string, string | null>();
+
+  if (audience === "recent") {
+    // Últimos N cadastrados (profiles ordenados por created_at)
+    const { data: profs, error } = await admin
+      .from("profiles")
+      .select("user_id, display_name, created_at")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    for (const p of profs ?? []) {
+      userIds.push(p.user_id);
+      nameMap.set(p.user_id, p.display_name);
+    }
+  } else {
+    let q = admin.from("subscriptions").select("user_id, plan");
+    if (audience === "free") q = q.eq("plan", "gratuito");
+    const { data: subs, error } = await q;
+    if (error) throw error;
+    userIds = (subs ?? []).map((s: any) => s.user_id);
+    if (userIds.length > 0) {
+      const { data: profs } = await admin
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
+      for (const p of profs ?? []) nameMap.set(p.user_id, p.display_name);
+    }
+  }
 
   const recipients: Array<{ user_id: string; email: string; display_name: string | null }> = [];
   const { data: usersPage } = await admin.auth.admin.listUsers({ perPage: 1000 });
@@ -108,20 +132,11 @@ async function listRecipients(admin: any, audience: Audience) {
     if (u.email) emailMap.set(u.id, u.email);
   }
 
-  // Buscar nomes dos profiles para personalização
-  const nameMap = new Map<string, string | null>();
-  if (userIds.length > 0) {
-    const { data: profs } = await admin
-      .from("profiles")
-      .select("user_id, display_name")
-      .in("user_id", userIds);
-    for (const p of profs ?? []) nameMap.set(p.user_id, p.display_name);
-  }
-
   for (const uid of userIds) {
     const email = emailMap.get(uid);
     if (email) recipients.push({ user_id: uid, email, display_name: nameMap.get(uid) ?? null });
   }
+
 
   const emails = recipients.map((r) => r.email);
   if (emails.length === 0) return [];
