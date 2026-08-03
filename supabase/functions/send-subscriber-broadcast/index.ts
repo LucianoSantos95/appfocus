@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
 
 
     if (action === "preview") {
-      const recipients = await listRecipients(admin, audience);
+      const recipients = await listRecipients(admin, audience, limit);
       const topic = (body?.topic as string) || "";
 
       const audienceBrief = audience === "free"
@@ -281,7 +281,7 @@ Responda APENAS JSON válido (sem markdown), no formato:
       const bodyText = String(body?.body_text || "").trim();
       if (!subject || !introHtml) return json(400, { error: "subject and intro_html required" });
 
-      const recipients = await listRecipients(admin, audience);
+      const recipients = await listRecipients(admin, audience, limit);
       let sent = 0;
       let failed = 0;
 
