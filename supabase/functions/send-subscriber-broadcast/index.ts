@@ -23,7 +23,7 @@ const FALLBACK_FROM = "Hub Empresarial <noreply@app.focusinteligente.com.br>";
 const PUBLIC_DOMAINS = /@(gmail|hotmail|outlook|live|yahoo|icloud|proton(?:mail)?)\.[a-z.]+>?\s*$/i;
 const FROM_EMAIL = RAW_FROM && !PUBLIC_DOMAINS.test(RAW_FROM) ? RAW_FROM : FALLBACK_FROM;
 
-type Audience = "all" | "free";
+type Audience = "all" | "free" | "recent";
 
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
@@ -94,12 +94,36 @@ function renderTemplate(opts: {
 </table></td></tr></table></body></html>`;
 }
 
-async function listRecipients(admin: any, audience: Audience) {
-  let q = admin.from("subscriptions").select("user_id, plan");
-  if (audience === "free") q = q.eq("plan", "gratuito");
-  const { data: subs, error } = await q;
-  if (error) throw error;
-  const userIds: string[] = (subs ?? []).map((s: any) => s.user_id);
+async function listRecipients(admin: any, audience: Audience, limit = 70) {
+  let userIds: string[] = [];
+  const nameMap = new Map<string, string | null>();
+
+  if (audience === "recent") {
+    // Últimos N cadastrados (profiles ordenados por created_at)
+    const { data: profs, error } = await admin
+      .from("profiles")
+      .select("user_id, display_name, created_at")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    for (const p of profs ?? []) {
+      userIds.push(p.user_id);
+      nameMap.set(p.user_id, p.display_name);
+    }
+  } else {
+    let q = admin.from("subscriptions").select("user_id, plan");
+    if (audience === "free") q = q.eq("plan", "gratuito");
+    const { data: subs, error } = await q;
+    if (error) throw error;
+    userIds = (subs ?? []).map((s: any) => s.user_id);
+    if (userIds.length > 0) {
+      const { data: profs } = await admin
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
+      for (const p of profs ?? []) nameMap.set(p.user_id, p.display_name);
+    }
+  }
 
   const recipients: Array<{ user_id: string; email: string; display_name: string | null }> = [];
   const { data: usersPage } = await admin.auth.admin.listUsers({ perPage: 1000 });
@@ -108,20 +132,11 @@ async function listRecipients(admin: any, audience: Audience) {
     if (u.email) emailMap.set(u.id, u.email);
   }
 
-  // Buscar nomes dos profiles para personalização
-  const nameMap = new Map<string, string | null>();
-  if (userIds.length > 0) {
-    const { data: profs } = await admin
-      .from("profiles")
-      .select("user_id, display_name")
-      .in("user_id", userIds);
-    for (const p of profs ?? []) nameMap.set(p.user_id, p.display_name);
-  }
-
   for (const uid of userIds) {
     const email = emailMap.get(uid);
     if (email) recipients.push({ user_id: uid, email, display_name: nameMap.get(uid) ?? null });
   }
+
 
   const emails = recipients.map((r) => r.email);
   if (emails.length === 0) return [];
@@ -140,28 +155,43 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json(401, { error: "Missing Authorization" });
 
-    const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData.user) return json(401, { error: "Unauthorized" });
-    const caller = userData.user;
-
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-    const { data: roleRow } = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", caller.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleRow) return json(403, { error: "Admin only" });
+    const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
+    let isServiceRole = bearer === SERVICE_ROLE;
+    if (!isServiceRole) {
+      const { data: tokenOk } = await admin.rpc("verify_cron_token", { p_token: bearer });
+      isServiceRole = tokenOk === true;
+    }
+
+    if (!isServiceRole) {
+      const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData, error: userErr } = await userClient.auth.getUser();
+      if (userErr || !userData.user) return json(401, { error: "Unauthorized" });
+      const caller = userData.user;
+
+      const { data: roleRow } = await admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", caller.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!roleRow) return json(403, { error: "Admin only" });
+    }
 
     const body = await req.json();
     const action = body?.action as string;
-    const audience: Audience = body?.audience === "free" ? "free" : "all";
+    const audience: Audience = body?.audience === "free"
+      ? "free"
+      : body?.audience === "recent"
+        ? "recent"
+        : "all";
+    const limit = Math.min(Math.max(Number(body?.limit) || 70, 1), 500);
+
 
     if (action === "preview") {
-      const recipients = await listRecipients(admin, audience);
+      const recipients = await listRecipients(admin, audience, limit);
       const topic = (body?.topic as string) || "";
 
       const audienceBrief = audience === "free"
@@ -255,7 +285,7 @@ Responda APENAS JSON válido (sem markdown), no formato:
       const bodyText = String(body?.body_text || "").trim();
       if (!subject || !introHtml) return json(400, { error: "subject and intro_html required" });
 
-      const recipients = await listRecipients(admin, audience);
+      const recipients = await listRecipients(admin, audience, limit);
       let sent = 0;
       let failed = 0;
 
