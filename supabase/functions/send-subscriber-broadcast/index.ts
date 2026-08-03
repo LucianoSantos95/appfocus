@@ -23,7 +23,7 @@ const FALLBACK_FROM = "Hub Empresarial <noreply@app.focusinteligente.com.br>";
 const PUBLIC_DOMAINS = /@(gmail|hotmail|outlook|live|yahoo|icloud|proton(?:mail)?)\.[a-z.]+>?\s*$/i;
 const FROM_EMAIL = RAW_FROM && !PUBLIC_DOMAINS.test(RAW_FROM) ? RAW_FROM : FALLBACK_FROM;
 
-type Audience = "all" | "free";
+type Audience = "all" | "free" | "recent";
 
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
