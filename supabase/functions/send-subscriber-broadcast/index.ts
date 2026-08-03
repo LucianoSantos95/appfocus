@@ -157,7 +157,11 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
     const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
-    const isServiceRole = bearer === SERVICE_ROLE;
+    let isServiceRole = bearer === SERVICE_ROLE;
+    if (!isServiceRole) {
+      const { data: tokenOk } = await admin.rpc("verify_cron_token", { p_token: bearer });
+      isServiceRole = tokenOk === true;
+    }
 
     if (!isServiceRole) {
       const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
