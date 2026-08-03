@@ -155,25 +155,36 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json(401, { error: "Missing Authorization" });
 
-    const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData.user) return json(401, { error: "Unauthorized" });
-    const caller = userData.user;
-
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-    const { data: roleRow } = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", caller.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleRow) return json(403, { error: "Admin only" });
+    const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const isServiceRole = bearer === SERVICE_ROLE;
+
+    if (!isServiceRole) {
+      const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData, error: userErr } = await userClient.auth.getUser();
+      if (userErr || !userData.user) return json(401, { error: "Unauthorized" });
+      const caller = userData.user;
+
+      const { data: roleRow } = await admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", caller.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!roleRow) return json(403, { error: "Admin only" });
+    }
 
     const body = await req.json();
     const action = body?.action as string;
-    const audience: Audience = body?.audience === "free" ? "free" : "all";
+    const audience: Audience = body?.audience === "free"
+      ? "free"
+      : body?.audience === "recent"
+        ? "recent"
+        : "all";
+    const limit = Math.min(Math.max(Number(body?.limit) || 70, 1), 500);
+
 
     if (action === "preview") {
       const recipients = await listRecipients(admin, audience);
