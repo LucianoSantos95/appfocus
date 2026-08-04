@@ -23,7 +23,7 @@ const FALLBACK_FROM = "Hub Empresarial <noreply@app.focusinteligente.com.br>";
 const PUBLIC_DOMAINS = /@(gmail|hotmail|outlook|live|yahoo|icloud|proton(?:mail)?)\.[a-z.]+>?\s*$/i;
 const FROM_EMAIL = RAW_FROM && !PUBLIC_DOMAINS.test(RAW_FROM) ? RAW_FROM : FALLBACK_FROM;
 
-type Audience = "all" | "free" | "recent";
+type Audience = "all" | "free" | "recent" | "active";
 
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
@@ -94,11 +94,24 @@ function renderTemplate(opts: {
 </table></td></tr></table></body></html>`;
 }
 
-async function listRecipients(admin: any, audience: Audience, limit = 70) {
+async function listRecipients(admin: any, audience: Audience, limit = 70, extraEmails: string[] = []) {
   let userIds: string[] = [];
   const nameMap = new Map<string, string | null>();
 
-  if (audience === "recent") {
+  if (audience === "active") {
+    // Usuários com atividade nos últimos 90 dias, dos mais ativos para os menos
+    const { data: rows, error } = await admin
+      .from("vw_user_engagement")
+      .select("user_id, display_name, total_actions_90d")
+      .gt("total_actions_90d", 0)
+      .order("total_actions_90d", { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    for (const r of rows ?? []) {
+      userIds.push(r.user_id);
+      nameMap.set(r.user_id, r.display_name);
+    }
+  } else if (audience === "recent") {
     // Últimos N cadastrados (profiles ordenados por created_at)
     const { data: profs, error } = await admin
       .from("profiles")
@@ -128,8 +141,12 @@ async function listRecipients(admin: any, audience: Audience, limit = 70) {
   const recipients: Array<{ user_id: string; email: string; display_name: string | null }> = [];
   const { data: usersPage } = await admin.auth.admin.listUsers({ perPage: 1000 });
   const emailMap = new Map<string, string>();
+  const byEmail = new Map<string, string>();
   for (const u of usersPage?.users ?? []) {
-    if (u.email) emailMap.set(u.id, u.email);
+    if (u.email) {
+      emailMap.set(u.id, u.email);
+      byEmail.set(u.email.toLowerCase(), u.id);
+    }
   }
 
   for (const uid of userIds) {
@@ -137,6 +154,26 @@ async function listRecipients(admin: any, audience: Audience, limit = 70) {
     if (email) recipients.push({ user_id: uid, email, display_name: nameMap.get(uid) ?? null });
   }
 
+  // E-mails extras solicitados explicitamente (sem duplicar)
+  for (const raw of extraEmails) {
+    const email = String(raw || "").trim();
+    if (!email) continue;
+    if (recipients.some((r) => r.email.toLowerCase() === email.toLowerCase())) continue;
+    const uid = byEmail.get(email.toLowerCase());
+    let displayName: string | null = null;
+    if (uid) {
+      if (nameMap.has(uid)) displayName = nameMap.get(uid) ?? null;
+      else {
+        const { data: prof } = await admin
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", uid)
+          .maybeSingle();
+        displayName = prof?.display_name ?? null;
+      }
+    }
+    recipients.push({ user_id: uid ?? email, email, display_name: displayName });
+  }
 
   const emails = recipients.map((r) => r.email);
   if (emails.length === 0) return [];
@@ -182,16 +219,18 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const action = body?.action as string;
-    const audience: Audience = body?.audience === "free"
-      ? "free"
-      : body?.audience === "recent"
-        ? "recent"
-        : "all";
+    const rawAudience = String(body?.audience || "");
+    const audience: Audience = ["free", "recent", "active"].includes(rawAudience)
+      ? (rawAudience as Audience)
+      : "all";
     const limit = Math.min(Math.max(Number(body?.limit) || 70, 1), 500);
+    const extraEmails: string[] = Array.isArray(body?.extra_emails)
+      ? body.extra_emails.map((e: unknown) => String(e)).filter((e: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))
+      : [];
 
 
     if (action === "preview") {
-      const recipients = await listRecipients(admin, audience, limit);
+      const recipients = await listRecipients(admin, audience, limit, extraEmails);
       const topic = (body?.topic as string) || "";
 
       const audienceBrief = audience === "free"
@@ -285,7 +324,7 @@ Responda APENAS JSON válido (sem markdown), no formato:
       const bodyText = String(body?.body_text || "").trim();
       if (!subject || !introHtml) return json(400, { error: "subject and intro_html required" });
 
-      const recipients = await listRecipients(admin, audience, limit);
+      const recipients = await listRecipients(admin, audience, limit, extraEmails);
       let sent = 0;
       let failed = 0;
 
