@@ -219,16 +219,18 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const action = body?.action as string;
-    const audience: Audience = body?.audience === "free"
-      ? "free"
-      : body?.audience === "recent"
-        ? "recent"
-        : "all";
+    const rawAudience = String(body?.audience || "");
+    const audience: Audience = ["free", "recent", "active"].includes(rawAudience)
+      ? (rawAudience as Audience)
+      : "all";
     const limit = Math.min(Math.max(Number(body?.limit) || 70, 1), 500);
+    const extraEmails: string[] = Array.isArray(body?.extra_emails)
+      ? body.extra_emails.map((e: unknown) => String(e)).filter((e: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))
+      : [];
 
 
     if (action === "preview") {
-      const recipients = await listRecipients(admin, audience, limit);
+      const recipients = await listRecipients(admin, audience, limit, extraEmails);
       const topic = (body?.topic as string) || "";
 
       const audienceBrief = audience === "free"
