@@ -191,9 +191,19 @@ export function SupportDialog({ open, onOpenChange }: SupportDialogProps) {
 function TicketCard({ ticket }: { ticket: Ticket }) {
   const config = statusConfig[ticket.status] || statusConfig.aberto;
   const StatusIcon = config.icon;
+  const recentlyResolved =
+    ticket.status === "resolvido" &&
+    Date.now() - new Date(ticket.updated_at).getTime() < 1000 * 60 * 60 * 24 * 3;
 
   return (
-    <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
+    <div
+      className={cn(
+        "rounded-lg p-4 border transition-colors",
+        recentlyResolved
+          ? "bg-success/10 border-success/40 ring-1 ring-success/30"
+          : "bg-muted/30 border-border/50"
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-sm text-foreground line-clamp-2">{ticket.mensagem}</p>
