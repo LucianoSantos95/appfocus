@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_ticket_resolved() FROM PUBLIC, anon, authenticated;
