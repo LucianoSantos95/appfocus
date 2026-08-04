@@ -124,21 +124,35 @@ export function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
         .select("token")
         .single();
 
+      let emailSent = false;
+      let emailError: string | null = null;
+
       if (tokenData) {
-        try {
-          await supabase.functions.invoke("send-invite", {
-            body: {
-              email,
-              token: tokenData.token,
-              inviter_name: user.user_metadata?.full_name || user.email,
-            },
-          });
-        } catch {
-          // Edge function might not exist yet
+        const { data: fnData, error: fnError } = await supabase.functions.invoke("send-invite", {
+          body: {
+            email,
+            token: tokenData.token,
+            inviter_name: user.user_metadata?.full_name || user.email,
+          },
+        });
+        if (fnError || (fnData && (fnData as any).error)) {
+          emailError = (fnData as any)?.error || fnError?.message || "Falha no envio do e-mail";
+        } else {
+          emailSent = true;
         }
+      } else {
+        emailError = "Não foi possível gerar o link de convite";
       }
 
-      toast({ title: "Convite enviado!", description: `Convite enviado para ${email}` });
+      if (emailSent) {
+        toast({ title: "Convite enviado!", description: `E-mail enviado para ${email}` });
+      } else {
+        toast({
+          title: "Colaborador adicionado, mas o e-mail não foi enviado",
+          description: emailError ?? undefined,
+          variant: "destructive",
+        });
+      }
       setInviteEmail("");
       setSelectedPages([]);
       setAllSelected(false);
