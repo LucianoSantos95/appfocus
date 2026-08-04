@@ -16,7 +16,7 @@ Mesmo formato de ontem: envio único para os **70 últimos cadastrados**, usando
 
 **CTA principal:** "Conectar meu Hub à IA" → https://app.focusinteligente.com.br/mcp
 
-**Fechamento (feedback):** pedido curto e direto para responderem o e-mail contando o que estão achando da plataforma — o que ajudou, o que falta e o que travou. Responder o e-mail chega direto na equipe (o rodapé do template já convida a responder).
+**Fechamento (feedback):** pedido curto para deixarem o feedback **dentro da plataforma** — clicar no próprio nome (canto superior direito) → **Feedback** → escrever o que ajudou, o que falta e o que travou. O e-mail leva direto ao Painel para isso.
 
 ## Execução técnica
 
