@@ -51,6 +51,7 @@ export function Sidebar() {
   const location = useLocation();
   const { isAdmin, isTeamMember, allowedPages, isLoading } = useTeamPermissions();
   const { user } = useAuth();
+  const { isOwner } = useOwnerAccess();
   const [customOpen, setCustomOpen] = useState(false);
 
   const hasAccess = (slug: string) => {
