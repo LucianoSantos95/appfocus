@@ -92,6 +92,7 @@ const App = () => (
                     <Route path="/atividades" element={<ProtectedRoute><ErrorBoundary><Tarefas /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/processos" element={<ProtectedRoute><ErrorBoundary><Processos /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/guia" element={<ProtectedRoute><ErrorBoundary><Guia /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/usuarios" element={<ProtectedRoute><ErrorBoundary><Usuarios /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/onboarding" element={<ProtectedRoute><ErrorBoundary><OnboardingPage /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                     <Route path="*" element={<NotFound />} />
