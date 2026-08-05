@@ -6,6 +6,7 @@ import { AIChatWidget } from "@/components/chat/AIChatWidget";
 import { WowMomentCard } from "@/components/onboarding/WowMomentCard";
 import { useDemoData } from "@/contexts/DemoDataContext";
 import { useLocation } from "react-router-dom";
+import { useSessionHeartbeat } from "@/hooks/useSessionHeartbeat";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -16,6 +17,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
   const { pendingWow, clearWow } = useDemoData();
   const isOnboardingRoute = location.pathname === "/onboarding";
+  useSessionHeartbeat();
 
   return (
     <div className="min-h-screen bg-background">

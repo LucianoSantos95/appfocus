@@ -1952,6 +1952,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          duration_sec: number
+          id: string
+          last_seen_at: string
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_sec?: number
+          id?: string
+          last_seen_at?: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_sec?: number
+          id?: string
+          last_seen_at?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       whatsapp_preferences: {
         Row: {
           created_at: string
@@ -2111,6 +2141,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_platform_owner: { Args: never; Returns: boolean }
       log_audit_event: {
         Args: {
           p_action: string
@@ -2128,6 +2159,38 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      owner_users_list: {
+        Args: never
+        Returns: {
+          actions_30d: number
+          actions_90d: number
+          actions_by_module: Json
+          active_days_30d: number
+          avg_session_sec: number
+          classificacao: string
+          display_name: string
+          email: string
+          funnel_stage: string
+          last_active_at: string
+          last_sign_in_at: string
+          plan: string
+          sessions_count: number
+          signed_up_at: string
+          total_time_sec: number
+          user_id: string
+        }[]
+      }
+      owner_users_overview: {
+        Args: never
+        Returns: {
+          active_30d: number
+          active_7d: number
+          new_30d: number
+          new_7d: number
+          paid_users: number
+          total_users: number
+        }[]
       }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
