@@ -81,17 +81,10 @@ export default function Usuarios() {
     [users, search]
   );
 
-  const maisAtivos = useMemo(
-    () => [...filtered].sort((a, b) => b.actions_90d - a.actions_90d).slice(0, 50),
-    [filtered]
-  );
-
-  const porTempo = useMemo(
-    () => [...filtered].sort((a, b) => b.total_time_sec - a.total_time_sec),
-    [filtered]
-  );
-
-  const inativos = useMemo(
+  const recentesFilter = useUserFilter(filtered, "recentes");
+  const ativosFilter = useUserFilter(filtered, "acoes90");
+  const tempoFilter = useUserFilter(filtered, "tempo");
+  const inativosBase = useMemo(
     () =>
       filtered.filter((u) => {
         const d = daysSince(u.last_active_at ?? u.last_sign_in_at);
@@ -99,6 +92,8 @@ export default function Usuarios() {
       }),
     [filtered]
   );
+  const inativosFilter = useUserFilter(inativosBase, "inatividade");
+
 
   const moduleUsage = useMemo(() => {
     const acc: Record<string, number> = {};
