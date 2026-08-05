@@ -129,7 +129,7 @@ export default function Usuarios() {
 
   return (
     <MainLayout>
-      <PageMeta title="Usuários | Hub Empresarial" description="Painel interno de usuários" noIndex />
+      <PageMeta title="Usuários | Hub Empresarial" description="Painel interno de usuários" />
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1 min-w-[200px]">
