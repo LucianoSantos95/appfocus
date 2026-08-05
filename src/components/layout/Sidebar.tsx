@@ -146,6 +146,24 @@ export function Sidebar() {
             );
           })}
 
+          {/* Painel de usuários — exclusivo do dono */}
+          {isOwner && (
+            <li>
+              <NavLink
+                to="/usuarios"
+                className={cn(
+                  "relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-200 text-sm font-medium",
+                  location.pathname === "/usuarios"
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
+                )}
+              >
+                <BarChart2 className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span>Usuários</span>}
+              </NavLink>
+            </li>
+          )}
+
           {/* Sistema sob medida */}
           <li className="pt-2">
             {collapsed ? (
