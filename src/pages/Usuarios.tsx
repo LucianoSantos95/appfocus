@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useOwnerUsers, formatDate, formatDuration, daysSince, OwnerUserRow } from "@/hooks/useOwnerUsers";
 import { BroadcastPanel } from "@/components/admin/BroadcastPanel";
+import { UserFilterBar, useUserFilter } from "@/components/admin/UserFilterBar";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { Loader2, Users, Clock, Flame, Download, RefreshCw, UserX } from "lucide-react";
 
