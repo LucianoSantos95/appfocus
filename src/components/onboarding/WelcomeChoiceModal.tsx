@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { DollarSign, Users, FolderKanban, Rocket, Loader2, ArrowRight } from "lucide-react";
 import hubLogo from "@/assets/logo.png";
 import type { DemoModule } from "@/lib/demo-data";
+import { CustomizeDialog } from "@/components/customize/CustomizeDialog";
 
 interface Props {
   firstName: string;
@@ -21,7 +22,7 @@ const PAINS = [
   { id: "lucro",     label: "Não sei se dou lucro" },
   { id: "prazo",     label: "Perco prazo com frequência" },
   { id: "pipeline",  label: "Não tenho pipeline organizado" },
-  { id: "outro",     label: "Outro" },
+  { id: "outro",     label: "Outro — a minha não está aqui" },
 ];
 
 const CHOICES: Array<{
@@ -93,6 +94,9 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
   const initialName = useMemo(() => (looksTruncated(firstName) ? "" : firstName), [firstName]);
   const [name, setName] = useState<string>(initialName);
   const needsNameConfirm = looksTruncated(firstName);
+  // "Outro" = a dor da pessoa não cabe no Hub → é lead de consultoria.
+  // Abre o formulário na hora, mas sem travar o onboarding: fechar segue o fluxo.
+  const [customizeOpen, setCustomizeOpen] = useState(false);
 
   const canContinueProfile = !!segment && !!pain && name.trim().length >= 2;
 
@@ -211,7 +215,11 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
               <select
                 id="pain-select"
                 value={pain ?? ""}
-                onChange={(e) => setPain(e.target.value || null)}
+                onChange={(e) => {
+                  const v = e.target.value || null;
+                  setPain(v);
+                  if (v === "outro") setCustomizeOpen(true);
+                }}
                 className="w-full rounded-[10px] border bg-transparent px-4 py-3 text-base text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition"
                 style={{ borderColor: "rgba(255,255,255,0.30)" }}
               >
@@ -220,6 +228,19 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
                   <option key={p.id} value={p.id} className="bg-neutral-900">{p.label}</option>
                 ))}
               </select>
+
+              {pain === "outro" && (
+                <p className="mt-3 text-xs" style={{ color: "rgba(255,255,255,0.70)" }}>
+                  Se o Hub não cobre a sua dor, dá pra construir algo sob medida.{" "}
+                  <button
+                    type="button"
+                    onClick={() => setCustomizeOpen(true)}
+                    className="underline underline-offset-2 text-primary hover:text-primary/80 transition"
+                  >
+                    Me conta qual é
+                  </button>
+                </p>
+              )}
             </div>
 
             <button
@@ -270,6 +291,8 @@ export function WelcomeChoiceModal({ firstName, onChoose, isLoading = false }: P
           </p>
         )}
       </div>
+
+      <CustomizeDialog open={customizeOpen} onOpenChange={setCustomizeOpen} origem="onboarding" />
     </div>
   );
 }

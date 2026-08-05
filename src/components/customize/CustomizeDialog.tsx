@@ -17,7 +17,7 @@ const sb = supabase as any;
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  origem?: "landing" | "app" | "planos";
+  origem?: "landing" | "app" | "planos" | "onboarding";
 }
 
 export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
