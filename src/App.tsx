@@ -36,6 +36,7 @@ const Mcp = lazy(() => import("./pages/Mcp"));
 const OQueEHubEmpresarial = lazy(() => import("./pages/OQueEHubEmpresarial"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OnboardingPage = lazy(() => import("./pages/Onboarding"));
+const Usuarios = lazy(() => import("./pages/Usuarios"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 const DemoEntry = lazy(() => import("./pages/DemoEntry"));
 import DemoBanner from "@/components/demo/DemoBanner";
