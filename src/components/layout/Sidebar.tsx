@@ -26,6 +26,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePlan } from "@/contexts/PlanContext";
 import { useClientes } from "@/hooks/useClientes";
