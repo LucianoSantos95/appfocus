@@ -173,8 +173,18 @@ export default function Usuarios() {
 
             <TabsContent value="recentes" className="mt-4">
               <Card className="p-4">
+                <UserFilterBar
+                  filter={recentesFilter}
+                  total={recentesFilter.rows.length}
+                  sortOptions={[
+                    { value: "recentes", label: "Último acesso" },
+                    { value: "cadastro", label: "Cadastro recente" },
+                    { value: "acoes30", label: "Ações 30d" },
+                    { value: "nome", label: "Nome (A-Z)" },
+                  ]}
+                />
                 <UserTable
-                  rows={filtered.slice(0, 100)}
+                  rows={recentesFilter.rows.slice(0, 100)}
                   columns={[
                     { key: "nome", label: "Usuário", render: (u) => (
                       <div><p className="font-medium">{u.display_name}</p><p className="text-xs text-muted-foreground">{u.email}</p></div>
@@ -193,10 +203,20 @@ export default function Usuarios() {
               <Card className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Flame className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold">Top 50 por ações (90 dias)</h3>
+                  <h3 className="font-semibold">Mais ativos</h3>
                 </div>
+                <UserFilterBar
+                  filter={ativosFilter}
+                  total={ativosFilter.rows.length}
+                  sortOptions={[
+                    { value: "acoes90", label: "Ações 90d" },
+                    { value: "acoes30", label: "Ações 30d" },
+                    { value: "recentes", label: "Último acesso" },
+                    { value: "nome", label: "Nome (A-Z)" },
+                  ]}
+                />
                 <UserTable
-                  rows={maisAtivos}
+                  rows={ativosFilter.rows.slice(0, 50)}
                   columns={[
                     { key: "nome", label: "Usuário", render: (u) => (
                       <div><p className="font-medium">{u.display_name}</p><p className="text-xs text-muted-foreground">{u.email}</p></div>
@@ -219,8 +239,18 @@ export default function Usuarios() {
                 <p className="text-xs text-muted-foreground mb-3">
                   A medição começa a partir de agora — sessões anteriores não têm registro de duração.
                 </p>
+                <UserFilterBar
+                  filter={tempoFilter}
+                  total={tempoFilter.rows.length}
+                  sortOptions={[
+                    { value: "tempo", label: "Tempo total" },
+                    { value: "sessoes", label: "Sessões" },
+                    { value: "recentes", label: "Último acesso" },
+                    { value: "nome", label: "Nome (A-Z)" },
+                  ]}
+                />
                 <UserTable
-                  rows={porTempo.slice(0, 100)}
+                  rows={tempoFilter.rows.slice(0, 100)}
                   columns={[
                     { key: "nome", label: "Usuário", render: (u) => (
                       <div><p className="font-medium">{u.display_name}</p><p className="text-xs text-muted-foreground">{u.email}</p></div>
@@ -239,10 +269,19 @@ export default function Usuarios() {
                 <div className="flex items-center gap-2 mb-3">
                   <UserX className="w-4 h-4 text-primary" />
                   <h3 className="font-semibold">Sem atividade há 14 dias ou mais</h3>
-                  <Badge variant="secondary" className="ml-auto">{inativos.length}</Badge>
+                  <Badge variant="secondary" className="ml-auto">{inativosBase.length}</Badge>
                 </div>
+                <UserFilterBar
+                  filter={inativosFilter}
+                  total={inativosFilter.rows.length}
+                  sortOptions={[
+                    { value: "inatividade", label: "Mais dias sem acesso" },
+                    { value: "cadastro", label: "Cadastro recente" },
+                    { value: "nome", label: "Nome (A-Z)" },
+                  ]}
+                />
                 <UserTable
-                  rows={inativos.slice(0, 100)}
+                  rows={inativosFilter.rows.slice(0, 100)}
                   columns={[
                     { key: "nome", label: "Usuário", render: (u) => (
                       <div><p className="font-medium">{u.display_name}</p><p className="text-xs text-muted-foreground">{u.email}</p></div>
@@ -254,6 +293,7 @@ export default function Usuarios() {
                 />
               </Card>
             </TabsContent>
+
 
             <TabsContent value="modulos" className="mt-4">
               <Card className="p-4 space-y-2">
