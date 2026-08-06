@@ -37,6 +37,7 @@ const OQueEHubEmpresarial = lazy(() => import("./pages/OQueEHubEmpresarial"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OnboardingPage = lazy(() => import("./pages/Onboarding"));
 const Usuarios = lazy(() => import("./pages/Usuarios"));
+const Leads = lazy(() => import("./pages/Leads"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 const DemoEntry = lazy(() => import("./pages/DemoEntry"));
 import DemoBanner from "@/components/demo/DemoBanner";
@@ -93,6 +94,7 @@ const App = () => (
                     <Route path="/processos" element={<ProtectedRoute><ErrorBoundary><Processos /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/guia" element={<ProtectedRoute><ErrorBoundary><Guia /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/usuarios" element={<ProtectedRoute><ErrorBoundary><Usuarios /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/leads" element={<ProtectedRoute><ErrorBoundary><Leads /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/onboarding" element={<ProtectedRoute><ErrorBoundary><OnboardingPage /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                     <Route path="*" element={<NotFound />} />

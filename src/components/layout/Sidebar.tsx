@@ -22,7 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Lock as LockIcon,
-  BarChart2,
+  BarChart2, Target,
   Sparkles,
 } from "lucide-react";
 import { useTeamPermissions } from "@/hooks/useTeamPermissions";
@@ -162,6 +162,24 @@ export function Sidebar() {
               >
                 <BarChart2 className="w-5 h-5 flex-shrink-0" />
                 {!collapsed && <span>Usuários</span>}
+              </NavLink>
+            </li>
+          )}
+
+          {/* Leads de consultoria (custom_requests) — exclusivo do dono */}
+          {isOwner && (
+            <li>
+              <NavLink
+                to="/leads"
+                className={cn(
+                  "relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-200 text-sm font-medium",
+                  location.pathname === "/leads"
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
+                )}
+              >
+                <Target className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span>Leads</span>}
               </NavLink>
             </li>
           )}
