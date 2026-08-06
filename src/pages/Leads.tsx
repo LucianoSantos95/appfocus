@@ -72,17 +72,9 @@ export default function Leads() {
 
   const novos = leads.filter((l) => l.status === "novo").length;
 
-  if (!permLoading && !isAdmin) {
-    return (
-      <MainLayout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center">
-          <ShieldAlert className="w-10 h-10 text-muted-foreground" />
-          <h1 className="font-display text-2xl tracking-tight">Área restrita</h1>
-          <p className="text-sm text-muted-foreground">Esta página é só para administradores.</p>
-        </div>
-      </MainLayout>
-    );
-  }
+  if (permLoading) return null;
+  if (!isOwner) return <Navigate to="/" replace />;
+
 
   return (
     <MainLayout>
