@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { supabase } from "@/integrations/supabase/client";
-import { useTeamPermissions } from "@/hooks/useTeamPermissions";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ShieldAlert, Target, Mail, Building2, Loader2, ExternalLink, Globe } from "lucide-react";
+import { Search, Target, Mail, Building2, Loader2, ExternalLink, Globe } from "lucide-react";
+
 
 // Onde caem os pedidos de "sistema sob medida" (tabela custom_requests).
 // Substituiu a antiga aba "Assinantes" — o Hub é gratuito, o que importa agora é o lead.
@@ -35,7 +37,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 export default function Leads() {
-  const { isAdmin, isLoading: permLoading } = useTeamPermissions();
+  const { isOwner, isLoading: permLoading } = useOwnerAccess();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
@@ -51,7 +53,7 @@ export default function Leads() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { if (isAdmin) load(); else setLoading(false); }, [isAdmin, load]);
+  useEffect(() => { if (isOwner) load(); else setLoading(false); }, [isOwner, load]);
 
   const setStatus = async (id: string, status: string) => {
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
@@ -70,17 +72,9 @@ export default function Leads() {
 
   const novos = leads.filter((l) => l.status === "novo").length;
 
-  if (!permLoading && !isAdmin) {
-    return (
-      <MainLayout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center">
-          <ShieldAlert className="w-10 h-10 text-muted-foreground" />
-          <h1 className="font-display text-2xl tracking-tight">Área restrita</h1>
-          <p className="text-sm text-muted-foreground">Esta página é só para administradores.</p>
-        </div>
-      </MainLayout>
-    );
-  }
+  if (permLoading) return null;
+  if (!isOwner) return <Navigate to="/" replace />;
+
 
   return (
     <MainLayout>
