@@ -53,7 +53,7 @@ export default function Leads() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { if (isAdmin) load(); else setLoading(false); }, [isAdmin, load]);
+  useEffect(() => { if (isOwner) load(); else setLoading(false); }, [isOwner, load]);
 
   const setStatus = async (id: string, status: string) => {
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
