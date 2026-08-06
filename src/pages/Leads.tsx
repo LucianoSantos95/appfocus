@@ -37,7 +37,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 export default function Leads() {
-  const { isAdmin, isLoading: permLoading } = useTeamPermissions();
+  const { isOwner, isLoading: permLoading } = useOwnerAccess();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
