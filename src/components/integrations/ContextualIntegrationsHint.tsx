@@ -69,7 +69,7 @@ export function ContextualIntegrationsHint({ module }: Props) {
     (async () => {
       const uid = session.user.id;
       const [intRes, waRes] = await Promise.all([
-        supabase.from("user_integrations").select("provider").eq("user_id", uid),
+        supabase.from("user_integrations_status").select("provider").eq("user_id", uid),
         supabase.from("whatsapp_preferences" as any).select("whatsapp_number").eq("user_id", uid).maybeSingle(),
       ]);
       if (cancelled) return;
