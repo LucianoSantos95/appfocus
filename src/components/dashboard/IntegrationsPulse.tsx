@@ -56,8 +56,8 @@ export function IntegrationsPulse() {
       // 1. Google Agenda — buscar user_integrations + último agenda_items sync
       try {
         const { data: integ } = await supabase
-          .from("user_integrations")
-          .select("provider, created_at")
+          .from("user_integrations_status")
+          .select("provider, connected_at")
           .eq("user_id", userId)
           .eq("provider", "google")
           .maybeSingle();
