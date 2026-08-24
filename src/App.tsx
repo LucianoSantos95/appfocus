@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TeamPermissionsProvider } from "@/contexts/TeamPermissionsContext";
 import { PlanProvider } from "@/contexts/PlanContext";
@@ -75,30 +75,35 @@ const App = () => (
                   </ErrorBoundary>
                   <PageTransition>
                   <Routes>
-                    <Route path="/demo" element={<DemoEntry />} />
+                    {/* HUB CENTRAL — o catálogo é a página principal.
+                        O Hub Empresarial (SaaS de 6 módulos) saiu do ar; tudo o que
+                        era dele redireciona pro catálogo. Só sobrevivem: acesso do
+                        dono (auth + admin), páginas legais e o consent do Lovable. */}
+                    <Route path="/" element={<Central />} />
+                    <Route path="/central" element={<Navigate to="/" replace />} />
 
-                    <Route path="/central" element={<Central />} />
+                    {/* Acesso do dono — necessário pro painel admin */}
                     <Route path="/auth" element={<Auth />} />
-                    <Route path="/termos" element={<Termos />} />
-                    <Route path="/privacidade" element={<Privacidade />} />
-                    <Route path="/planos" element={<Planos />} />
-                    <Route path="/glossario" element={<Glossario />} />
-                    <Route path="/comparar" element={<Comparar />} />
-                    <Route path="/mcp" element={<Mcp />} />
-                    <Route path="/blog/o-que-e-hub-empresarial" element={<OQueEHubEmpresarial />} />
-                    <Route path="/" element={<ProtectedRoute><ErrorBoundary><Index /></ErrorBoundary></ProtectedRoute>} />
-                    <Route path="/financas" element={<ProtectedRoute><ErrorBoundary><Financas /></ErrorBoundary></ProtectedRoute>} />
-                    <Route path="/rh" element={<ProtectedRoute><ErrorBoundary><RH /></ErrorBoundary></ProtectedRoute>} />
-                    <Route path="/marketing" element={<ProtectedRoute><ErrorBoundary><Marketing /></ErrorBoundary></ProtectedRoute>} />
-                    <Route path="/projetos" element={<ProtectedRoute><ErrorBoundary><Projetos /></ErrorBoundary></ProtectedRoute>} />
-                    <Route path="/clientes" element={<ProtectedRoute><ErrorBoundary><Clientes /></ErrorBoundary></ProtectedRoute>} />
-                    <Route path="/atividades" element={<ProtectedRoute><ErrorBoundary><Tarefas /></ErrorBoundary></ProtectedRoute>} />
-                    <Route path="/processos" element={<ProtectedRoute><ErrorBoundary><Processos /></ErrorBoundary></ProtectedRoute>} />
-                    <Route path="/guia" element={<ProtectedRoute><ErrorBoundary><Guia /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/usuarios" element={<ProtectedRoute><ErrorBoundary><Usuarios /></ErrorBoundary></ProtectedRoute>} />
                     <Route path="/leads" element={<ProtectedRoute><ErrorBoundary><Leads /></ErrorBoundary></ProtectedRoute>} />
-                    <Route path="/onboarding" element={<ProtectedRoute><ErrorBoundary><OnboardingPage /></ErrorBoundary></ProtectedRoute>} />
+
+                    {/* Legais — o catálogo coleta nome e e-mail (LGPD) */}
+                    <Route path="/termos" element={<Termos />} />
+                    <Route path="/privacidade" element={<Privacidade />} />
+
+                    {/* Infra do Lovable/MCP */}
                     <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+
+                    {/* Aposentadas: páginas de SEO e todos os módulos do Hub.
+                        Redirecionam pro catálogo para aproveitar o tráfego. */}
+                    {["/mcp", "/comparar", "/glossario", "/blog/o-que-e-hub-empresarial",
+                      "/planos", "/demo", "/onboarding", "/guia",
+                      "/financas", "/rh", "/marketing", "/projetos",
+                      "/clientes", "/atividades", "/processos",
+                    ].map((rota) => (
+                      <Route key={rota} path={rota} element={<Navigate to="/" replace />} />
+                    ))}
+
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   </PageTransition>

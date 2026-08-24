@@ -1,55 +1,37 @@
-# Hub Empresarial — Focus Gestão Inteligente
+# Hub Central — Focus Gestão Inteligente
 
-> Sistema de gestão empresarial integrado para agências de marketing, consultorias, freelancers e pequenas empresas. Reúne em um único hub: Finanças, Clientes (CRM), Projetos, Tarefas, Marketing, RH e Processos, com automação por IA e relatórios prontos para apresentar a clientes.
+> Catálogo de ferramentas para organizar a operação de pequenos negócios. Templates de Notion, sistemas e consultoria. Sem login e sem custo para começar.
 
 ## O que é
 
-O Hub Empresarial é uma plataforma SaaS 100% em português que substitui o uso fragmentado de planilhas, Trello, CRMs separados e ferramentas financeiras isoladas. Em poucos minutos, agências ou consultorias configuram pipelines, tarefas, categorias financeiras e começam a operar de forma profissional, com dashboards de BI e envio de relatórios por e-mail.
+O Hub Central reúne, num só lugar, as ferramentas que a Focus Gestão Inteligente disponibiliza para quem precisa organizar a operação do próprio negócio. O visitante escolhe o que resolve a dor dele, informa nome e e-mail, e recebe o material na hora — não existe cadastro nem assinatura.
 
-## Para quem é
+## Como funciona
 
-- Agências de marketing digital (social media, performance, branding)
-- Consultorias (estratégia, RH, financeira, jurídica)
-- Freelancers que querem operar como empresa
-- Pequenas e médias empresas que precisam de gestão integrada
+- Acesse https://app.focusinteligente.com.br
+- Escolha um item do catálogo
+- Informe nome e e-mail
+- O material abre imediatamente
 
-## Diferenciais
+## O que está disponível
 
-- Onboarding guiado por IA com personalização por nicho (Agência, Consultoria, Freelancer, PME)
-- Templates de operação pré-configurados (pipeline, tarefas, categorias) por segmento
-- Hub Assistant: assistente de IA com tool calling integrado a todos os módulos
-- Relatórios automáticos para apresentar a clientes (PDF, e-mail, WhatsApp)
-- Dashboards de BI por módulo (DRE, Inadimplência, Funil, Engajamento, Produtividade)
-- 100% em português, focado em operações brasileiras
-- **Servidor MCP oficial** — clientes conectam ChatGPT, Claude, Cursor e Codex diretamente ao Hub via `https://hnextembswhejumvxbzd.supabase.co/functions/v1/mcp` (OAuth 2.1). Ferramentas: list_clientes, list_projetos, list_tarefas, create_tarefa, financeiro_resumo. Página: https://app.focusinteligente.com.br/mcp
+- **Controle Financeiro** — template de Notion gratuito para controlar gastos, receitas e metas.
 
-## Preço
-
-- **Gratuito** — o Hub Empresarial é 100% gratuito, sem versão paga.
-- Todos os módulos, relatórios, exportações, dashboards de BI, análises com IA, integrações e o servidor MCP estão liberados.
-- Sem limite de registros, sem cartão de crédito, sem período de teste.
-- Precisa de algo sob medida para a sua operação? É possível solicitar customização em https://app.focusinteligente.com.br/planos
+Novos itens (sistemas e consultoria) entram no catálogo conforme são lançados.
 
 ## Perguntas frequentes
 
-- **O que é o Hub Empresarial Focus?** É um sistema de gestão integrado em português para agências, consultorias, freelancers e PMEs, com módulos de Finanças, CRM, Projetos, Tarefas, Marketing, RH e Processos em uma plataforma só.
-- **Tem versão gratuita?** O Hub inteiro é gratuito — não existe versão paga nem recurso bloqueado.
-- **Quanto custa?** Nada. Todos os módulos, BI, IA, integrações e o servidor MCP são gratuitos, sem limite de registros e sem cartão de crédito.
-- **Para quem é?** Para agências de marketing, consultorias, freelancers e pequenas empresas brasileiras que querem substituir planilhas e ferramentas fragmentadas por uma plataforma única.
-- **O que substitui?** Substitui Excel/Sheets, Trello, Asana, Pipedrive, sistemas financeiros isolados e ferramentas de RH separadas.
-- **Como funciona o onboarding?** O sistema identifica seu segmento (agência, consultoria, freelancer ou PME) e pré-configura templates de pipeline, tarefas e categorias financeiras. Em menos de 5 minutos você já opera com dados reais.
+- **Preciso criar conta?** Não. O catálogo funciona sem login.
+- **Quanto custa?** Os itens gratuitos são realmente gratuitos. Quando houver item pago, o preço aparece no próprio card.
+- **Para quem é?** Donos de pequenos negócios, agências, consultorias e freelancers brasileiros que querem organizar a operação sem montar tudo do zero.
+- **Quem mantém?** Focus Gestão Inteligente (https://focusinteligente.com.br), que também presta consultoria de sistemas sob medida.
+
+## Histórico
+
+O Hub Empresarial — sistema de gestão com módulos de finanças, CRM, projetos, tarefas, marketing, RH e processos — foi descontinuado em agosto de 2026. As URLs antigas redirecionam para o catálogo. Quem usava o sistema pode solicitar uma cópia dos próprios dados em comercial@focusinteligente.com.br.
 
 ## Links
 
-- Site: https://app.focusinteligente.com.br
-- Cadastro gratuito: https://app.focusinteligente.com.br/auth
-- Acesso gratuito e pedidos de customização: https://app.focusinteligente.com.br/planos
-- Comparativo com alternativas: https://app.focusinteligente.com.br/comparar
-- Glossário de gestão para agências: https://app.focusinteligente.com.br/glossario
-- Blog — O que é Hub Empresarial: https://app.focusinteligente.com.br/blog/o-que-e-hub-empresarial
-- Termos de uso: https://app.focusinteligente.com.br/termos
-- Política de privacidade: https://app.focusinteligente.com.br/privacidade
-
-## Quem faz
-
-Focus Gestão Inteligente — empresa brasileira. Site: https://app.focusinteligente.com.br
+- Catálogo: https://app.focusinteligente.com.br
+- Site da Focus: https://focusinteligente.com.br
+- Contato: comercial@focusinteligente.com.br

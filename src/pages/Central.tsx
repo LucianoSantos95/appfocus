@@ -6,6 +6,7 @@ import { ArrowRight, Loader2, PackageOpen } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useProdutos, usePrimeiraVisita, type Produto } from "@/hooks/useProdutos";
 import { LeadCaptureDialog } from "@/components/central/LeadCaptureDialog";
+import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
 
 // Hub Central — catálogo de produtos SEM LOGIN.
 // MVP: só o catálogo (sem landing). As seções seguem a escada de compromisso:
@@ -60,11 +61,13 @@ export default function Central() {
   return (
     <div className="min-h-screen bg-background">
       <PageMeta
-        path="/central"
+        path="/"
         title="Templates e sistemas para sua operação"
         suffix="Hub Central"
         description="Templates de Notion, sistemas e consultoria para organizar a operação do seu negócio. Comece grátis, sem cadastro."
       />
+
+      <AvisoHubAntigo />
 
       {/* Cabeçalho enxuto — MVP não tem landing */}
       <header className="border-b border-border/60">
