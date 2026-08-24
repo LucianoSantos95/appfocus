@@ -36,9 +36,8 @@ const Mcp = lazy(() => import("./pages/Mcp"));
 const OQueEHubEmpresarial = lazy(() => import("./pages/OQueEHubEmpresarial"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OnboardingPage = lazy(() => import("./pages/Onboarding"));
-const Usuarios = lazy(() => import("./pages/Usuarios"));
-const Leads = lazy(() => import("./pages/Leads"));
 const Central = lazy(() => import("./pages/Central"));
+const Admin = lazy(() => import("./pages/Admin"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 const DemoEntry = lazy(() => import("./pages/DemoEntry"));
 import DemoBanner from "@/components/demo/DemoBanner";
@@ -84,8 +83,10 @@ const App = () => (
 
                     {/* Acesso do dono — necessário pro painel admin */}
                     <Route path="/auth" element={<Auth />} />
-                    <Route path="/usuarios" element={<ProtectedRoute><ErrorBoundary><Usuarios /></ErrorBoundary></ProtectedRoute>} />
-                    <Route path="/leads" element={<ProtectedRoute><ErrorBoundary><Leads /></ErrorBoundary></ProtectedRoute>} />
+                    <Route path="/admin" element={<ProtectedRoute><ErrorBoundary><Admin /></ErrorBoundary></ProtectedRoute>} />
+                    {/* Consolidadas no /admin */}
+                    <Route path="/leads" element={<Navigate to="/admin?aba=leads" replace />} />
+                    <Route path="/usuarios" element={<Navigate to="/admin" replace />} />
 
                     {/* Legais — o catálogo coleta nome e e-mail (LGPD) */}
                     <Route path="/termos" element={<Termos />} />

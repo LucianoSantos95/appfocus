@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import logo from "@/assets/logo.png";
 import { useProdutos, usePrimeiraVisita, type Produto } from "@/hooks/useProdutos";
 import { LeadCaptureDialog } from "@/components/central/LeadCaptureDialog";
 import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
+import { registrarEvento } from "@/lib/eventos";
 
 // Hub Central — catálogo de produtos SEM LOGIN.
 // MVP: só o catálogo (sem landing). As seções seguem a escada de compromisso:
@@ -20,6 +21,7 @@ const SECOES: Array<{ tipo: Produto["tipo"]; titulo: string; sub: string }> = [
 
 function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void }) {
   const acao = () => {
+    registrarEvento("clique_produto", p.slug);
     if (p.captura_lead) return onAbrir(p);
     if (p.link_destino) window.open(p.link_destino, "_blank", "noopener");
   };
@@ -55,6 +57,8 @@ export default function Central() {
   const { produtos, loading } = useProdutos();
   const primeiraVisita = usePrimeiraVisita();
   const [selecionado, setSelecionado] = useState<Produto | null>(null);
+
+  useEffect(() => { registrarEvento("visita_catalogo"); }, []);
 
   const porTipo = (t: Produto["tipo"]) => produtos.filter((p) => p.tipo === t);
 

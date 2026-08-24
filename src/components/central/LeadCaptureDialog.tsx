@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 import type { Produto } from "@/hooks/useProdutos";
+import { registrarEvento } from "@/lib/eventos";
 
 // Captura do Hub Central: nome + e-mail antes de entregar o produto.
 // Sem login — a política de INSERT da tabela leads aceita visitante anônimo.
@@ -45,6 +46,7 @@ export function LeadCaptureDialog({ produto, onOpenChange }: Props) {
         body: { text: `📥 Novo lead do catálogo\n*${nome.trim()}* (${email.trim()})\nProduto: ${produto.nome}` },
       }).catch(() => {});
 
+      registrarEvento("lead_enviado", produto.slug);
       setEntregue(true);
       // Abre o destino numa nova aba (o clique do usuário ainda é recente,
       // então o navegador não bloqueia como popup).
