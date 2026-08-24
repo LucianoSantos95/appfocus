@@ -38,6 +38,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const OnboardingPage = lazy(() => import("./pages/Onboarding"));
 const Usuarios = lazy(() => import("./pages/Usuarios"));
 const Leads = lazy(() => import("./pages/Leads"));
+const Central = lazy(() => import("./pages/Central"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 const DemoEntry = lazy(() => import("./pages/DemoEntry"));
 import DemoBanner from "@/components/demo/DemoBanner";
@@ -76,6 +77,7 @@ const App = () => (
                   <Routes>
                     <Route path="/demo" element={<DemoEntry />} />
 
+                    <Route path="/central" element={<Central />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/termos" element={<Termos />} />
                     <Route path="/privacidade" element={<Privacidade />} />
