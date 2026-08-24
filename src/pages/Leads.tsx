@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Target, Mail, Building2, Loader2, ExternalLink, Globe } from "lucide-react";
 
 
-// Onde caem os pedidos de "sistema sob medida" (tabela custom_requests).
-// Substituiu a antiga aba "Assinantes" — o Hub é gratuito, o que importa agora é o lead.
+// Onde caem os leads do Hub Central (tabela leads, ex-custom_requests):
+// catalogo, consultoria e os contatos legados do Hub Empresarial (status "legado").
 const sb = supabase as any;
 
 interface Lead {
@@ -34,6 +34,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
   negociando:  { label: "Negociando",   cls: "bg-accent/10 text-accent border-accent/20" },
   fechado:     { label: "Fechado",      cls: "bg-success/10 text-success border-success/20" },
   perdido:     { label: "Perdido",      cls: "bg-muted text-muted-foreground border-border" },
+  legado:      { label: "Base antiga",  cls: "bg-muted text-muted-foreground border-border" },
 };
 
 export default function Leads() {
@@ -41,12 +42,12 @@ export default function Leads() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-  const [filtro, setFiltro] = useState<string>("todos");
+  const [filtro, setFiltro] = useState<string>("reais");
 
   const load = useCallback(async () => {
     setLoading(true);
     const { data } = await sb
-      .from("custom_requests")
+      .from("leads")
       .select("*")
       .order("created_at", { ascending: false });
     setLeads((data as Lead[]) || []);
@@ -57,13 +58,14 @@ export default function Leads() {
 
   const setStatus = async (id: string, status: string) => {
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
-    await sb.from("custom_requests").update({ status }).eq("id", id);
+    await sb.from("leads").update({ status }).eq("id", id);
   };
 
   const filtrados = useMemo(() => {
     const term = q.trim().toLowerCase();
     return leads.filter((l) => {
-      if (filtro !== "todos" && l.status !== filtro) return false;
+      if (filtro === "reais" && l.status === "legado") return false;
+      if (filtro !== "todos" && filtro !== "reais" && l.status !== filtro) return false;
       if (!term) return true;
       return [l.nome, l.email, l.empresa, l.site, l.customizacao]
         .some((v) => (v || "").toLowerCase().includes(term));
@@ -96,7 +98,8 @@ export default function Leads() {
             <Select value={filtro} onValueChange={setFiltro}>
               <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="reais">Leads reais</SelectItem>
+                <SelectItem value="todos">Todos (com base antiga)</SelectItem>
                 {Object.entries(STATUS).map(([k, v]) => (
                   <SelectItem key={k} value={k}>{v.label}</SelectItem>
                 ))}

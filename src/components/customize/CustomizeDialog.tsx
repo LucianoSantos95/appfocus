@@ -56,7 +56,7 @@ export function CustomizeDialog({ open, onOpenChange, origem = "app" }: Props) {
     setSending(true);
     try {
       const site = normalizeSite(form.site);
-      const { error } = await sb.from("custom_requests").insert({
+      const { error } = await sb.from("leads").insert({
         user_id: user?.id ?? null,
         nome: form.nome.trim(),
         email: form.email.trim(),

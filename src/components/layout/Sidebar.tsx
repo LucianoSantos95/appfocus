@@ -166,7 +166,7 @@ export function Sidebar() {
             </li>
           )}
 
-          {/* Leads de consultoria (custom_requests) — exclusivo do dono */}
+          {/* Leads do Hub Central — exclusivo do dono */}
           {isOwner && (
             <li>
               <NavLink
