@@ -3,6 +3,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+
+// Barras por produto: cliques vs. leads, nos tokens do tema.
+const grafico = {
+  cliques: { label: "Cliques", color: "hsl(var(--muted-foreground))" },
+  leads: { label: "Leads", color: "hsl(var(--primary))" },
+} satisfies ChartConfig;
 
 // Funil do catálogo: visita → clique → lead.
 // A leitura que importa: onde a pessoa desiste.
@@ -133,24 +148,35 @@ export function MetricasPanel() {
                 Nenhum clique registrado no período.
               </CardContent></Card>
             ) : (
-              <div className="space-y-2">
-                {porProduto.map((p) => (
-                  <Card key={p.produto}>
-                    <CardContent className="p-4 flex items-center gap-4 flex-wrap">
-                      <span className="font-mono text-sm text-foreground flex-1 min-w-[140px]">{p.produto}</span>
-                      <span className="text-sm text-muted-foreground tabular-nums">{p.cliques} cliques</span>
-                      <span className="text-sm text-muted-foreground tabular-nums">{p.leads} leads</span>
-                      <span className={`text-sm font-medium tabular-nums ${
-                        pct(p.leads, p.cliques) >= 50 ? "text-success" : "text-warning"
-                      }`}>
-                        {pct(p.leads, p.cliques)}%
-                      </span>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <Card>
+                <CardContent className="p-5">
+                  <ChartContainer
+                    config={grafico}
+                    className="w-full"
+                    style={{ height: Math.max(160, porProduto.length * 56) }}
+                  >
+                    <BarChart data={porProduto} layout="vertical" margin={{ left: 8, right: 16 }} barGap={4}>
+                      <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} />
+                      <YAxis
+                        type="category"
+                        dataKey="produto"
+                        width={130}
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 12 }}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "hsl(var(--muted) / 0.4)" }} />
+                      <ChartLegend content={<ChartLegendContent />} />
+                      <Bar dataKey="cliques" fill="var(--color-cliques)" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="leads" fill="var(--color-leads)" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
             )}
           </div>
+
 
           <p className="text-xs text-muted-foreground">
             Total de leads no período (todas as origens, sem contar a base antiga): <span className="text-foreground tabular-nums">{leadsTotal}</span>
