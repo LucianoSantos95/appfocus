@@ -75,12 +75,48 @@ export function AbasCatalogo({ abas }: { abas: AbaItem[] }) {
 }
 
 // Luzinha de tema: mesma linha das abas, encostada na direita.
+// Técnica do AnimatedThemeToggler (magicui): View Transitions API + clip-path
+// circular saindo do próprio botão. Sem suporte, troca direta (como antes).
 function BotaoTema() {
   const { theme, toggleTheme } = useTheme();
+  const ref = useRef<HTMLButtonElement>(null);
   const claro = theme === "light";
+
+  const trocar = () => {
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => { ready: Promise<void> };
+    };
+    const reduzir = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!doc.startViewTransition || reduzir || !ref.current) {
+      toggleTheme();
+      return;
+    }
+    const { top, left, width, height } = ref.current.getBoundingClientRect();
+    const x = left + width / 2;
+    const y = top + height / 2;
+    const raio = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+
+    const transicao = doc.startViewTransition(() => {
+      flushSync(() => toggleTheme());
+    });
+    transicao.ready.then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${raio}px at ${x}px ${y}px)`],
+        },
+        {
+          duration: 550,
+          easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+          pseudoElement: "::view-transition-new(root)",
+        },
+      );
+    });
+  };
+
   return (
     <button
-      onClick={toggleTheme}
+      ref={ref}
+      onClick={trocar}
       aria-label={claro ? "Ativar modo escuro" : "Ativar modo claro"}
       title={claro ? "Modo escuro" : "Modo claro"}
       className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-foreground/25 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
@@ -89,3 +125,4 @@ function BotaoTema() {
     </button>
   );
 }
+
