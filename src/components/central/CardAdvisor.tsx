@@ -28,9 +28,18 @@ export function CardAdvisor({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) 
         </Badge>
       )}
 
-      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xl">
-        {p.emoji || "🧭"}
-      </div>
+      {p.capa ? (
+        <img
+          src={p.capa}
+          alt={p.nome}
+          loading="lazy"
+          className="h-16 w-16 shrink-0 rounded-full border border-border object-cover"
+        />
+      ) : (
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xl">
+          {p.emoji || "🧭"}
+        </div>
+      )}
 
       <div className="mt-4 flex-1 sm:mt-0">
         <div className="flex flex-wrap items-center gap-2">
