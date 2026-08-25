@@ -3,6 +3,8 @@ import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Loader2, PackageOpen, Clock } from "lucide-react";
 import logo from "@/assets/logo.png";
+import logoNotion from "@/assets/notion.png.asset.json";
+import logoLovable from "@/assets/lovable-color.png.asset.json";
 import { useProdutos, type Produto } from "@/hooks/useProdutos";
 import { ProdutoDialog } from "@/components/central/ProdutoDialog";
 import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
@@ -17,9 +19,9 @@ import { registrarEvento } from "@/lib/eventos";
 // Escada de compromisso: Notion grátis → Produtos Lovable → Advisor.
 // As três seções aparecem sempre; sem produto no banco, entra um placeholder.
 
-const SECOES: Array<{ tipo: Produto["tipo"]; titulo: string; sub: string; aba: string }> = [
-  { tipo: "notion",  aba: "Notion",   titulo: "Templates Notion",  sub: "Gratuitos, prontos pra duplicar e usar hoje" },
-  { tipo: "lovable", aba: "Lovable",  titulo: "Produtos Lovable",  sub: "Aplicações completas pra operação do seu negócio" },
+const SECOES: Array<{ tipo: Produto["tipo"]; titulo: string; sub: string; aba: string; logo?: string; fundoClaro?: boolean }> = [
+  { tipo: "notion",  aba: "Notion",   titulo: "Templates Notion",  sub: "Gratuitos, prontos pra duplicar e usar hoje", logo: logoNotion.url, fundoClaro: true },
+  { tipo: "lovable", aba: "Lovable",  titulo: "Produtos Lovable",  sub: "Aplicações completas pra operação do seu negócio", logo: logoLovable.url },
   { tipo: "advisor", aba: "Advisor",  titulo: "Fale comigo",       sub: "Quando você precisa de alguém olhando a sua operação" },
 ];
 
