@@ -2,21 +2,24 @@ import { useEffect, useState } from "react";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Loader2, PackageOpen } from "lucide-react";
+import { ArrowRight, Loader2, PackageOpen, Sparkles } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useProdutos, usePrimeiraVisita, type Produto } from "@/hooks/useProdutos";
 import { LeadCaptureDialog } from "@/components/central/LeadCaptureDialog";
 import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
+import { AbasCatalogo } from "@/components/central/AbasCatalogo";
+import { CardAdvisor } from "@/components/central/CardAdvisor";
+import { Stagger, StaggerItem } from "@/components/motion";
 import { registrarEvento } from "@/lib/eventos";
 
 // Hub Central — catálogo de produtos SEM LOGIN.
 // MVP: só o catálogo (sem landing). As seções seguem a escada de compromisso:
 // Notion grátis → Lovable freemium → Advisor.
 
-const SECOES: Array<{ tipo: Produto["tipo"]; titulo: string; sub: string }> = [
-  { tipo: "notion",  titulo: "Templates de Notion", sub: "Gratuitos, prontos pra duplicar e usar hoje" },
-  { tipo: "lovable", titulo: "Sistemas",             sub: "Aplicações completas pra operação do seu negócio" },
-  { tipo: "advisor", titulo: "Advisor",              sub: "Quando você precisa de alguém olhando a sua operação" },
+const SECOES: Array<{ tipo: Produto["tipo"]; titulo: string; sub: string; aba: string }> = [
+  { tipo: "notion",  aba: "Notion",   titulo: "Templates de Notion", sub: "Gratuitos, prontos pra duplicar e usar hoje" },
+  { tipo: "lovable", aba: "Sistemas", titulo: "Sistemas",             sub: "Aplicações completas pra operação do seu negócio" },
+  { tipo: "advisor", aba: "Advisor",  titulo: "Advisor",              sub: "Quando você precisa de alguém olhando a sua operação" },
 ];
 
 function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void }) {
@@ -29,8 +32,16 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
   return (
     <button
       onClick={acao}
-      className="group text-left rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+      className={`group relative w-full h-full text-left rounded-2xl border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+        p.destaque ? "border-primary/60 ring-1 ring-primary/30" : "border-border"
+      }`}
     >
+      {p.destaque && (
+        <Badge className="absolute -top-2.5 left-6 gap-1 font-mono text-[10px] uppercase tracking-wider">
+          <Sparkles className="w-3 h-3" /> Recomendado
+        </Badge>
+      )}
+
       <div className="flex items-start justify-between gap-3">
         <span className="text-3xl leading-none">{p.emoji || "📦"}</span>
         {p.gratuito ? (
@@ -81,6 +92,12 @@ export default function Central() {
         </div>
       </header>
 
+      {!loading && produtos.length > 0 && (
+        <AbasCatalogo
+          abas={SECOES.filter((s) => porTipo(s.tipo).length > 0).map((s) => ({ tipo: s.tipo, rotulo: s.aba }))}
+        />
+      )}
+
       <main className="mx-auto max-w-5xl px-6 py-12 md:py-16">
         <div className="max-w-2xl">
           <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary font-medium">
@@ -109,17 +126,31 @@ export default function Central() {
         ) : (
           <div className="mt-12 space-y-14">
             {SECOES.map((s) => {
-              const itens = porTipo(s.tipo);
-              if (itens.length === 0) return null; // seção vazia não aparece no MVP
+              const brutos = porTipo(s.tipo);
+              if (brutos.length === 0) return null; // seção vazia não aparece no MVP
+              // Só o primeiro marcado como destaque ganha o tratamento visual.
+              const idDestaque = brutos.find((p) => p.destaque)?.id;
+              const itens = brutos.map((p) => ({ ...p, destaque: p.id === idDestaque }));
+              const ehAdvisor = s.tipo === "advisor";
               return (
-                <section key={s.tipo}>
+                <section key={s.tipo} id={`secao-${s.tipo}`} className="scroll-mt-24">
                   <h2 className="font-display text-2xl tracking-tight text-foreground">{s.titulo}</h2>
                   <p className="mt-1 text-sm text-muted-foreground">{s.sub}</p>
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <Stagger
+                    inView
+                    gap={0.07}
+                    className={`mt-6 grid gap-4 ${ehAdvisor ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
+                  >
                     {itens.map((p) => (
-                      <CardProduto key={p.id} p={p} onAbrir={setSelecionado} />
+                      <StaggerItem key={p.id} className="flex">
+                        {ehAdvisor ? (
+                          <div className="w-full"><CardAdvisor p={p} onAbrir={setSelecionado} /></div>
+                        ) : (
+                          <div className="w-full flex"><CardProduto p={p} onAbrir={setSelecionado} /></div>
+                        )}
+                      </StaggerItem>
                     ))}
-                  </div>
+                  </Stagger>
                 </section>
               );
             })}

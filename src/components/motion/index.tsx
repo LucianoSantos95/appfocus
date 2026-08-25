@@ -40,16 +40,26 @@ const staggerChild: Variants = {
 interface StaggerProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   as?: "div" | "ul" | "ol" | "section";
+  /** Anima só quando entra na viewport (uma vez). */
+  inView?: boolean;
+  /** Intervalo entre os filhos, em segundos. */
+  gap?: number;
 }
 
-export function Stagger({ children, className, as = "div", ...rest }: StaggerProps) {
+export function Stagger({ children, className, as = "div", inView = false, gap, ...rest }: StaggerProps) {
   const reduce = useReducedMotion();
   const Comp: any = (motion as any)[as];
+  const parent: Variants = gap
+    ? { hidden: { opacity: 1 }, show: { opacity: 1, transition: { staggerChildren: gap, delayChildren: 0.02 } } }
+    : staggerParent;
+  const anim = inView
+    ? { whileInView: "show", viewport: { once: true, margin: "-80px" } }
+    : { animate: "show" };
   return (
     <Comp
-      variants={reduce ? undefined : staggerParent}
+      variants={reduce ? undefined : parent}
       initial={reduce ? false : "hidden"}
-      animate="show"
+      {...(reduce ? { animate: "show" } : anim)}
       className={className}
       {...rest}
     >
