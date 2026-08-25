@@ -72,13 +72,20 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
     return () => { api.off("select", onSel); };
   }, [api]);
 
-  const valido = nome.trim().length >= 2 && /\S+@\S+\.\S+/.test(email);
+  const nomeOk = nome.trim().length >= 2;
+  const emailOk = /\S+@\S+\.\S+/.test(email.trim());
+  const valido = nomeOk && emailOk;
   const advisor = produto?.tipo === "advisor";
   const t = copyPor(produto?.tipo);
-  const imagens = (produto?.imagens ?? []).filter(Boolean);
+  const galeria = (produto?.imagens ?? []).filter(Boolean);
+  // Sem galeria, a capa é a imagem do template — precisa aparecer no detalhe.
+  const imagens = galeria.length > 0 ? galeria : produto?.capa ? [produto.capa] : [];
 
   const entregar = async () => {
-    if (!valido || !produto) return;
+    if (!valido || !produto) {
+      setTocado({ nome: true, email: true });
+      return;
+    }
     setSending(true);
     setErro(null);
     try {
@@ -100,7 +107,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
       setEntregue(true);
       // Advisor não entrega nada na hora — é contato.
       if (!advisor && produto.link_destino) {
-        window.open(produto.link_destino, "_blank", "noopener");
+        window.location.assign(produto.link_destino);
       }
     } catch (e: any) {
       setErro(e?.message || "Não foi possível enviar. Tente de novo.");
@@ -108,6 +115,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
       setSending(false);
     }
   };
+
 
   const fechar = () => {
     onOpenChange(false);
