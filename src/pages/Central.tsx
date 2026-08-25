@@ -73,10 +73,11 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
           <div className="aspect-[16/10] w-full bg-muted/40" />
         )}
         {p.destaque && (
-          <span className="absolute left-3 top-3 z-10">
+          <span className="absolute bottom-3 left-3 z-10 rounded-full bg-background/85 p-0.5 backdrop-blur-sm">
             <Pill tom="primario">Recomendado</Pill>
           </span>
         )}
+
       </div>
 
       <div className="p-4">
