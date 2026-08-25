@@ -68,15 +68,44 @@ export function ProdutosPanel() {
   const [loading, setLoading] = useState(true);
   const [editando, setEditando] = useState<Produto | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [subindo, setSubindo] = useState(false);
 
   const carregar = useCallback(async () => {
     setLoading(true);
     const { data } = await sb.from("produtos").select("*").order("ordem", { ascending: true });
-    setProdutos((data as Produto[]) || []);
+    setProdutos(((data as Produto[]) || []).map((p) => ({ ...p, imagens: p.imagens ?? [] })));
     setLoading(false);
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  const subir = async (files: FileList | null, alvo: "capa" | "galeria") => {
+    if (!files?.length || !editando) return;
+    setSubindo(true);
+    try {
+      const urls = await Promise.all(Array.from(files).map(enviarImagem));
+      setEditando((prev) => prev && (
+        alvo === "capa"
+          ? { ...prev, capa: urls[0] }
+          : { ...prev, imagens: [...(prev.imagens ?? []), ...urls] }
+      ));
+    } catch (e: any) {
+      toast({ title: "Não subiu a imagem", description: e?.message, variant: "destructive" });
+    } finally {
+      setSubindo(false);
+    }
+  };
+
+  const moverImagem = (i: number, dir: -1 | 1) => {
+    setEditando((prev) => {
+      if (!prev) return prev;
+      const arr = [...(prev.imagens ?? [])];
+      const j = i + dir;
+      if (j < 0 || j >= arr.length) return prev;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      return { ...prev, imagens: arr };
+    });
+  };
 
   const salvar = async () => {
     if (!editando) return;
@@ -93,6 +122,7 @@ export function ProdutosPanel() {
       tipo: p.tipo, gratuito: p.gratuito, preco: p.gratuito ? null : Number(p.preco),
       link_destino: p.link_destino?.trim() || null, captura_lead: p.captura_lead,
       emoji: p.emoji || null, ordem: Number(p.ordem) || 0, ativo: p.ativo, destaque: p.destaque,
+      capa: p.capa || null, imagens: p.imagens ?? [], detalhes: p.detalhes?.trim() || null,
     };
 
     const { error } = p.id
