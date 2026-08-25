@@ -107,7 +107,19 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
         body: { text: `📥 Novo lead do catálogo\n*${nome.trim()}* (${email.trim()})\nProduto: ${produto.nome}` },
       }).catch(() => {});
 
+      // Agradecimento best-effort — mesma identidade visual dos demais e-mails.
+      supabase.functions.invoke("send-thanks-email", {
+        body: {
+          kind: advisor ? "advisor" : "produto",
+          email: email.trim().toLowerCase(),
+          nome: nome.trim(),
+          produto_nome: produto.nome,
+          link: produto.link_destino ?? undefined,
+        },
+      }).catch(() => {});
+
       registrarEvento("lead_enviado", produto.slug);
+
       setEntregue(true);
       // Advisor não entrega nada na hora — é contato.
       if (!advisor && produto.link_destino) {
