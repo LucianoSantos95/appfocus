@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Loader2, PackageOpen, Sparkles } from "lucide-react";
+import { ArrowRight, Loader2, PackageOpen, Sparkles, Clock, MessageCircle } from "lucide-react";
 import logo from "@/assets/logo.png";
-import { useProdutos, usePrimeiraVisita, type Produto } from "@/hooks/useProdutos";
+import { useProdutos, type Produto } from "@/hooks/useProdutos";
 import { LeadCaptureDialog } from "@/components/central/LeadCaptureDialog";
 import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
 import { AbasCatalogo } from "@/components/central/AbasCatalogo";
@@ -13,13 +13,13 @@ import { Stagger, StaggerItem } from "@/components/motion";
 import { registrarEvento } from "@/lib/eventos";
 
 // Hub Central — catálogo de produtos SEM LOGIN.
-// MVP: só o catálogo (sem landing). As seções seguem a escada de compromisso:
-// Notion grátis → Lovable freemium → Advisor.
+// Escada de compromisso: Notion grátis → Produtos Lovable → Advisor.
+// As três seções aparecem sempre; sem produto no banco, entra um placeholder.
 
 const SECOES: Array<{ tipo: Produto["tipo"]; titulo: string; sub: string; aba: string }> = [
-  { tipo: "notion",  aba: "Notion",   titulo: "Templates de Notion", sub: "Gratuitos, prontos pra duplicar e usar hoje" },
-  { tipo: "lovable", aba: "Sistemas", titulo: "Sistemas",             sub: "Aplicações completas pra operação do seu negócio" },
-  { tipo: "advisor", aba: "Advisor",  titulo: "Advisor",              sub: "Quando você precisa de alguém olhando a sua operação" },
+  { tipo: "notion",  aba: "Notion",   titulo: "Templates Notion",  sub: "Gratuitos, prontos pra duplicar e usar hoje" },
+  { tipo: "lovable", aba: "Lovable",  titulo: "Produtos Lovable",  sub: "Aplicações completas pra operação do seu negócio" },
+  { tipo: "advisor", aba: "Advisor",  titulo: "Fale comigo",       sub: "Quando você precisa de alguém olhando a sua operação" },
 ];
 
 function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void }) {
@@ -64,9 +64,55 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
   );
 }
 
+/* Placeholder no mesmo formato do card, para seção ainda sem produto. */
+function CardEmBreve() {
+  return (
+    <div className="w-full h-full rounded-2xl border border-dashed border-border bg-card/40 p-6">
+      <div className="flex items-start justify-between gap-3">
+        <span className="text-3xl leading-none">🛠️</span>
+        <Badge variant="outline" className="font-mono text-[10px] uppercase tracking-wider">Em breve</Badge>
+      </div>
+      <h3 className="mt-4 text-lg font-semibold text-foreground">Em breve novos produtos</h3>
+      <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+        Estamos preparando as próximas aplicações. Volte em alguns dias.
+      </p>
+      <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+        <Clock className="w-4 h-4" /> Em desenvolvimento
+      </span>
+    </div>
+  );
+}
+
+/* Advisor sem registro no banco — mantém o convite ao contato. */
+function CardAdvisorPadrao() {
+  return (
+    <div className="flex flex-col rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-start sm:gap-5">
+      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xl">🧭</div>
+      <div className="mt-4 flex-1 sm:mt-0">
+        <h3 className="text-lg font-semibold text-foreground">Advisor</h3>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Uma conversa direta sobre a sua operação: o que travar, a gente organiza junto.
+        </p>
+        <Button
+          size="sm"
+          className="group mt-5 gap-1.5"
+          onClick={() => {
+            registrarEvento("clique_produto", "advisor");
+            window.location.href =
+              "mailto:comercial@focusinteligente.com.br?subject=Quero%20falar%20com%20o%20Advisor";
+          }}
+        >
+          <MessageCircle className="w-3.5 h-3.5" />
+          Falar comigo
+          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function Central() {
   const { produtos, loading } = useProdutos();
-  const primeiraVisita = usePrimeiraVisita();
   const [selecionado, setSelecionado] = useState<Produto | null>(null);
 
   useEffect(() => { registrarEvento("visita_catalogo"); }, []);
@@ -84,33 +130,46 @@ export default function Central() {
 
       <AvisoHubAntigo />
 
-      {/* Cabeçalho enxuto — MVP não tem landing */}
+      {/* Cabeçalho: só o logo, centralizado. No hover os nomes saem de trás dele. */}
       <header className="border-b border-border/60">
-        <div className="mx-auto max-w-5xl px-6 py-4 flex items-center gap-2.5">
-          <img src={logo} alt="" className="h-8 w-8 rounded-lg object-cover" width={32} height={32} />
-          <span className="font-semibold text-foreground">Hub Central</span>
+        <div className="mx-auto max-w-5xl px-6 py-5 flex justify-center">
+          <div
+            tabIndex={0}
+            aria-label="Hub Central"
+            className="group relative flex items-center justify-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          >
+            <span className="pointer-events-none absolute right-1/2 whitespace-nowrap text-lg font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:-translate-x-7 group-focus-visible:opacity-100 group-focus-visible:-translate-x-7 motion-reduce:transition-none motion-reduce:-translate-x-7">
+              Hub
+            </span>
+            <img
+              src={logo}
+              alt="Hub Central"
+              className="relative z-10 h-12 w-12 rounded-xl object-cover"
+              width={48}
+              height={48}
+            />
+            <span className="pointer-events-none absolute left-1/2 whitespace-nowrap text-lg font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-7 group-focus-visible:opacity-100 group-focus-visible:translate-x-7 motion-reduce:transition-none motion-reduce:translate-x-7">
+              Central
+            </span>
+          </div>
         </div>
       </header>
 
-      {!loading && produtos.length > 0 && (
-        <AbasCatalogo
-          abas={SECOES.filter((s) => porTipo(s.tipo).length > 0).map((s) => ({ tipo: s.tipo, rotulo: s.aba }))}
-        />
+      {!loading && (
+        <AbasCatalogo abas={SECOES.map((s) => ({ tipo: s.tipo, rotulo: s.aba }))} />
       )}
 
       <main className="mx-auto max-w-5xl px-6 py-12 md:py-16">
-        <div className="max-w-2xl">
-          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary font-medium">
-            {primeiraVisita ? "Seja bem-vindo" : "Bom te ver de novo"}
-          </span>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl leading-tight tracking-tight text-foreground">
+        {/* Título centralizado; o complemento aparece no hover, sem empurrar layout. */}
+        <div className="group mx-auto max-w-2xl text-center">
+          <h1 className="font-display text-4xl md:text-5xl leading-tight tracking-tight text-foreground">
             Ferramentas pra organizar <span className="italic gradient-text">sua operação</span>.
           </h1>
-          <p className="mt-4 text-muted-foreground text-lg">
-            {primeiraVisita
-              ? "Comece pelo que resolve sua dor hoje. É de graça e você leva na hora — sem criar conta."
-              : "Pegue o que precisar. Sem cadastro, sem custo."}
-          </p>
+          <div className="mt-4 h-7">
+            <p className="text-lg text-muted-foreground opacity-0 translate-y-1 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0 motion-reduce:transition-none">
+              Pegue o que precisar, sem cadastro e sem custos.
+            </p>
+          </div>
         </div>
 
         {loading ? (
@@ -127,7 +186,6 @@ export default function Central() {
           <div className="mt-12 space-y-14">
             {SECOES.map((s) => {
               const brutos = porTipo(s.tipo);
-              if (brutos.length === 0) return null; // seção vazia não aparece no MVP
               // Só o primeiro marcado como destaque ganha o tratamento visual.
               const idDestaque = brutos.find((p) => p.destaque)?.id;
               const itens = brutos.map((p) => ({ ...p, destaque: p.id === idDestaque }));
@@ -141,15 +199,23 @@ export default function Central() {
                     gap={0.07}
                     className={`mt-6 grid gap-4 ${ehAdvisor ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
                   >
-                    {itens.map((p) => (
-                      <StaggerItem key={p.id} className="flex">
-                        {ehAdvisor ? (
-                          <div className="w-full"><CardAdvisor p={p} onAbrir={setSelecionado} /></div>
-                        ) : (
-                          <div className="w-full flex"><CardProduto p={p} onAbrir={setSelecionado} /></div>
-                        )}
+                    {itens.length === 0 ? (
+                      <StaggerItem className="flex">
+                        <div className="w-full flex">
+                          {ehAdvisor ? <CardAdvisorPadrao /> : <CardEmBreve />}
+                        </div>
                       </StaggerItem>
-                    ))}
+                    ) : (
+                      itens.map((p) => (
+                        <StaggerItem key={p.id} className="flex">
+                          {ehAdvisor ? (
+                            <div className="w-full"><CardAdvisor p={p} onAbrir={setSelecionado} /></div>
+                          ) : (
+                            <div className="w-full flex"><CardProduto p={p} onAbrir={setSelecionado} /></div>
+                          )}
+                        </StaggerItem>
+                      ))
+                    )}
                   </Stagger>
                 </section>
               );
@@ -159,8 +225,8 @@ export default function Central() {
       </main>
 
       <footer className="border-t border-border/60 mt-8">
-        <div className="mx-auto max-w-5xl px-6 py-8 flex items-center justify-between gap-4 flex-wrap">
-          <p className="text-sm text-muted-foreground">
+        <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-xs text-muted-foreground">
             Plataforma criada pela{" "}
             <a
               href="https://focusinteligente.com.br"
@@ -170,9 +236,9 @@ export default function Central() {
               Focus
             </a>
           </p>
-          <Button variant="ghost" size="sm" asChild>
+          <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-xs">
             <a href="https://focusinteligente.com.br" target="_blank" rel="noopener noreferrer" className="gap-1.5">
-              Conhecer a Focus <ArrowRight className="w-3.5 h-3.5" />
+              Conhecer a Focus <ArrowRight className="w-3 h-3" />
             </a>
           </Button>
         </div>
