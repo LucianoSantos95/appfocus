@@ -164,9 +164,9 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
             {!feedbackEnviado ? (
               <div className="mt-5 w-full rounded-xl border border-border p-4">
                 <FeedbackForm
-                  titulo="Me diz o que achou sobre a nova plataforma"
-                  placeholder="Pode ser curto: o que gostou, o que faltou, o que confundiu."
-                  pagina={`/central#${produto?.slug ?? ""}`}
+                  titulo={`Deixar feedback sobre ${produto?.nome ?? "este item"}`}
+                  placeholder={`Essa semana estamos testando o Hub Central. O que achou do ${produto?.nome ?? "item"}? O que faltou pra você?`}
+                  pagina={produto?.slug}
                   submitLabel="Enviar feedback"
                   onSubmitted={() => setFeedbackEnviado(true)}
                   secondary={
@@ -178,19 +178,6 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
               <p className="mt-5 text-sm text-muted-foreground">Obrigado pelo feedback!</p>
             )}
 
-            <button
-              type="button"
-              onClick={() => setFeedbackProduto(true)}
-              className="mt-1 text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
-            >
-              Deixar feedback sobre {produto?.nome ?? "este item"}
-            </button>
-            <FeedbackDialog
-              open={feedbackProduto}
-              onOpenChange={setFeedbackProduto}
-              placeholder={`Essa semana estamos testando o Hub Central. O que achou do ${produto?.nome ?? "item"}? O que faltou pra você?`}
-              pagina={produto?.slug}
-            />
 
           </div>
         ) : (
