@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import type { Produto } from "@/hooks/useProdutos";
 import { FeedbackForm } from "@/components/user/FeedbackForm";
+import { FeedbackDialog } from "@/components/user/FeedbackDialog";
 import { registrarEvento } from "@/lib/eventos";
 
 // Detalhe do produto no Hub Central: galeria + descrição longa + captura de
@@ -66,6 +67,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   const [tocado, setTocado] = useState({ nome: false, email: false });
   const [slide, setSlide] = useState(0);
   const [feedbackEnviado, setFeedbackEnviado] = useState(false);
+  const [feedbackProduto, setFeedbackProduto] = useState(false);
 
 
   useEffect(() => {
