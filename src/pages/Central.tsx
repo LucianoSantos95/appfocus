@@ -219,20 +219,17 @@ export default function Central() {
                     gap={0.07}
                     className={`mt-6 grid gap-4 ${ehAdvisor ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
                   >
-                    {itens.length === 0 ? (
+                    {/* Advisor ainda não está no ar: seção sempre informativa. */}
+                    {ehAdvisor || itens.length === 0 ? (
                       <StaggerItem className="flex">
                         <div className="w-full flex">
-                          {ehAdvisor ? <CardAdvisorPadrao /> : <CardEmBreve />}
+                          {ehAdvisor ? <CardAdvisorEmBreve /> : <CardEmBreve />}
                         </div>
                       </StaggerItem>
                     ) : (
                       itens.map((p) => (
                         <StaggerItem key={p.id} className="flex">
-                          {ehAdvisor ? (
-                            <div className="w-full"><CardAdvisor p={p} onAbrir={setSelecionado} /></div>
-                          ) : (
-                            <div className="w-full flex"><CardProduto p={p} onAbrir={setSelecionado} /></div>
-                          )}
+                          <div className="w-full flex"><CardProduto p={p} onAbrir={setSelecionado} /></div>
                         </StaggerItem>
                       ))
                     )}
