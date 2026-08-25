@@ -5,8 +5,7 @@ import { FeedbackDialog } from "@/components/user/FeedbackDialog";
 // MVP: coletar o máximo de feedback possível. O mesmo formulário é aberto
 // pelo botão flutuante e pelo link do rodapé.
 export function BotaoFeedbackFlutuante() {
-  // Semana de validação: o formulário abre sozinho para maximizar respostas.
-  const [aberto, setAberto] = useState(true);
+  const [aberto, setAberto] = useState(false);
   return (
     <>
       <button
