@@ -10,10 +10,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Loader2, ExternalLink, GripVertical } from "lucide-react";
+import { Plus, Pencil, Loader2, ExternalLink, GripVertical, Upload, X, ArrowLeft, ArrowRight } from "lucide-react";
 
 // CRUD do catálogo. É o que permite publicar produto novo sem depender de código.
 const sb = supabase as any;
+
+// Bucket privado: guardamos URL assinada de longa duração (10 anos) para que a
+// imagem apareça no catálogo público sem expor o bucket inteiro.
+const BUCKET = "produtos";
+const VALIDADE = 60 * 60 * 24 * 365 * 10;
+
+async function enviarImagem(file: File): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const caminho = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from(BUCKET).upload(caminho, file, { upsert: false });
+  if (error) throw error;
+  const { data, error: e2 } = await supabase.storage.from(BUCKET).createSignedUrl(caminho, VALIDADE);
+  if (e2 || !data?.signedUrl) throw e2 || new Error("Não gerou o link da imagem");
+  return data.signedUrl;
+}
 
 interface Produto {
   id?: string;
@@ -29,11 +44,15 @@ interface Produto {
   ordem: number;
   ativo: boolean;
   destaque: boolean;
+  capa: string | null;
+  imagens: string[];
+  detalhes: string | null;
 }
 
 const VAZIO: Produto = {
   slug: "", nome: "", descricao: "", tipo: "notion", gratuito: true, preco: null,
   link_destino: "", captura_lead: true, emoji: "📦", ordem: 0, ativo: true, destaque: false,
+  capa: null, imagens: [], detalhes: "",
 };
 
 const TIPO_LABEL: Record<string, string> = { notion: "Notion", lovable: "Sistema", advisor: "Advisor" };
@@ -49,15 +68,44 @@ export function ProdutosPanel() {
   const [loading, setLoading] = useState(true);
   const [editando, setEditando] = useState<Produto | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [subindo, setSubindo] = useState(false);
 
   const carregar = useCallback(async () => {
     setLoading(true);
     const { data } = await sb.from("produtos").select("*").order("ordem", { ascending: true });
-    setProdutos((data as Produto[]) || []);
+    setProdutos(((data as Produto[]) || []).map((p) => ({ ...p, imagens: p.imagens ?? [] })));
     setLoading(false);
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  const subir = async (files: FileList | null, alvo: "capa" | "galeria") => {
+    if (!files?.length || !editando) return;
+    setSubindo(true);
+    try {
+      const urls = await Promise.all(Array.from(files).map(enviarImagem));
+      setEditando((prev) => prev && (
+        alvo === "capa"
+          ? { ...prev, capa: urls[0] }
+          : { ...prev, imagens: [...(prev.imagens ?? []), ...urls] }
+      ));
+    } catch (e: any) {
+      toast({ title: "Não subiu a imagem", description: e?.message, variant: "destructive" });
+    } finally {
+      setSubindo(false);
+    }
+  };
+
+  const moverImagem = (i: number, dir: -1 | 1) => {
+    setEditando((prev) => {
+      if (!prev) return prev;
+      const arr = [...(prev.imagens ?? [])];
+      const j = i + dir;
+      if (j < 0 || j >= arr.length) return prev;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      return { ...prev, imagens: arr };
+    });
+  };
 
   const salvar = async () => {
     if (!editando) return;
@@ -74,6 +122,7 @@ export function ProdutosPanel() {
       tipo: p.tipo, gratuito: p.gratuito, preco: p.gratuito ? null : Number(p.preco),
       link_destino: p.link_destino?.trim() || null, captura_lead: p.captura_lead,
       emoji: p.emoji || null, ordem: Number(p.ordem) || 0, ativo: p.ativo, destaque: p.destaque,
+      capa: p.capa || null, imagens: p.imagens ?? [], detalhes: p.detalhes?.trim() || null,
     };
 
     const { error } = p.id
@@ -177,6 +226,64 @@ export function ProdutosPanel() {
                 <Textarea id="pr-desc" rows={2} value={editando.descricao ?? ""}
                   onChange={(e) => setEditando({ ...editando, descricao: e.target.value })}
                   placeholder="Uma frase sobre o que resolve" />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="pr-detalhes">Descrição completa (aparece ao clicar no card)</Label>
+                <Textarea id="pr-detalhes" rows={5} value={editando.detalhes ?? ""}
+                  onChange={(e) => setEditando({ ...editando, detalhes: e.target.value })}
+                  placeholder="O que é, o que vem dentro, para quem serve, valor…" />
+              </div>
+
+              <div className="rounded-xl border border-border p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label>Imagem de capa</Label>
+                  <div className="flex items-center gap-3">
+                    {editando.capa && (
+                      <div className="relative">
+                        <img src={editando.capa} alt="Capa" className="h-16 w-24 rounded-lg border border-border object-cover" />
+                        <button type="button" onClick={() => setEditando({ ...editando, capa: null })}
+                          className="absolute -top-2 -right-2 rounded-full bg-destructive p-0.5 text-destructive-foreground">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted">
+                      <Upload className="w-4 h-4" /> {editando.capa ? "Trocar capa" : "Enviar capa"}
+                      <input type="file" accept="image/*" className="hidden"
+                        onChange={(e) => { subir(e.target.files, "capa"); e.target.value = ""; }} />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Galeria (aparece no detalhe, na ordem abaixo)</Label>
+                  <div className="flex flex-wrap gap-3">
+                    {(editando.imagens ?? []).map((src, i) => (
+                      <div key={src + i} className="relative">
+                        <img src={src} alt={`Imagem ${i + 1}`} className="h-16 w-24 rounded-lg border border-border object-cover" />
+                        <button type="button"
+                          onClick={() => setEditando({ ...editando, imagens: editando.imagens.filter((_, j) => j !== i) })}
+                          className="absolute -top-2 -right-2 rounded-full bg-destructive p-0.5 text-destructive-foreground">
+                          <X className="w-3 h-3" />
+                        </button>
+                        <div className="mt-1 flex justify-center gap-1">
+                          <button type="button" onClick={() => moverImagem(i, -1)} className="text-muted-foreground hover:text-foreground">
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                          </button>
+                          <button type="button" onClick={() => moverImagem(i, 1)} className="text-muted-foreground hover:text-foreground">
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <label className="inline-flex h-16 w-24 cursor-pointer items-center justify-center rounded-lg border border-dashed border-border text-muted-foreground hover:bg-muted">
+                      {subindo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                      <input type="file" accept="image/*" multiple className="hidden"
+                        onChange={(e) => { subir(e.target.files, "galeria"); e.target.value = ""; }} />
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

@@ -7,16 +7,14 @@ import { registrarEvento } from "@/lib/eventos";
 // Advisor não é produto de prateleira — o cartão segue o formato "perfil de
 // consultor": avatar, bio curta e dois CTAs (saber mais / falar com a gente).
 export function CardAdvisor({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void }) {
-  const falar = () => {
+  // Todo clique abre o detalhe — é lá que a pessoa vê as imagens, o que é o
+  // Advisor e o valor, antes de deixar o contato.
+  const abrir = () => {
     registrarEvento("clique_produto", p.slug);
-    if (p.captura_lead) return onAbrir(p);
-    if (p.link_destino) window.open(p.link_destino, "_blank", "noopener");
+    onAbrir(p);
   };
-
-  const saibaMais = () => {
-    registrarEvento("clique_produto", p.slug);
-    if (p.link_destino) window.open(p.link_destino, "_blank", "noopener");
-  };
+  const falar = abrir;
+  const saibaMais = abrir;
 
   return (
     <div
@@ -30,9 +28,18 @@ export function CardAdvisor({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) 
         </Badge>
       )}
 
-      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xl">
-        {p.emoji || "🧭"}
-      </div>
+      {p.capa ? (
+        <img
+          src={p.capa}
+          alt={p.nome}
+          loading="lazy"
+          className="h-16 w-16 shrink-0 rounded-full border border-border object-cover"
+        />
+      ) : (
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xl">
+          {p.emoji || "🧭"}
+        </div>
+      )}
 
       <div className="mt-4 flex-1 sm:mt-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -51,9 +58,7 @@ export function CardAdvisor({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) 
         )}
 
         <div className="mt-5 flex flex-wrap gap-2">
-          {p.link_destino && (
-            <Button variant="outline" size="sm" onClick={saibaMais}>Saiba mais</Button>
-          )}
+          <Button variant="outline" size="sm" onClick={saibaMais}>Saiba mais</Button>
           <Button size="sm" onClick={falar} className="group gap-1.5">
             Falar com a Focus
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />

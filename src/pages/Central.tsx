@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Loader2, PackageOpen, Sparkles, Clock, MessageCircle } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useProdutos, type Produto } from "@/hooks/useProdutos";
-import { LeadCaptureDialog } from "@/components/central/LeadCaptureDialog";
+import { ProdutoDialog } from "@/components/central/ProdutoDialog";
 import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
 import { AbasCatalogo } from "@/components/central/AbasCatalogo";
 import { CardAdvisor } from "@/components/central/CardAdvisor";
@@ -23,10 +23,10 @@ const SECOES: Array<{ tipo: Produto["tipo"]; titulo: string; sub: string; aba: s
 ];
 
 function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void }) {
+  // Todo clique abre o detalhe (galeria + info + captura), nunca o link direto.
   const acao = () => {
     registrarEvento("clique_produto", p.slug);
-    if (p.captura_lead) return onAbrir(p);
-    if (p.link_destino) window.open(p.link_destino, "_blank", "noopener");
+    onAbrir(p);
   };
 
   return (
@@ -40,6 +40,15 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
         <Badge className="absolute -top-2.5 left-6 gap-1 font-mono text-[10px] uppercase tracking-wider">
           <Sparkles className="w-3 h-3" /> Recomendado
         </Badge>
+      )}
+
+      {p.capa && (
+        <img
+          src={p.capa}
+          alt={p.nome}
+          loading="lazy"
+          className="mb-4 w-full rounded-xl border border-border object-cover aspect-[16/10] bg-muted"
+        />
       )}
 
       <div className="flex items-start justify-between gap-3">
@@ -138,17 +147,17 @@ export default function Central() {
             aria-label="Hub Central"
             className="group relative flex items-center justify-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
-            <span className="pointer-events-none absolute right-1/2 whitespace-nowrap text-lg font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:-translate-x-7 group-focus-visible:opacity-100 group-focus-visible:-translate-x-7 motion-reduce:transition-none motion-reduce:-translate-x-7">
+            <span className="pointer-events-none absolute right-1/2 whitespace-nowrap font-brand text-xl font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:-translate-x-9 group-focus-visible:opacity-100 group-focus-visible:-translate-x-9 motion-reduce:transition-none motion-reduce:-translate-x-9">
               Hub
             </span>
             <img
               src={logo}
               alt="Hub Central"
-              className="relative z-10 h-12 w-12 rounded-xl object-cover"
-              width={48}
-              height={48}
+              className="relative z-10 h-16 w-16 rounded-2xl object-cover"
+              width={64}
+              height={64}
             />
-            <span className="pointer-events-none absolute left-1/2 whitespace-nowrap text-lg font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-7 group-focus-visible:opacity-100 group-focus-visible:translate-x-7 motion-reduce:transition-none motion-reduce:translate-x-7">
+            <span className="pointer-events-none absolute left-1/2 whitespace-nowrap font-brand text-xl font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-9 group-focus-visible:opacity-100 group-focus-visible:translate-x-9 motion-reduce:transition-none motion-reduce:translate-x-9">
               Central
             </span>
           </div>
@@ -244,7 +253,7 @@ export default function Central() {
         </div>
       </footer>
 
-      <LeadCaptureDialog produto={selecionado} onOpenChange={(v) => !v && setSelecionado(null)} />
+      <ProdutoDialog produto={selecionado} onOpenChange={(v) => !v && setSelecionado(null)} />
     </div>
   );
 }

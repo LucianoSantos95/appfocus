@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         sans: ['"Work Sans"', 'system-ui', 'sans-serif'],
         display: ['"Instrument Serif"', 'Georgia', 'serif'],
+        brand: ['"Montserrat Alternates"', '"Work Sans"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       colors: {
