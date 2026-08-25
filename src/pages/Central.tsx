@@ -184,15 +184,15 @@ export default function Central() {
         <AbasCatalogo abas={SECOES.map((s) => ({ tipo: s.tipo, rotulo: s.aba }))} />
       )}
 
-      <main className="mx-auto max-w-5xl px-6 py-12 md:py-16">
+      <main className="relative mx-auto max-w-5xl px-6 py-14 md:py-20">
         {/* Título centralizado; o complemento aparece no hover, sem empurrar layout. */}
-        <div className="group mx-auto max-w-2xl text-center">
-          <h1 className="font-display text-4xl md:text-5xl leading-tight tracking-tight text-foreground">
-            Ferramentas pra organizar <span className="italic gradient-text">sua operação</span>.
+        <div className="group mx-auto max-w-3xl text-center">
+          <h1 className="font-grotesk text-4xl md:text-6xl font-extrabold leading-[1.05] tracking-[-0.035em] text-foreground">
+            Ferramentas pra organizar <span className="text-primary">sua operação</span>.
           </h1>
-          <div className="mt-4 h-7">
-            <p className="text-lg text-muted-foreground opacity-0 translate-y-1 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0 motion-reduce:transition-none">
-              Pegue o que precisar, sem cadastro e sem custos.
+          <div className="mt-5 h-7">
+            <p className="focus-label text-muted-foreground opacity-0 translate-y-1 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0 motion-reduce:transition-none">
+              / Pegue o que precisar, sem cadastro e sem custos
             </p>
           </div>
         </div>
