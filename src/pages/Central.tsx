@@ -109,29 +109,23 @@ function CardEmBreve() {
   );
 }
 
-/* Advisor sem registro no banco — mantém o convite ao contato. */
-function CardAdvisorPadrao() {
+/* Advisor ainda não está disponível — cartão apenas informativo, sem CTA. */
+function CardAdvisorEmBreve() {
   return (
-    <div className="flex flex-col rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-start sm:gap-5">
+    <div className="flex flex-col rounded-2xl border border-dashed border-border bg-card/40 p-6 sm:flex-row sm:items-start sm:gap-5">
       <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-border bg-background-elevated text-3xl">🧭</div>
       <div className="mt-4 flex-1 sm:mt-0">
-        <h3 className="font-grotesk text-xl font-extrabold tracking-tight text-foreground">Advisor</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-grotesk text-xl font-extrabold tracking-tight text-foreground">Advisor</h3>
+          <Pill tom="sutil">Em breve</Pill>
+        </div>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Uma conversa direta sobre a sua operação: o que travar, a gente organiza junto.
+          Estamos finalizando os detalhes — em breve por aqui.
         </p>
-        <Button
-          size="sm"
-          className="group mt-5 gap-1.5 rounded-full px-4"
-          onClick={() => {
-            registrarEvento("clique_produto", "advisor");
-            window.location.href =
-              "mailto:comercial@focusinteligente.com.br?subject=Quero%20falar%20com%20o%20Advisor";
-          }}
-        >
-          <MessageCircle className="w-3.5 h-3.5" />
-          Falar comigo
-          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-        </Button>
+        <span className="focus-label mt-5 inline-flex items-center gap-1.5 text-muted-foreground">
+          <Clock className="w-3.5 h-3.5" /> Em preparação
+        </span>
       </div>
     </div>
   );
