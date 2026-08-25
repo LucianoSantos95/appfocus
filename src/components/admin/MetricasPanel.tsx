@@ -3,6 +3,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+
+// Barras por produto: cliques vs. leads, nos tokens do tema.
+const grafico = {
+  cliques: { label: "Cliques", color: "hsl(var(--muted-foreground))" },
+  leads: { label: "Leads", color: "hsl(var(--primary))" },
+} satisfies ChartConfig;
 
 // Funil do catálogo: visita → clique → lead.
 // A leitura que importa: onde a pessoa desiste.
