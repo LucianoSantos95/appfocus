@@ -153,37 +153,51 @@ export default function Central() {
 
       <AvisoHubAntigo />
 
-      {/* Cabeçalho: logo + wordmark sempre visível (identidade legível de cara).
-          O hover só abre um pouco o espaçamento e revela o micro-rótulo. */}
+      {/* Cabeçalho: só o logo em repouso. No hover, "Hub" surge à esquerda,
+          "Central" à direita e o micro-rótulo aparece abaixo. */}
       <header className="relative border-b border-border/60">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-6 py-7">
           <div
             tabIndex={0}
             aria-label="Hub Central"
-            className="group flex flex-col items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="group flex flex-col items-center gap-2 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
-            <span className="relative flex items-center justify-center">
-              <span className="absolute h-20 w-20 rounded-full bg-primary/25 blur-2xl transition-opacity duration-500 group-hover:opacity-100 opacity-70" />
-              <img
-                src={logo}
-                alt="Hub Central"
-                className="relative z-10 h-[72px] w-[72px] rounded-2xl object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                width={72}
-                height={72}
-              />
-            </span>
+            <div className="font-brand flex items-center justify-center gap-5 text-2xl font-semibold tracking-[-0.02em] md:text-[28px]">
+              <span
+                aria-hidden="true"
+                className="wordmark-sheen w-[3.2em] text-right opacity-0 translate-x-3 transition-all duration-500 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-reduce:transition-none"
+              >
+                Hub
+              </span>
 
-            <span className="font-brand flex items-baseline gap-[0.32em] text-2xl font-semibold tracking-[-0.02em] transition-[gap] duration-500 ease-out group-hover:gap-[0.55em] md:text-[28px]">
-              <span className="wordmark-sheen">Hub</span>
-              <span className="text-primary">Central</span>
-            </span>
+              <span className="relative flex shrink-0 items-center justify-center">
+                <span className="absolute h-20 w-20 rounded-full bg-primary/25 blur-2xl transition-opacity duration-500 group-hover:opacity-100 opacity-70" />
+                <img
+                  src={logo}
+                  alt="Hub Central"
+                  className="relative z-10 h-[72px] w-[72px] rounded-2xl object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                  width={72}
+                  height={72}
+                />
+              </span>
 
-            <span className="focus-label text-muted-foreground opacity-0 -translate-y-1 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none">
-              / by Focus Inteligente
-            </span>
+              <span
+                aria-hidden="true"
+                className="w-[3.2em] text-left text-primary opacity-0 -translate-x-3 transition-all duration-500 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-reduce:transition-none"
+              >
+                Central
+              </span>
+            </div>
+
+            <div className="h-5">
+              <span className="focus-label text-muted-foreground opacity-0 -translate-y-1 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 motion-reduce:transition-none">
+                / by Focus Inteligente
+              </span>
+            </div>
           </div>
         </div>
       </header>
+
 
       {!loading && (
         <AbasCatalogo abas={SECOES.map((s) => ({ tipo: s.tipo, rotulo: s.aba }))} />
