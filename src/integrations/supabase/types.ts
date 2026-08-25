@@ -1099,13 +1099,16 @@ export type Database = {
       produtos: {
         Row: {
           ativo: boolean
+          capa: string | null
           captura_lead: boolean
           created_at: string
           descricao: string | null
           destaque: boolean
+          detalhes: string | null
           emoji: string | null
           gratuito: boolean
           id: string
+          imagens: string[]
           link_destino: string | null
           nome: string
           ordem: number
@@ -1115,13 +1118,16 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          capa?: string | null
           captura_lead?: boolean
           created_at?: string
           descricao?: string | null
           destaque?: boolean
+          detalhes?: string | null
           emoji?: string | null
           gratuito?: boolean
           id?: string
+          imagens?: string[]
           link_destino?: string | null
           nome: string
           ordem?: number
@@ -1131,13 +1137,16 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          capa?: string | null
           captura_lead?: boolean
           created_at?: string
           descricao?: string | null
           destaque?: boolean
+          detalhes?: string | null
           emoji?: string | null
           gratuito?: boolean
           id?: string
+          imagens?: string[]
           link_destino?: string | null
           nome?: string
           ordem?: number
