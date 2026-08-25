@@ -217,8 +217,8 @@ export default function Central() {
               const ehAdvisor = s.tipo === "advisor";
               return (
                 <section key={s.tipo} id={`secao-${s.tipo}`} className="scroll-mt-24">
-                  <h2 className="font-display text-2xl tracking-tight text-foreground">{s.titulo}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{s.sub}</p>
+                  <p className="focus-label text-muted-foreground">/ {s.sub}</p>
+                  <h2 className="mt-2 font-grotesk text-3xl md:text-4xl font-extrabold tracking-[-0.03em] text-foreground">{s.titulo}</h2>
                   <Stagger
                     inView
                     gap={0.07}
