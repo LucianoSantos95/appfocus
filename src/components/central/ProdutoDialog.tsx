@@ -163,7 +163,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
                 ) : null}
               </div>
               <DialogTitle className="font-grotesk text-2xl font-extrabold tracking-[-0.03em] text-left">
-                {`${produto?.emoji ?? ""} ${produto?.nome ?? ""}`.trim()}
+                {produto?.nome ?? ""}
               </DialogTitle>
               {produto?.descricao && (
                 <DialogDescription className="text-left">{produto.descricao}</DialogDescription>
