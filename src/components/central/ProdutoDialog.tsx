@@ -121,7 +121,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
 
   const fechar = () => {
     onOpenChange(false);
-    setTimeout(() => { setNome(""); setEmail(""); setEntregue(false); setErro(null); }, 250);
+    setTimeout(() => { setNome(""); setEmail(""); setEntregue(false); setErro(null); setTocado({ nome: false, email: false }); }, 250);
   };
 
   return (
