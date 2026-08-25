@@ -228,6 +228,64 @@ export function ProdutosPanel() {
                   placeholder="Uma frase sobre o que resolve" />
               </div>
 
+              <div className="space-y-1.5">
+                <Label htmlFor="pr-detalhes">Descrição completa (aparece ao clicar no card)</Label>
+                <Textarea id="pr-detalhes" rows={5} value={editando.detalhes ?? ""}
+                  onChange={(e) => setEditando({ ...editando, detalhes: e.target.value })}
+                  placeholder="O que é, o que vem dentro, para quem serve, valor…" />
+              </div>
+
+              <div className="rounded-xl border border-border p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label>Imagem de capa</Label>
+                  <div className="flex items-center gap-3">
+                    {editando.capa && (
+                      <div className="relative">
+                        <img src={editando.capa} alt="Capa" className="h-16 w-24 rounded-lg border border-border object-cover" />
+                        <button type="button" onClick={() => setEditando({ ...editando, capa: null })}
+                          className="absolute -top-2 -right-2 rounded-full bg-destructive p-0.5 text-destructive-foreground">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted">
+                      <Upload className="w-4 h-4" /> {editando.capa ? "Trocar capa" : "Enviar capa"}
+                      <input type="file" accept="image/*" className="hidden"
+                        onChange={(e) => { subir(e.target.files, "capa"); e.target.value = ""; }} />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Galeria (aparece no detalhe, na ordem abaixo)</Label>
+                  <div className="flex flex-wrap gap-3">
+                    {(editando.imagens ?? []).map((src, i) => (
+                      <div key={src + i} className="relative">
+                        <img src={src} alt={`Imagem ${i + 1}`} className="h-16 w-24 rounded-lg border border-border object-cover" />
+                        <button type="button"
+                          onClick={() => setEditando({ ...editando, imagens: editando.imagens.filter((_, j) => j !== i) })}
+                          className="absolute -top-2 -right-2 rounded-full bg-destructive p-0.5 text-destructive-foreground">
+                          <X className="w-3 h-3" />
+                        </button>
+                        <div className="mt-1 flex justify-center gap-1">
+                          <button type="button" onClick={() => moverImagem(i, -1)} className="text-muted-foreground hover:text-foreground">
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                          </button>
+                          <button type="button" onClick={() => moverImagem(i, 1)} className="text-muted-foreground hover:text-foreground">
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <label className="inline-flex h-16 w-24 cursor-pointer items-center justify-center rounded-lg border border-dashed border-border text-muted-foreground hover:bg-muted">
+                      {subindo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                      <input type="file" accept="image/*" multiple className="hidden"
+                        onChange={(e) => { subir(e.target.files, "galeria"); e.target.value = ""; }} />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Seção do catálogo</Label>
