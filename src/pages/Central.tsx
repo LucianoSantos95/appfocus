@@ -3,6 +3,8 @@ import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Loader2, PackageOpen, Clock } from "lucide-react";
 import logo from "@/assets/logo.png";
+import logoNotion from "@/assets/notion.png.asset.json";
+import logoLovable from "@/assets/lovable-color.png.asset.json";
 import { useProdutos, type Produto } from "@/hooks/useProdutos";
 import { ProdutoDialog } from "@/components/central/ProdutoDialog";
 import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
@@ -17,9 +19,9 @@ import { registrarEvento } from "@/lib/eventos";
 // Escada de compromisso: Notion grátis → Produtos Lovable → Advisor.
 // As três seções aparecem sempre; sem produto no banco, entra um placeholder.
 
-const SECOES: Array<{ tipo: Produto["tipo"]; titulo: string; sub: string; aba: string }> = [
-  { tipo: "notion",  aba: "Notion",   titulo: "Templates Notion",  sub: "Gratuitos, prontos pra duplicar e usar hoje" },
-  { tipo: "lovable", aba: "Lovable",  titulo: "Produtos Lovable",  sub: "Aplicações completas pra operação do seu negócio" },
+const SECOES: Array<{ tipo: Produto["tipo"]; titulo: string; sub: string; aba: string; logo?: string; fundoClaro?: boolean }> = [
+  { tipo: "notion",  aba: "Notion",   titulo: "Templates Notion",  sub: "Gratuitos, prontos pra duplicar e usar hoje", logo: logoNotion.url, fundoClaro: true },
+  { tipo: "lovable", aba: "Lovable",  titulo: "Produtos Lovable",  sub: "Aplicações completas pra operação do seu negócio", logo: logoLovable.url },
   { tipo: "advisor", aba: "Advisor",  titulo: "Fale comigo",       sub: "Quando você precisa de alguém olhando a sua operação" },
 ];
 
@@ -244,9 +246,24 @@ export default function Central() {
               const itens = brutos.map((p) => ({ ...p, destaque: p.id === idDestaque }));
               const ehAdvisor = s.tipo === "advisor";
               return (
-                <section key={s.tipo} id={`secao-${s.tipo}`} className="scroll-mt-24">
+                <section key={s.tipo} id={`secao-${s.tipo}`} className="group scroll-mt-24">
                   <p className="focus-label text-muted-foreground">/ {s.sub}</p>
-                  <h2 className="mt-2 font-grotesk text-3xl md:text-4xl font-extrabold tracking-[-0.03em] text-foreground">{s.titulo}</h2>
+                  <h2 className="mt-2 flex items-center gap-3 font-grotesk text-3xl md:text-4xl font-extrabold tracking-[-0.03em] text-foreground">
+                    {s.titulo}
+                    {s.logo && (
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center md:h-9 md:w-9">
+                        <img
+                          src={s.logo}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          className={`h-full w-full object-contain opacity-0 -translate-x-2 scale-90 transition-all duration-300 ease-out group-hover:translate-x-0 group-hover:scale-100 group-hover:opacity-100 motion-reduce:transition-none ${
+                            s.fundoClaro ? "rounded-md bg-white p-1" : ""
+                          }`}
+                        />
+                      </span>
+                    )}
+                  </h2>
                   <Stagger
                     inView
                     gap={0.07}
