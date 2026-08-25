@@ -156,7 +156,7 @@ export default function Central() {
       <AvisoHubAntigo />
 
       {/* Cabeçalho: só o logo, centralizado. No hover os nomes saem de trás dele. */}
-      <header className="border-b border-border/60">
+      <header className="relative border-b border-border/60">
         <div className="mx-auto max-w-5xl px-6 py-5 flex justify-center">
           <div
             tabIndex={0}
