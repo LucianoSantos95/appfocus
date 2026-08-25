@@ -174,6 +174,81 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* === TEMA "FOCUS" — escopado (site focusinteligente.com.br) ===
+     Preto profundo + azul elétrico + grade sutil. Usado só no Hub Central. */
+  [data-theme="focus"] {
+    --background: 240 6% 4%;
+    --background-secondary: 240 6% 6%;
+    --background-elevated: 240 5% 9%;
+
+    --foreground: 0 0% 98%;
+    --foreground-muted: 240 5% 65%;
+
+    --card: 240 5% 7%;
+    --card-foreground: 0 0% 98%;
+    --card-border: 240 5% 16%;
+
+    --popover: 240 6% 5%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 228 100% 63%;
+    --primary-glow: 228 100% 72%;
+    --primary-foreground: 0 0% 100%;
+
+    --accent: 240 5% 12%;
+    --accent-foreground: 0 0% 98%;
+
+    --secondary: 240 5% 11%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 5% 10%;
+    --muted-foreground: 240 5% 62%;
+
+    --success: 152 60% 45%;
+    --success-foreground: 0 0% 100%;
+    --destructive: 4 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 5% 16%;
+    --input: 240 5% 12%;
+    --ring: 228 100% 63%;
+
+    --radius: 1rem;
+
+    color-scheme: dark;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  /* Sombras/vidro coerentes com o preto do site (sem tint colorido) */
+  [data-theme="focus"] .shadow-premium {
+    box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.04) inset, 0 20px 40px -28px hsl(0 0% 0% / 0.9);
+  }
+
+  /* Malha de grade do fundo, com fade nas bordas */
+  [data-theme="focus"] .focus-grid::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background-image:
+      linear-gradient(to right, hsl(0 0% 100% / 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(0 0% 100% / 0.035) 1px, transparent 1px);
+    background-size: 72px 72px;
+    -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 25%, transparent 85%);
+            mask-image: radial-gradient(120% 90% at 50% 0%, #000 25%, transparent 85%);
+  }
+
+  /* Micro-rótulo mono maiúsculo, assinatura do site */
+  .focus-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+  }
 }
 
 @layer base {

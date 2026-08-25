@@ -116,13 +116,13 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
 
   return (
     <Dialog open={!!produto} onOpenChange={(v) => !v && fechar()}>
-      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
+      <DialogContent data-theme="focus" className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto border-border bg-card text-foreground">
         {entregue ? (
           <div className="py-6 text-center flex flex-col items-center gap-3">
             <div className="w-14 h-14 rounded-full bg-success/10 flex items-center justify-center">
               <CheckCircle2 className="w-7 h-7 text-success" />
             </div>
-            <h3 className="font-display text-2xl tracking-tight">{t.okTitulo}</h3>
+            <h3 className="font-grotesk text-2xl font-extrabold tracking-tight">{t.okTitulo}</h3>
             <p className="text-sm text-muted-foreground max-w-xs">{t.okTexto}</p>
             <div className="flex gap-2 mt-1">
               <Button variant={advisor ? "default" : "outline"} onClick={fechar}>Fechar</Button>
@@ -140,19 +140,19 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
             <DialogHeader className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 {produto?.destaque && (
-                  <Badge className="gap-1 font-mono text-[10px] uppercase tracking-wider">
+                  <Badge className="gap-1 focus-label rounded-full">
                     <Sparkles className="w-3 h-3" /> Recomendado
                   </Badge>
                 )}
                 {produto?.gratuito ? (
-                  <Badge variant="secondary" className="font-mono text-[10px] uppercase tracking-wider">Grátis</Badge>
+                  <Badge variant="outline" className="focus-label rounded-full text-muted-foreground">Grátis</Badge>
                 ) : produto?.preco != null ? (
-                  <Badge variant="outline" className="font-mono text-[10px] tracking-wider">
+                  <Badge variant="outline" className="focus-label rounded-full text-muted-foreground">
                     R$ {Number(produto.preco).toLocaleString("pt-BR")}
                   </Badge>
                 ) : null}
               </div>
-              <DialogTitle className="font-display text-2xl tracking-tight text-left">
+              <DialogTitle className="font-grotesk text-2xl font-extrabold tracking-[-0.03em] text-left">
                 {`${produto?.emoji ?? ""} ${produto?.nome ?? ""}`.trim()}
               </DialogTitle>
               {produto?.descricao && (
@@ -232,7 +232,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
 
               {erro && <p className="text-sm text-destructive">{erro}</p>}
 
-              <Button onClick={entregar} disabled={!valido || sending} className="w-full gap-2 group">
+              <Button onClick={entregar} disabled={!valido || sending} className="w-full gap-2 group rounded-full">
                 {sending
                   ? <><Loader2 className="w-4 h-4 animate-spin" /> {t.enviando}</>
                   : <>{t.cta} <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>}

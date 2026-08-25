@@ -42,7 +42,7 @@ export function AbasCatalogo({ abas }: { abas: AbaItem[] }) {
 
   return (
     <div className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/65">
-      <nav className="mx-auto max-w-5xl px-6 flex gap-1 overflow-x-auto" aria-label="Seções do catálogo">
+      <nav className="mx-auto max-w-5xl px-6 py-3 flex gap-2 overflow-x-auto" aria-label="Seções do catálogo">
         {abas.map((a) => {
           const on = ativa === a.tipo;
           return (
@@ -50,16 +50,14 @@ export function AbasCatalogo({ abas }: { abas: AbaItem[] }) {
               key={a.tipo}
               onClick={() => ir(a.tipo)}
               aria-current={on ? "true" : undefined}
-              className={`relative shrink-0 px-3 py-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-sm ${
-                on ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              className={`focus-label shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                on
+                  ? "border-primary/40 bg-primary/10 text-foreground"
+                  : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/25"
               }`}
             >
+              <span className={`h-1.5 w-1.5 rounded-full transition-colors ${on ? "bg-primary" : "bg-foreground/30"}`} />
               {a.rotulo}
-              <span
-                className={`absolute left-2 right-2 -bottom-px h-0.5 rounded-full bg-primary transition-transform duration-300 origin-left ${
-                  on ? "scale-x-100" : "scale-x-0"
-                }`}
-              />
             </button>
           );
         })}
