@@ -145,7 +145,7 @@ export default function Central() {
   const porTipo = (t: Produto["tipo"]) => produtos.filter((p) => p.tipo === t);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div data-theme="focus" className="focus-grid relative min-h-screen bg-background text-foreground">
       <PageMeta
         path="/"
         title="Templates e sistemas para sua operação"
