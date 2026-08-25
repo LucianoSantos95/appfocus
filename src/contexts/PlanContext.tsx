@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
-import { useTeamPermissions } from "@/hooks/useTeamPermissions";
+
 import { isDemoMode } from "@/lib/demo-fixtures";
 
 
@@ -25,7 +25,6 @@ const PlanContext = createContext<PlanContextType | undefined>(undefined);
 
 export function PlanProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const { isAdmin } = useTeamPermissions();
   const demo = isDemoMode();
   const [plan, setPlan] = useState(demo ? "enterprise" : "gratuito");
   const [features, setFeatures] = useState<PlanFeature[]>([]);
@@ -84,7 +83,6 @@ export function PlanProvider({ children }: { children: ReactNode }) {
 
   const canAccess = (_module: string, _action: string): boolean => {
     if (demo) return true; // Demo libera todos os módulos, incluindo BI.
-    if (isAdmin) return true;
     if (_module === "guia") return true;
     const feature = features.find(
       (f) => f.module === _module && f.action === _action

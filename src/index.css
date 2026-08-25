@@ -294,6 +294,85 @@
     font-size: 0.6875rem;
     line-height: 1.4;
   }
+
+  /* === Fundo "aurora" do Hub Central === */
+  .aurora-blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(90px);
+    opacity: 0.55;
+    will-change: transform;
+  }
+  .aurora-a {
+    top: -18%;
+    left: -10%;
+    width: 46vw;
+    height: 46vw;
+    background: radial-gradient(circle, hsl(var(--primary) / 0.55), transparent 68%);
+    animation: auroraDriftA 26s ease-in-out infinite alternate;
+  }
+  .aurora-b {
+    top: 12%;
+    right: -14%;
+    width: 40vw;
+    height: 40vw;
+    background: radial-gradient(circle, hsl(268 90% 62% / 0.42), transparent 68%);
+    animation: auroraDriftB 34s ease-in-out infinite alternate;
+  }
+  .aurora-c {
+    bottom: -22%;
+    left: 24%;
+    width: 52vw;
+    height: 52vw;
+    background: radial-gradient(circle, hsl(190 95% 55% / 0.3), transparent 70%);
+    animation: auroraDriftC 42s ease-in-out infinite alternate;
+  }
+  .light .aurora-blob {
+    opacity: 0.4;
+  }
+  @keyframes auroraDriftA {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(9vw, 6vh, 0) scale(1.18); }
+  }
+  @keyframes auroraDriftB {
+    from { transform: translate3d(0, 0, 0) scale(1.1); }
+    to   { transform: translate3d(-8vw, 10vh, 0) scale(0.92); }
+  }
+  @keyframes auroraDriftC {
+    from { transform: translate3d(0, 0, 0) scale(0.95); }
+    to   { transform: translate3d(6vw, -8vh, 0) scale(1.2); }
+  }
+
+  /* Wordmark do Hub Central: brilho que atravessa devagar */
+  @keyframes wordmarkSheen {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  .wordmark-sheen {
+    background-image: linear-gradient(
+      100deg,
+      hsl(var(--foreground)) 0%,
+      hsl(var(--foreground)) 35%,
+      hsl(var(--primary)) 50%,
+      hsl(var(--foreground)) 65%,
+      hsl(var(--foreground)) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: wordmarkSheen 7s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aurora-blob,
+    .wordmark-sheen {
+      animation: none !important;
+    }
+    .wordmark-sheen {
+      -webkit-text-fill-color: hsl(var(--foreground));
+    }
+  }
 }
 
 @layer base {
