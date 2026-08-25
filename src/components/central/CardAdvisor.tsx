@@ -18,14 +18,15 @@ export function CardAdvisor({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) 
 
   return (
     <div
-      className={`relative flex flex-col rounded-2xl border bg-card p-6 transition-all hover:shadow-premium sm:flex-row sm:items-start sm:gap-5 ${
-        p.destaque ? "border-primary/60 ring-1 ring-primary/30" : "border-border"
+      className={`relative flex flex-col rounded-2xl border bg-card p-6 transition-all duration-300 hover:border-foreground/25 hover:bg-background-elevated sm:flex-row sm:items-start sm:gap-5 ${
+        p.destaque ? "border-primary/50" : "border-border"
       }`}
     >
       {p.destaque && (
-        <Badge className="absolute -top-2.5 left-6 gap-1 font-mono text-[10px] uppercase tracking-wider">
-          <Sparkles className="w-3 h-3" /> Recomendado
-        </Badge>
+        <span className="focus-label absolute -top-2.5 left-6 inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-primary">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          Recomendado
+        </span>
       )}
 
       {p.capa ? (
@@ -36,20 +37,20 @@ export function CardAdvisor({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) 
           className="h-16 w-16 shrink-0 rounded-full border border-border object-cover"
         />
       ) : (
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-3xl">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-border bg-background-elevated text-3xl">
           {p.emoji || "🧭"}
         </div>
       )}
 
       <div className="mt-4 flex-1 sm:mt-0">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-lg font-semibold text-foreground">{p.nome}</h3>
+          <h3 className="font-grotesk text-xl font-extrabold tracking-tight text-foreground">{p.nome}</h3>
           {p.gratuito ? (
-            <Badge variant="secondary" className="font-mono text-[10px] uppercase tracking-wider">Grátis</Badge>
+            <span className="focus-label rounded-full border border-border/70 px-2.5 py-1 text-muted-foreground">Grátis</span>
           ) : p.preco != null ? (
-            <Badge variant="outline" className="font-mono text-[10px] tracking-wider">
+            <span className="focus-label rounded-full border border-border/70 px-2.5 py-1 text-muted-foreground">
               R$ {Number(p.preco).toLocaleString("pt-BR")}
-            </Badge>
+            </span>
           ) : null}
         </div>
 
@@ -58,8 +59,8 @@ export function CardAdvisor({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) 
         )}
 
         <div className="mt-5 flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={saibaMais}>Saiba mais</Button>
-          <Button size="sm" onClick={falar} className="group gap-1.5">
+          <Button variant="outline" size="sm" className="rounded-full px-4" onClick={saibaMais}>Saiba mais</Button>
+          <Button size="sm" onClick={falar} className="group gap-1.5 rounded-full px-4">
             Falar com a Focus
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
           </Button>
