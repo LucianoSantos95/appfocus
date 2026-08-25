@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Loader2, PackageOpen, Sparkles, Clock, MessageCircle } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useProdutos, type Produto } from "@/hooks/useProdutos";
-import { LeadCaptureDialog } from "@/components/central/LeadCaptureDialog";
+import { ProdutoDialog } from "@/components/central/ProdutoDialog";
 import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
 import { AbasCatalogo } from "@/components/central/AbasCatalogo";
 import { CardAdvisor } from "@/components/central/CardAdvisor";
@@ -253,7 +253,7 @@ export default function Central() {
         </div>
       </footer>
 
-      <LeadCaptureDialog produto={selecionado} onOpenChange={(v) => !v && setSelecionado(null)} />
+      <ProdutoDialog produto={selecionado} onOpenChange={(v) => !v && setSelecionado(null)} />
     </div>
   );
 }
