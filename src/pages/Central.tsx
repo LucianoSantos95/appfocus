@@ -23,10 +23,10 @@ const SECOES: Array<{ tipo: Produto["tipo"]; titulo: string; sub: string; aba: s
 ];
 
 function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void }) {
+  // Todo clique abre o detalhe (galeria + info + captura), nunca o link direto.
   const acao = () => {
     registrarEvento("clique_produto", p.slug);
-    if (p.captura_lead) return onAbrir(p);
-    if (p.link_destino) window.open(p.link_destino, "_blank", "noopener");
+    onAbrir(p);
   };
 
   return (
@@ -40,6 +40,15 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
         <Badge className="absolute -top-2.5 left-6 gap-1 font-mono text-[10px] uppercase tracking-wider">
           <Sparkles className="w-3 h-3" /> Recomendado
         </Badge>
+      )}
+
+      {p.capa && (
+        <img
+          src={p.capa}
+          alt={p.nome}
+          loading="lazy"
+          className="mb-4 w-full rounded-xl border border-border object-cover aspect-[16/10] bg-muted"
+        />
       )}
 
       <div className="flex items-start justify-between gap-3">
