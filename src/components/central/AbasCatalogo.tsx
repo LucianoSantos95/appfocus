@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // Abas de navegação do catálogo. Não filtram nada — são atalho de scroll,
 // com a aba ativa acompanhando a seção visível (IntersectionObserver).
