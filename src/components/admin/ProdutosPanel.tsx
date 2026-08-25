@@ -10,10 +10,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Loader2, ExternalLink, GripVertical } from "lucide-react";
+import { Plus, Pencil, Loader2, ExternalLink, GripVertical, Upload, X, ArrowLeft, ArrowRight } from "lucide-react";
 
 // CRUD do catálogo. É o que permite publicar produto novo sem depender de código.
 const sb = supabase as any;
+
+// Bucket privado: guardamos URL assinada de longa duração (10 anos) para que a
+// imagem apareça no catálogo público sem expor o bucket inteiro.
+const BUCKET = "produtos";
+const VALIDADE = 60 * 60 * 24 * 365 * 10;
+
+async function enviarImagem(file: File): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const caminho = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from(BUCKET).upload(caminho, file, { upsert: false });
+  if (error) throw error;
+  const { data, error: e2 } = await supabase.storage.from(BUCKET).createSignedUrl(caminho, VALIDADE);
+  if (e2 || !data?.signedUrl) throw e2 || new Error("Não gerou o link da imagem");
+  return data.signedUrl;
+}
 
 interface Produto {
   id?: string;
@@ -29,11 +44,15 @@ interface Produto {
   ordem: number;
   ativo: boolean;
   destaque: boolean;
+  capa: string | null;
+  imagens: string[];
+  detalhes: string | null;
 }
 
 const VAZIO: Produto = {
   slug: "", nome: "", descricao: "", tipo: "notion", gratuito: true, preco: null,
   link_destino: "", captura_lead: true, emoji: "📦", ordem: 0, ativo: true, destaque: false,
+  capa: null, imagens: [], detalhes: "",
 };
 
 const TIPO_LABEL: Record<string, string> = { notion: "Notion", lovable: "Sistema", advisor: "Advisor" };
