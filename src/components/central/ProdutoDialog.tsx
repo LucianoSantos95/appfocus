@@ -116,7 +116,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
 
   return (
     <Dialog open={!!produto} onOpenChange={(v) => !v && fechar()}>
-      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
+      <DialogContent data-theme="focus" className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto border-border bg-card text-foreground">
         {entregue ? (
           <div className="py-6 text-center flex flex-col items-center gap-3">
             <div className="w-14 h-14 rounded-full bg-success/10 flex items-center justify-center">
