@@ -241,7 +241,9 @@ export default function Central() {
         )}
       </main>
 
-      <footer className="relative border-t border-border/60 mt-8">
+      <FaqCatalogo />
+
+      <footer className="relative border-t border-border/60">
         <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
           <p className="focus-label text-muted-foreground">
             / Plataforma criada pela{" "}
@@ -253,13 +255,18 @@ export default function Central() {
               Focus
             </a>
           </p>
-          <Button variant="ghost" size="sm" asChild className="focus-label h-7 rounded-full px-3">
-            <a href="https://focusinteligente.com.br" target="_blank" rel="noopener noreferrer" className="gap-1.5">
-              Conhecer a Focus <ArrowRight className="w-3 h-3" />
-            </a>
-          </Button>
+          <div className="flex items-center gap-4">
+            <LinkFeedback />
+            <Button variant="ghost" size="sm" asChild className="focus-label h-7 rounded-full px-3">
+              <a href="https://focusinteligente.com.br" target="_blank" rel="noopener noreferrer" className="gap-1.5">
+                Conhecer a Focus <ArrowRight className="w-3 h-3" />
+              </a>
+            </Button>
+          </div>
         </div>
       </footer>
+
+      <BotaoFeedbackFlutuante />
 
       <ProdutoDialog produto={selecionado} onOpenChange={(v) => !v && setSelecionado(null)} />
     </div>
