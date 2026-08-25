@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import type { Produto } from "@/hooks/useProdutos";
+import { FeedbackForm } from "@/components/user/FeedbackForm";
 import { registrarEvento } from "@/lib/eventos";
 
 // Detalhe do produto no Hub Central: galeria + descrição longa + captura de
@@ -64,6 +65,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   const [api, setApi] = useState<CarouselApi>();
   const [tocado, setTocado] = useState({ nome: false, email: false });
   const [slide, setSlide] = useState(0);
+  const [feedbackEnviado, setFeedbackEnviado] = useState(false);
 
 
   useEffect(() => {
@@ -109,7 +111,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
       setEntregue(true);
       // Advisor não entrega nada na hora — é contato.
       if (!advisor && produto.link_destino) {
-        window.location.assign(produto.link_destino);
+        window.open(produto.link_destino, "_blank", "noopener,noreferrer");
       }
     } catch (e: any) {
       setErro(e?.message || "Não foi possível enviar. Tente de novo.");
@@ -121,7 +123,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
 
   const fechar = () => {
     onOpenChange(false);
-    setTimeout(() => { setNome(""); setEmail(""); setEntregue(false); setErro(null); setTocado({ nome: false, email: false }); }, 250);
+    setTimeout(() => { setNome(""); setEmail(""); setEntregue(false); setFeedbackEnviado(false); setErro(null); setTocado({ nome: false, email: false }); }, 250);
   };
 
   return (
@@ -139,11 +141,28 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
               {!advisor && produto?.link_destino && (
                 <Button asChild>
                   <a href={produto.link_destino} target="_blank" rel="noopener noreferrer">
-                    Abrir agora <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    Abrir template <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </a>
                 </Button>
               )}
             </div>
+
+            {!feedbackEnviado ? (
+              <div className="mt-5 w-full rounded-xl border border-border p-4">
+                <FeedbackForm
+                  titulo="Me diz o que achou sobre a nova plataforma"
+                  placeholder="Pode ser curto: o que gostou, o que faltou, o que confundiu."
+                  pagina={`/central#${produto?.slug ?? ""}`}
+                  submitLabel="Enviar feedback"
+                  onSubmitted={() => setFeedbackEnviado(true)}
+                  secondary={
+                    <Button type="button" variant="ghost" onClick={fechar}>Agora não</Button>
+                  }
+                />
+              </div>
+            ) : (
+              <p className="mt-5 text-sm text-muted-foreground">Obrigado pelo feedback!</p>
+            )}
           </div>
         ) : (
           <>
