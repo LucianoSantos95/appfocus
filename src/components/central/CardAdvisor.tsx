@@ -14,7 +14,7 @@ export function CardAdvisor({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) 
   };
 
   const saibaMais = () => {
-    registrarEvento("clique_saiba_mais", p.slug);
+    registrarEvento("clique_produto", p.slug);
     if (p.link_destino) window.open(p.link_destino, "_blank", "noopener");
   };
 
