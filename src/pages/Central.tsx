@@ -13,6 +13,8 @@ import { FaqCatalogo } from "@/components/central/FaqCatalogo";
 import { BotaoFeedbackFlutuante, LinkFeedback } from "@/components/central/BotaoFeedback";
 import { FundoAnimado } from "@/components/central/FundoAnimado";
 import { Stagger, StaggerItem } from "@/components/motion";
+import { BorderBeam } from "@/components/magicui/border-beam";
+
 import { registrarEvento } from "@/lib/eventos";
 
 // Hub Central — catálogo de produtos SEM LOGIN.
