@@ -53,34 +53,36 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
   return (
     <button
       onClick={acao}
-      className={`group relative w-full h-full text-left rounded-2xl border bg-card p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/25 hover:bg-background-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+      className={`group relative w-full h-full text-left rounded-2xl border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/25 hover:bg-background-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
         p.destaque ? "border-primary/50" : "border-border"
       }`}
     >
       {p.destaque && (
-        <span className="absolute -top-2.5 left-6">
+        <span className="absolute -top-2.5 left-6 z-10">
           <Pill tom="primario">Recomendado</Pill>
         </span>
       )}
 
-      {p.capa && (
+      {/* A foto é o herói do card: mostra o template antes de qualquer texto. */}
+      {p.capa ? (
         <img
           src={p.capa}
           alt={p.nome}
           loading="lazy"
-          className="mb-5 w-full rounded-xl border border-border object-cover aspect-[16/10] bg-muted"
+          className="w-full rounded-xl border border-border object-cover aspect-[16/10] bg-muted"
         />
+      ) : (
+        <div className="w-full rounded-xl border border-dashed border-border bg-muted/40 aspect-[16/10]" />
       )}
 
-      <div className="flex items-start justify-between gap-3">
-        <span className="text-3xl leading-none">{p.emoji || "📦"}</span>
+      <div className="mt-4 flex items-start justify-between gap-3">
+        <h3 className="font-grotesk text-lg font-extrabold leading-snug tracking-tight text-foreground">{p.nome}</h3>
         {p.gratuito ? <Pill tom="sutil">Grátis</Pill> : <Pill tom="sutil">R$ {Number(p.preco).toLocaleString("pt-BR")}</Pill>}
       </div>
 
-      <h3 className="mt-5 font-grotesk text-xl font-extrabold tracking-tight text-foreground">{p.nome}</h3>
-      {p.descricao && <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{p.descricao}</p>}
+      {p.descricao && <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2">{p.descricao}</p>}
 
-      <span className="focus-label mt-6 inline-flex items-center gap-1.5 text-foreground">
+      <span className="focus-label mt-4 inline-flex items-center gap-1.5 text-foreground">
         {p.gratuito ? "Pegar agora" : "Quero este"}
         <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
       </span>
@@ -91,16 +93,16 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
 /* Placeholder no mesmo formato do card, para seção ainda sem produto. */
 function CardEmBreve() {
   return (
-    <div className="w-full h-full rounded-2xl border border-dashed border-border bg-card/40 p-6">
-      <div className="flex items-start justify-between gap-3">
-        <span className="text-3xl leading-none">🛠️</span>
+    <div className="w-full h-full rounded-2xl border border-dashed border-border bg-card/40 p-4">
+      <div className="w-full rounded-xl border border-dashed border-border bg-muted/30 aspect-[16/10]" />
+      <div className="mt-4 flex items-start justify-between gap-3">
+        <h3 className="font-grotesk text-lg font-extrabold leading-snug tracking-tight text-foreground">Em breve novos produtos</h3>
         <Pill tom="sutil">Em breve</Pill>
       </div>
-      <h3 className="mt-5 font-grotesk text-xl font-extrabold tracking-tight text-foreground">Em breve novos produtos</h3>
-      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+      <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
         Estamos preparando as próximas aplicações. Volte em alguns dias.
       </p>
-      <span className="focus-label mt-6 inline-flex items-center gap-1.5 text-muted-foreground">
+      <span className="focus-label mt-4 inline-flex items-center gap-1.5 text-muted-foreground">
         <Clock className="w-3.5 h-3.5" /> Em desenvolvimento
       </span>
     </div>
