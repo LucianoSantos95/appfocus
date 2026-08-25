@@ -9,6 +9,7 @@ import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
 import { AbasCatalogo } from "@/components/central/AbasCatalogo";
 import { FaqCatalogo } from "@/components/central/FaqCatalogo";
 import { BotaoFeedbackFlutuante, LinkFeedback } from "@/components/central/BotaoFeedback";
+import { FundoAnimado } from "@/components/central/FundoAnimado";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { registrarEvento } from "@/lib/eventos";
 
