@@ -15,19 +15,22 @@ import { Plus, Pencil, Loader2, ExternalLink, GripVertical, Upload, X, ArrowLeft
 // CRUD do catálogo. É o que permite publicar produto novo sem depender de código.
 const sb = supabase as any;
 
-// Bucket público: a imagem do catálogo precisa de URL permanente (link assinado
-// expira e a foto some do card).
+// Bucket privado (buckets públicos estão bloqueados na política do workspace):
+// guardamos URL assinada de longa duração (10 anos) para a imagem aparecer no
+// catálogo público sem expor o bucket inteiro.
 const BUCKET = "produtos";
+const VALIDADE = 60 * 60 * 24 * 365 * 10;
 
 async function enviarImagem(file: File): Promise<string> {
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const caminho = `${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from(BUCKET).upload(caminho, file, { upsert: false });
   if (error) throw error;
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(caminho);
-  if (!data?.publicUrl) throw new Error("Não gerou o link da imagem");
-  return data.publicUrl;
+  const { data, error: e2 } = await supabase.storage.from(BUCKET).createSignedUrl(caminho, VALIDADE);
+  if (e2 || !data?.signedUrl) throw e2 || new Error("Não gerou o link da imagem");
+  return data.signedUrl;
 }
+
 
 
 interface Produto {
