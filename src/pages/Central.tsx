@@ -92,6 +92,12 @@ export default function Central() {
         </div>
       </header>
 
+      {!loading && produtos.length > 0 && (
+        <AbasCatalogo
+          abas={SECOES.filter((s) => porTipo(s.tipo).length > 0).map((s) => ({ tipo: s.tipo, rotulo: s.aba }))}
+        />
+      )}
+
       <main className="mx-auto max-w-5xl px-6 py-12 md:py-16">
         <div className="max-w-2xl">
           <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-primary font-medium">
@@ -120,17 +126,31 @@ export default function Central() {
         ) : (
           <div className="mt-12 space-y-14">
             {SECOES.map((s) => {
-              const itens = porTipo(s.tipo);
-              if (itens.length === 0) return null; // seção vazia não aparece no MVP
+              const brutos = porTipo(s.tipo);
+              if (brutos.length === 0) return null; // seção vazia não aparece no MVP
+              // Só o primeiro marcado como destaque ganha o tratamento visual.
+              const idDestaque = brutos.find((p) => p.destaque)?.id;
+              const itens = brutos.map((p) => ({ ...p, destaque: p.id === idDestaque }));
+              const ehAdvisor = s.tipo === "advisor";
               return (
-                <section key={s.tipo}>
+                <section key={s.tipo} id={`secao-${s.tipo}`} className="scroll-mt-24">
                   <h2 className="font-display text-2xl tracking-tight text-foreground">{s.titulo}</h2>
                   <p className="mt-1 text-sm text-muted-foreground">{s.sub}</p>
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <Stagger
+                    inView
+                    gap={0.07}
+                    className={`mt-6 grid gap-4 ${ehAdvisor ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
+                  >
                     {itens.map((p) => (
-                      <CardProduto key={p.id} p={p} onAbrir={setSelecionado} />
+                      <StaggerItem key={p.id} className="flex">
+                        {ehAdvisor ? (
+                          <div className="w-full"><CardAdvisor p={p} onAbrir={setSelecionado} /></div>
+                        ) : (
+                          <div className="w-full flex"><CardProduto p={p} onAbrir={setSelecionado} /></div>
+                        )}
+                      </StaggerItem>
                     ))}
-                  </div>
+                  </Stagger>
                 </section>
               );
             })}
