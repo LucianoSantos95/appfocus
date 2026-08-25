@@ -241,6 +241,51 @@
             mask-image: radial-gradient(120% 90% at 50% 0%, #000 25%, transparent 85%);
   }
 
+  /* Variante clara do tema Focus — mesma identidade (azul elétrico,
+     tipografia e grade), só que sobre papel claro. Ativada pelo
+     ThemeProvider, que coloca a classe .light no <html>. */
+  .light [data-theme="focus"] {
+    --background: 0 0% 100%;
+    --background-secondary: 240 20% 98%;
+    --background-elevated: 240 20% 97%;
+
+    --foreground: 240 10% 8%;
+    --foreground-muted: 240 5% 40%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 8%;
+    --card-border: 240 12% 88%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 8%;
+
+    --accent: 240 20% 96%;
+    --accent-foreground: 240 10% 8%;
+
+    --secondary: 240 20% 96%;
+    --secondary-foreground: 240 10% 8%;
+
+    --muted: 240 20% 96%;
+    --muted-foreground: 240 5% 42%;
+
+    --border: 240 12% 88%;
+    --input: 240 12% 90%;
+
+    color-scheme: light;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  .light [data-theme="focus"] .shadow-premium {
+    box-shadow: 0 1px 2px 0 hsl(240 10% 8% / 0.06), 0 12px 32px -24px hsl(240 10% 8% / 0.35);
+  }
+
+  .light [data-theme="focus"] .focus-grid::before {
+    background-image:
+      linear-gradient(to right, hsl(240 10% 8% / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(240 10% 8% / 0.05) 1px, transparent 1px);
+  }
+
   /* Micro-rótulo mono maiúsculo, assinatura do site */
   .focus-label {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
