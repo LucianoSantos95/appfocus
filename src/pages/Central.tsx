@@ -249,19 +249,19 @@ export default function Central() {
         )}
       </main>
 
-      <footer className="border-t border-border/60 mt-8">
+      <footer className="relative border-t border-border/60 mt-8">
         <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-xs text-muted-foreground">
-            Plataforma criada pela{" "}
+          <p className="focus-label text-muted-foreground">
+            / Plataforma criada pela{" "}
             <a
               href="https://focusinteligente.com.br"
               target="_blank" rel="noopener noreferrer"
-              className="text-foreground hover:text-primary transition-colors underline underline-offset-4"
+              className="text-foreground hover:text-primary transition-colors"
             >
               Focus
             </a>
           </p>
-          <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-xs">
+          <Button variant="ghost" size="sm" asChild className="focus-label h-7 rounded-full px-3">
             <a href="https://focusinteligente.com.br" target="_blank" rel="noopener noreferrer" className="gap-1.5">
               Conhecer a Focus <ArrowRight className="w-3 h-3" />
             </a>
