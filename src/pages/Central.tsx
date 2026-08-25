@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Loader2, PackageOpen, Clock, MessageCircle } from "lucide-react";
+import { ArrowRight, Loader2, PackageOpen, Clock } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useProdutos, type Produto } from "@/hooks/useProdutos";
 import { ProdutoDialog } from "@/components/central/ProdutoDialog";
 import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
 import { AbasCatalogo } from "@/components/central/AbasCatalogo";
-import { CardAdvisor } from "@/components/central/CardAdvisor";
+import { FaqCatalogo } from "@/components/central/FaqCatalogo";
+import { BotaoFeedbackFlutuante, LinkFeedback } from "@/components/central/BotaoFeedback";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { registrarEvento } from "@/lib/eventos";
 
