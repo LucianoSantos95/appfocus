@@ -755,3 +755,35 @@
   [data-wc-banner] *,
   .wc-overlay * { animation: none !important; }
 }
+
+/* === AnimatedGradientText (técnica MagicUI, tons do nosso primary) === */
+@keyframes focus-gradient-slide {
+  to { background-position: var(--bg-size, 200%) 0; }
+}
+.gradient-text-animado {
+  background-image: linear-gradient(
+    90deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary-glow)) 35%,
+    hsl(var(--accent)) 55%,
+    hsl(var(--primary)) 100%
+  );
+  background-size: var(--bg-size, 200%) 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: focus-gradient-slide 8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gradient-text-animado { animation: none; }
+}
+
+/* Transição circular do tema (View Transitions API) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2147483646; }
