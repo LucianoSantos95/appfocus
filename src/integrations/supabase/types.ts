@@ -530,48 +530,6 @@ export type Database = {
         }
         Relationships: []
       }
-      custom_requests: {
-        Row: {
-          atuacao: string | null
-          created_at: string
-          customizacao: string | null
-          email: string
-          empresa: string | null
-          id: string
-          nome: string
-          origem: string | null
-          site: string | null
-          status: string
-          user_id: string | null
-        }
-        Insert: {
-          atuacao?: string | null
-          created_at?: string
-          customizacao?: string | null
-          email: string
-          empresa?: string | null
-          id?: string
-          nome: string
-          origem?: string | null
-          site?: string | null
-          status?: string
-          user_id?: string | null
-        }
-        Update: {
-          atuacao?: string | null
-          created_at?: string
-          customizacao?: string | null
-          email?: string
-          empresa?: string | null
-          id?: string
-          nome?: string
-          origem?: string | null
-          site?: string | null
-          status?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       data_export_requests: {
         Row: {
           created_at: string
@@ -734,6 +692,30 @@ export type Database = {
         }
         Relationships: []
       }
+      eventos: {
+        Row: {
+          created_at: string
+          id: number
+          produto: string | null
+          sessao: string | null
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          produto?: string | null
+          sessao?: string | null
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          produto?: string | null
+          sessao?: string | null
+          tipo?: string
+        }
+        Relationships: []
+      }
       feedbacks: {
         Row: {
           avaliacao: number | null
@@ -840,6 +822,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      leads: {
+        Row: {
+          atuacao: string | null
+          created_at: string
+          customizacao: string | null
+          email: string
+          empresa: string | null
+          id: string
+          nome: string
+          origem: string | null
+          produto: string | null
+          site: string | null
+          status: string
+          tipo: string | null
+          user_id: string | null
+        }
+        Insert: {
+          atuacao?: string | null
+          created_at?: string
+          customizacao?: string | null
+          email: string
+          empresa?: string | null
+          id?: string
+          nome: string
+          origem?: string | null
+          produto?: string | null
+          site?: string | null
+          status?: string
+          tipo?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          atuacao?: string | null
+          created_at?: string
+          customizacao?: string | null
+          email?: string
+          empresa?: string | null
+          id?: string
+          nome?: string
+          origem?: string | null
+          produto?: string | null
+          site?: string | null
+          status?: string
+          tipo?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       login_attempts: {
         Row: {
@@ -1063,6 +1093,57 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      produtos: {
+        Row: {
+          ativo: boolean
+          captura_lead: boolean
+          created_at: string
+          descricao: string | null
+          destaque: boolean
+          emoji: string | null
+          gratuito: boolean
+          id: string
+          link_destino: string | null
+          nome: string
+          ordem: number
+          preco: number | null
+          slug: string
+          tipo: string
+        }
+        Insert: {
+          ativo?: boolean
+          captura_lead?: boolean
+          created_at?: string
+          descricao?: string | null
+          destaque?: boolean
+          emoji?: string | null
+          gratuito?: boolean
+          id?: string
+          link_destino?: string | null
+          nome: string
+          ordem?: number
+          preco?: number | null
+          slug: string
+          tipo: string
+        }
+        Update: {
+          ativo?: boolean
+          captura_lead?: boolean
+          created_at?: string
+          descricao?: string | null
+          destaque?: boolean
+          emoji?: string | null
+          gratuito?: boolean
+          id?: string
+          link_destino?: string | null
+          nome?: string
+          ordem?: number
+          preco?: number | null
+          slug?: string
+          tipo?: string
         }
         Relationships: []
       }
