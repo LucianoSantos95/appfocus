@@ -9,6 +9,7 @@ import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
 import { AbasCatalogo } from "@/components/central/AbasCatalogo";
 import { FaqCatalogo } from "@/components/central/FaqCatalogo";
 import { BotaoFeedbackFlutuante, LinkFeedback } from "@/components/central/BotaoFeedback";
+import { FundoAnimado } from "@/components/central/FundoAnimado";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { registrarEvento } from "@/lib/eventos";
 
@@ -141,7 +142,8 @@ export default function Central() {
   const porTipo = (t: Produto["tipo"]) => produtos.filter((p) => p.tipo === t);
 
   return (
-    <div data-theme="focus" className="focus-grid relative min-h-screen bg-background text-foreground">
+    <div data-theme="focus" className="focus-grid relative min-h-screen overflow-hidden bg-background text-foreground">
+      <FundoAnimado />
       <PageMeta
         path="/"
         title="Templates e sistemas para sua operação"
@@ -151,26 +153,33 @@ export default function Central() {
 
       <AvisoHubAntigo />
 
-      {/* Cabeçalho: só o logo, centralizado. No hover os nomes saem de trás dele. */}
+      {/* Cabeçalho: logo + wordmark sempre visível (identidade legível de cara).
+          O hover só abre um pouco o espaçamento e revela o micro-rótulo. */}
       <header className="relative border-b border-border/60">
-        <div className="mx-auto max-w-5xl px-6 py-5 flex justify-center">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-6 py-7">
           <div
             tabIndex={0}
             aria-label="Hub Central"
-            className="group relative flex items-center justify-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="group flex flex-col items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
-            <span className="pointer-events-none absolute right-1/2 whitespace-nowrap font-brand text-xl font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:-translate-x-9 group-focus-visible:opacity-100 group-focus-visible:-translate-x-9 motion-reduce:transition-none motion-reduce:-translate-x-9">
-              Hub
+            <span className="relative flex items-center justify-center">
+              <span className="absolute h-20 w-20 rounded-full bg-primary/25 blur-2xl transition-opacity duration-500 group-hover:opacity-100 opacity-70" />
+              <img
+                src={logo}
+                alt="Hub Central"
+                className="relative z-10 h-[72px] w-[72px] rounded-2xl object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                width={72}
+                height={72}
+              />
             </span>
-            <img
-              src={logo}
-              alt="Hub Central"
-              className="relative z-10 h-16 w-16 rounded-2xl object-cover"
-              width={64}
-              height={64}
-            />
-            <span className="pointer-events-none absolute left-1/2 whitespace-nowrap font-brand text-xl font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-9 group-focus-visible:opacity-100 group-focus-visible:translate-x-9 motion-reduce:transition-none motion-reduce:translate-x-9">
-              Central
+
+            <span className="font-brand flex items-baseline gap-[0.32em] text-2xl font-semibold tracking-[-0.02em] transition-[gap] duration-500 ease-out group-hover:gap-[0.55em] md:text-[28px]">
+              <span className="wordmark-sheen">Hub</span>
+              <span className="text-primary">Central</span>
+            </span>
+
+            <span className="focus-label text-muted-foreground opacity-0 -translate-y-1 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none">
+              / by Focus Inteligente
             </span>
           </div>
         </div>

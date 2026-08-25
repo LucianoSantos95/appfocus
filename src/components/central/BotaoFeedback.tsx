@@ -11,10 +11,10 @@ export function BotaoFeedbackFlutuante() {
       <button
         onClick={() => setAberto(true)}
         aria-label="Enviar feedback"
-        className="focus-label fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full border border-border bg-background-elevated/90 px-4 py-2.5 text-foreground shadow-premium backdrop-blur transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        className="focus-label animate-idle-pulse fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-primary-foreground shadow-lg ring-1 ring-primary/40 transition-all hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <MessageSquarePlus className="h-4 w-4" />
-        <span className="hidden sm:inline">Feedback</span>
+        <span>Feedback</span>
       </button>
       <FeedbackDialog
         open={aberto}
