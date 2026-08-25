@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Loader2, PackageOpen, Clock, MessageCircle } from "lucide-react";
+import { ArrowRight, Loader2, PackageOpen, Clock } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useProdutos, type Produto } from "@/hooks/useProdutos";
 import { ProdutoDialog } from "@/components/central/ProdutoDialog";
 import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
 import { AbasCatalogo } from "@/components/central/AbasCatalogo";
-import { CardAdvisor } from "@/components/central/CardAdvisor";
+import { FaqCatalogo } from "@/components/central/FaqCatalogo";
+import { BotaoFeedbackFlutuante, LinkFeedback } from "@/components/central/BotaoFeedback";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { registrarEvento } from "@/lib/eventos";
 
@@ -53,34 +54,36 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
   return (
     <button
       onClick={acao}
-      className={`group relative w-full h-full text-left rounded-2xl border bg-card p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/25 hover:bg-background-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+      className={`group relative w-full h-full text-left rounded-2xl border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/25 hover:bg-background-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
         p.destaque ? "border-primary/50" : "border-border"
       }`}
     >
       {p.destaque && (
-        <span className="absolute -top-2.5 left-6">
+        <span className="absolute -top-2.5 left-6 z-10">
           <Pill tom="primario">Recomendado</Pill>
         </span>
       )}
 
-      {p.capa && (
+      {/* A foto é o herói do card: mostra o template antes de qualquer texto. */}
+      {p.capa ? (
         <img
           src={p.capa}
           alt={p.nome}
           loading="lazy"
-          className="mb-5 w-full rounded-xl border border-border object-cover aspect-[16/10] bg-muted"
+          className="w-full rounded-xl border border-border object-cover aspect-[16/10] bg-muted"
         />
+      ) : (
+        <div className="w-full rounded-xl border border-dashed border-border bg-muted/40 aspect-[16/10]" />
       )}
 
-      <div className="flex items-start justify-between gap-3">
-        <span className="text-3xl leading-none">{p.emoji || "📦"}</span>
+      <div className="mt-4 flex items-start justify-between gap-3">
+        <h3 className="font-grotesk text-lg font-extrabold leading-snug tracking-tight text-foreground">{p.nome}</h3>
         {p.gratuito ? <Pill tom="sutil">Grátis</Pill> : <Pill tom="sutil">R$ {Number(p.preco).toLocaleString("pt-BR")}</Pill>}
       </div>
 
-      <h3 className="mt-5 font-grotesk text-xl font-extrabold tracking-tight text-foreground">{p.nome}</h3>
-      {p.descricao && <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{p.descricao}</p>}
+      {p.descricao && <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2">{p.descricao}</p>}
 
-      <span className="focus-label mt-6 inline-flex items-center gap-1.5 text-foreground">
+      <span className="focus-label mt-4 inline-flex items-center gap-1.5 text-foreground">
         {p.gratuito ? "Pegar agora" : "Quero este"}
         <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
       </span>
@@ -91,45 +94,39 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
 /* Placeholder no mesmo formato do card, para seção ainda sem produto. */
 function CardEmBreve() {
   return (
-    <div className="w-full h-full rounded-2xl border border-dashed border-border bg-card/40 p-6">
-      <div className="flex items-start justify-between gap-3">
-        <span className="text-3xl leading-none">🛠️</span>
+    <div className="w-full h-full rounded-2xl border border-dashed border-border bg-card/40 p-4">
+      <div className="w-full rounded-xl border border-dashed border-border bg-muted/30 aspect-[16/10]" />
+      <div className="mt-4 flex items-start justify-between gap-3">
+        <h3 className="font-grotesk text-lg font-extrabold leading-snug tracking-tight text-foreground">Em breve novos produtos</h3>
         <Pill tom="sutil">Em breve</Pill>
       </div>
-      <h3 className="mt-5 font-grotesk text-xl font-extrabold tracking-tight text-foreground">Em breve novos produtos</h3>
-      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+      <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
         Estamos preparando as próximas aplicações. Volte em alguns dias.
       </p>
-      <span className="focus-label mt-6 inline-flex items-center gap-1.5 text-muted-foreground">
+      <span className="focus-label mt-4 inline-flex items-center gap-1.5 text-muted-foreground">
         <Clock className="w-3.5 h-3.5" /> Em desenvolvimento
       </span>
     </div>
   );
 }
 
-/* Advisor sem registro no banco — mantém o convite ao contato. */
-function CardAdvisorPadrao() {
+/* Advisor ainda não está disponível — cartão apenas informativo, sem CTA. */
+function CardAdvisorEmBreve() {
   return (
-    <div className="flex flex-col rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-start sm:gap-5">
+    <div className="flex flex-col rounded-2xl border border-dashed border-border bg-card/40 p-6 sm:flex-row sm:items-start sm:gap-5">
       <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-border bg-background-elevated text-3xl">🧭</div>
       <div className="mt-4 flex-1 sm:mt-0">
-        <h3 className="font-grotesk text-xl font-extrabold tracking-tight text-foreground">Advisor</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-grotesk text-xl font-extrabold tracking-tight text-foreground">Advisor</h3>
+          <Pill tom="sutil">Em breve</Pill>
+        </div>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Uma conversa direta sobre a sua operação: o que travar, a gente organiza junto.
+          Estamos finalizando os detalhes — em breve por aqui.
         </p>
-        <Button
-          size="sm"
-          className="group mt-5 gap-1.5 rounded-full px-4"
-          onClick={() => {
-            registrarEvento("clique_produto", "advisor");
-            window.location.href =
-              "mailto:comercial@focusinteligente.com.br?subject=Quero%20falar%20com%20o%20Advisor";
-          }}
-        >
-          <MessageCircle className="w-3.5 h-3.5" />
-          Falar comigo
-          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-        </Button>
+        <span className="focus-label mt-5 inline-flex items-center gap-1.5 text-muted-foreground">
+          <Clock className="w-3.5 h-3.5" /> Em preparação
+        </span>
       </div>
     </div>
   );
@@ -223,20 +220,17 @@ export default function Central() {
                     gap={0.07}
                     className={`mt-6 grid gap-4 ${ehAdvisor ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
                   >
-                    {itens.length === 0 ? (
+                    {/* Advisor ainda não está no ar: seção sempre informativa. */}
+                    {ehAdvisor || itens.length === 0 ? (
                       <StaggerItem className="flex">
                         <div className="w-full flex">
-                          {ehAdvisor ? <CardAdvisorPadrao /> : <CardEmBreve />}
+                          {ehAdvisor ? <CardAdvisorEmBreve /> : <CardEmBreve />}
                         </div>
                       </StaggerItem>
                     ) : (
                       itens.map((p) => (
                         <StaggerItem key={p.id} className="flex">
-                          {ehAdvisor ? (
-                            <div className="w-full"><CardAdvisor p={p} onAbrir={setSelecionado} /></div>
-                          ) : (
-                            <div className="w-full flex"><CardProduto p={p} onAbrir={setSelecionado} /></div>
-                          )}
+                          <div className="w-full flex"><CardProduto p={p} onAbrir={setSelecionado} /></div>
                         </StaggerItem>
                       ))
                     )}
@@ -248,7 +242,9 @@ export default function Central() {
         )}
       </main>
 
-      <footer className="relative border-t border-border/60 mt-8">
+      <FaqCatalogo />
+
+      <footer className="relative border-t border-border/60">
         <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
           <p className="focus-label text-muted-foreground">
             / Plataforma criada pela{" "}
@@ -260,13 +256,18 @@ export default function Central() {
               Focus
             </a>
           </p>
-          <Button variant="ghost" size="sm" asChild className="focus-label h-7 rounded-full px-3">
-            <a href="https://focusinteligente.com.br" target="_blank" rel="noopener noreferrer" className="gap-1.5">
-              Conhecer a Focus <ArrowRight className="w-3 h-3" />
-            </a>
-          </Button>
+          <div className="flex items-center gap-4">
+            <LinkFeedback />
+            <Button variant="ghost" size="sm" asChild className="focus-label h-7 rounded-full px-3">
+              <a href="https://focusinteligente.com.br" target="_blank" rel="noopener noreferrer" className="gap-1.5">
+                Conhecer a Focus <ArrowRight className="w-3 h-3" />
+              </a>
+            </Button>
+          </div>
         </div>
       </footer>
+
+      <BotaoFeedbackFlutuante />
 
       <ProdutoDialog produto={selecionado} onOpenChange={(v) => !v && setSelecionado(null)} />
     </div>
