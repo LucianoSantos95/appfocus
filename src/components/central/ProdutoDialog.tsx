@@ -180,7 +180,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
                           src={src}
                           alt={`${produto?.nome ?? "Produto"} — imagem ${i + 1}`}
                           loading="lazy"
-                          className="w-full rounded-xl border border-border object-cover aspect-[16/10] bg-muted"
+                          className="w-full h-auto rounded-xl border border-border bg-muted"
                         />
                       </CarouselItem>
                     ))}
