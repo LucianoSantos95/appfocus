@@ -32,7 +32,7 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
   return (
     <button
       onClick={acao}
-      className={`group relative text-left rounded-2xl border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+      className={`group relative w-full h-full text-left rounded-2xl border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
         p.destaque ? "border-primary/60 ring-1 ring-primary/30" : "border-border"
       }`}
     >
