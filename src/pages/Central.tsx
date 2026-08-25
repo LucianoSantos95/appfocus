@@ -55,42 +55,46 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
   return (
     <button
       onClick={acao}
-      className={`group relative w-full h-full text-left rounded-2xl border bg-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/25 hover:bg-background-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+      className={`group relative w-full h-full text-left overflow-hidden rounded-2xl border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/25 hover:bg-background-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
         p.destaque ? "border-primary/50" : "border-border"
       }`}
     >
-      {p.destaque && (
-        <span className="absolute -top-2.5 left-6 z-10">
-          <Pill tom="primario">Recomendado</Pill>
-        </span>
-      )}
-
-      {/* A foto é o herói do card: mostra o template antes de qualquer texto. */}
-      {p.capa ? (
-        <img
-          src={p.capa}
-          alt={p.nome}
-          loading="lazy"
-          className="w-full rounded-xl border border-border object-cover aspect-[16/10] bg-muted"
-        />
-      ) : (
-        <div className="w-full rounded-xl border border-dashed border-border bg-muted/40 aspect-[16/10]" />
-      )}
-
-      <div className="mt-4 flex items-start justify-between gap-3">
-        <h3 className="font-grotesk text-lg font-extrabold leading-snug tracking-tight text-foreground">{p.nome}</h3>
-        {p.gratuito ? <Pill tom="sutil">Grátis</Pill> : <Pill tom="sutil">R$ {Number(p.preco).toLocaleString("pt-BR")}</Pill>}
+      {/* A foto é o herói do card: ocupa o topo inteiro, sem margem interna. */}
+      <div className="relative w-full aspect-[16/10] bg-muted">
+        {p.capa ? (
+          <img
+            src={p.capa}
+            alt={p.nome}
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-muted/40" />
+        )}
+        {p.destaque && (
+          <span className="absolute left-3 top-3 z-10">
+            <Pill tom="primario">Recomendado</Pill>
+          </span>
+        )}
       </div>
 
-      {p.descricao && <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2">{p.descricao}</p>}
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="font-grotesk text-lg font-extrabold leading-snug tracking-tight text-foreground">{p.nome}</h3>
+          {p.gratuito ? <Pill tom="sutil">Grátis</Pill> : <Pill tom="sutil">R$ {Number(p.preco).toLocaleString("pt-BR")}</Pill>}
+        </div>
 
-      <span className="focus-label mt-4 inline-flex items-center gap-1.5 text-foreground">
-        {p.gratuito ? "Pegar agora" : "Quero este"}
-        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-      </span>
+        {p.descricao && <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2">{p.descricao}</p>}
+
+        <span className="focus-label mt-4 inline-flex items-center gap-1.5 text-foreground">
+          {p.gratuito ? "Pegar agora" : "Quero este"}
+          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+        </span>
+      </div>
     </button>
   );
 }
+
 
 /* Placeholder no mesmo formato do card, para seção ainda sem produto. */
 function CardEmBreve() {

@@ -62,7 +62,9 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   const [erro, setErro] = useState<string | null>(null);
   const [entregue, setEntregue] = useState(false);
   const [api, setApi] = useState<CarouselApi>();
+  const [tocado, setTocado] = useState({ nome: false, email: false });
   const [slide, setSlide] = useState(0);
+
 
   useEffect(() => {
     if (!api) return;
@@ -72,13 +74,20 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
     return () => { api.off("select", onSel); };
   }, [api]);
 
-  const valido = nome.trim().length >= 2 && /\S+@\S+\.\S+/.test(email);
+  const nomeOk = nome.trim().length >= 2;
+  const emailOk = /\S+@\S+\.\S+/.test(email.trim());
+  const valido = nomeOk && emailOk;
   const advisor = produto?.tipo === "advisor";
   const t = copyPor(produto?.tipo);
-  const imagens = (produto?.imagens ?? []).filter(Boolean);
+  const galeria = (produto?.imagens ?? []).filter(Boolean);
+  // Sem galeria, a capa é a imagem do template — precisa aparecer no detalhe.
+  const imagens = galeria.length > 0 ? galeria : produto?.capa ? [produto.capa] : [];
 
   const entregar = async () => {
-    if (!valido || !produto) return;
+    if (!valido || !produto) {
+      setTocado({ nome: true, email: true });
+      return;
+    }
     setSending(true);
     setErro(null);
     try {
@@ -100,7 +109,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
       setEntregue(true);
       // Advisor não entrega nada na hora — é contato.
       if (!advisor && produto.link_destino) {
-        window.open(produto.link_destino, "_blank", "noopener");
+        window.location.assign(produto.link_destino);
       }
     } catch (e: any) {
       setErro(e?.message || "Não foi possível enviar. Tente de novo.");
@@ -109,9 +118,10 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
     }
   };
 
+
   const fechar = () => {
     onOpenChange(false);
-    setTimeout(() => { setNome(""); setEmail(""); setEntregue(false); setErro(null); }, 250);
+    setTimeout(() => { setNome(""); setEmail(""); setEntregue(false); setErro(null); setTocado({ nome: false, email: false }); }, 250);
   };
 
   return (
@@ -211,24 +221,31 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="pd-nome">Nome</Label>
+                  <Label htmlFor="pd-nome">Nome <span className="text-destructive">*</span></Label>
                   <Input
-                    id="pd-nome" value={nome}
+                    id="pd-nome" value={nome} required
+                    aria-invalid={tocado.nome && !nomeOk}
                     onChange={(e) => setNome(e.target.value)}
+                    onBlur={() => setTocado((s) => ({ ...s, nome: true }))}
                     onKeyDown={(e) => e.key === "Enter" && entregar()}
                     placeholder="Como te chamamos"
                   />
+                  {tocado.nome && !nomeOk && <p className="text-xs text-destructive">Informe seu nome.</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="pd-email">E-mail</Label>
+                  <Label htmlFor="pd-email">E-mail <span className="text-destructive">*</span></Label>
                   <Input
-                    id="pd-email" type="email" value={email}
+                    id="pd-email" type="email" value={email} required
+                    aria-invalid={tocado.email && !emailOk}
                     onChange={(e) => setEmail(e.target.value)}
+                    onBlur={() => setTocado((s) => ({ ...s, email: true }))}
                     onKeyDown={(e) => e.key === "Enter" && entregar()}
                     placeholder="voce@empresa.com.br"
                   />
+                  {tocado.email && !emailOk && <p className="text-xs text-destructive">Informe um e-mail válido.</p>}
                 </div>
               </div>
+
 
               {erro && <p className="text-sm text-destructive">{erro}</p>}
 
