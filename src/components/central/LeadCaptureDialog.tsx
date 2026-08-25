@@ -49,8 +49,11 @@ export function LeadCaptureDialog({ produto, onOpenChange }: Props) {
       registrarEvento("lead_enviado", produto.slug);
       setEntregue(true);
       // Abre o destino numa nova aba (o clique do usuário ainda é recente,
-      // então o navegador não bloqueia como popup).
-      if (produto.link_destino) window.open(produto.link_destino, "_blank", "noopener");
+      // então o navegador não bloqueia como popup). Advisor não entrega nada
+      // na hora — é contato, então não abre link.
+      if (produto.tipo !== "advisor" && produto.link_destino) {
+        window.open(produto.link_destino, "_blank", "noopener");
+      }
     } catch (e: any) {
       setErro(e?.message || "Não foi possível enviar. Tente de novo.");
     } finally {
@@ -63,6 +66,8 @@ export function LeadCaptureDialog({ produto, onOpenChange }: Props) {
     setTimeout(() => { setNome(""); setEmail(""); setEntregue(false); setErro(null); }, 250);
   };
 
+  const advisor = produto?.tipo === "advisor";
+
   return (
     <Dialog open={!!produto} onOpenChange={(v) => !v && fechar()}>
       <DialogContent className="sm:max-w-[440px]">
@@ -71,27 +76,35 @@ export function LeadCaptureDialog({ produto, onOpenChange }: Props) {
             <div className="w-14 h-14 rounded-full bg-success/10 flex items-center justify-center">
               <CheckCircle2 className="w-7 h-7 text-success" />
             </div>
-            <h3 className="font-display text-2xl tracking-tight">Pronto, é seu</h3>
+            <h3 className="font-display text-2xl tracking-tight">
+              {advisor ? "Recebemos seu contato" : "Pronto, é seu"}
+            </h3>
             <p className="text-sm text-muted-foreground max-w-xs">
-              O {produto?.nome} abriu numa nova aba. Se não abriu, use o botão abaixo.
+              {advisor
+                ? "A Focus vai te retornar por e-mail para entender sua operação."
+                : `O ${produto?.nome} abriu numa nova aba. Se não abriu, use o botão abaixo.`}
             </p>
             <div className="flex gap-2 mt-1">
-              <Button variant="outline" onClick={fechar}>Fechar</Button>
-              <Button asChild>
-                <a href={produto?.link_destino ?? "#"} target="_blank" rel="noopener noreferrer">
-                  Abrir agora <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                </a>
-              </Button>
+              <Button variant={advisor ? "default" : "outline"} onClick={fechar}>Fechar</Button>
+              {!advisor && (
+                <Button asChild>
+                  <a href={produto?.link_destino ?? "#"} target="_blank" rel="noopener noreferrer">
+                    Abrir agora <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </a>
+                </Button>
+              )}
             </div>
           </div>
         ) : (
           <>
             <DialogHeader>
               <DialogTitle className="font-display text-2xl tracking-tight">
-                {produto?.emoji} {produto?.nome}
+                {advisor ? "Conte um pouco sobre sua operação" : `${produto?.emoji ?? ""} ${produto?.nome ?? ""}`.trim()}
               </DialogTitle>
               <DialogDescription>
-                É gratuito. Diz pra onde eu mando e ele é seu na hora.
+                {advisor
+                  ? "Deixe seu contato e a Focus fala com você para entender o cenário antes de qualquer proposta."
+                  : "É gratuito. Diz pra onde eu mando e ele é seu na hora."}
               </DialogDescription>
             </DialogHeader>
 
@@ -119,11 +132,11 @@ export function LeadCaptureDialog({ produto, onOpenChange }: Props) {
 
             <Button onClick={entregar} disabled={!valido || sending} className="w-full gap-2 group">
               {sending
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Liberando…</>
-                : <>Quero o template <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>}
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> {advisor ? "Enviando…" : "Liberando…"}</>
+                : <>{advisor ? "Quero conversar" : "Quero o template"} <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" /></>}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Sem spam. Só aviso quando sai algo novo.
+              {advisor ? "Sem compromisso. Só um papo pra entender sua operação." : "Sem spam. Só aviso quando sai algo novo."}
             </p>
           </>
         )}
