@@ -58,9 +58,7 @@ export function CardAdvisor({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) 
         )}
 
         <div className="mt-5 flex flex-wrap gap-2">
-          {p.link_destino && (
-            <Button variant="outline" size="sm" onClick={saibaMais}>Saiba mais</Button>
-          )}
+          <Button variant="outline" size="sm" onClick={saibaMais}>Saiba mais</Button>
           <Button size="sm" onClick={falar} className="group gap-1.5">
             Falar com a Focus
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
