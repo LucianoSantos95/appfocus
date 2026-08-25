@@ -221,24 +221,31 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="pd-nome">Nome</Label>
+                  <Label htmlFor="pd-nome">Nome <span className="text-destructive">*</span></Label>
                   <Input
-                    id="pd-nome" value={nome}
+                    id="pd-nome" value={nome} required
+                    aria-invalid={tocado.nome && !nomeOk}
                     onChange={(e) => setNome(e.target.value)}
+                    onBlur={() => setTocado((s) => ({ ...s, nome: true }))}
                     onKeyDown={(e) => e.key === "Enter" && entregar()}
                     placeholder="Como te chamamos"
                   />
+                  {tocado.nome && !nomeOk && <p className="text-xs text-destructive">Informe seu nome.</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="pd-email">E-mail</Label>
+                  <Label htmlFor="pd-email">E-mail <span className="text-destructive">*</span></Label>
                   <Input
-                    id="pd-email" type="email" value={email}
+                    id="pd-email" type="email" value={email} required
+                    aria-invalid={tocado.email && !emailOk}
                     onChange={(e) => setEmail(e.target.value)}
+                    onBlur={() => setTocado((s) => ({ ...s, email: true }))}
                     onKeyDown={(e) => e.key === "Enter" && entregar()}
                     placeholder="voce@empresa.com.br"
                   />
+                  {tocado.email && !emailOk && <p className="text-xs text-destructive">Informe um e-mail válido.</p>}
                 </div>
               </div>
+
 
               {erro && <p className="text-sm text-destructive">{erro}</p>}
 
