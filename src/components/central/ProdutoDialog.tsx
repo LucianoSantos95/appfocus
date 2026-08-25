@@ -62,7 +62,9 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   const [erro, setErro] = useState<string | null>(null);
   const [entregue, setEntregue] = useState(false);
   const [api, setApi] = useState<CarouselApi>();
+  const [tocado, setTocado] = useState({ nome: false, email: false });
   const [slide, setSlide] = useState(0);
+
 
   useEffect(() => {
     if (!api) return;
