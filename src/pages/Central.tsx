@@ -61,6 +61,9 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
         p.destaque ? "border-primary/50" : "border-border"
       }`}
     >
+      {/* Luz sutil percorrendo o contorno — só no card recomendado. */}
+      {p.destaque && <BorderBeam />}
+
       {/* A foto é o herói do card: o bloco se adapta à altura real da imagem,
           sem cortar nada. */}
       <div className="relative w-full bg-muted">
@@ -81,6 +84,7 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
         )}
 
       </div>
+
 
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
