@@ -147,17 +147,17 @@ export default function Central() {
             aria-label="Hub Central"
             className="group relative flex items-center justify-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
-            <span className="pointer-events-none absolute right-1/2 whitespace-nowrap text-lg font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:-translate-x-7 group-focus-visible:opacity-100 group-focus-visible:-translate-x-7 motion-reduce:transition-none motion-reduce:-translate-x-7">
+            <span className="pointer-events-none absolute right-1/2 whitespace-nowrap font-brand text-xl font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:-translate-x-9 group-focus-visible:opacity-100 group-focus-visible:-translate-x-9 motion-reduce:transition-none motion-reduce:-translate-x-9">
               Hub
             </span>
             <img
               src={logo}
               alt="Hub Central"
-              className="relative z-10 h-12 w-12 rounded-xl object-cover"
-              width={48}
-              height={48}
+              className="relative z-10 h-16 w-16 rounded-2xl object-cover"
+              width={64}
+              height={64}
             />
-            <span className="pointer-events-none absolute left-1/2 whitespace-nowrap text-lg font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-7 group-focus-visible:opacity-100 group-focus-visible:translate-x-7 motion-reduce:transition-none motion-reduce:translate-x-7">
+            <span className="pointer-events-none absolute left-1/2 whitespace-nowrap font-brand text-xl font-semibold text-foreground opacity-0 translate-x-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-x-9 group-focus-visible:opacity-100 group-focus-visible:translate-x-9 motion-reduce:transition-none motion-reduce:translate-x-9">
               Central
             </span>
           </div>
