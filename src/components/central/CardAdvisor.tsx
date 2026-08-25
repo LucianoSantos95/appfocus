@@ -7,16 +7,14 @@ import { registrarEvento } from "@/lib/eventos";
 // Advisor não é produto de prateleira — o cartão segue o formato "perfil de
 // consultor": avatar, bio curta e dois CTAs (saber mais / falar com a gente).
 export function CardAdvisor({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void }) {
-  const falar = () => {
+  // Todo clique abre o detalhe — é lá que a pessoa vê as imagens, o que é o
+  // Advisor e o valor, antes de deixar o contato.
+  const abrir = () => {
     registrarEvento("clique_produto", p.slug);
-    if (p.captura_lead) return onAbrir(p);
-    if (p.link_destino) window.open(p.link_destino, "_blank", "noopener");
+    onAbrir(p);
   };
-
-  const saibaMais = () => {
-    registrarEvento("clique_produto", p.slug);
-    if (p.link_destino) window.open(p.link_destino, "_blank", "noopener");
-  };
+  const falar = abrir;
+  const saibaMais = abrir;
 
   return (
     <div
