@@ -58,12 +58,22 @@ export function FeedbackForm({
         pagina: pagina ?? location.pathname,
       });
       if (error) throw error;
+
+      // Agradecimento best-effort — não trava o toast de sucesso.
+      const emailLimpo = email.trim().toLowerCase();
+      if (emailLimpo) {
+        supabase.functions.invoke("send-thanks-email", {
+          body: { kind: "feedback", email: emailLimpo, nome: nome.trim() || null },
+        }).catch(() => {});
+      }
+
       toast({ title: "Feedback enviado!", description: "Obrigado pela sua opinião!" });
       setNome("");
       setEmail("");
       setMensagem("");
       setAvaliacao(0);
       onSubmitted?.();
+
     } catch (err: any) {
       toast({ title: "Erro ao enviar", description: err.message, variant: "destructive" });
     } finally {

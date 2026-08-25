@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import type { Produto } from "@/hooks/useProdutos";
 import { FeedbackForm } from "@/components/user/FeedbackForm";
+import { FeedbackDialog } from "@/components/user/FeedbackDialog";
 import { registrarEvento } from "@/lib/eventos";
 
 // Detalhe do produto no Hub Central: galeria + descrição longa + captura de
@@ -66,6 +67,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   const [tocado, setTocado] = useState({ nome: false, email: false });
   const [slide, setSlide] = useState(0);
   const [feedbackEnviado, setFeedbackEnviado] = useState(false);
+  const [feedbackProduto, setFeedbackProduto] = useState(false);
 
 
   useEffect(() => {
@@ -107,7 +109,19 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
         body: { text: `📥 Novo lead do catálogo\n*${nome.trim()}* (${email.trim()})\nProduto: ${produto.nome}` },
       }).catch(() => {});
 
+      // Agradecimento best-effort — mesma identidade visual dos demais e-mails.
+      supabase.functions.invoke("send-thanks-email", {
+        body: {
+          kind: advisor ? "advisor" : "produto",
+          email: email.trim().toLowerCase(),
+          nome: nome.trim(),
+          produto_nome: produto.nome,
+          link: produto.link_destino ?? undefined,
+        },
+      }).catch(() => {});
+
       registrarEvento("lead_enviado", produto.slug);
+
       setEntregue(true);
       // Advisor não entrega nada na hora — é contato.
       if (!advisor && produto.link_destino) {
@@ -163,6 +177,21 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
             ) : (
               <p className="mt-5 text-sm text-muted-foreground">Obrigado pelo feedback!</p>
             )}
+
+            <button
+              type="button"
+              onClick={() => setFeedbackProduto(true)}
+              className="mt-1 text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+            >
+              Deixar feedback sobre {produto?.nome ?? "este item"}
+            </button>
+            <FeedbackDialog
+              open={feedbackProduto}
+              onOpenChange={setFeedbackProduto}
+              placeholder={`Essa semana estamos testando o Hub Central. O que achou do ${produto?.nome ?? "item"}? O que faltou pra você?`}
+              pagina={produto?.slug}
+            />
+
           </div>
         ) : (
           <>
