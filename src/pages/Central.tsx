@@ -59,17 +59,18 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
         p.destaque ? "border-primary/50" : "border-border"
       }`}
     >
-      {/* A foto é o herói do card: ocupa o topo inteiro, sem margem interna. */}
-      <div className="relative w-full aspect-[16/10] bg-muted">
+      {/* A foto é o herói do card: o bloco se adapta à altura real da imagem,
+          sem cortar nada. */}
+      <div className="relative w-full bg-muted">
         {p.capa ? (
           <img
             src={p.capa}
             alt={p.nome}
             loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="block w-full h-auto"
           />
         ) : (
-          <div className="absolute inset-0 bg-muted/40" />
+          <div className="aspect-[16/10] w-full bg-muted/40" />
         )}
         {p.destaque && (
           <span className="absolute left-3 top-3 z-10">
@@ -80,9 +81,12 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
 
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="font-grotesk text-lg font-extrabold leading-snug tracking-tight text-foreground">{p.nome}</h3>
-          {p.gratuito ? <Pill tom="sutil">Grátis</Pill> : <Pill tom="sutil">R$ {Number(p.preco).toLocaleString("pt-BR")}</Pill>}
+          <h3 className="min-w-0 font-grotesk text-lg font-extrabold leading-snug tracking-tight text-foreground">{p.nome}</h3>
+          <span className="shrink-0">
+            {p.gratuito ? <Pill tom="sutil">Grátis</Pill> : <Pill tom="sutil">R$ {Number(p.preco).toLocaleString("pt-BR")}</Pill>}
+          </span>
         </div>
+
 
         {p.descricao && <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed line-clamp-2">{p.descricao}</p>}
 
