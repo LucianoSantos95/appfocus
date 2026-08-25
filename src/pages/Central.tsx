@@ -246,9 +246,24 @@ export default function Central() {
               const itens = brutos.map((p) => ({ ...p, destaque: p.id === idDestaque }));
               const ehAdvisor = s.tipo === "advisor";
               return (
-                <section key={s.tipo} id={`secao-${s.tipo}`} className="scroll-mt-24">
+                <section key={s.tipo} id={`secao-${s.tipo}`} className="group scroll-mt-24">
                   <p className="focus-label text-muted-foreground">/ {s.sub}</p>
-                  <h2 className="mt-2 font-grotesk text-3xl md:text-4xl font-extrabold tracking-[-0.03em] text-foreground">{s.titulo}</h2>
+                  <h2 className="mt-2 flex items-center gap-3 font-grotesk text-3xl md:text-4xl font-extrabold tracking-[-0.03em] text-foreground">
+                    {s.titulo}
+                    {s.logo && (
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center md:h-9 md:w-9">
+                        <img
+                          src={s.logo}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          className={`h-full w-full object-contain opacity-0 -translate-x-2 scale-90 transition-all duration-300 ease-out group-hover:translate-x-0 group-hover:scale-100 group-hover:opacity-100 motion-reduce:transition-none ${
+                            s.fundoClaro ? "rounded-md bg-white p-1" : ""
+                          }`}
+                        />
+                      </span>
+                    )}
+                  </h2>
                   <Stagger
                     inView
                     gap={0.07}
