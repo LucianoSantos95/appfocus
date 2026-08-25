@@ -13,8 +13,8 @@ export function FadeIn({ delay = 0, y = 8, children, className, ...rest }: FadeI
   const reduce = useReducedMotion();
   return (
     <motion.div
-      initial={reduce ? false : { opacity: 0, y }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={reduce ? false : { opacity: 0, y, filter: "blur(6px)" }}
+      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       transition={{ duration: 0.35, delay, ease: [0.16, 1, 0.3, 1] }}
       className={className}
       {...(rest as any)}
@@ -32,10 +32,12 @@ const staggerParent: Variants = {
     transition: { staggerChildren: 0.04, delayChildren: 0.02 },
   },
 };
+// Técnica do BlurFade (magicui): desfoque some junto com o fade + translate.
 const staggerChild: Variants = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+  hidden: { opacity: 0, y: 8, filter: "blur(6px)" },
+  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
 };
+
 
 interface StaggerProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;

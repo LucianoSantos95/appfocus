@@ -13,6 +13,8 @@ import { FaqCatalogo } from "@/components/central/FaqCatalogo";
 import { BotaoFeedbackFlutuante, LinkFeedback } from "@/components/central/BotaoFeedback";
 import { FundoAnimado } from "@/components/central/FundoAnimado";
 import { Stagger, StaggerItem } from "@/components/motion";
+import { BorderBeam } from "@/components/magicui/border-beam";
+
 import { registrarEvento } from "@/lib/eventos";
 
 // Hub Central — catálogo de produtos SEM LOGIN.
@@ -61,6 +63,9 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
         p.destaque ? "border-primary/50" : "border-border"
       }`}
     >
+      {/* Luz sutil percorrendo o contorno — só no card recomendado. */}
+      {p.destaque && <BorderBeam />}
+
       {/* A foto é o herói do card: o bloco se adapta à altura real da imagem,
           sem cortar nada. */}
       <div className="relative w-full bg-muted">
@@ -81,6 +86,7 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
         )}
 
       </div>
+
 
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
@@ -218,8 +224,9 @@ export default function Central() {
         {/* Título centralizado; o complemento aparece no hover, sem empurrar layout. */}
         <div className="group mx-auto max-w-3xl text-center">
           <h1 className="font-grotesk text-4xl md:text-6xl font-extrabold leading-[1.05] tracking-[-0.035em] text-foreground">
-            Ferramentas pra organizar <span className="text-primary">sua operação</span>.
+            Ferramentas pra organizar <span className="gradient-text-animado">sua operação</span>.
           </h1>
+
           <div className="mt-5 h-7">
             <p className="focus-label text-muted-foreground opacity-0 translate-y-1 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0 motion-reduce:transition-none">
               / Pegue o que precisar, sem cadastro e sem custos
