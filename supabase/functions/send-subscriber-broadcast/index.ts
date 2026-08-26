@@ -93,8 +93,10 @@ function renderTemplate(opts: {
     <span style="color:#4b5563">— Equipe Focus</span>
   </p>
 </td></tr>
+${opts.pixelHtml ?? ""}
 </table></td></tr></table></body></html>`;
 }
+
 
 async function listRecipients(admin: any, audience: Audience, limit = 70, extraEmails: string[] = []) {
   let userIds: string[] = [];
