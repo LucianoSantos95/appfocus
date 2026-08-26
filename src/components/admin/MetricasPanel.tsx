@@ -205,18 +205,30 @@ export function MetricasPanel() {
     .map((d) => ({ data: d.data, visitas: d.visitas.size, cliques: d.cliques, leads: d.leads }))
     .sort((a, b) => a.data.localeCompare(b.data));
 
-  // E-mails automáticos por template
-  const porTemplate = Object.values(
-    emails.reduce((acc: Record<string, { nome: string; enviados: number; falhas: number }>, e) => {
-      acc[e.template_name] ??= { nome: rotuloTemplate(e.template_name), enviados: 0, falhas: 0 };
-      if (e.status === "sent") acc[e.template_name].enviados++;
-      else acc[e.template_name].falhas++;
+  // E-mails automáticos agrupados pela origem do disparo
+  const porOrigem = Object.entries(
+    emails.reduce((acc: Record<string, { enviados: number; falhas: number; abertos: number; rastreados: number }>, e) => {
+      const o = origemDe(e.template_name);
+      acc[o] ??= { enviados: 0, falhas: 0, abertos: 0, rastreados: 0 };
+      if (e.status === "sent") {
+        acc[o].enviados++;
+        if (temRastreio(e)) {
+          acc[o].rastreados++;
+          if (e.opened_at) acc[o].abertos++;
+        }
+      } else acc[o].falhas++;
       return acc;
     }, {}),
-  ).sort((a, b) => b.enviados + b.falhas - (a.enviados + a.falhas));
+  )
+    .map(([origem, v]) => ({ origem: origem as Origem, ...v }))
+    .sort((a, b) => b.enviados + b.falhas - (a.enviados + a.falhas));
 
-  const emailsEnviados = porTemplate.reduce((s, t) => s + t.enviados, 0);
-  const emailsFalhas = porTemplate.reduce((s, t) => s + t.falhas, 0);
+  const emailsEnviados = porOrigem.reduce((s, t) => s + t.enviados, 0);
+  const emailsFalhas = porOrigem.reduce((s, t) => s + t.falhas, 0);
+  const emailsAbertos = porOrigem.reduce((s, t) => s + t.abertos, 0);
+  const emailsRastreados = porOrigem.reduce((s, t) => s + t.rastreados, 0);
+  const ultimosEmails = emails.slice(0, 25);
+
 
   const etapas = [
     { rot: "Visitas",  val: visitas,  ant: anterior.visitas, icone: Eye,               sub: "sessões únicas" },
