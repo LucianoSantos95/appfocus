@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { FeedbackDialog } from "@/components/user/FeedbackDialog";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Loader2, PackageOpen, Clock } from "lucide-react";
@@ -153,8 +155,23 @@ function CardAdvisorEmBreve() {
 export default function Central() {
   const { produtos, loading } = useProdutos();
   const [selecionado, setSelecionado] = useState<Produto | null>(null);
+  const [avaliando, setAvaliando] = useState<Produto | null>(null);
+  const [params, setParams] = useSearchParams();
 
   useEffect(() => { registrarEvento("visita_catalogo"); }, []);
+
+  // Link vindo do e-mail de agradecimento: /?avaliar={slug} abre o feedback
+  // já no contexto do produto certo.
+  const slugAvaliar = params.get("avaliar");
+  useEffect(() => {
+    if (!slugAvaliar || produtos.length === 0) return;
+    const p = produtos.find((x) => x.slug === slugAvaliar);
+    if (p) setAvaliando(p);
+    const next = new URLSearchParams(params);
+    next.delete("avaliar");
+    setParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slugAvaliar, produtos]);
 
   const porTipo = (t: Produto["tipo"]) => produtos.filter((p) => p.tipo === t);
 
