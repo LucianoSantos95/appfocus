@@ -7,6 +7,7 @@ import { ProdutosPanel } from "@/components/admin/ProdutosPanel";
 import { LeadsPanel } from "@/components/admin/LeadsPanel";
 import { MetricasPanel } from "@/components/admin/MetricasPanel";
 import { EmailPanel } from "@/components/admin/EmailPanel";
+import { FeedbacksPanel } from "@/components/admin/FeedbacksPanel";
 import { ArrowUpRight, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -50,12 +51,14 @@ export default function Admin() {
             <TabsTrigger value="leads">Leads</TabsTrigger>
             <TabsTrigger value="metricas">Métricas</TabsTrigger>
             <TabsTrigger value="email">E-mail</TabsTrigger>
+            <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
           </TabsList>
 
           <TabsContent value="produtos" className="mt-6"><ProdutosPanel /></TabsContent>
           <TabsContent value="leads"    className="mt-6"><LeadsPanel /></TabsContent>
           <TabsContent value="metricas" className="mt-6"><MetricasPanel /></TabsContent>
           <TabsContent value="email"    className="mt-6"><EmailPanel /></TabsContent>
+          <TabsContent value="feedbacks" className="mt-6"><FeedbacksPanel /></TabsContent>
         </Tabs>
       </main>
     </div>

@@ -49,6 +49,7 @@ function renderTemplate(opts: {
   blocksHtml: string;
   ctaLabel: string;
   ctaUrl: string;
+  secondaryHtml?: string;
   footerNote?: string;
 }) {
   const name = firstName(opts.displayName);
@@ -65,11 +66,12 @@ function renderTemplate(opts: {
   <div style="margin:14px 0 0;font-size:16px;color:#cbd5e1;line-height:1.6">${opts.introHtml}</div>
 </td></tr>
 ${opts.blocksHtml ? `<tr><td style="padding:20px 36px 8px">${opts.blocksHtml}</td></tr>` : ""}
-<tr><td align="center" style="padding:20px 36px 32px">
+<tr><td align="center" style="padding:20px 36px ${opts.secondaryHtml ? "10px" : "32px"}">
   <a href="${escapeHtml(safeHttpUrl(opts.ctaUrl, `${SITE_URL}/`))}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:16px 36px;border-radius:12px;box-shadow:0 8px 24px rgba(59,130,246,.4)">
     ${escapeHtml(opts.ctaLabel)} →
   </a>
 </td></tr>
+${opts.secondaryHtml ? `<tr><td align="center" style="padding:0 36px 30px"><p style="margin:0;font-size:14px;color:#94a3b8;line-height:1.6">${opts.secondaryHtml}</p></td></tr>` : ""}
 <tr><td style="padding:24px 36px;border-top:1px solid #1f2937">
   <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6">
     ${escapeHtml(opts.footerNote || "Você está recebendo este e-mail porque pediu algo no Hub Central.")}<br/>
@@ -105,6 +107,8 @@ Deno.serve(async (req) => {
 
     const nome = String(body?.nome || "").trim().slice(0, 100) || null;
     const produtoNome = String(body?.produto_nome || "").trim().slice(0, 120);
+    // Slug é usado só para montar o link de avaliação — sanitizado no servidor.
+    const produtoSlug = String(body?.produto_slug || "").trim().slice(0, 120).replace(/[^a-zA-Z0-9_-]/g, "");
     const link = safeHttpUrl(String(body?.link || ""), `${SITE_URL}/`);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
@@ -122,6 +126,7 @@ Deno.serve(async (req) => {
     let blocksHtml = "";
     let ctaLabel: string;
     let ctaUrl = link;
+    let secondaryHtml: string | undefined;
     let text: string;
 
     if (kind === "advisor") {
@@ -137,6 +142,11 @@ Deno.serve(async (req) => {
       blocksHtml = card("Acesso garantido", "O link abaixo é o mesmo que abrimos para você na hora. Ele continua valendo.");
       ctaLabel = "Abrir agora";
       text = `Seu acesso${produtoNome ? ` a ${produtoNome}` : ""}: ${ctaUrl}`;
+      if (produtoSlug) {
+        const avaliarUrl = `${SITE_URL}/?avaliar=${encodeURIComponent(produtoSlug)}`;
+        secondaryHtml = `Como foi usar ${produtoNome ? `o <strong>${escapeHtml(produtoNome)}</strong>` : "o material"}? <a href="${escapeHtml(avaliarUrl)}" style="color:#3b82f6;text-decoration:underline">Deixe sua nota</a> — leva 10 segundos.`;
+        text += `\n\nComo foi usar? Deixe sua nota: ${avaliarUrl}`;
+      }
     } else {
       subject = "Valeu pelo feedback";
       introHtml = `<p>Obrigado por escrever. Lemos todos os feedbacks um por um — a sua opinião ajuda a decidir o que entra no Hub ainda essa semana.</p>`;
@@ -151,6 +161,7 @@ Deno.serve(async (req) => {
       blocksHtml,
       ctaLabel,
       ctaUrl,
+      secondaryHtml,
     });
 
     const result = await sendResendEmail({ to: email, subject, html, text });
