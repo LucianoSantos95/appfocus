@@ -126,6 +126,7 @@ Deno.serve(async (req) => {
     let blocksHtml = "";
     let ctaLabel: string;
     let ctaUrl = link;
+    let secondaryHtml: string | undefined;
     let text: string;
 
     if (kind === "advisor") {
@@ -141,6 +142,11 @@ Deno.serve(async (req) => {
       blocksHtml = card("Acesso garantido", "O link abaixo é o mesmo que abrimos para você na hora. Ele continua valendo.");
       ctaLabel = "Abrir agora";
       text = `Seu acesso${produtoNome ? ` a ${produtoNome}` : ""}: ${ctaUrl}`;
+      if (produtoSlug) {
+        const avaliarUrl = `${SITE_URL}/?avaliar=${encodeURIComponent(produtoSlug)}`;
+        secondaryHtml = `Como foi usar ${produtoNome ? `o <strong>${escapeHtml(produtoNome)}</strong>` : "o material"}? <a href="${escapeHtml(avaliarUrl)}" style="color:#3b82f6;text-decoration:underline">Deixe sua nota</a> — leva 10 segundos.`;
+        text += `\n\nComo foi usar? Deixe sua nota: ${avaliarUrl}`;
+      }
     } else {
       subject = "Valeu pelo feedback";
       introHtml = `<p>Obrigado por escrever. Lemos todos os feedbacks um por um — a sua opinião ajuda a decidir o que entra no Hub ainda essa semana.</p>`;
@@ -155,6 +161,7 @@ Deno.serve(async (req) => {
       blocksHtml,
       ctaLabel,
       ctaUrl,
+      secondaryHtml,
     });
 
     const result = await sendResendEmail({ to: email, subject, html, text });
