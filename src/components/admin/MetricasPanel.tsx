@@ -529,6 +529,18 @@ export function MetricasPanel() {
                           </div>
                         );
                       })}
+
+                      {emailsFiltrados.length > 5 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-2 h-8 gap-1.5 text-muted-foreground"
+                          onClick={() => setVerTodosEmails((v) => !v)}
+                        >
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${verTodosEmails ? "rotate-180" : ""}`} />
+                          {verTodosEmails ? "Ver menos" : `Ver mais (${emailsFiltrados.length - 5})`}
+                        </Button>
+                      )}
                     </div>
 
                     <p className="mt-3 text-xs text-muted-foreground">
