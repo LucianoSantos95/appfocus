@@ -51,9 +51,11 @@ function renderTemplate(opts: {
   ctaUrl: string;
   secondaryHtml?: string;
   footerNote?: string;
+  pixelHtml?: string;
 }) {
   const name = firstName(opts.displayName);
   const greeting = name ? `Olá, ${escapeHtml(name)}!` : "Olá!";
+
 
   return `<!doctype html><html><body style="margin:0;padding:0;background:#0a0e1a;font-family:Inter,Arial,sans-serif;color:#e8ecf3">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0e1a"><tr><td align="center" style="padding:40px 20px">
