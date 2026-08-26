@@ -343,6 +343,13 @@ export default function Central() {
       <BotaoFeedbackFlutuante />
 
       <ProdutoDialog produto={selecionado} onOpenChange={(v) => !v && setSelecionado(null)} />
+
+      <FeedbackDialog
+        open={!!avaliando}
+        onOpenChange={(v) => !v && setAvaliando(null)}
+        pagina={avaliando?.slug}
+        placeholder={avaliando ? `Como foi usar o ${avaliando.nome}? Conta pra gente.` : undefined}
+      />
     </div>
   );
 }

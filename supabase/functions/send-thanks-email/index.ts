@@ -49,6 +49,7 @@ function renderTemplate(opts: {
   blocksHtml: string;
   ctaLabel: string;
   ctaUrl: string;
+  secondaryHtml?: string;
   footerNote?: string;
 }) {
   const name = firstName(opts.displayName);
