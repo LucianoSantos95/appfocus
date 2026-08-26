@@ -119,7 +119,13 @@ export function MetricasPanel() {
             .gte("created_at", desdeAnterior).lt("created_at", desde),
       sb.from("leads").select("id", { count: "exact", head: true })
         .neq("status", "legado").gte("created_at", desde),
-      sb.from("email_send_log").select("template_name,status").gte("created_at", desde),
+      sb.from("email_send_log")
+        .select("id,template_name,status,recipient_email,opened_at,created_at")
+        .neq("status", "pending")
+        .gte("created_at", desde)
+        .order("created_at", { ascending: false })
+        .limit(2000),
+
       sb.from("feedbacks").select("avaliacao,pagina"),
       sb.from("produtos").select("slug,nome"),
     ]);
