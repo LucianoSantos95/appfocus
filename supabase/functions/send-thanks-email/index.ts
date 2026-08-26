@@ -107,6 +107,8 @@ Deno.serve(async (req) => {
 
     const nome = String(body?.nome || "").trim().slice(0, 100) || null;
     const produtoNome = String(body?.produto_nome || "").trim().slice(0, 120);
+    // Slug é usado só para montar o link de avaliação — sanitizado no servidor.
+    const produtoSlug = String(body?.produto_slug || "").trim().slice(0, 120).replace(/[^a-zA-Z0-9_-]/g, "");
     const link = safeHttpUrl(String(body?.link || ""), `${SITE_URL}/`);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
