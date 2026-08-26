@@ -109,7 +109,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name?: string, inviteToken?: string) => {
+    // Hub Central não tem cadastro aberto — só o dono tem conta.
+    if (!isOwnerEmail(email)) {
+      return { error: new Error("Cadastro indisponível. O catálogo é aberto e não precisa de conta.") };
+    }
     // Read first-touch UTM from localStorage (set when user landed on /auth)
+
     let canalAquisicao: string | null = null;
     try {
       const raw = localStorage.getItem("hub_utm");
