@@ -114,6 +114,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
           email: email.trim().toLowerCase(),
           nome: nome.trim(),
           produto_nome: produto.nome,
+          produto_slug: produto.slug,
           link: produto.link_destino ?? undefined,
         },
       }).catch(() => {});
