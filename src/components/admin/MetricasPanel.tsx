@@ -466,7 +466,43 @@ export function MetricasPanel() {
 
                     {/* Últimos envios, um por linha: origem + abertura */}
                     <div className="mt-5 border-t border-border/60 pt-4 space-y-1.5">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Últimos envios</p>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground">Últimos envios</p>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`h-7 gap-1.5 px-2 ${filtroAtivo ? "text-primary" : "text-muted-foreground"}`}
+                              aria-label="Filtrar envios"
+                            >
+                              <SlidersHorizontal className="w-3.5 h-3.5" />
+                              <span className="text-xs">Filtrar</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuLabel>Origem</DropdownMenuLabel>
+                            <DropdownMenuRadioGroup value={filtroOrigem} onValueChange={(v) => { setFiltroOrigem(v as typeof filtroOrigem); setVerTodosEmails(false); }}>
+                              <DropdownMenuRadioItem value="todas">Todas</DropdownMenuRadioItem>
+                              {(Object.keys(ORIGEM_ROTULO) as Origem[]).map((o) => (
+                                <DropdownMenuRadioItem key={o} value={o}>{ORIGEM_ROTULO[o]}</DropdownMenuRadioItem>
+                              ))}
+                            </DropdownMenuRadioGroup>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Situação</DropdownMenuLabel>
+                            <DropdownMenuRadioGroup value={filtroStatus} onValueChange={(v) => { setFiltroStatus(v as typeof filtroStatus); setVerTodosEmails(false); }}>
+                              <DropdownMenuRadioItem value="todos">Todas</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="sent">Enviados</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="aberto">Abertos</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="nao_aberto">Não abertos</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="falhou">Falhas</DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      {ultimosEmails.length === 0 && (
+                        <p className="text-sm text-muted-foreground">Nenhum envio com esse filtro.</p>
+                      )}
                       {ultimosEmails.map((e) => {
                         const rastreado = temRastreio(e);
                         return (
