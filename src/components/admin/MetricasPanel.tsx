@@ -3,7 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus } from "lucide-react";
+import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
@@ -101,6 +111,9 @@ export function MetricasPanel() {
   const [nomes, setNomes] = useState<Record<string, string>>({});
   const [leadsTotal, setLeadsTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [filtroOrigem, setFiltroOrigem] = useState<"todas" | Origem>("todas");
+  const [filtroStatus, setFiltroStatus] = useState<"todos" | "sent" | "falhou" | "aberto" | "nao_aberto">("todos");
+  const [verTodosEmails, setVerTodosEmails] = useState(false);
 
   const comparavel = dias !== "0";
 
@@ -227,7 +240,17 @@ export function MetricasPanel() {
   const emailsFalhas = porOrigem.reduce((s, t) => s + t.falhas, 0);
   const emailsAbertos = porOrigem.reduce((s, t) => s + t.abertos, 0);
   const emailsRastreados = porOrigem.reduce((s, t) => s + t.rastreados, 0);
-  const ultimosEmails = emails.slice(0, 25);
+  // Lista de envios: filtro por origem e por situação (enviado / falhou / aberto)
+  const emailsFiltrados = emails.filter((e) => {
+    if (filtroOrigem !== "todas" && origemDe(e.template_name) !== filtroOrigem) return false;
+    if (filtroStatus === "sent") return e.status === "sent";
+    if (filtroStatus === "falhou") return e.status !== "sent";
+    if (filtroStatus === "aberto") return e.status === "sent" && !!e.opened_at;
+    if (filtroStatus === "nao_aberto") return e.status === "sent" && !e.opened_at && temRastreio(e);
+    return true;
+  });
+  const ultimosEmails = verTodosEmails ? emailsFiltrados.slice(0, 50) : emailsFiltrados.slice(0, 5);
+  const filtroAtivo = filtroOrigem !== "todas" || filtroStatus !== "todos";
 
 
   const etapas = [
@@ -443,7 +466,43 @@ export function MetricasPanel() {
 
                     {/* Últimos envios, um por linha: origem + abertura */}
                     <div className="mt-5 border-t border-border/60 pt-4 space-y-1.5">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Últimos envios</p>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground">Últimos envios</p>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`h-7 gap-1.5 px-2 ${filtroAtivo ? "text-primary" : "text-muted-foreground"}`}
+                              aria-label="Filtrar envios"
+                            >
+                              <SlidersHorizontal className="w-3.5 h-3.5" />
+                              <span className="text-xs">Filtrar</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuLabel>Origem</DropdownMenuLabel>
+                            <DropdownMenuRadioGroup value={filtroOrigem} onValueChange={(v) => { setFiltroOrigem(v as typeof filtroOrigem); setVerTodosEmails(false); }}>
+                              <DropdownMenuRadioItem value="todas">Todas</DropdownMenuRadioItem>
+                              {(Object.keys(ORIGEM_ROTULO) as Origem[]).map((o) => (
+                                <DropdownMenuRadioItem key={o} value={o}>{ORIGEM_ROTULO[o]}</DropdownMenuRadioItem>
+                              ))}
+                            </DropdownMenuRadioGroup>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Situação</DropdownMenuLabel>
+                            <DropdownMenuRadioGroup value={filtroStatus} onValueChange={(v) => { setFiltroStatus(v as typeof filtroStatus); setVerTodosEmails(false); }}>
+                              <DropdownMenuRadioItem value="todos">Todas</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="sent">Enviados</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="aberto">Abertos</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="nao_aberto">Não abertos</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="falhou">Falhas</DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      {ultimosEmails.length === 0 && (
+                        <p className="text-sm text-muted-foreground">Nenhum envio com esse filtro.</p>
+                      )}
                       {ultimosEmails.map((e) => {
                         const rastreado = temRastreio(e);
                         return (
@@ -470,6 +529,18 @@ export function MetricasPanel() {
                           </div>
                         );
                       })}
+
+                      {emailsFiltrados.length > 5 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-2 h-8 gap-1.5 text-muted-foreground"
+                          onClick={() => setVerTodosEmails((v) => !v)}
+                        >
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${verTodosEmails ? "rotate-180" : ""}`} />
+                          {verTodosEmails ? "Ver menos" : `Ver mais (${emailsFiltrados.length - 5})`}
+                        </Button>
+                      )}
                     </div>
 
                     <p className="mt-3 text-xs text-muted-foreground">
