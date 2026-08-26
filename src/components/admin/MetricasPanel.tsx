@@ -34,7 +34,14 @@ const graficoTendencia = {
 const sb = supabase as any;
 
 interface Linha { tipo: string; produto: string | null; sessao: string | null; created_at: string }
-interface EmailLinha { template_name: string; status: string }
+interface EmailLinha {
+  id: string;
+  template_name: string;
+  status: string;
+  recipient_email: string;
+  opened_at: string | null;
+  created_at: string;
+}
 
 const PERIODOS = [
   { v: "7",   label: "Últimos 7 dias" },
@@ -42,15 +49,31 @@ const PERIODOS = [
   { v: "0",   label: "Desde o início" },
 ];
 
-const ROTULO_TEMPLATE: Record<string, string> = {
-  thanks_produto: "Produto",
-  thanks_advisor: "Advisor",
-  thanks_feedback: "Feedback",
+// Origem do e-mail: de onde ele saiu, não qual template foi usado.
+type Origem = "produto" | "feedback" | "manual" | "advisor";
+
+const ORIGEM_ROTULO: Record<Origem, string> = {
+  produto: "Produto baixado",
+  feedback: "Feedback",
+  manual: "Envio manual",
+  advisor: "Contato Advisor",
 };
 
-function rotuloTemplate(nome: string) {
-  return ROTULO_TEMPLATE[nome] ?? nome.replace(/^thanks_/, "");
+function origemDe(template: string): Origem {
+  if (template === "thanks_produto") return "produto";
+  if (template === "thanks_feedback") return "feedback";
+  if (template === "thanks_advisor") return "advisor";
+  return "manual"; // subscriber_broadcast, promo_*, campanhas antigas
 }
+
+// Rastreio de abertura só existe a partir da instrumentação do pixel.
+// Antes disso não dá para dizer "não abriu" — dizemos "sem rastreio".
+const RASTREIO_DESDE = new Date("2026-08-26T00:00:00Z").getTime();
+
+function temRastreio(e: EmailLinha) {
+  return new Date(e.created_at).getTime() >= RASTREIO_DESDE;
+}
+
 
 function chaveDia(iso: string) {
   return iso.slice(0, 10);
