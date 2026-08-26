@@ -81,8 +81,10 @@ ${opts.secondaryHtml ? `<tr><td align="center" style="padding:0 36px 30px"><p st
     <span style="color:#4b5563">— Equipe Focus</span>
   </p>
 </td></tr>
+${opts.pixelHtml ?? ""}
 </table></td></tr></table></body></html>`;
 }
+
 
 function card(titulo: string, texto: string) {
   return `<div style="background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:18px;margin-bottom:10px"><strong style="color:#3b82f6;font-size:14px">${escapeHtml(titulo)}</strong><p style="margin:6px 0 0;color:#cbd5e1;font-size:14px;line-height:1.5">${escapeHtml(texto)}</p></div>`;
