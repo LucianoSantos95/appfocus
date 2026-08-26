@@ -1,10 +1,10 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { isOwnerEmail, PLATFORM_OWNER_EMAIL } from "@/lib/owner";
 
-export const PLATFORM_OWNER_EMAIL = "oluciano.dosantos@gmail.com";
+export { PLATFORM_OWNER_EMAIL };
 
 /** Acesso exclusivo do dono da plataforma (validado também no banco). */
 export function useOwnerAccess() {
   const { user, isLoading } = useAuth();
-  const isOwner = (user?.email || "").toLowerCase() === PLATFORM_OWNER_EMAIL;
-  return { isOwner, isLoading };
+  return { isOwner: isOwnerEmail(user?.email), isLoading };
 }
