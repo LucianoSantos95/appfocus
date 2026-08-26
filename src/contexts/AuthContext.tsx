@@ -3,6 +3,8 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearAllResources } from "@/lib/sharedResource";
 import { isDemoMode, DEMO_USER } from "@/lib/demo-fixtures";
+import { isOwnerEmail } from "@/lib/owner";
+
 
 interface AuthContextType {
   user: User | null;
@@ -23,11 +25,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (demo) return; // Modo demo não usa Supabase auth
+
+    // Regra dura: só o dono da plataforma pode manter sessão. Se qualquer
+    // outra conta conseguir autenticar (cadastro antigo, OAuth), derrubamos
+    // a sessão na hora. O catálogo é público e não precisa de login.
+    const aplicarSessao = (session: Session | null) => {
+      if (session && !isOwnerEmail(session.user?.email)) {
+        setSession(null);
+        setUser(null);
+        setIsLoading(false);
+        supabase.auth.signOut().catch(() => {});
+        return false;
+      }
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+      return true;
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
+        if (!aplicarSessao(session)) return;
 
         // After any sign-in (covers Google OAuth redirect), try to attribute UTM
         // if profiles.canal_aquisicao is still NULL (first-touch, never overwrites)
@@ -54,10 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
+      aplicarSessao(session);
     });
+
 
     return () => subscription.unsubscribe();
   }, [demo]);
@@ -92,7 +109,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name?: string, inviteToken?: string) => {
+    // Hub Central não tem cadastro aberto — só o dono tem conta.
+    if (!isOwnerEmail(email)) {
+      return { error: new Error("Cadastro indisponível. O catálogo é aberto e não precisa de conta.") };
+    }
     // Read first-touch UTM from localStorage (set when user landed on /auth)
+
     let canalAquisicao: string | null = null;
     try {
       const raw = localStorage.getItem("hub_utm");
