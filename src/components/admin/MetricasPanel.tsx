@@ -400,7 +400,7 @@ export function MetricasPanel() {
             <h3 className="font-display text-xl tracking-tight text-foreground mb-3">E-mails automáticos</h3>
             <Card className={emailsFalhas > 0 ? "border-destructive/40 bg-destructive/[0.04]" : undefined}>
               <CardContent className="p-5">
-                {porTemplate.length === 0 ? (
+                {porOrigem.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nenhum e-mail disparado no período.</p>
                 ) : (
                   <>
@@ -412,13 +412,25 @@ export function MetricasPanel() {
                       <span className={`text-sm tabular-nums ${emailsFalhas > 0 ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                         {emailsFalhas} falhou{emailsFalhas === 1 ? "" : "/falharam"}
                       </span>
+                      <span className="text-sm text-muted-foreground tabular-nums">
+                        {emailsRastreados > 0
+                          ? `${emailsAbertos} aberto${emailsAbertos === 1 ? "" : "s"} · ${pct(emailsAbertos, emailsRastreados)}% de abertura`
+                          : "abertura sem rastreio no período"}
+                      </span>
                     </div>
+
                     <div className="mt-4 space-y-2">
-                      {porTemplate.map((t) => (
-                        <div key={t.nome} className="flex items-center justify-between gap-3 text-sm">
-                          <span className="text-foreground">{t.nome}</span>
+                      {porOrigem.map((t) => (
+                        <div key={t.origem} className="flex items-center justify-between gap-3 text-sm">
+                          <span className="text-foreground">{ORIGEM_ROTULO[t.origem]}</span>
                           <span className="flex items-center gap-2 tabular-nums">
                             <Badge variant="outline" className="text-muted-foreground">{t.enviados} ok</Badge>
+                            {t.rastreados > 0 && (
+                              <Badge variant="outline" className="border-primary/50 text-primary gap-1">
+                                <MailOpen className="w-3 h-3" />
+                                {t.abertos} aberto{t.abertos === 1 ? "" : "s"} ({pct(t.abertos, t.rastreados)}%)
+                              </Badge>
+                            )}
                             {t.falhas > 0 && (
                               <Badge variant="outline" className="border-destructive/50 text-destructive">
                                 {t.falhas} falha{t.falhas === 1 ? "" : "s"}
@@ -428,6 +440,44 @@ export function MetricasPanel() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Últimos envios, um por linha: origem + abertura */}
+                    <div className="mt-5 border-t border-border/60 pt-4 space-y-1.5">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Últimos envios</p>
+                      {ultimosEmails.map((e) => {
+                        const rastreado = temRastreio(e);
+                        return (
+                          <div key={e.id} className="flex items-center justify-between gap-3 text-sm">
+                            <span className="truncate text-foreground" title={e.recipient_email}>
+                              {e.recipient_email}
+                            </span>
+                            <span className="flex items-center gap-2 shrink-0">
+                              <Badge variant="outline" className="text-muted-foreground">
+                                {ORIGEM_ROTULO[origemDe(e.template_name)]}
+                              </Badge>
+                              {e.status !== "sent" ? (
+                                <Badge variant="outline" className="border-destructive/50 text-destructive">falhou</Badge>
+                              ) : e.opened_at ? (
+                                <Badge variant="outline" className="border-primary/50 text-primary gap-1">
+                                  <MailOpen className="w-3 h-3" /> Aberto
+                                </Badge>
+                              ) : rastreado ? (
+                                <Badge variant="outline" className="text-muted-foreground">Não aberto</Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-muted-foreground">sem rastreio</Badge>
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      A abertura é medida por pixel de imagem — clientes como Gmail e Outlook às vezes bloqueiam ou
+                      pré-carregam imagens, então a taxa é uma aproximação. Envios anteriores à instrumentação aparecem
+                      como “sem rastreio”.
+                    </p>
+
                     {emailsFalhas > 0 && (
                       <p className="mt-3 text-xs text-destructive">
                         Há falhas de envio no período — vale checar o log de e-mails antes que o usuário reclame.
@@ -435,6 +485,7 @@ export function MetricasPanel() {
                     )}
                   </>
                 )}
+
               </CardContent>
             </Card>
           </div>
