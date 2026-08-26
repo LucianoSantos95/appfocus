@@ -337,6 +337,22 @@ Responda APENAS JSON válido (sem markdown), no formato:
 
       for (const r of recipients) {
         try {
+          // Log criado antes do envio: dá o id usado no pixel de abertura.
+          const { data: logRow } = await admin
+            .from("email_send_log")
+            .insert({
+              recipient_email: r.email,
+              status: "pending",
+              template_name: "subscriber_broadcast",
+              metadata: { audience, origem: "manual" },
+            })
+            .select("id")
+            .single();
+
+          const pixelHtml = logRow?.id
+            ? `<img src="${SUPABASE_URL}/functions/v1/track-email-open?m=${logRow.id}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;opacity:0" />`
+            : "";
+
           // Render personalizado por destinatário
           const html = renderTemplate({
             displayName: r.display_name,
@@ -345,6 +361,7 @@ Responda APENAS JSON válido (sem markdown), no formato:
             blocksHtml,
             ctaLabel,
             ctaUrl,
+            pixelHtml,
           });
           const personalizedText = (firstName(r.display_name)
             ? `Olá, ${firstName(r.display_name)}!\n\n`
@@ -358,25 +375,24 @@ Responda APENAS JSON válido (sem markdown), no formato:
             html,
             text: personalizedText || undefined,
           });
-          if (!result.ok) {
-            failed++;
-            await admin.from("email_send_log").insert({
-              recipient_email: r.email,
-              status: "failed",
-              template_name: "subscriber_broadcast",
-              error_message: (result.error ?? "unknown").slice(0, 500),
-              metadata: { audience },
-            });
+
+          const registro = result.ok
+            ? { status: "sent", message_id: result.id ?? null }
+            : { status: "failed", error_message: (result.error ?? "unknown").slice(0, 500) };
+
+          if (result.ok) sent++; else failed++;
+
+          if (logRow?.id) {
+            await admin.from("email_send_log").update(registro).eq("id", logRow.id);
           } else {
-            sent++;
             await admin.from("email_send_log").insert({
               recipient_email: r.email,
-              status: "sent",
               template_name: "subscriber_broadcast",
-              message_id: result.id ?? null,
-              metadata: { audience },
+              metadata: { audience, origem: "manual" },
+              ...registro,
             });
           }
+
 
           await new Promise((res) => setTimeout(res, 150));
         } catch (e) {
