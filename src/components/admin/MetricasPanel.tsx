@@ -240,7 +240,17 @@ export function MetricasPanel() {
   const emailsFalhas = porOrigem.reduce((s, t) => s + t.falhas, 0);
   const emailsAbertos = porOrigem.reduce((s, t) => s + t.abertos, 0);
   const emailsRastreados = porOrigem.reduce((s, t) => s + t.rastreados, 0);
-  const ultimosEmails = emails.slice(0, 25);
+  // Lista de envios: filtro por origem e por situação (enviado / falhou / aberto)
+  const emailsFiltrados = emails.filter((e) => {
+    if (filtroOrigem !== "todas" && origemDe(e.template_name) !== filtroOrigem) return false;
+    if (filtroStatus === "sent") return e.status === "sent";
+    if (filtroStatus === "falhou") return e.status !== "sent";
+    if (filtroStatus === "aberto") return e.status === "sent" && !!e.opened_at;
+    if (filtroStatus === "nao_aberto") return e.status === "sent" && !e.opened_at && temRastreio(e);
+    return true;
+  });
+  const ultimosEmails = verTodosEmails ? emailsFiltrados.slice(0, 50) : emailsFiltrados.slice(0, 5);
+  const filtroAtivo = filtroOrigem !== "todas" || filtroStatus !== "todos";
 
 
   const etapas = [
