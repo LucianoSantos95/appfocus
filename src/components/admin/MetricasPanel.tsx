@@ -111,6 +111,9 @@ export function MetricasPanel() {
   const [nomes, setNomes] = useState<Record<string, string>>({});
   const [leadsTotal, setLeadsTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [filtroOrigem, setFiltroOrigem] = useState<"todas" | Origem>("todas");
+  const [filtroStatus, setFiltroStatus] = useState<"todos" | "sent" | "falhou" | "aberto" | "nao_aberto">("todos");
+  const [verTodosEmails, setVerTodosEmails] = useState(false);
 
   const comparavel = dias !== "0";
 
