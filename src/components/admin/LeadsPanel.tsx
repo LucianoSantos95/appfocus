@@ -129,7 +129,14 @@ export function LeadsPanel() {
                     <div className="mt-1.5 flex items-center gap-4 flex-wrap text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" />{l.email}</span>
                       {l.empresa && <span className="inline-flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" />{l.empresa}</span>}
-                      <span className="font-mono">{new Date(l.created_at).toLocaleDateString("pt-BR")}</span>
+                      <span
+                        className="font-mono"
+                        title={new Date(l.created_at).toLocaleString("pt-BR", { dateStyle: "full", timeStyle: "medium", timeZone: "America/Sao_Paulo" })}
+                      >
+                        {new Date(l.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" })}
+                        {" · "}
+                        {new Date(l.created_at).toLocaleString("pt-BR", { timeStyle: "short", timeZone: "America/Sao_Paulo" })}
+                      </span>
                     </div>
                     {l.site && (
                       <a href={l.site} target="_blank" rel="noopener noreferrer"
