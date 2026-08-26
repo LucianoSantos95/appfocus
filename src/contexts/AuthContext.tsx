@@ -3,6 +3,8 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearAllResources } from "@/lib/sharedResource";
 import { isDemoMode, DEMO_USER } from "@/lib/demo-fixtures";
+import { isOwnerEmail } from "@/lib/owner";
+
 
 interface AuthContextType {
   user: User | null;
