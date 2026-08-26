@@ -60,7 +60,9 @@ function renderTemplate(opts: {
   ctaLabel: string;
   ctaUrl: string;
   footerNote?: string;
+  pixelHtml?: string;
 }) {
+
   const name = firstName(opts.displayName);
   const greeting = opts.greetingTone === "reengage"
     ? (name ? `${escapeHtml(name)}, temos novidades para você` : "Temos novidades para você")
