@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, Star, Minus } from "lucide-react";
+import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
@@ -34,7 +34,14 @@ const graficoTendencia = {
 const sb = supabase as any;
 
 interface Linha { tipo: string; produto: string | null; sessao: string | null; created_at: string }
-interface EmailLinha { template_name: string; status: string }
+interface EmailLinha {
+  id: string;
+  template_name: string;
+  status: string;
+  recipient_email: string;
+  opened_at: string | null;
+  created_at: string;
+}
 
 const PERIODOS = [
   { v: "7",   label: "Últimos 7 dias" },
@@ -42,15 +49,31 @@ const PERIODOS = [
   { v: "0",   label: "Desde o início" },
 ];
 
-const ROTULO_TEMPLATE: Record<string, string> = {
-  thanks_produto: "Produto",
-  thanks_advisor: "Advisor",
-  thanks_feedback: "Feedback",
+// Origem do e-mail: de onde ele saiu, não qual template foi usado.
+type Origem = "produto" | "feedback" | "manual" | "advisor";
+
+const ORIGEM_ROTULO: Record<Origem, string> = {
+  produto: "Produto baixado",
+  feedback: "Feedback",
+  manual: "Envio manual",
+  advisor: "Contato Advisor",
 };
 
-function rotuloTemplate(nome: string) {
-  return ROTULO_TEMPLATE[nome] ?? nome.replace(/^thanks_/, "");
+function origemDe(template: string): Origem {
+  if (template === "thanks_produto") return "produto";
+  if (template === "thanks_feedback") return "feedback";
+  if (template === "thanks_advisor") return "advisor";
+  return "manual"; // subscriber_broadcast, promo_*, campanhas antigas
 }
+
+// Rastreio de abertura só existe a partir da instrumentação do pixel.
+// Antes disso não dá para dizer "não abriu" — dizemos "sem rastreio".
+const RASTREIO_DESDE = new Date("2026-08-26T00:00:00Z").getTime();
+
+function temRastreio(e: EmailLinha) {
+  return new Date(e.created_at).getTime() >= RASTREIO_DESDE;
+}
+
 
 function chaveDia(iso: string) {
   return iso.slice(0, 10);
@@ -96,7 +119,13 @@ export function MetricasPanel() {
             .gte("created_at", desdeAnterior).lt("created_at", desde),
       sb.from("leads").select("id", { count: "exact", head: true })
         .neq("status", "legado").gte("created_at", desde),
-      sb.from("email_send_log").select("template_name,status").gte("created_at", desde),
+      sb.from("email_send_log")
+        .select("id,template_name,status,recipient_email,opened_at,created_at")
+        .neq("status", "pending")
+        .gte("created_at", desde)
+        .order("created_at", { ascending: false })
+        .limit(2000),
+
       sb.from("feedbacks").select("avaliacao,pagina"),
       sb.from("produtos").select("slug,nome"),
     ]);
@@ -176,18 +205,30 @@ export function MetricasPanel() {
     .map((d) => ({ data: d.data, visitas: d.visitas.size, cliques: d.cliques, leads: d.leads }))
     .sort((a, b) => a.data.localeCompare(b.data));
 
-  // E-mails automáticos por template
-  const porTemplate = Object.values(
-    emails.reduce((acc: Record<string, { nome: string; enviados: number; falhas: number }>, e) => {
-      acc[e.template_name] ??= { nome: rotuloTemplate(e.template_name), enviados: 0, falhas: 0 };
-      if (e.status === "sent") acc[e.template_name].enviados++;
-      else acc[e.template_name].falhas++;
+  // E-mails automáticos agrupados pela origem do disparo
+  const porOrigem = Object.entries(
+    emails.reduce((acc: Record<string, { enviados: number; falhas: number; abertos: number; rastreados: number }>, e) => {
+      const o = origemDe(e.template_name);
+      acc[o] ??= { enviados: 0, falhas: 0, abertos: 0, rastreados: 0 };
+      if (e.status === "sent") {
+        acc[o].enviados++;
+        if (temRastreio(e)) {
+          acc[o].rastreados++;
+          if (e.opened_at) acc[o].abertos++;
+        }
+      } else acc[o].falhas++;
       return acc;
     }, {}),
-  ).sort((a, b) => b.enviados + b.falhas - (a.enviados + a.falhas));
+  )
+    .map(([origem, v]) => ({ origem: origem as Origem, ...v }))
+    .sort((a, b) => b.enviados + b.falhas - (a.enviados + a.falhas));
 
-  const emailsEnviados = porTemplate.reduce((s, t) => s + t.enviados, 0);
-  const emailsFalhas = porTemplate.reduce((s, t) => s + t.falhas, 0);
+  const emailsEnviados = porOrigem.reduce((s, t) => s + t.enviados, 0);
+  const emailsFalhas = porOrigem.reduce((s, t) => s + t.falhas, 0);
+  const emailsAbertos = porOrigem.reduce((s, t) => s + t.abertos, 0);
+  const emailsRastreados = porOrigem.reduce((s, t) => s + t.rastreados, 0);
+  const ultimosEmails = emails.slice(0, 25);
+
 
   const etapas = [
     { rot: "Visitas",  val: visitas,  ant: anterior.visitas, icone: Eye,               sub: "sessões únicas" },
@@ -359,7 +400,7 @@ export function MetricasPanel() {
             <h3 className="font-display text-xl tracking-tight text-foreground mb-3">E-mails automáticos</h3>
             <Card className={emailsFalhas > 0 ? "border-destructive/40 bg-destructive/[0.04]" : undefined}>
               <CardContent className="p-5">
-                {porTemplate.length === 0 ? (
+                {porOrigem.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nenhum e-mail disparado no período.</p>
                 ) : (
                   <>
@@ -371,13 +412,25 @@ export function MetricasPanel() {
                       <span className={`text-sm tabular-nums ${emailsFalhas > 0 ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                         {emailsFalhas} falhou{emailsFalhas === 1 ? "" : "/falharam"}
                       </span>
+                      <span className="text-sm text-muted-foreground tabular-nums">
+                        {emailsRastreados > 0
+                          ? `${emailsAbertos} aberto${emailsAbertos === 1 ? "" : "s"} · ${pct(emailsAbertos, emailsRastreados)}% de abertura`
+                          : "abertura sem rastreio no período"}
+                      </span>
                     </div>
+
                     <div className="mt-4 space-y-2">
-                      {porTemplate.map((t) => (
-                        <div key={t.nome} className="flex items-center justify-between gap-3 text-sm">
-                          <span className="text-foreground">{t.nome}</span>
+                      {porOrigem.map((t) => (
+                        <div key={t.origem} className="flex items-center justify-between gap-3 text-sm">
+                          <span className="text-foreground">{ORIGEM_ROTULO[t.origem]}</span>
                           <span className="flex items-center gap-2 tabular-nums">
                             <Badge variant="outline" className="text-muted-foreground">{t.enviados} ok</Badge>
+                            {t.rastreados > 0 && (
+                              <Badge variant="outline" className="border-primary/50 text-primary gap-1">
+                                <MailOpen className="w-3 h-3" />
+                                {t.abertos} aberto{t.abertos === 1 ? "" : "s"} ({pct(t.abertos, t.rastreados)}%)
+                              </Badge>
+                            )}
                             {t.falhas > 0 && (
                               <Badge variant="outline" className="border-destructive/50 text-destructive">
                                 {t.falhas} falha{t.falhas === 1 ? "" : "s"}
@@ -387,6 +440,44 @@ export function MetricasPanel() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Últimos envios, um por linha: origem + abertura */}
+                    <div className="mt-5 border-t border-border/60 pt-4 space-y-1.5">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Últimos envios</p>
+                      {ultimosEmails.map((e) => {
+                        const rastreado = temRastreio(e);
+                        return (
+                          <div key={e.id} className="flex items-center justify-between gap-3 text-sm">
+                            <span className="truncate text-foreground" title={e.recipient_email}>
+                              {e.recipient_email}
+                            </span>
+                            <span className="flex items-center gap-2 shrink-0">
+                              <Badge variant="outline" className="text-muted-foreground">
+                                {ORIGEM_ROTULO[origemDe(e.template_name)]}
+                              </Badge>
+                              {e.status !== "sent" ? (
+                                <Badge variant="outline" className="border-destructive/50 text-destructive">falhou</Badge>
+                              ) : e.opened_at ? (
+                                <Badge variant="outline" className="border-primary/50 text-primary gap-1">
+                                  <MailOpen className="w-3 h-3" /> Aberto
+                                </Badge>
+                              ) : rastreado ? (
+                                <Badge variant="outline" className="text-muted-foreground">Não aberto</Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-muted-foreground">sem rastreio</Badge>
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      A abertura é medida por pixel de imagem — clientes como Gmail e Outlook às vezes bloqueiam ou
+                      pré-carregam imagens, então a taxa é uma aproximação. Envios anteriores à instrumentação aparecem
+                      como “sem rastreio”.
+                    </p>
+
                     {emailsFalhas > 0 && (
                       <p className="mt-3 text-xs text-destructive">
                         Há falhas de envio no período — vale checar o log de e-mails antes que o usuário reclame.
@@ -394,6 +485,7 @@ export function MetricasPanel() {
                     )}
                   </>
                 )}
+
               </CardContent>
             </Card>
           </div>

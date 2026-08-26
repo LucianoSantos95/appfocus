@@ -51,9 +51,11 @@ function renderTemplate(opts: {
   ctaUrl: string;
   secondaryHtml?: string;
   footerNote?: string;
+  pixelHtml?: string;
 }) {
   const name = firstName(opts.displayName);
   const greeting = name ? `Olá, ${escapeHtml(name)}!` : "Olá!";
+
 
   return `<!doctype html><html><body style="margin:0;padding:0;background:#0a0e1a;font-family:Inter,Arial,sans-serif;color:#e8ecf3">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0e1a"><tr><td align="center" style="padding:40px 20px">
@@ -79,8 +81,10 @@ ${opts.secondaryHtml ? `<tr><td align="center" style="padding:0 36px 30px"><p st
     <span style="color:#4b5563">— Equipe Focus</span>
   </p>
 </td></tr>
+${opts.pixelHtml ?? ""}
 </table></td></tr></table></body></html>`;
 }
+
 
 function card(titulo: string, texto: string) {
   return `<div style="background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:18px;margin-bottom:10px"><strong style="color:#3b82f6;font-size:14px">${escapeHtml(titulo)}</strong><p style="margin:6px 0 0;color:#cbd5e1;font-size:14px;line-height:1.5">${escapeHtml(texto)}</p></div>`;
@@ -155,6 +159,22 @@ Deno.serve(async (req) => {
       text = "Valeu pelo feedback! Sua opinião ajuda a decidir o que vem no Hub essa semana.";
     }
 
+    // Linha de log criada ANTES do envio para termos o id do pixel de abertura.
+    const { data: logRow } = await admin
+      .from("email_send_log")
+      .insert({
+        recipient_email: email,
+        status: "pending",
+        template_name: `thanks_${kind}`,
+        metadata: { produto: produtoNome || null, origem: kind },
+      })
+      .select("id")
+      .single();
+
+    const pixelHtml = logRow?.id
+      ? `<img src="${SUPABASE_URL}/functions/v1/track-email-open?m=${logRow.id}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;opacity:0" />`
+      : "";
+
     const html = renderTemplate({
       displayName: nome,
       introHtml,
@@ -162,18 +182,28 @@ Deno.serve(async (req) => {
       ctaLabel,
       ctaUrl,
       secondaryHtml,
+      pixelHtml,
     });
 
     const result = await sendResendEmail({ to: email, subject, html, text });
 
-    await admin.from("email_send_log").insert({
-      recipient_email: email,
+    const registro = {
       status: result.ok ? "sent" : "failed",
-      template_name: `thanks_${kind}`,
       message_id: result.ok ? (result.id ?? null) : null,
       error_message: result.ok ? null : (result.error ?? "unknown").slice(0, 500),
-      metadata: { produto: produtoNome || null },
-    });
+    };
+
+    if (logRow?.id) {
+      await admin.from("email_send_log").update(registro).eq("id", logRow.id);
+    } else {
+      await admin.from("email_send_log").insert({
+        recipient_email: email,
+        template_name: `thanks_${kind}`,
+        metadata: { produto: produtoNome || null, origem: kind },
+        ...registro,
+      });
+    }
+
 
     if (!result.ok) return json(502, { error: result.error ?? "send failed" });
     return json(200, { ok: true, id: result.id ?? null });
