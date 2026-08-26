@@ -159,6 +159,22 @@ Deno.serve(async (req) => {
       text = "Valeu pelo feedback! Sua opinião ajuda a decidir o que vem no Hub essa semana.";
     }
 
+    // Linha de log criada ANTES do envio para termos o id do pixel de abertura.
+    const { data: logRow } = await admin
+      .from("email_send_log")
+      .insert({
+        recipient_email: email,
+        status: "pending",
+        template_name: `thanks_${kind}`,
+        metadata: { produto: produtoNome || null, origem: kind },
+      })
+      .select("id")
+      .single();
+
+    const pixelHtml = logRow?.id
+      ? `<img src="${SUPABASE_URL}/functions/v1/track-email-open?m=${logRow.id}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;opacity:0" />`
+      : "";
+
     const html = renderTemplate({
       displayName: nome,
       introHtml,
@@ -166,18 +182,28 @@ Deno.serve(async (req) => {
       ctaLabel,
       ctaUrl,
       secondaryHtml,
+      pixelHtml,
     });
 
     const result = await sendResendEmail({ to: email, subject, html, text });
 
-    await admin.from("email_send_log").insert({
-      recipient_email: email,
+    const registro = {
       status: result.ok ? "sent" : "failed",
-      template_name: `thanks_${kind}`,
       message_id: result.ok ? (result.id ?? null) : null,
       error_message: result.ok ? null : (result.error ?? "unknown").slice(0, 500),
-      metadata: { produto: produtoNome || null },
-    });
+    };
+
+    if (logRow?.id) {
+      await admin.from("email_send_log").update(registro).eq("id", logRow.id);
+    } else {
+      await admin.from("email_send_log").insert({
+        recipient_email: email,
+        template_name: `thanks_${kind}`,
+        metadata: { produto: produtoNome || null, origem: kind },
+        ...registro,
+      });
+    }
+
 
     if (!result.ok) return json(502, { error: result.error ?? "send failed" });
     return json(200, { ok: true, id: result.id ?? null });
