@@ -455,6 +455,74 @@ export function MetricasPanel() {
             )}
           </div>
 
+          {/* Aprofundar em um produto ao longo do tempo */}
+          <div>
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+              <h3 className="font-display text-xl tracking-tight text-foreground">
+                Visualizações e downloads por produto
+              </h3>
+              <Select value={produtoSel} onValueChange={setProdutoSel}>
+                <SelectTrigger className="w-60"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os produtos</SelectItem>
+                  {slugsProduto.map((s) => (
+                    <SelectItem key={s} value={s}>{nomes[s] ?? s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Eye className="w-4 h-4" />
+                    <span className="text-xs uppercase tracking-wider font-medium">Visualizações</span>
+                  </div>
+                  <p className="mt-2 font-display text-4xl leading-none text-foreground tabular-nums">{totalVisualizacoes}</p>
+                  <p className="mt-1.5 text-xs text-muted-foreground">quem abriu o produto</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <UserPlus className="w-4 h-4" />
+                    <span className="text-xs uppercase tracking-wider font-medium">Downloads</span>
+                  </div>
+                  <p className="mt-2 font-display text-4xl leading-none text-foreground tabular-nums">{totalDownloads}</p>
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    {pct(totalDownloads, totalVisualizacoes)}% de quem visualizou
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="mt-3">
+              {serieProduto.length < 2 ? (
+                <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
+                  Ainda não há dados suficientes para desenhar esse produto ao longo do tempo.
+                </CardContent></Card>
+              ) : (
+                <Card>
+                  <CardContent className="p-5">
+                    <ChartContainer config={graficoProduto} className="w-full" style={{ height: 260 }}>
+                      <LineChart data={serieProduto} margin={{ left: 8, right: 16, top: 8 }}>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="data" tickFormatter={fmtEixo} tickLine={false} axisLine={false} minTickGap={16} tick={{ fontSize: 12 }} />
+                        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} tick={{ fontSize: 12 }} />
+                        <ChartTooltip content={<ChartTooltipContent labelFormatter={(v) => fmtEixo(String(v))} />} />
+                        <ChartLegend content={<ChartLegendContent />} />
+                        <Line type="monotone" dataKey="visualizacoes" stroke="var(--color-visualizacoes)" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="downloads" stroke="var(--color-downloads)" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+
+
           {/* Saúde dos e-mails automáticos */}
           <div>
             <h3 className="font-display text-xl tracking-tight text-foreground mb-3">E-mails automáticos</h3>
