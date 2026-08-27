@@ -37,6 +37,12 @@ const graficoTendencia = {
   leads: { label: "Leads", color: "hsl(var(--primary))" },
 } satisfies ChartConfig;
 
+// Visualizações (clique_produto) e downloads (lead_enviado) de um produto ao longo do tempo.
+const graficoProduto = {
+  visualizacoes: { label: "Visualizações", color: "hsl(var(--muted-foreground))" },
+  downloads: { label: "Downloads", color: "hsl(var(--primary))" },
+} satisfies ChartConfig;
+
 // Funil do catálogo: visita → clique → lead.
 // A leitura que importa: onde a pessoa desiste.
 //   pouco clique  = o produto não atrai
@@ -114,6 +120,7 @@ export function MetricasPanel() {
   const [filtroOrigem, setFiltroOrigem] = useState<"todas" | Origem>("todas");
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "sent" | "falhou" | "aberto" | "nao_aberto">("todos");
   const [verTodosEmails, setVerTodosEmails] = useState(false);
+  const [produtoSel, setProdutoSel] = useState("todos");
 
   const comparavel = dias !== "0";
 
@@ -217,6 +224,36 @@ export function MetricasPanel() {
   )
     .map((d) => ({ data: d.data, visitas: d.visitas.size, cliques: d.cliques, leads: d.leads }))
     .sort((a, b) => a.data.localeCompare(b.data));
+
+  // Visualizações e downloads por produto: mesmo agrupamento da tendência,
+  // mas filtrando pelo produto escolhido no seletor.
+  const slugsProduto = Array.from(
+    new Set([
+      ...Object.keys(nomes),
+      ...eventos.map((e) => e.produto).filter((p): p is string => !!p),
+    ]),
+  ).sort((a, b) => (nomes[a] ?? a).localeCompare(nomes[b] ?? b));
+
+  const eventosProduto = eventos.filter(
+    (e) =>
+      !!e.produto &&
+      (e.tipo === "clique_produto" || e.tipo === "lead_enviado") &&
+      (produtoSel === "todos" || e.produto === produtoSel),
+  );
+
+  const totalVisualizacoes = eventosProduto.filter((e) => e.tipo === "clique_produto").length;
+  const totalDownloads = eventosProduto.filter((e) => e.tipo === "lead_enviado").length;
+
+  const serieProduto = Object.values(
+    eventosProduto.reduce((acc: Record<string, { data: string; visualizacoes: number; downloads: number }>, e) => {
+      const k = chave(e.created_at);
+      acc[k] ??= { data: k, visualizacoes: 0, downloads: 0 };
+      if (e.tipo === "clique_produto") acc[k].visualizacoes++;
+      else acc[k].downloads++;
+      return acc;
+    }, {}),
+  ).sort((a, b) => a.data.localeCompare(b.data));
+
 
   // E-mails automáticos agrupados pela origem do disparo
   const porOrigem = Object.entries(
@@ -417,6 +454,74 @@ export function MetricasPanel() {
               </Card>
             )}
           </div>
+
+          {/* Aprofundar em um produto ao longo do tempo */}
+          <div>
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+              <h3 className="font-display text-xl tracking-tight text-foreground">
+                Visualizações e downloads por produto
+              </h3>
+              <Select value={produtoSel} onValueChange={setProdutoSel}>
+                <SelectTrigger className="w-60"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os produtos</SelectItem>
+                  {slugsProduto.map((s) => (
+                    <SelectItem key={s} value={s}>{nomes[s] ?? s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Eye className="w-4 h-4" />
+                    <span className="text-xs uppercase tracking-wider font-medium">Visualizações</span>
+                  </div>
+                  <p className="mt-2 font-display text-4xl leading-none text-foreground tabular-nums">{totalVisualizacoes}</p>
+                  <p className="mt-1.5 text-xs text-muted-foreground">quem abriu o produto</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <UserPlus className="w-4 h-4" />
+                    <span className="text-xs uppercase tracking-wider font-medium">Downloads</span>
+                  </div>
+                  <p className="mt-2 font-display text-4xl leading-none text-foreground tabular-nums">{totalDownloads}</p>
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    {pct(totalDownloads, totalVisualizacoes)}% de quem visualizou
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="mt-3">
+              {serieProduto.length < 2 ? (
+                <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
+                  Ainda não há dados suficientes para desenhar esse produto ao longo do tempo.
+                </CardContent></Card>
+              ) : (
+                <Card>
+                  <CardContent className="p-5">
+                    <ChartContainer config={graficoProduto} className="w-full" style={{ height: 260 }}>
+                      <LineChart data={serieProduto} margin={{ left: 8, right: 16, top: 8 }}>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="data" tickFormatter={fmtEixo} tickLine={false} axisLine={false} minTickGap={16} tick={{ fontSize: 12 }} />
+                        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} tick={{ fontSize: 12 }} />
+                        <ChartTooltip content={<ChartTooltipContent labelFormatter={(v) => fmtEixo(String(v))} />} />
+                        <ChartLegend content={<ChartLegendContent />} />
+                        <Line type="monotone" dataKey="visualizacoes" stroke="var(--color-visualizacoes)" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="downloads" stroke="var(--color-downloads)" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+
 
           {/* Saúde dos e-mails automáticos */}
           <div>
