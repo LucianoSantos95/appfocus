@@ -37,6 +37,12 @@ const graficoTendencia = {
   leads: { label: "Leads", color: "hsl(var(--primary))" },
 } satisfies ChartConfig;
 
+// Visualizações (clique_produto) e downloads (lead_enviado) de um produto ao longo do tempo.
+const graficoProduto = {
+  visualizacoes: { label: "Visualizações", color: "hsl(var(--muted-foreground))" },
+  downloads: { label: "Downloads", color: "hsl(var(--primary))" },
+} satisfies ChartConfig;
+
 // Funil do catálogo: visita → clique → lead.
 // A leitura que importa: onde a pessoa desiste.
 //   pouco clique  = o produto não atrai
