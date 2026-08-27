@@ -225,6 +225,36 @@ export function MetricasPanel() {
     .map((d) => ({ data: d.data, visitas: d.visitas.size, cliques: d.cliques, leads: d.leads }))
     .sort((a, b) => a.data.localeCompare(b.data));
 
+  // Visualizações e downloads por produto: mesmo agrupamento da tendência,
+  // mas filtrando pelo produto escolhido no seletor.
+  const slugsProduto = Array.from(
+    new Set([
+      ...Object.keys(nomes),
+      ...eventos.map((e) => e.produto).filter((p): p is string => !!p),
+    ]),
+  ).sort((a, b) => (nomes[a] ?? a).localeCompare(nomes[b] ?? b));
+
+  const eventosProduto = eventos.filter(
+    (e) =>
+      !!e.produto &&
+      (e.tipo === "clique_produto" || e.tipo === "lead_enviado") &&
+      (produtoSel === "todos" || e.produto === produtoSel),
+  );
+
+  const totalVisualizacoes = eventosProduto.filter((e) => e.tipo === "clique_produto").length;
+  const totalDownloads = eventosProduto.filter((e) => e.tipo === "lead_enviado").length;
+
+  const serieProduto = Object.values(
+    eventosProduto.reduce((acc: Record<string, { data: string; visualizacoes: number; downloads: number }>, e) => {
+      const k = chave(e.created_at);
+      acc[k] ??= { data: k, visualizacoes: 0, downloads: 0 };
+      if (e.tipo === "clique_produto") acc[k].visualizacoes++;
+      else acc[k].downloads++;
+      return acc;
+    }, {}),
+  ).sort((a, b) => a.data.localeCompare(b.data));
+
+
   // E-mails automáticos agrupados pela origem do disparo
   const porOrigem = Object.entries(
     emails.reduce((acc: Record<string, { enviados: number; falhas: number; abertos: number; rastreados: number }>, e) => {
