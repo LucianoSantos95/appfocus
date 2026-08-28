@@ -156,6 +156,7 @@ export default function Central() {
   const { produtos, loading } = useProdutos();
   const [selecionado, setSelecionado] = useState<Produto | null>(null);
   const [avaliando, setAvaliando] = useState<Produto | null>(null);
+  const [feedbackGeral, setFeedbackGeral] = useState(false);
   const [params, setParams] = useSearchParams();
 
   useEffect(() => { registrarEvento("visita_catalogo"); }, []);
@@ -249,6 +250,22 @@ export default function Central() {
               / Pegue o que precisar, sem cadastro e sem custos
             </p>
           </div>
+        </div>
+
+        {/* Convite direto ao feedback para quem só navega e não converte. */}
+        <div className="mx-auto mt-10 flex max-w-3xl flex-col items-start gap-4 rounded-2xl border border-primary/30 bg-card/60 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <Pill tom="primario">Semana de validação</Pill>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              Essa semana estamos testando o Hub Central — sua opinião ajuda a decidir o que vem por aí.
+            </p>
+          </div>
+          <Button
+            onClick={() => setFeedbackGeral(true)}
+            className="shrink-0 gap-1.5 rounded-full"
+          >
+            Deixar minha opinião <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
         </div>
 
         {loading ? (
@@ -349,6 +366,12 @@ export default function Central() {
         onOpenChange={(v) => !v && setAvaliando(null)}
         pagina={avaliando?.slug}
         placeholder={avaliando ? `Como foi usar o ${avaliando.nome}? Conta pra gente.` : undefined}
+      />
+
+      <FeedbackDialog
+        open={feedbackGeral}
+        onOpenChange={setFeedbackGeral}
+        placeholder="O que achou do Hub Central? O que faltou pra você?"
       />
     </div>
   );
