@@ -352,13 +352,35 @@ export function MetricasPanel() {
         <p className="text-sm text-muted-foreground">
           Visitas e cliques vêm do próprio catálogo. O Google Analytics segue medindo tráfego e origem.
         </p>
-        <Select value={dias} onValueChange={setDias}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {PERIODOS.map((p) => <SelectItem key={p.v} value={p.v}>{p.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5" disabled={loading}>
+                <Download className="w-3.5 h-3.5" /> Exportar CSV
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel>Baixar dados do período</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={exportarEventos} className="flex-col items-start gap-0.5">
+                <span>Eventos brutos ({eventos.length})</span>
+                <span className="text-xs text-muted-foreground">data, tipo, produto, sessão</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={exportarResumo} className="flex-col items-start gap-0.5">
+                <span>Resumo por produto ({porProduto.length})</span>
+                <span className="text-xs text-muted-foreground">cliques, leads, conversão e nota</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Select value={dias} onValueChange={setDias}>
+            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {PERIODOS.map((p) => <SelectItem key={p.v} value={p.v}>{p.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
