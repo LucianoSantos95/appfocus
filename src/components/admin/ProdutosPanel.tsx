@@ -196,6 +196,30 @@ export function ProdutosPanel() {
         </Button>
       </div>
 
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <Label htmlFor="pr-ia">Colar link do produto</Label>
+          <div className="flex gap-2 flex-wrap">
+            <Input
+              id="pr-ia"
+              value={linkIA}
+              onChange={(e) => setLinkIA(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !extraindo) preencherComIA(); }}
+              placeholder="https://…"
+              className="flex-1 min-w-[220px]"
+            />
+            <Button onClick={preencherComIA} disabled={extraindo} variant="secondary" className="gap-2">
+              {extraindo ? <><Loader2 className="w-4 h-4 animate-spin" /> Lendo…</> : <><Sparkles className="w-4 h-4" /> Preencher com IA</>}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            A IA lê a página e monta um rascunho (nome, descrição, detalhes e capa). Nada é salvo sem você confirmar.
+          </p>
+        </CardContent>
+      </Card>
+
+
+
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : produtos.length === 0 ? (
