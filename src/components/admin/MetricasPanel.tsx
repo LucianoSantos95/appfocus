@@ -505,7 +505,7 @@ export function MetricasPanel() {
                     className="w-full"
                     style={{ height: Math.max(160, porProduto.length * 56) }}
                   >
-                    <BarChart data={porProduto} layout="vertical" margin={{ left: 8, right: 16 }} barGap={4}>
+                    <BarChart data={porProduto} layout="vertical" margin={{ left: 8, right: 56 }} barGap={4}>
                       <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} />
                       <YAxis
@@ -516,11 +516,32 @@ export function MetricasPanel() {
                         axisLine={false}
                         tick={{ fontSize: 12 }}
                       />
-                      <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "hsl(var(--muted) / 0.4)" }} />
+                      <ChartTooltip
+                        content={
+                          <ChartTooltipContent
+                            labelFormatter={(v, p) => {
+                              const d = p?.[0]?.payload as { produto: string; taxa: number } | undefined;
+                              return d ? `${d.produto} · ${d.taxa}% de conversão` : String(v);
+                            }}
+                          />
+                        }
+                        cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
+                      />
                       <ChartLegend content={<ChartLegendContent />} />
                       <Bar dataKey="cliques" fill="var(--color-cliques)" radius={[0, 4, 4, 0]} />
-                      <Bar dataKey="leads" fill="var(--color-leads)" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="leads" fill="var(--color-leads)" radius={[0, 4, 4, 0]}>
+                        {/* conversão como rótulo: mesma leitura, sem competir de escala */}
+                        <LabelList
+                          dataKey="taxa"
+                          position="right"
+                          offset={8}
+                          className="fill-muted-foreground"
+                          fontSize={11}
+                          formatter={(v: number) => `${v}%`}
+                        />
+                      </Bar>
                     </BarChart>
+
                   </ChartContainer>
                 </CardContent>
               </Card>
