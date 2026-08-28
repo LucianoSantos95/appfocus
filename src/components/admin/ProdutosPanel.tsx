@@ -72,6 +72,47 @@ export function ProdutosPanel() {
   const [editando, setEditando] = useState<Produto | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [subindo, setSubindo] = useState(false);
+  const [linkIA, setLinkIA] = useState("");
+  const [extraindo, setExtraindo] = useState(false);
+
+  const preencherComIA = async () => {
+    const url = linkIA.trim();
+    if (!url) return toast({ title: "Cole o link do produto", variant: "destructive" });
+    setExtraindo(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-produto-info", { body: { url } });
+      if (error) throw error;
+      if (!data?.nome && !data?.capa) throw new Error("Nada útil veio desse link");
+      setEditando({
+        ...VAZIO,
+        ordem: produtos.length + 1,
+        nome: data.nome || "",
+        slug: slugify(data.nome || ""),
+        descricao: data.descricao ?? "",
+        detalhes: data.detalhes ?? "",
+        tipo: data.tipo ?? "notion",
+        gratuito: data.gratuito ?? true,
+        preco: data.preco ?? null,
+        emoji: data.emoji || "📦",
+        capa: data.capa ?? null,
+        link_destino: data.link_destino || url,
+      });
+      setLinkIA("");
+      toast({
+        title: "Rascunho pronto",
+        description: data.capa ? "Revise e salve." : "Sem imagem de capa no link — envie uma manualmente.",
+      });
+    } catch (e: any) {
+      toast({
+        title: "Não consegui preencher pela IA",
+        description: e?.message || "Cadastre manualmente.",
+        variant: "destructive",
+      });
+    } finally {
+      setExtraindo(false);
+    }
+  };
+
 
   const carregar = useCallback(async () => {
     setLoading(true);
