@@ -156,6 +156,7 @@ export default function Central() {
   const { produtos, loading } = useProdutos();
   const [selecionado, setSelecionado] = useState<Produto | null>(null);
   const [avaliando, setAvaliando] = useState<Produto | null>(null);
+  const [feedbackGeral, setFeedbackGeral] = useState(false);
   const [params, setParams] = useSearchParams();
 
   useEffect(() => { registrarEvento("visita_catalogo"); }, []);
@@ -365,6 +366,12 @@ export default function Central() {
         onOpenChange={(v) => !v && setAvaliando(null)}
         pagina={avaliando?.slug}
         placeholder={avaliando ? `Como foi usar o ${avaliando.nome}? Conta pra gente.` : undefined}
+      />
+
+      <FeedbackDialog
+        open={feedbackGeral}
+        onOpenChange={setFeedbackGeral}
+        placeholder="O que achou do Hub Central? O que faltou pra você?"
       />
     </div>
   );
