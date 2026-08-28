@@ -105,6 +105,15 @@ export function LeadsPanel() {
             <Input value={q} onChange={(e) => setQ(e.target.value)} className="pl-9 w-60"
               placeholder="Buscar por nome, empresa, produto…" />
           </div>
+          <Select value={produto} onValueChange={setProduto}>
+            <SelectTrigger className="w-52"><SelectValue placeholder="Produto" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os produtos</SelectItem>
+              {produtos.map((p) => (
+                <SelectItem key={p.slug} value={p.slug}>{p.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={filtro} onValueChange={setFiltro}>
             <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
             <SelectContent>
