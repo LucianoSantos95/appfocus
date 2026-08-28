@@ -3,18 +3,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown, Download, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, Line, LineChart, XAxis, YAxis } from "recharts";
+
 import {
   ChartContainer,
   ChartLegend,
@@ -107,6 +110,24 @@ function fmtEixo(chave: string) {
   const [, m, d] = chave.split("-");
   return `${d}/${m}`;
 }
+
+// Exportação client-side: monta o CSV na memória e baixa via Blob.
+// Separador ";" e BOM porque o destino é o Excel em pt-BR.
+function celula(v: unknown) {
+  const s = v === null || v === undefined ? "" : String(v);
+  return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function baixarCsv(nome: string, linhas: (string | number | null)[][]) {
+  const csv = linhas.map((l) => l.map(celula).join(";")).join("\r\n");
+  const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nome;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 
 export function MetricasPanel() {
   const [dias, setDias] = useState("30");
@@ -202,7 +223,36 @@ export function MetricasPanel() {
       if (e.tipo === "lead_enviado") acc[e.produto].leads++;
       return acc;
     }, {}),
-  ).sort((a, b) => b.cliques - a.cliques);
+  )
+    .sort((a, b) => b.cliques - a.cliques)
+    // taxa vai como rótulo de texto, não como barra: a escala é outra
+    .map((p) => ({ ...p, taxa: pct(p.leads, p.cliques) }));
+
+  const periodoRotulo = dias === "0" ? "tudo" : `${dias}d`;
+  const hoje = new Date().toISOString().slice(0, 10);
+
+  const exportarEventos = () =>
+    baixarCsv(`eventos-${periodoRotulo}-${hoje}.csv`, [
+      ["data", "tipo", "produto", "sessao"],
+      ...[...eventos]
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))
+        .map((e) => [e.created_at, e.tipo, e.produto ?? "", e.sessao ?? ""]),
+    ]);
+
+  const exportarResumo = () =>
+    baixarCsv(`resumo-por-produto-${periodoRotulo}-${hoje}.csv`, [
+      ["produto", "slug", "cliques", "leads", "conversao_%", "nota_media", "avaliacoes"],
+      ...porProduto.map((p) => [
+        p.produto,
+        p.slug,
+        p.cliques,
+        p.leads,
+        p.taxa,
+        notas[p.slug] ? notas[p.slug].media.toFixed(1).replace(".", ",") : "",
+        notas[p.slug]?.qtd ?? 0,
+      ]),
+    ]);
+
 
   // Tendência: dia a dia; agrupa por semana quando o intervalo passa de ~60 dias
   const datas = eventos.map((e) => e.created_at).sort();
@@ -302,13 +352,35 @@ export function MetricasPanel() {
         <p className="text-sm text-muted-foreground">
           Visitas e cliques vêm do próprio catálogo. O Google Analytics segue medindo tráfego e origem.
         </p>
-        <Select value={dias} onValueChange={setDias}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {PERIODOS.map((p) => <SelectItem key={p.v} value={p.v}>{p.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5" disabled={loading}>
+                <Download className="w-3.5 h-3.5" /> Exportar CSV
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel>Baixar dados do período</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={exportarEventos} className="flex-col items-start gap-0.5">
+                <span>Eventos brutos ({eventos.length})</span>
+                <span className="text-xs text-muted-foreground">data, tipo, produto, sessão</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={exportarResumo} className="flex-col items-start gap-0.5">
+                <span>Resumo por produto ({porProduto.length})</span>
+                <span className="text-xs text-muted-foreground">cliques, leads, conversão e nota</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Select value={dias} onValueChange={setDias}>
+            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {PERIODOS.map((p) => <SelectItem key={p.v} value={p.v}>{p.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
@@ -433,7 +505,7 @@ export function MetricasPanel() {
                     className="w-full"
                     style={{ height: Math.max(160, porProduto.length * 56) }}
                   >
-                    <BarChart data={porProduto} layout="vertical" margin={{ left: 8, right: 16 }} barGap={4}>
+                    <BarChart data={porProduto} layout="vertical" margin={{ left: 8, right: 56 }} barGap={4}>
                       <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} />
                       <YAxis
@@ -444,11 +516,32 @@ export function MetricasPanel() {
                         axisLine={false}
                         tick={{ fontSize: 12 }}
                       />
-                      <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "hsl(var(--muted) / 0.4)" }} />
+                      <ChartTooltip
+                        content={
+                          <ChartTooltipContent
+                            labelFormatter={(v, p) => {
+                              const d = p?.[0]?.payload as { produto: string; taxa: number } | undefined;
+                              return d ? `${d.produto} · ${d.taxa}% de conversão` : String(v);
+                            }}
+                          />
+                        }
+                        cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
+                      />
                       <ChartLegend content={<ChartLegendContent />} />
                       <Bar dataKey="cliques" fill="var(--color-cliques)" radius={[0, 4, 4, 0]} />
-                      <Bar dataKey="leads" fill="var(--color-leads)" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="leads" fill="var(--color-leads)" radius={[0, 4, 4, 0]}>
+                        {/* conversão como rótulo: mesma leitura, sem competir de escala */}
+                        <LabelList
+                          dataKey="taxa"
+                          position="right"
+                          offset={8}
+                          className="fill-muted-foreground"
+                          fontSize={11}
+                          formatter={(v: number) => `${v}%`}
+                        />
+                      </Bar>
                     </BarChart>
+
                   </ChartContainer>
                 </CardContent>
               </Card>
@@ -471,6 +564,17 @@ export function MetricasPanel() {
                 </SelectContent>
               </Select>
             </div>
+
+            {produtoSel !== "todos" && (
+              <div className="-mt-1 mb-3">
+                <Button variant="link" size="sm" asChild className="h-auto p-0 gap-1 text-xs">
+                  <Link to={`/admin?aba=leads&leadProduto=${encodeURIComponent(produtoSel)}`}>
+                    Ver leads desse produto <ArrowUpRight className="w-3 h-3" />
+                  </Link>
+                </Button>
+              </div>
+            )}
+
 
             <div className="grid gap-3 sm:grid-cols-2">
               <Card>
