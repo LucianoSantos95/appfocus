@@ -565,6 +565,17 @@ export function MetricasPanel() {
               </Select>
             </div>
 
+            {produtoSel !== "todos" && (
+              <div className="-mt-1 mb-3">
+                <Button variant="link" size="sm" asChild className="h-auto p-0 gap-1 text-xs">
+                  <Link to={`/admin?aba=leads&leadProduto=${encodeURIComponent(produtoSel)}`}>
+                    Ver leads desse produto <ArrowUpRight className="w-3 h-3" />
+                  </Link>
+                </Button>
+              </div>
+            )}
+
+
             <div className="grid gap-3 sm:grid-cols-2">
               <Card>
                 <CardContent className="p-5">
