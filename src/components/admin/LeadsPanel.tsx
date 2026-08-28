@@ -203,6 +203,13 @@ export function LeadsPanel() {
               </Card>
             );
           })}
+          {restantes > 0 && (
+            <div className="flex justify-center pt-1">
+              <Button variant="outline" size="sm" onClick={() => setVisiveis((v) => v + PASSO)}>
+                Ver mais ({restantes} restante{restantes > 1 ? "s" : ""})
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
