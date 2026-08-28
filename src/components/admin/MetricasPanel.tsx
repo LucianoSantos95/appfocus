@@ -223,7 +223,36 @@ export function MetricasPanel() {
       if (e.tipo === "lead_enviado") acc[e.produto].leads++;
       return acc;
     }, {}),
-  ).sort((a, b) => b.cliques - a.cliques);
+  )
+    .sort((a, b) => b.cliques - a.cliques)
+    // taxa vai como rótulo de texto, não como barra: a escala é outra
+    .map((p) => ({ ...p, taxa: pct(p.leads, p.cliques) }));
+
+  const periodoRotulo = dias === "0" ? "tudo" : `${dias}d`;
+  const hoje = new Date().toISOString().slice(0, 10);
+
+  const exportarEventos = () =>
+    baixarCsv(`eventos-${periodoRotulo}-${hoje}.csv`, [
+      ["data", "tipo", "produto", "sessao"],
+      ...[...eventos]
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))
+        .map((e) => [e.created_at, e.tipo, e.produto ?? "", e.sessao ?? ""]),
+    ]);
+
+  const exportarResumo = () =>
+    baixarCsv(`resumo-por-produto-${periodoRotulo}-${hoje}.csv`, [
+      ["produto", "slug", "cliques", "leads", "conversao_%", "nota_media", "avaliacoes"],
+      ...porProduto.map((p) => [
+        p.produto,
+        p.slug,
+        p.cliques,
+        p.leads,
+        p.taxa,
+        notas[p.slug] ? notas[p.slug].media.toFixed(1).replace(".", ",") : "",
+        notas[p.slug]?.qtd ?? 0,
+      ]),
+    ]);
+
 
   // Tendência: dia a dia; agrupa por semana quando o intervalo passa de ~60 dias
   const datas = eventos.map((e) => e.created_at).sort();
