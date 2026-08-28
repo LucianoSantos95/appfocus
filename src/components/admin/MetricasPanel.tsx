@@ -111,6 +111,24 @@ function fmtEixo(chave: string) {
   return `${d}/${m}`;
 }
 
+// Exportação client-side: monta o CSV na memória e baixa via Blob.
+// Separador ";" e BOM porque o destino é o Excel em pt-BR.
+function celula(v: unknown) {
+  const s = v === null || v === undefined ? "" : String(v);
+  return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function baixarCsv(nome: string, linhas: (string | number | null)[][]) {
+  const csv = linhas.map((l) => l.map(celula).join(";")).join("\r\n");
+  const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nome;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+
 export function MetricasPanel() {
   const [dias, setDias] = useState("30");
   const [eventos, setEventos] = useState<Linha[]>([]);
