@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Loader2, ExternalLink, GripVertical, Upload, X, ArrowLeft, ArrowRight } from "lucide-react";
+import { Plus, Pencil, Loader2, ExternalLink, GripVertical, Upload, X, ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 
 // CRUD do catálogo. É o que permite publicar produto novo sem depender de código.
 const sb = supabase as any;
@@ -72,6 +72,47 @@ export function ProdutosPanel() {
   const [editando, setEditando] = useState<Produto | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [subindo, setSubindo] = useState(false);
+  const [linkIA, setLinkIA] = useState("");
+  const [extraindo, setExtraindo] = useState(false);
+
+  const preencherComIA = async () => {
+    const url = linkIA.trim();
+    if (!url) return toast({ title: "Cole o link do produto", variant: "destructive" });
+    setExtraindo(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-produto-info", { body: { url } });
+      if (error) throw error;
+      if (!data?.nome && !data?.capa) throw new Error("Nada útil veio desse link");
+      setEditando({
+        ...VAZIO,
+        ordem: produtos.length + 1,
+        nome: data.nome || "",
+        slug: slugify(data.nome || ""),
+        descricao: data.descricao ?? "",
+        detalhes: data.detalhes ?? "",
+        tipo: data.tipo ?? "notion",
+        gratuito: data.gratuito ?? true,
+        preco: data.preco ?? null,
+        emoji: data.emoji || "📦",
+        capa: data.capa ?? null,
+        link_destino: data.link_destino || url,
+      });
+      setLinkIA("");
+      toast({
+        title: "Rascunho pronto",
+        description: data.capa ? "Revise e salve." : "Sem imagem de capa no link — envie uma manualmente.",
+      });
+    } catch (e: any) {
+      toast({
+        title: "Não consegui preencher pela IA",
+        description: e?.message || "Cadastre manualmente.",
+        variant: "destructive",
+      });
+    } finally {
+      setExtraindo(false);
+    }
+  };
+
 
   const carregar = useCallback(async () => {
     setLoading(true);
@@ -154,6 +195,30 @@ export function ProdutosPanel() {
           <Plus className="w-4 h-4" /> Novo produto
         </Button>
       </div>
+
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <Label htmlFor="pr-ia">Colar link do produto</Label>
+          <div className="flex gap-2 flex-wrap">
+            <Input
+              id="pr-ia"
+              value={linkIA}
+              onChange={(e) => setLinkIA(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !extraindo) preencherComIA(); }}
+              placeholder="https://…"
+              className="flex-1 min-w-[220px]"
+            />
+            <Button onClick={preencherComIA} disabled={extraindo} variant="secondary" className="gap-2">
+              {extraindo ? <><Loader2 className="w-4 h-4 animate-spin" /> Lendo…</> : <><Sparkles className="w-4 h-4" /> Preencher com IA</>}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            A IA lê a página e monta um rascunho (nome, descrição, detalhes e capa). Nada é salvo sem você confirmar.
+          </p>
+        </CardContent>
+      </Card>
+
+
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
