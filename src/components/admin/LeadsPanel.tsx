@@ -143,7 +143,7 @@ export function LeadsPanel() {
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {filtrados.map((l) => {
+          {mostrados.map((l) => {
             const st = STATUS[l.status] || STATUS.novo;
             return (
               <Card key={l.id} className="transition-colors hover:border-primary/30">
