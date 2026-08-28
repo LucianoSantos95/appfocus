@@ -35,23 +35,33 @@ const STATUS: Record<string, { label: string; cls: string }> = {
   legado:     { label: "Base antiga", cls: "bg-muted text-muted-foreground border-border" },
 };
 
-export function LeadsPanel() {
-  // `?leadProduto=slug` (vindo das Métricas) já abre a lista filtrada.
-  // `leads.produto` guarda o slug, então a busca textual existente basta.
-  const [params] = useSearchParams();
-  const produtoUrl = params.get("leadProduto") ?? "";
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState(produtoUrl);
-  const [filtro, setFiltro] = useState("reais");
+const INICIAL = 5;
+const PASSO = 10;
 
-  useEffect(() => { if (produtoUrl) setQ(produtoUrl); }, [produtoUrl]);
+export function LeadsPanel() {
+  // `?leadProduto=slug` (vindo das Métricas) pré-seleciona o filtro dedicado
+  // por produto — mais preciso que match de substring na busca textual.
+  const [params] = useSearchParams();
+  const produtoUrl = params.get("leadProduto") ?? "todos";
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [produtos, setProdutos] = useState<Array<{ slug: string; nome: string }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+  const [filtro, setFiltro] = useState("reais");
+  const [produto, setProduto] = useState(produtoUrl);
+  const [visiveis, setVisiveis] = useState(INICIAL);
+
+  useEffect(() => { if (produtoUrl) setProduto(produtoUrl); }, [produtoUrl]);
 
 
   const carregar = useCallback(async () => {
     setLoading(true);
-    const { data } = await sb.from("leads").select("*").order("created_at", { ascending: false });
+    const [{ data }, { data: prods }] = await Promise.all([
+      sb.from("leads").select("*").order("created_at", { ascending: false }),
+      sb.from("produtos").select("slug,nome").order("ordem", { ascending: true }),
+    ]);
     setLeads((data as Lead[]) || []);
+    setProdutos((prods as Array<{ slug: string; nome: string }>) || []);
     setLoading(false);
   }, []);
 
@@ -67,11 +77,18 @@ export function LeadsPanel() {
     return leads.filter((l) => {
       if (filtro === "reais" && l.status === "legado") return false;
       if (filtro !== "todos" && filtro !== "reais" && l.status !== filtro) return false;
+      if (produto !== "todos" && l.produto !== produto) return false;
       if (!termo) return true;
       return [l.nome, l.email, l.empresa, l.site, l.produto, l.customizacao]
         .some((v) => (v || "").toLowerCase().includes(termo));
     });
-  }, [leads, q, filtro]);
+  }, [leads, q, filtro, produto]);
+
+  // Qualquer mudança de filtro volta pra primeira "página".
+  useEffect(() => { setVisiveis(INICIAL); }, [q, filtro, produto]);
+
+  const mostrados = filtrados.slice(0, visiveis);
+  const restantes = filtrados.length - mostrados.length;
 
   const novos = leads.filter((l) => l.status === "novo").length;
 
