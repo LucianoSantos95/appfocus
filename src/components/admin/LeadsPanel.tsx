@@ -36,10 +36,17 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 export function LeadsPanel() {
+  // `?leadProduto=slug` (vindo das Métricas) já abre a lista filtrada.
+  // `leads.produto` guarda o slug, então a busca textual existente basta.
+  const [params] = useSearchParams();
+  const produtoUrl = params.get("leadProduto") ?? "";
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(produtoUrl);
   const [filtro, setFiltro] = useState("reais");
+
+  useEffect(() => { if (produtoUrl) setQ(produtoUrl); }, [produtoUrl]);
+
 
   const carregar = useCallback(async () => {
     setLoading(true);
