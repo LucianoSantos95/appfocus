@@ -138,9 +138,51 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   };
 
 
+  const votar = async (resposta: boolean) => {
+    setSending(true);
+    setErro(null);
+    try {
+      const { data, error } = await sb
+        .from("advisor_interesse")
+        .insert({ resposta })
+        .select("id")
+        .single();
+      if (error) throw error;
+      setVotoId(data?.id ?? null);
+      setVoto(resposta);
+      registrarEvento(resposta ? "advisor_sim" : "advisor_nao", produto?.slug);
+    } catch (e: any) {
+      setErro(e?.message || "Não foi possível registrar. Tente de novo.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const salvarAviso = async () => {
+    if (!emailOk) return;
+    setSending(true);
+    setErro(null);
+    try {
+      const valor = email.trim().toLowerCase();
+      const { error } = votoId
+        ? await sb.from("advisor_interesse").update({ email: valor }).eq("id", votoId)
+        : await sb.from("advisor_interesse").insert({ resposta: true, email: valor });
+      if (error) throw error;
+      setAvisado(true);
+    } catch (e: any) {
+      setErro(e?.message || "Não foi possível salvar seu e-mail.");
+    } finally {
+      setSending(false);
+    }
+  };
+
   const fechar = () => {
     onOpenChange(false);
-    setTimeout(() => { setNome(""); setEmail(""); setEntregue(false); setFeedbackEnviado(false); setErro(null); setTocado({ nome: false, email: false }); }, 250);
+    setTimeout(() => {
+      setNome(""); setEmail(""); setEntregue(false); setFeedbackEnviado(false); setErro(null);
+      setTocado({ nome: false, email: false });
+      setVoto(null); setVotoId(null); setAvisado(false);
+    }, 250);
   };
 
   return (
