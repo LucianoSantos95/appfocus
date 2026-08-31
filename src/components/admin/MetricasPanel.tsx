@@ -60,7 +60,11 @@ interface EmailLinha {
   recipient_email: string;
   opened_at: string | null;
   created_at: string;
+  metadata?: { produto?: string | null } | null;
 }
+
+// Abaixo disso a taxa de abertura é ruído estatístico — mostramos, mas fora do ranking.
+const MIN_AMOSTRA_ABERTURA = 5;
 
 const PERIODOS = [
   { v: "7",   label: "Últimos 7 dias" },
@@ -161,7 +165,7 @@ export function MetricasPanel() {
       sb.from("leads").select("id", { count: "exact", head: true })
         .neq("status", "legado").gte("created_at", desde),
       sb.from("email_send_log")
-        .select("id,template_name,status,recipient_email,opened_at,created_at")
+        .select("id,template_name,status,recipient_email,opened_at,created_at,metadata")
         .neq("status", "pending")
         .gte("created_at", desde)
         .order("created_at", { ascending: false })
@@ -322,6 +326,35 @@ export function MetricasPanel() {
   )
     .map(([origem, v]) => ({ origem: origem as Origem, ...v }))
     .sort((a, b) => b.enviados + b.falhas - (a.enviados + a.falhas));
+
+  // Mesma base, quebrada pelo produto associado ao envio (metadata.produto guarda o nome)
+  const porProdutoEmail = Object.entries(
+    emails.reduce((acc: Record<string, { enviados: number; falhas: number; abertos: number; rastreados: number }>, e) => {
+      const p = (e.metadata?.produto || "").trim() || "Geral";
+      acc[p] ??= { enviados: 0, falhas: 0, abertos: 0, rastreados: 0 };
+      if (e.status === "sent") {
+        acc[p].enviados++;
+        if (temRastreio(e)) {
+          acc[p].rastreados++;
+          if (e.opened_at) acc[p].abertos++;
+        }
+      } else acc[p].falhas++;
+      return acc;
+    }, {}),
+  )
+    .map(([produto, v]) => ({
+      produto,
+      ...v,
+      taxa: v.rastreados > 0 ? v.abertos / v.rastreados : -1,
+      confiavel: v.rastreados >= MIN_AMOSTRA_ABERTURA,
+    }))
+    .filter((t) => t.enviados > 0 || t.falhas > 0)
+    .sort((a, b) => {
+      if (a.confiavel !== b.confiavel) return a.confiavel ? -1 : 1;
+      if (a.confiavel) return b.taxa - a.taxa;
+      return b.enviados - a.enviados;
+    });
+
 
   const emailsEnviados = porOrigem.reduce((s, t) => s + t.enviados, 0);
   const emailsFalhas = porOrigem.reduce((s, t) => s + t.falhas, 0);
@@ -672,6 +705,40 @@ export function MetricasPanel() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Mesma base, agora por produto (metadata.produto); sem produto = Geral */}
+                    <div className="mt-5 border-t border-border/60 pt-4">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Por produto</p>
+                      <div className="space-y-2">
+                        {porProdutoEmail.map((t) => (
+                          <div key={t.produto} className="flex items-center justify-between gap-3 text-sm">
+                            <span className="text-foreground truncate">{t.produto}</span>
+                            <span className="flex items-center gap-2 tabular-nums shrink-0">
+                              <Badge variant="outline" className="text-muted-foreground">{t.enviados} enviado{t.enviados === 1 ? "" : "s"}</Badge>
+                              {t.rastreados > 0 ? (
+                                <Badge
+                                  variant="outline"
+                                  className={t.confiavel ? "border-primary/50 text-primary gap-1" : "border-border text-muted-foreground gap-1"}
+                                  title={t.confiavel ? undefined : "Amostra pequena — percentual pouco confiável"}
+                                >
+                                  <MailOpen className="w-3 h-3" />
+                                  {t.abertos} aberto{t.abertos === 1 ? "" : "s"} ({pct(t.abertos, t.rastreados)}%)
+                                  {!t.confiavel && " ·  amostra pequena"}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-muted-foreground">sem rastreio</Badge>
+                              )}
+                              {t.falhas > 0 && (
+                                <Badge variant="outline" className="border-destructive/50 text-destructive">
+                                  {t.falhas} falha{t.falhas === 1 ? "" : "s"}
+                                </Badge>
+                              )}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
 
                     {/* Últimos envios, um por linha: origem + abertura */}
                     <div className="mt-5 border-t border-border/60 pt-4 space-y-1.5">
