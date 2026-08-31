@@ -285,9 +285,18 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
             )}
 
             {produto?.detalhes && (
-              <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                {produto.detalhes}
-              </p>
+              <div className="text-sm leading-relaxed text-muted-foreground space-y-3">
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="whitespace-pre-line">{children}</p>,
+                    strong: ({ children }) => (
+                      <strong className="font-semibold text-foreground">{children}</strong>
+                    ),
+                  }}
+                >
+                  {produto.detalhes}
+                </ReactMarkdown>
+              </div>
             )}
 
             {advisor ? (
