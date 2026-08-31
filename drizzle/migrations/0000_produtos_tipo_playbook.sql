@@ -1,0 +1,2 @@
+ALTER TABLE public.produtos DROP CONSTRAINT produtos_tipo_valido;
+ALTER TABLE public.produtos ADD CONSTRAINT produtos_tipo_valido CHECK (tipo = ANY (ARRAY['notion'::text, 'playbook'::text, 'lovable'::text, 'advisor'::text]));
