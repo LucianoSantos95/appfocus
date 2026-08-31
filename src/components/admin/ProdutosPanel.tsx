@@ -38,7 +38,7 @@ interface Produto {
   slug: string;
   nome: string;
   descricao: string | null;
-  tipo: "notion" | "lovable" | "advisor";
+  tipo: "notion" | "playbook" | "lovable" | "advisor";
   gratuito: boolean;
   preco: number | null;
   link_destino: string | null;
@@ -58,7 +58,7 @@ const VAZIO: Produto = {
   capa: null, imagens: [], detalhes: "",
 };
 
-const TIPO_LABEL: Record<string, string> = { notion: "Notion", lovable: "Sistema", advisor: "Advisor" };
+const TIPO_LABEL: Record<string, string> = { notion: "Notion", playbook: "Playbook", lovable: "Sistema", advisor: "Advisor" };
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
@@ -367,6 +367,7 @@ export function ProdutosPanel() {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="notion">Templates de Notion</SelectItem>
+                      <SelectItem value="playbook">Playbooks</SelectItem>
                       <SelectItem value="lovable">Sistemas</SelectItem>
                       <SelectItem value="advisor">Advisor</SelectItem>
                     </SelectContent>
