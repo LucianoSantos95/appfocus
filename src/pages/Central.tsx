@@ -60,15 +60,20 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
     onAbrir(p);
   };
 
+  // O Advisor é enquete, não produto pra pegar: merece o mesmo brilho do card
+  // recomendado, mas com um selo que faça sentido pro contexto.
+  const advisor = p.tipo === "advisor";
+  const comBeam = p.destaque || advisor;
+
   return (
     <button
       onClick={acao}
       className={`group relative w-full h-full text-left overflow-hidden rounded-2xl border bg-card transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/25 hover:bg-background-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-        p.destaque ? "border-primary/50" : "border-border"
+        comBeam ? "border-primary/50" : "border-border"
       }`}
     >
-      {/* Luz sutil percorrendo o contorno — só no card recomendado. */}
-      {p.destaque && <BorderBeam />}
+      {/* Luz sutil percorrendo o contorno — card recomendado e Advisor. */}
+      {comBeam && <BorderBeam />}
 
       {/* A foto é o herói do card: o bloco se adapta à altura real da imagem,
           sem cortar nada. */}
