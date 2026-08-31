@@ -117,29 +117,16 @@ Deno.serve(async (req) => {
     const title = meta(html, "og:title", "twitter:title") ||
       decodeEntities(html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim() || "");
     const description = meta(html, "og:description", "twitter:description", "description") || "";
-    const ogImage = meta(html, "og:image:secure_url", "og:image", "twitter:image");
 
-    // 1) capa: baixa a imagem e sobe no bucket privado + signed URL longa
-    let capa: string | null = null;
-    if (ogImage) {
-      const absolute = (() => {
-        try { return new URL(ogImage, page.finalUrl).toString(); } catch { return null; }
-      })();
-      const safeImg = absolute ? publicHttpUrl(absolute) : null;
-      if (safeImg) {
-        const img = await fetchLimited(safeImg.toString(), MAX_IMG);
-        if (img && img.contentType.startsWith("image/")) {
-          const ext = (img.contentType.split("/")[1] || "jpg").split(";")[0].replace("jpeg", "jpg");
-          const path = `${crypto.randomUUID()}.${ext}`;
-          const { error: upErr } = await admin.storage.from(BUCKET)
-            .upload(path, img.buf, { contentType: img.contentType, upsert: false });
-          if (!upErr) {
-            const { data: signed } = await admin.storage.from(BUCKET).createSignedUrl(path, VALIDADE);
-            capa = signed?.signedUrl ?? null;
-          }
-        }
-      }
-    }
+    // 1) galeria: og:image (todas) + <img> do corpo como complemento
+    const candidatos = coletarImagens(html, page.finalUrl).slice(0, MAX_IMAGENS);
+    const enviadas = await Promise.all(
+      candidatos.map((u) => baixarESubir(admin, u)),
+    );
+    const galeria = enviadas.filter((u): u is string => !!u);
+    const capa = galeria[0] ?? null;
+    const imagens = galeria.slice(1);
+
 
     // 2) IA: rascunho estruturado a partir do que foi extraído
     let draft: Record<string, unknown> = {};
