@@ -142,15 +142,12 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
     setSending(true);
     setErro(null);
     try {
-      const { data, error } = await sb
-        .from("advisor_interesse")
-        .insert({ resposta })
-        .select("id")
-        .single();
+      // id gerado no cliente: a enquete é anônima e não pode ler de volta (RLS).
+      const id = crypto.randomUUID();
+      const { error } = await sb.from("advisor_interesse").insert({ id, resposta });
       if (error) throw error;
-      setVotoId(data?.id ?? null);
+      setVotoId(id);
       setVoto(resposta);
-      registrarEvento(resposta ? "advisor_sim" : "advisor_nao", produto?.slug);
     } catch (e: any) {
       setErro(e?.message || "Não foi possível registrar. Tente de novo.");
     } finally {
