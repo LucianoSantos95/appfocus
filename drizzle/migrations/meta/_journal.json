@@ -8,6 +8,13 @@
       "when": 1788185948614,
       "tag": "0000_produtos_tipo_playbook",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788186381351,
+      "tag": "0001_add_downloads_produtos",
+      "breakpoints": true
     }
   ]
 }
