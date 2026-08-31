@@ -590,6 +590,39 @@ export type Database = {
         }
         Relationships: []
       }
+      suporte_publico: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          mensagem: string
+          nome: string
+          pagina: string | null
+          status: string
+          telefone: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          mensagem: string
+          nome: string
+          pagina?: string | null
+          status?: string
+          telefone: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          mensagem?: string
+          nome?: string
+          pagina?: string | null
+          status?: string
+          telefone?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           created_at: string
