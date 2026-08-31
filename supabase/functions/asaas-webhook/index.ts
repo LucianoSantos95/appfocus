@@ -20,13 +20,16 @@ Deno.serve(async (req) => {
   const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const WEBHOOK_TOKEN = Deno.env.get("ASAAS_WEBHOOK_TOKEN");
 
-  if (WEBHOOK_TOKEN) {
-    const sent = req.headers.get("asaas-access-token");
-    if (sent !== WEBHOOK_TOKEN) {
-      log("Invalid webhook token");
-      return new Response("Unauthorized", { status: 401 });
-    }
+  // Fail closed: sem segredo configurado, ninguém entra.
+  if (!WEBHOOK_TOKEN) {
+    log("ASAAS_WEBHOOK_TOKEN not configured — rejecting request");
+    return new Response("Unauthorized", { status: 401 });
   }
+  if (req.headers.get("asaas-access-token") !== WEBHOOK_TOKEN) {
+    log("Invalid webhook token");
+    return new Response("Unauthorized", { status: 401 });
+  }
+
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
