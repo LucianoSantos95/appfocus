@@ -15,6 +15,27 @@
       "when": 1788186381351,
       "tag": "0001_add_downloads_produtos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788192500995,
+      "tag": "0002_create_advisor_interesse",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788192602225,
+      "tag": "0003_advisor_interesse_public_email_update",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788192707388,
+      "tag": "0004_advisor_interesse_set_email_rpc",
+      "breakpoints": true
     }
   ]
 }

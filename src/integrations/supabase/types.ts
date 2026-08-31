@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      advisor_interesse: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          resposta: boolean
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          resposta: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          resposta?: boolean
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -669,6 +690,10 @@ export type Database = {
       }
     }
     Functions: {
+      advisor_interesse_set_email: {
+        Args: { p_email: string; p_id: string }
+        Returns: undefined
+      }
       check_login_rate_limit: { Args: { p_email: string }; Returns: Json }
       cleanup_old_client_errors: { Args: never; Returns: undefined }
       cleanup_rate_limits: { Args: never; Returns: undefined }

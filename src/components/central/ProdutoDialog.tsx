@@ -66,6 +66,10 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   const [tocado, setTocado] = useState({ nome: false, email: false });
   const [slide, setSlide] = useState(0);
   const [feedbackEnviado, setFeedbackEnviado] = useState(false);
+  // Enquete do Advisor: ainda não é contato, é validação de demanda.
+  const [voto, setVoto] = useState<boolean | null>(null);
+  const [votoId, setVotoId] = useState<string | null>(null);
+  const [avisado, setAvisado] = useState(false);
 
 
   useEffect(() => {
@@ -134,9 +138,48 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   };
 
 
+  const votar = async (resposta: boolean) => {
+    setSending(true);
+    setErro(null);
+    try {
+      // id gerado no cliente: a enquete é anônima e não pode ler de volta (RLS).
+      const id = crypto.randomUUID();
+      const { error } = await sb.from("advisor_interesse").insert({ id, resposta });
+      if (error) throw error;
+      setVotoId(id);
+      setVoto(resposta);
+    } catch (e: any) {
+      setErro(e?.message || "Não foi possível registrar. Tente de novo.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const salvarAviso = async () => {
+    if (!emailOk) return;
+    setSending(true);
+    setErro(null);
+    try {
+      const valor = email.trim().toLowerCase();
+      const { error } = votoId
+        ? await sb.rpc("advisor_interesse_set_email", { p_id: votoId, p_email: valor })
+        : await sb.from("advisor_interesse").insert({ resposta: true, email: valor });
+      if (error) throw error;
+      setAvisado(true);
+    } catch (e: any) {
+      setErro(e?.message || "Não foi possível salvar seu e-mail.");
+    } finally {
+      setSending(false);
+    }
+  };
+
   const fechar = () => {
     onOpenChange(false);
-    setTimeout(() => { setNome(""); setEmail(""); setEntregue(false); setFeedbackEnviado(false); setErro(null); setTocado({ nome: false, email: false }); }, 250);
+    setTimeout(() => {
+      setNome(""); setEmail(""); setEntregue(false); setFeedbackEnviado(false); setErro(null);
+      setTocado({ nome: false, email: false });
+      setVoto(null); setVotoId(null); setAvisado(false);
+    }, 250);
   };
 
   return (
@@ -247,6 +290,61 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
               </p>
             )}
 
+            {advisor ? (
+              <div className="rounded-xl border border-border p-4 space-y-3">
+                {voto === null ? (
+                  <>
+                    <p className="text-sm font-medium text-foreground">
+                      Se esse programa estivesse ativo hoje, você agendaria esse bate-papo?
+                    </p>
+                    {erro && <p className="text-sm text-destructive">{erro}</p>}
+                    <div className="flex gap-2">
+                      <Button onClick={() => votar(true)} disabled={sending} className="flex-1 rounded-full">
+                        {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sim"}
+                      </Button>
+                      <Button variant="outline" onClick={() => votar(false)} disabled={sending} className="flex-1 rounded-full">
+                        Não
+                      </Button>
+                    </div>
+                  </>
+                ) : voto === false ? (
+                  <div className="text-center space-y-2 py-2">
+                    <p className="text-sm font-medium text-foreground">Valeu pela resposta</p>
+                    <p className="text-xs text-muted-foreground">Isso já me ajuda a decidir o que construir.</p>
+                    <Button variant="outline" onClick={fechar} className="rounded-full">Fechar</Button>
+                  </div>
+                ) : avisado ? (
+                  <div className="text-center space-y-2 py-2">
+                    <p className="text-sm font-medium text-foreground">Anotado</p>
+                    <p className="text-xs text-muted-foreground">Te aviso assim que abrir.</p>
+                    <Button variant="outline" onClick={fechar} className="rounded-full">Fechar</Button>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Quer que eu te avise assim que abrir?</p>
+                      <p className="text-xs text-muted-foreground">Opcional — só o e-mail, sem spam.</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="pd-adv-email">E-mail</Label>
+                      <Input
+                        id="pd-adv-email" type="email" value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && emailOk && salvarAviso()}
+                        placeholder="voce@empresa.com.br"
+                      />
+                    </div>
+                    {erro && <p className="text-sm text-destructive">{erro}</p>}
+                    <div className="flex gap-2">
+                      <Button onClick={salvarAviso} disabled={!emailOk || sending} className="flex-1 rounded-full gap-2">
+                        {sending ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando…</> : "Quero ser avisado"}
+                      </Button>
+                      <Button variant="ghost" onClick={fechar}>Pular</Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
             <div className="rounded-xl border border-border p-4 space-y-3">
               <div>
                 <p className="text-sm font-medium text-foreground">{t.formTitulo}</p>
@@ -290,6 +388,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
               </Button>
               <p className="text-center text-xs text-muted-foreground">{t.rodape}</p>
             </div>
+            )}
           </>
         )}
       </DialogContent>

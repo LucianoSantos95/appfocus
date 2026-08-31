@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { ProdutosPanel } from "@/components/admin/ProdutosPanel";
+import { FaleComigoPanel } from "@/components/admin/FaleComigoPanel";
 import { LeadsPanel } from "@/components/admin/LeadsPanel";
 import { MetricasPanel } from "@/components/admin/MetricasPanel";
 import { EmailPanel } from "@/components/admin/EmailPanel";
@@ -48,6 +49,7 @@ export default function Admin() {
         <Tabs value={aba} onValueChange={(v) => setParams({ aba: v }, { replace: true })}>
           <TabsList>
             <TabsTrigger value="produtos">Produtos</TabsTrigger>
+            <TabsTrigger value="fale-comigo">Fale comigo</TabsTrigger>
             <TabsTrigger value="leads">Leads</TabsTrigger>
             <TabsTrigger value="metricas">Métricas</TabsTrigger>
             <TabsTrigger value="email">E-mail</TabsTrigger>
@@ -55,6 +57,7 @@ export default function Admin() {
           </TabsList>
 
           <TabsContent value="produtos" className="mt-6"><ProdutosPanel /></TabsContent>
+          <TabsContent value="fale-comigo" className="mt-6"><FaleComigoPanel /></TabsContent>
           <TabsContent value="leads"    className="mt-6"><LeadsPanel /></TabsContent>
           <TabsContent value="metricas" className="mt-6"><MetricasPanel /></TabsContent>
           <TabsContent value="email"    className="mt-6"><EmailPanel /></TabsContent>
