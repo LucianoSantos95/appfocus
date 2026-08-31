@@ -167,9 +167,8 @@ export function MetricasPanel() {
       sb.from("email_send_log")
         .select("id,template_name,status,recipient_email,opened_at,created_at,metadata")
         .neq("status", "pending")
-        // Campanhas da era Hub Empresarial (SaaS pago) não entram nas métricas do Hub Central
-        .not("template_name", "in", "(promo_inactive_reactivation,promo_engaged_20off)")
-        .gte("created_at", desde)
+        // Só e-mails a partir do início do Hub Central (exclui toda a era Hub Empresarial)
+        .gte("created_at", desde > HUB_CENTRAL_INICIO ? desde : HUB_CENTRAL_INICIO)
         .order("created_at", { ascending: false })
         .limit(2000),
 
