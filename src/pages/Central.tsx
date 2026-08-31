@@ -82,8 +82,13 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
           />
         ) : (
           /* Sem capa: wordmark da Focus centralizada, na mesma proporção das
-             capas reais (1200x630) pra o card ter a altura dos vizinhos. */
-          <div className="flex aspect-[1200/630] w-full items-center justify-center bg-card">
+             capas reais (1200x630) — o card fica com a mesma altura dos vizinhos.
+             O fundo claro imita uma capa de verdade e mantém a wordmark legível
+             nos dois temas. */
+          <div
+            className="flex aspect-[1200/630] w-full items-center justify-center"
+            style={{ backgroundColor: "hsl(0 0% 100%)" }}
+          >
             <img src={focusWordmark} alt="Focus Inteligente" loading="lazy" className="h-10 w-auto sm:h-12" />
           </div>
         )}
@@ -209,7 +214,7 @@ function SecaoCatalogo({
       <Stagger
         inView
         gap={0.07}
-        className={`mt-6 grid gap-4 ${ehAdvisor ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
+        className={`mt-6 grid gap-4 ${ehAdvisor && ordenados.length === 0 ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
       >
         {/* Advisor só mostra "Em breve" quando não há produto cadastrado. */}
         {ordenados.length === 0 ? (
