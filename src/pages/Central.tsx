@@ -153,6 +153,90 @@ function CardAdvisorEmBreve() {
   );
 }
 
+const PAGINA = 3;
+
+/* Uma seção do catálogo: ordena (destaque primeiro, depois mais baixados)
+   e revela 3 itens por vez. */
+function SecaoCatalogo({
+  s,
+  itens,
+  onAbrir,
+}: {
+  s: (typeof SECOES)[number];
+  itens: Produto[];
+  onAbrir: (p: Produto) => void;
+}) {
+  const [visiveis, setVisiveis] = useState(PAGINA);
+  const ehAdvisor = s.tipo === "advisor";
+
+  // Só o primeiro marcado como destaque ganha o tratamento visual.
+  const idDestaque = itens.find((p) => p.destaque)?.id;
+  const ordenados = itens
+    .map((p) => ({ ...p, destaque: p.id === idDestaque }))
+    .sort((a, b) => {
+      if (a.destaque !== b.destaque) return a.destaque ? -1 : 1;
+      const d = (b.downloads ?? 0) - (a.downloads ?? 0);
+      return d !== 0 ? d : a.ordem - b.ordem;
+    });
+
+  const mostrando = ordenados.slice(0, visiveis);
+  const restantes = ordenados.length - mostrando.length;
+
+  return (
+    <section id={`secao-${s.tipo}`} className="group scroll-mt-24">
+      <p className="focus-label text-muted-foreground">/ {s.sub}</p>
+      <h2 className="mt-2 flex items-center gap-3 font-grotesk text-3xl md:text-4xl font-extrabold tracking-[-0.03em] text-foreground">
+        {s.titulo}
+        {s.logo && (
+          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center md:h-9 md:w-9">
+            <img
+              src={s.logo}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className={`h-full w-full object-contain opacity-0 -translate-x-2 scale-90 transition-all duration-300 ease-out group-hover:translate-x-0 group-hover:scale-100 group-hover:opacity-100 motion-reduce:transition-none ${
+                s.fundoClaro ? "rounded-md bg-white p-1" : ""
+              }`}
+            />
+          </span>
+        )}
+      </h2>
+      <Stagger
+        inView
+        gap={0.07}
+        className={`mt-6 grid gap-4 ${ehAdvisor ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
+      >
+        {/* Advisor ainda não está no ar: seção sempre informativa. */}
+        {ehAdvisor || ordenados.length === 0 ? (
+          <StaggerItem className="flex">
+            <div className="w-full flex">{ehAdvisor ? <CardAdvisorEmBreve /> : <CardEmBreve />}</div>
+          </StaggerItem>
+        ) : (
+          mostrando.map((p) => (
+            <StaggerItem key={p.id} className="flex">
+              <div className="w-full flex">
+                <CardProduto p={p} onAbrir={onAbrir} />
+              </div>
+            </StaggerItem>
+          ))
+        )}
+      </Stagger>
+
+      {!ehAdvisor && restantes > 0 && (
+        <div className="mt-5 flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => setVisiveis((v) => v + PAGINA)}
+            className="focus-label rounded-full"
+          >
+            Ver mais ({restantes})
+          </Button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function Central() {
   const { produtos, loading } = useProdutos();
   const [selecionado, setSelecionado] = useState<Produto | null>(null);
