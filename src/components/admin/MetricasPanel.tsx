@@ -60,7 +60,11 @@ interface EmailLinha {
   recipient_email: string;
   opened_at: string | null;
   created_at: string;
+  metadata?: { produto?: string | null } | null;
 }
+
+// Abaixo disso a taxa de abertura é ruído estatístico — mostramos, mas fora do ranking.
+const MIN_AMOSTRA_ABERTURA = 5;
 
 const PERIODOS = [
   { v: "7",   label: "Últimos 7 dias" },
