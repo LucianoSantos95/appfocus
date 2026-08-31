@@ -10,7 +10,7 @@ export interface Produto {
   slug: string;
   nome: string;
   descricao: string | null;
-  tipo: "notion" | "lovable" | "advisor";
+  tipo: "notion" | "playbook" | "lovable" | "advisor";
   gratuito: boolean;
   preco: number | null;
   link_destino: string | null;
