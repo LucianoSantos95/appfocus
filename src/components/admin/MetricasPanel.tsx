@@ -132,6 +132,9 @@ function baixarCsv(nome: string, linhas: (string | number | null)[][]) {
   URL.revokeObjectURL(url);
 }
 
+// Primeiro e-mail automático do Hub Central (thanks_*): tudo antes é da era Hub Empresarial
+const HUB_CENTRAL_INICIO = "2026-08-25T21:56:58.927Z";
+
 
 export function MetricasPanel() {
   const [dias, setDias] = useState("30");
