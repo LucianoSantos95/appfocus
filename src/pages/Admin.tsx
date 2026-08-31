@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { ProdutosPanel } from "@/components/admin/ProdutosPanel";
+import { FaleComigoPanel } from "@/components/admin/FaleComigoPanel";
 import { LeadsPanel } from "@/components/admin/LeadsPanel";
 import { MetricasPanel } from "@/components/admin/MetricasPanel";
 import { EmailPanel } from "@/components/admin/EmailPanel";
