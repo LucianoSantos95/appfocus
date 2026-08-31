@@ -206,8 +206,8 @@ function SecaoCatalogo({
         gap={0.07}
         className={`mt-6 grid gap-4 ${ehAdvisor ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
       >
-        {/* Advisor ainda não está no ar: seção sempre informativa. */}
-        {ehAdvisor || ordenados.length === 0 ? (
+        {/* Advisor só mostra "Em breve" quando não há produto cadastrado. */}
+        {ordenados.length === 0 ? (
           <StaggerItem className="flex">
             <div className="w-full flex">{ehAdvisor ? <CardAdvisorEmBreve /> : <CardEmBreve />}</div>
           </StaggerItem>
@@ -222,7 +222,7 @@ function SecaoCatalogo({
         )}
       </Stagger>
 
-      {!ehAdvisor && restantes > 0 && (
+      {restantes > 0 && (
         <div className="mt-5 flex justify-center">
           <Button
             variant="outline"
