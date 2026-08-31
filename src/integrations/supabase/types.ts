@@ -392,6 +392,7 @@ export type Database = {
           descricao: string | null
           destaque: boolean
           detalhes: string | null
+          downloads: number
           emoji: string | null
           gratuito: boolean
           id: string
@@ -411,6 +412,7 @@ export type Database = {
           descricao?: string | null
           destaque?: boolean
           detalhes?: string | null
+          downloads?: number
           emoji?: string | null
           gratuito?: boolean
           id?: string
@@ -430,6 +432,7 @@ export type Database = {
           descricao?: string | null
           destaque?: boolean
           detalhes?: string | null
+          downloads?: number
           emoji?: string | null
           gratuito?: boolean
           id?: string

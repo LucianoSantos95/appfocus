@@ -18,6 +18,7 @@ export interface Produto {
   emoji: string | null;
   ordem: number;
   destaque: boolean;
+  downloads?: number | null;
   capa?: string | null;
   imagens?: string[] | null;
   detalhes?: string | null;
