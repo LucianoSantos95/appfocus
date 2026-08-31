@@ -257,7 +257,7 @@ export default function Central() {
   const { produtos, loading } = useProdutos();
   const [selecionado, setSelecionado] = useState<Produto | null>(null);
   const [avaliando, setAvaliando] = useState<Produto | null>(null);
-  const [feedbackGeral, setFeedbackGeral] = useState(false);
+  
   const [params, setParams] = useSearchParams();
 
   useEffect(() => { registrarEvento("visita_catalogo"); }, []);
