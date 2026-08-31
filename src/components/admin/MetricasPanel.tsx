@@ -327,6 +327,35 @@ export function MetricasPanel() {
     .map(([origem, v]) => ({ origem: origem as Origem, ...v }))
     .sort((a, b) => b.enviados + b.falhas - (a.enviados + a.falhas));
 
+  // Mesma base, quebrada pelo produto associado ao envio (metadata.produto guarda o nome)
+  const porProdutoEmail = Object.entries(
+    emails.reduce((acc: Record<string, { enviados: number; falhas: number; abertos: number; rastreados: number }>, e) => {
+      const p = (e.metadata?.produto || "").trim() || "Geral";
+      acc[p] ??= { enviados: 0, falhas: 0, abertos: 0, rastreados: 0 };
+      if (e.status === "sent") {
+        acc[p].enviados++;
+        if (temRastreio(e)) {
+          acc[p].rastreados++;
+          if (e.opened_at) acc[p].abertos++;
+        }
+      } else acc[p].falhas++;
+      return acc;
+    }, {}),
+  )
+    .map(([produto, v]) => ({
+      produto,
+      ...v,
+      taxa: v.rastreados > 0 ? v.abertos / v.rastreados : -1,
+      confiavel: v.rastreados >= MIN_AMOSTRA_ABERTURA,
+    }))
+    .filter((t) => t.enviados > 0 || t.falhas > 0)
+    .sort((a, b) => {
+      if (a.confiavel !== b.confiavel) return a.confiavel ? -1 : 1;
+      if (a.confiavel) return b.taxa - a.taxa;
+      return b.enviados - a.enviados;
+    });
+
+
   const emailsEnviados = porOrigem.reduce((s, t) => s + t.enviados, 0);
   const emailsFalhas = porOrigem.reduce((s, t) => s + t.falhas, 0);
   const emailsAbertos = porOrigem.reduce((s, t) => s + t.abertos, 0);
