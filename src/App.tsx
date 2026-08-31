@@ -53,6 +53,7 @@ const App = () => (
                         (auth + admin), páginas legais e o consent do Lovable. */}
                     <Route path="/" element={<Central />} />
                     <Route path="/central" element={<Navigate to="/" replace />} />
+                    <Route path="/templates-notion-gratuitos" element={<TemplatesNotionGratuitos />} />
 
                     {/* Acesso do dono — necessário pro painel admin */}
                     <Route path="/auth" element={<Auth />} />
