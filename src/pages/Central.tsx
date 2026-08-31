@@ -387,12 +387,7 @@ export default function Central() {
             </a>
           </p>
           <div className="flex items-center gap-4">
-            <LinkFeedback />
-            <Button variant="ghost" size="sm" asChild className="focus-label h-7 rounded-full px-3">
-              <a href="https://focusinteligente.com.br" target="_blank" rel="noopener noreferrer" className="gap-1.5">
-                Conhecer a Focus <ArrowRight className="w-3 h-3" />
-              </a>
-            </Button>
+            <LinkSuporte />
           </div>
         </div>
       </footer>
