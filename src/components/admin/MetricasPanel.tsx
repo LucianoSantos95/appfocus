@@ -165,7 +165,7 @@ export function MetricasPanel() {
       sb.from("leads").select("id", { count: "exact", head: true })
         .neq("status", "legado").gte("created_at", desde),
       sb.from("email_send_log")
-        .select("id,template_name,status,recipient_email,opened_at,created_at")
+        .select("id,template_name,status,recipient_email,opened_at,created_at,metadata")
         .neq("status", "pending")
         .gte("created_at", desde)
         .order("created_at", { ascending: false })
