@@ -95,12 +95,18 @@ export function ProdutosPanel() {
         preco: data.preco ?? null,
         emoji: data.emoji || "📦",
         capa: data.capa ?? null,
+        imagens: Array.isArray(data.imagens) ? data.imagens : [],
         link_destino: data.link_destino || url,
       });
       setLinkIA("");
+      const extras = Array.isArray(data.imagens) ? data.imagens.length : 0;
       toast({
         title: "Rascunho pronto",
-        description: data.capa ? "Revise e salve." : "Sem imagem de capa no link — envie uma manualmente.",
+        description: data.capa
+          ? extras
+            ? `Capa + ${extras} imagem(ns) na galeria. Revise e salve.`
+            : "Capa encontrada. Revise e salve."
+          : "Sem imagem no link — envie uma manualmente.",
       });
     } catch (e: any) {
       toast({
