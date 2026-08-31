@@ -80,9 +80,10 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
             className="block w-full h-auto"
           />
         ) : (
-          /* Sem capa: logo da Focus centralizado, em vez de uma caixa vazia. */
-          <div className="flex aspect-[16/10] w-full items-center justify-center bg-gradient-to-br from-muted/60 to-muted/20">
-            <img src={logo} alt="Focus Inteligente" loading="lazy" className="h-14 w-auto opacity-80" />
+          /* Sem capa: wordmark da Focus centralizada, na mesma proporção das
+             capas reais (1200x630) pra o card ter a altura dos vizinhos. */
+          <div className="flex aspect-[1200/630] w-full items-center justify-center bg-card">
+            <img src={focusWordmark} alt="Focus Inteligente" loading="lazy" className="h-10 w-auto sm:h-12" />
           </div>
         )}
         {p.destaque && (
