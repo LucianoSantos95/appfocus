@@ -209,7 +209,7 @@ function SecaoCatalogo({
       <Stagger
         inView
         gap={0.07}
-        className={`mt-6 grid gap-4 ${ehAdvisor ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
+        className={`mt-6 grid gap-4 ${ehAdvisor && ordenados.length === 0 ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
       >
         {/* Advisor só mostra "Em breve" quando não há produto cadastrado. */}
         {ordenados.length === 0 ? (
