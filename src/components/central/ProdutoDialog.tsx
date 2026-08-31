@@ -66,6 +66,10 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   const [tocado, setTocado] = useState({ nome: false, email: false });
   const [slide, setSlide] = useState(0);
   const [feedbackEnviado, setFeedbackEnviado] = useState(false);
+  // Enquete do Advisor: ainda não é contato, é validação de demanda.
+  const [voto, setVoto] = useState<boolean | null>(null);
+  const [votoId, setVotoId] = useState<string | null>(null);
+  const [avisado, setAvisado] = useState(false);
 
 
   useEffect(() => {
