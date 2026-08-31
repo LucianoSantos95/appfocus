@@ -60,6 +60,9 @@ const VAZIO: Produto = {
 
 const TIPO_LABEL: Record<string, string> = { notion: "Notion", playbook: "Playbook", lovable: "Sistema", advisor: "Advisor" };
 
+// Mesma ordem do catálogo público (SECOES em Central.tsx)
+const ORDEM_TIPOS: Produto["tipo"][] = ["notion", "playbook", "lovable", "advisor"];
+
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -233,39 +236,52 @@ export function ProdutosPanel() {
           Nenhum produto ainda. Crie o primeiro.
         </CardContent></Card>
       ) : (
-        <div className="space-y-2">
-          {produtos.map((p) => (
-            <Card key={p.id} className={p.ativo ? "" : "opacity-60"}>
-              <CardContent className="p-4 flex items-center gap-4 flex-wrap">
-                <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-                <span className="text-2xl leading-none">{p.emoji || "📦"}</span>
-
-                <div className="flex-1 min-w-[200px]">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-foreground">{p.nome}</span>
-                    <Badge variant="outline" className="text-[10px]">{TIPO_LABEL[p.tipo] || p.tipo}</Badge>
-                    {p.destaque && <Badge variant="secondary" className="text-[10px]">Destaque</Badge>}
-                    {!p.ativo && <Badge variant="outline" className="text-[10px] text-muted-foreground">Fora do ar</Badge>}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                    /{p.slug} · {p.gratuito ? "grátis" : `R$ ${Number(p.preco).toLocaleString("pt-BR")}`}
-                    {p.captura_lead ? " · captura e-mail" : " · vai direto"}
-                  </p>
+        <div className="space-y-6">
+          {ORDEM_TIPOS.map((tipo) => {
+            const grupo = produtos.filter((p) => p.tipo === tipo);
+            return (
+              <div key={tipo} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-foreground">{TIPO_LABEL[tipo]}</h3>
+                  <span className="text-xs text-muted-foreground">{grupo.length}</span>
                 </div>
+                {grupo.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nenhum produto nessa categoria.</p>
+                ) : grupo.map((p) => (
+                  <Card key={p.id} className={p.ativo ? "" : "opacity-60"}>
+                    <CardContent className="p-4 flex items-center gap-4 flex-wrap">
+                      <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                      <span className="text-2xl leading-none">{p.emoji || "📦"}</span>
 
-                {p.link_destino && (
-                  <a href={p.link_destino} target="_blank" rel="noopener noreferrer"
-                     className="text-muted-foreground hover:text-primary transition-colors" title="Abrir destino">
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                )}
-                <Switch checked={p.ativo} onCheckedChange={() => alternarAtivo(p)} />
-                <Button variant="outline" size="sm" onClick={() => setEditando(p)} className="gap-1.5">
-                  <Pencil className="w-3.5 h-3.5" /> Editar
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                      <div className="flex-1 min-w-[200px]">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-foreground">{p.nome}</span>
+                          <Badge variant="outline" className="text-[10px]">{TIPO_LABEL[p.tipo] || p.tipo}</Badge>
+                          {p.destaque && <Badge variant="secondary" className="text-[10px]">Destaque</Badge>}
+                          {!p.ativo && <Badge variant="outline" className="text-[10px] text-muted-foreground">Fora do ar</Badge>}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+                          /{p.slug} · {p.gratuito ? "grátis" : `R$ ${Number(p.preco).toLocaleString("pt-BR")}`}
+                          {p.captura_lead ? " · captura e-mail" : " · vai direto"}
+                        </p>
+                      </div>
+
+                      {p.link_destino && (
+                        <a href={p.link_destino} target="_blank" rel="noopener noreferrer"
+                           className="text-muted-foreground hover:text-primary transition-colors" title="Abrir destino">
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
+                      <Switch checked={p.ativo} onCheckedChange={() => alternarAtivo(p)} />
+                      <Button variant="outline" size="sm" onClick={() => setEditando(p)} className="gap-1.5">
+                        <Pencil className="w-3.5 h-3.5" /> Editar
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            );
+          })}
         </div>
       )}
 
