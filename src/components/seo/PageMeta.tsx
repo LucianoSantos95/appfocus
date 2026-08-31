@@ -44,7 +44,7 @@ function setMetaProp(property: string, content: string) {
   }, "content", content);
 }
 
-export function PageMeta({ title, description, path = "/", image, suffix = "Hub Empresarial" }: PageMetaProps) {
+export function PageMeta({ title, description, path = "/", image, suffix = "Hub Central" }: PageMetaProps) {
   const fullTitle = `${title} | ${suffix}`;
   const url = `${SITE_URL}${path}`;
   const ogImage = image ?? DEFAULT_IMAGE;

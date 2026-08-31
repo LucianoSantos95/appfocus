@@ -82,7 +82,7 @@ export default function OAuthConsent() {
   const clientName = details.client?.name ?? "um aplicativo";
   return (
     <>
-      <PageMeta path="/.lovable/oauth/consent" title="Autorizar acesso" description="Conceda acesso ao Hub Empresarial." />
+      <PageMeta path="/.lovable/oauth/consent" title="Autorizar acesso" description="Conceda acesso ao Hub Central." />
       <main className="min-h-screen flex items-center justify-center bg-background p-6">
         <div className="max-w-md w-full rounded-xl border border-border bg-card p-6 space-y-5">
           <div className="text-center space-y-2">
