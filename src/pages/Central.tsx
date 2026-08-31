@@ -5,6 +5,7 @@ import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Loader2, PackageOpen, Clock } from "lucide-react";
 import logo from "@/assets/logo.png";
+import focusWordmark from "@/assets/logo-email.png";
 import logoNotion from "@/assets/notion.png.asset.json";
 import logoLovable from "@/assets/lovable-color.png.asset.json";
 import { useProdutos, type Produto } from "@/hooks/useProdutos";
