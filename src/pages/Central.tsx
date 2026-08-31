@@ -403,12 +403,6 @@ export default function Central() {
         pagina={avaliando?.slug}
         placeholder={avaliando ? `Como foi usar o ${avaliando.nome}? Conta pra gente.` : undefined}
       />
-
-      <FeedbackDialog
-        open={feedbackGeral}
-        onOpenChange={setFeedbackGeral}
-        placeholder="O que achou do Hub Central? O que faltou pra você?"
-      />
     </div>
   );
 }
