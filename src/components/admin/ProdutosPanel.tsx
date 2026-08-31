@@ -60,6 +60,9 @@ const VAZIO: Produto = {
 
 const TIPO_LABEL: Record<string, string> = { notion: "Notion", playbook: "Playbook", lovable: "Sistema", advisor: "Advisor" };
 
+// Mesma ordem do catálogo público (SECOES em Central.tsx)
+const ORDEM_TIPOS: Produto["tipo"][] = ["notion", "playbook", "lovable", "advisor"];
+
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
