@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      advisor_interesse: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          resposta: boolean
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          resposta: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          resposta?: boolean
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
