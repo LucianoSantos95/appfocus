@@ -97,9 +97,9 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
             <img src={focusWordmark} alt="Focus Inteligente" loading="lazy" className="h-10 w-auto sm:h-12" />
           </div>
         )}
-        {p.destaque && (
+        {comBeam && (
           <span className="absolute bottom-3 left-3 z-10 rounded-full bg-background/85 p-0.5 backdrop-blur-sm">
-            <Pill tom="primario">Recomendado</Pill>
+            <Pill tom="primario">{advisor ? "Sua opinião conta" : "Recomendado"}</Pill>
           </span>
         )}
 
