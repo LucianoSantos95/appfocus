@@ -17,7 +17,8 @@ const BUCKET = "produtos";
 const VALIDADE = 60 * 60 * 24 * 365 * 10; // 10 anos
 const MAX_HTML = 1_500_000; // ~1.5MB
 const MAX_IMG = 8_000_000; // 8MB
-const TIMEOUT = 12_000;
+const TIMEOUT = 9_000; // por requisição
+const MAX_IMAGENS = 6;
 
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
@@ -88,6 +89,81 @@ function decodeEntities(s: string) {
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ");
 }
 
+// Todas as og:image declaradas, na ordem em que aparecem.
+function metaAll(html: string, ...names: string[]): string[] {
+  const out: string[] = [];
+  for (const name of names) {
+    const re = new RegExp(
+      `<meta[^>]+(?:property|name)=["']${name}["'][^>]*content=["']([^"']+)["']`,
+      "gi",
+    );
+    const alt = new RegExp(
+      `<meta[^>]+content=["']([^"']+)["'][^>]*(?:property|name)=["']${name}["']`,
+      "gi",
+    );
+    for (const m of [...html.matchAll(re), ...html.matchAll(alt)]) {
+      if (m[1]) out.push(decodeEntities(m[1].trim()));
+    }
+  }
+  return out;
+}
+
+const LIXO = /(sprite|icon|logo|avatar|favicon|badge|emoji|pixel|placeholder|spacer|button)/i;
+
+// <img> do corpo, com heurística simples pra evitar ícone de menu.
+function imagensDoCorpo(html: string): string[] {
+  const out: string[] = [];
+  for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
+    const tag = m[0];
+    const src = decodeEntities(
+      tag.match(/\bsrc=["']([^"']+)["']/i)?.[1] ??
+        tag.match(/\bdata-src=["']([^"']+)["']/i)?.[1] ?? "",
+    ).trim();
+    if (!src || src.startsWith("data:")) continue;
+    if (LIXO.test(src)) continue;
+    const w = Number(tag.match(/\bwidth=["']?(\d+)/i)?.[1] ?? 0);
+    const h = Number(tag.match(/\bheight=["']?(\d+)/i)?.[1] ?? 0);
+    const temSrcset = /\bsrcset=/i.test(tag);
+    // sem dimensão declarada e sem srcset ainda vale, mas dimensão pequena reprova
+    if ((w && w < 200) || (h && h < 200)) continue;
+    out.push(src);
+    void temSrcset;
+  }
+  return out;
+}
+
+function coletarImagens(html: string, base: string): string[] {
+  const brutos = [
+    ...metaAll(html, "og:image:secure_url", "og:image", "twitter:image"),
+  ];
+  if (brutos.length <= 1) brutos.push(...imagensDoCorpo(html));
+
+  const vistos = new Set<string>();
+  const finais: string[] = [];
+  for (const raw of brutos) {
+    let abs: string;
+    try { abs = new URL(raw, base).toString(); } catch { continue; }
+    if (!publicHttpUrl(abs)) continue;
+    if (vistos.has(abs)) continue;
+    vistos.add(abs);
+    finais.push(abs);
+  }
+  return finais;
+}
+
+// deno-lint-ignore no-explicit-any
+async function baixarESubir(admin: any, url: string): Promise<string | null> {
+  const img = await fetchLimited(url, MAX_IMG);
+  if (!img || !img.contentType.startsWith("image/")) return null;
+  const ext = (img.contentType.split("/")[1] || "jpg").split(";")[0].replace("jpeg", "jpg");
+  const path = `${crypto.randomUUID()}.${ext.slice(0, 5)}`;
+  const { error } = await admin.storage.from(BUCKET)
+    .upload(path, img.buf, { contentType: img.contentType, upsert: false });
+  if (error) return null;
+  const { data: signed } = await admin.storage.from(BUCKET).createSignedUrl(path, VALIDADE);
+  return signed?.signedUrl ?? null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -117,29 +193,16 @@ Deno.serve(async (req) => {
     const title = meta(html, "og:title", "twitter:title") ||
       decodeEntities(html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim() || "");
     const description = meta(html, "og:description", "twitter:description", "description") || "";
-    const ogImage = meta(html, "og:image:secure_url", "og:image", "twitter:image");
 
-    // 1) capa: baixa a imagem e sobe no bucket privado + signed URL longa
-    let capa: string | null = null;
-    if (ogImage) {
-      const absolute = (() => {
-        try { return new URL(ogImage, page.finalUrl).toString(); } catch { return null; }
-      })();
-      const safeImg = absolute ? publicHttpUrl(absolute) : null;
-      if (safeImg) {
-        const img = await fetchLimited(safeImg.toString(), MAX_IMG);
-        if (img && img.contentType.startsWith("image/")) {
-          const ext = (img.contentType.split("/")[1] || "jpg").split(";")[0].replace("jpeg", "jpg");
-          const path = `${crypto.randomUUID()}.${ext}`;
-          const { error: upErr } = await admin.storage.from(BUCKET)
-            .upload(path, img.buf, { contentType: img.contentType, upsert: false });
-          if (!upErr) {
-            const { data: signed } = await admin.storage.from(BUCKET).createSignedUrl(path, VALIDADE);
-            capa = signed?.signedUrl ?? null;
-          }
-        }
-      }
-    }
+    // 1) galeria: og:image (todas) + <img> do corpo como complemento
+    const candidatos = coletarImagens(html, page.finalUrl).slice(0, MAX_IMAGENS);
+    const enviadas = await Promise.all(
+      candidatos.map((u) => baixarESubir(admin, u)),
+    );
+    const galeria = enviadas.filter((u): u is string => !!u);
+    const capa = galeria[0] ?? null;
+    const imagens = galeria.slice(1);
+
 
     // 2) IA: rascunho estruturado a partir do que foi extraído
     let draft: Record<string, unknown> = {};
@@ -203,6 +266,7 @@ Regra do tipo: "notion" para templates/páginas do Notion, "lovable" para sistem
       preco,
       emoji: String(draft.emoji || "📦").slice(0, 4),
       capa,
+      imagens,
       link_destino: page.finalUrl,
       ai_ok: Object.keys(draft).length > 0,
     });
