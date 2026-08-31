@@ -281,54 +281,9 @@ export default function Central() {
           </div>
         ) : (
           <div className="mt-12 space-y-14">
-            {SECOES.map((s) => {
-              const brutos = porTipo(s.tipo);
-              // Só o primeiro marcado como destaque ganha o tratamento visual.
-              const idDestaque = brutos.find((p) => p.destaque)?.id;
-              const itens = brutos.map((p) => ({ ...p, destaque: p.id === idDestaque }));
-              const ehAdvisor = s.tipo === "advisor";
-              return (
-                <section key={s.tipo} id={`secao-${s.tipo}`} className="group scroll-mt-24">
-                  <p className="focus-label text-muted-foreground">/ {s.sub}</p>
-                  <h2 className="mt-2 flex items-center gap-3 font-grotesk text-3xl md:text-4xl font-extrabold tracking-[-0.03em] text-foreground">
-                    {s.titulo}
-                    {s.logo && (
-                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center md:h-9 md:w-9">
-                        <img
-                          src={s.logo}
-                          alt=""
-                          aria-hidden="true"
-                          loading="lazy"
-                          className={`h-full w-full object-contain opacity-0 -translate-x-2 scale-90 transition-all duration-300 ease-out group-hover:translate-x-0 group-hover:scale-100 group-hover:opacity-100 motion-reduce:transition-none ${
-                            s.fundoClaro ? "rounded-md bg-white p-1" : ""
-                          }`}
-                        />
-                      </span>
-                    )}
-                  </h2>
-                  <Stagger
-                    inView
-                    gap={0.07}
-                    className={`mt-6 grid gap-4 ${ehAdvisor ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}
-                  >
-                    {/* Advisor ainda não está no ar: seção sempre informativa. */}
-                    {ehAdvisor || itens.length === 0 ? (
-                      <StaggerItem className="flex">
-                        <div className="w-full flex">
-                          {ehAdvisor ? <CardAdvisorEmBreve /> : <CardEmBreve />}
-                        </div>
-                      </StaggerItem>
-                    ) : (
-                      itens.map((p) => (
-                        <StaggerItem key={p.id} className="flex">
-                          <div className="w-full flex"><CardProduto p={p} onAbrir={setSelecionado} /></div>
-                        </StaggerItem>
-                      ))
-                    )}
-                  </Stagger>
-                </section>
-              );
-            })}
+            {SECOES.map((s) => (
+              <SecaoCatalogo key={s.tipo} s={s} itens={porTipo(s.tipo)} onAbrir={setSelecionado} />
+            ))}
           </div>
         )}
       </main>
