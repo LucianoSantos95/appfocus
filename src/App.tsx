@@ -17,6 +17,7 @@ const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Central = lazy(() => import("./pages/Central"));
+const TemplatesNotionGratuitos = lazy(() => import("./pages/TemplatesNotionGratuitos"));
 const Admin = lazy(() => import("./pages/Admin"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 
@@ -52,6 +53,7 @@ const App = () => (
                         (auth + admin), páginas legais e o consent do Lovable. */}
                     <Route path="/" element={<Central />} />
                     <Route path="/central" element={<Navigate to="/" replace />} />
+                    <Route path="/templates-notion-gratuitos" element={<TemplatesNotionGratuitos />} />
 
                     {/* Acesso do dono — necessário pro painel admin */}
                     <Route path="/auth" element={<Auth />} />
