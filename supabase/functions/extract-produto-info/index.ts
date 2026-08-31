@@ -220,9 +220,9 @@ Responda APENAS JSON válido (sem markdown):
   "preco": number ou null,
   "gratuito": true ou false,
   "emoji": "1 emoji só",
-  "tipo": "notion" | "lovable" | "advisor"
+  "tipo": "notion" | "playbook" | "lovable" | "advisor"
 }
-Regra do tipo: "notion" para templates/páginas do Notion, "lovable" para sistemas/apps web, "advisor" para consultoria/mentoria.`;
+Regra do tipo: "notion" para templates/páginas do Notion, "playbook" para metodologias/guias passo a passo, "lovable" para sistemas/apps web, "advisor" para consultoria/mentoria.`;
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -249,7 +249,7 @@ Regra do tipo: "notion" para templates/páginas do Notion, "lovable" para sistem
       console.error("AI gateway error", aiRes.status, await aiRes.text());
     }
 
-    const tipo = ["notion", "lovable", "advisor"].includes(String(draft.tipo)) ? draft.tipo : "notion";
+    const tipo = ["notion", "playbook", "lovable", "advisor"].includes(String(draft.tipo)) ? draft.tipo : "notion";
     const gratuito = typeof draft.gratuito === "boolean" ? draft.gratuito : true;
     const precoNum = Number(draft.preco);
     const preco = !gratuito && Number.isFinite(precoNum) && precoNum > 0 ? precoNum : null;
