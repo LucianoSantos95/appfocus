@@ -162,7 +162,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
     try {
       const valor = email.trim().toLowerCase();
       const { error } = votoId
-        ? await sb.from("advisor_interesse").update({ email: valor }).eq("id", votoId)
+        ? await sb.rpc("advisor_interesse_set_email", { p_id: votoId, p_email: valor })
         : await sb.from("advisor_interesse").insert({ resposta: true, email: valor });
       if (error) throw error;
       setAvisado(true);
