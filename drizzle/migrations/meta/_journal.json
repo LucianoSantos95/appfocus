@@ -29,6 +29,13 @@
       "when": 1788192602225,
       "tag": "0003_advisor_interesse_public_email_update",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788192707388,
+      "tag": "0004_advisor_interesse_set_email_rpc",
+      "breakpoints": true
     }
   ]
 }
