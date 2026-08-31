@@ -706,6 +706,40 @@ export function MetricasPanel() {
                       ))}
                     </div>
 
+                    {/* Mesma base, agora por produto (metadata.produto); sem produto = Geral */}
+                    <div className="mt-5 border-t border-border/60 pt-4">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Por produto</p>
+                      <div className="space-y-2">
+                        {porProdutoEmail.map((t) => (
+                          <div key={t.produto} className="flex items-center justify-between gap-3 text-sm">
+                            <span className="text-foreground truncate">{t.produto}</span>
+                            <span className="flex items-center gap-2 tabular-nums shrink-0">
+                              <Badge variant="outline" className="text-muted-foreground">{t.enviados} enviado{t.enviados === 1 ? "" : "s"}</Badge>
+                              {t.rastreados > 0 ? (
+                                <Badge
+                                  variant="outline"
+                                  className={t.confiavel ? "border-primary/50 text-primary gap-1" : "border-border text-muted-foreground gap-1"}
+                                  title={t.confiavel ? undefined : "Amostra pequena — percentual pouco confiável"}
+                                >
+                                  <MailOpen className="w-3 h-3" />
+                                  {t.abertos} aberto{t.abertos === 1 ? "" : "s"} ({pct(t.abertos, t.rastreados)}%)
+                                  {!t.confiavel && " ·  amostra pequena"}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-muted-foreground">sem rastreio</Badge>
+                              )}
+                              {t.falhas > 0 && (
+                                <Badge variant="outline" className="border-destructive/50 text-destructive">
+                                  {t.falhas} falha{t.falhas === 1 ? "" : "s"}
+                                </Badge>
+                              )}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+
                     {/* Últimos envios, um por linha: origem + abertura */}
                     <div className="mt-5 border-t border-border/60 pt-4 space-y-1.5">
                       <div className="flex items-center justify-between gap-2 mb-2">
