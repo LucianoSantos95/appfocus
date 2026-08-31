@@ -80,7 +80,10 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
             className="block w-full h-auto"
           />
         ) : (
-          <div className="aspect-[16/10] w-full bg-muted/40" />
+          /* Sem capa: logo da Focus centralizado, em vez de uma caixa vazia. */
+          <div className="flex aspect-[16/10] w-full items-center justify-center bg-gradient-to-br from-muted/60 to-muted/20">
+            <img src={logo} alt="Focus Inteligente" loading="lazy" className="h-14 w-auto opacity-80" />
+          </div>
         )}
         {p.destaque && (
           <span className="absolute bottom-3 left-3 z-10 rounded-full bg-background/85 p-0.5 backdrop-blur-sm">
