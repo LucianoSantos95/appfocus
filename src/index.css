@@ -790,5 +790,5 @@
 
 /* Dropdowns (Select/Popover) precisam ficar acima de dialogs. */
 [data-radix-popper-content-wrapper] {
-  z-index: 100 !important;
+  z-index: 200 !important;
 }
