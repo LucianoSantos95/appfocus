@@ -17,6 +17,7 @@ const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Central = lazy(() => import("./pages/Central"));
+const TemplatesNotionGratuitos = lazy(() => import("./pages/TemplatesNotionGratuitos"));
 const Admin = lazy(() => import("./pages/Admin"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 
