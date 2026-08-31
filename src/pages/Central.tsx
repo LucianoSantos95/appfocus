@@ -352,21 +352,6 @@ export default function Central() {
           </div>
         </div>
 
-        {/* Convite direto ao feedback para quem só navega e não converte. */}
-        <div className="mx-auto mt-10 flex max-w-3xl flex-col items-start gap-4 rounded-2xl border border-primary/30 bg-card/60 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <Pill tom="primario">Semana de validação</Pill>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Essa semana estamos testando o Hub Central — sua opinião ajuda a decidir o que vem por aí.
-            </p>
-          </div>
-          <Button
-            onClick={() => setFeedbackGeral(true)}
-            className="shrink-0 gap-1.5 rounded-full"
-          >
-            Deixar minha opinião <ArrowRight className="h-3.5 w-3.5" />
-          </Button>
-        </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
