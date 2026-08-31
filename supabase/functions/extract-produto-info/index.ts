@@ -17,7 +17,8 @@ const BUCKET = "produtos";
 const VALIDADE = 60 * 60 * 24 * 365 * 10; // 10 anos
 const MAX_HTML = 1_500_000; // ~1.5MB
 const MAX_IMG = 8_000_000; // 8MB
-const TIMEOUT = 12_000;
+const TIMEOUT = 9_000; // por requisição
+const MAX_IMAGENS = 6;
 
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
@@ -265,6 +266,7 @@ Regra do tipo: "notion" para templates/páginas do Notion, "lovable" para sistem
       preco,
       emoji: String(draft.emoji || "📦").slice(0, 4),
       capa,
+      imagens,
       link_destino: page.finalUrl,
       ai_ok: Object.keys(draft).length > 0,
     });
