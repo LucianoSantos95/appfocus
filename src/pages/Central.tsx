@@ -13,7 +13,8 @@ import { ProdutoDialog } from "@/components/central/ProdutoDialog";
 import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
 import { AbasCatalogo } from "@/components/central/AbasCatalogo";
 import { FaqCatalogo } from "@/components/central/FaqCatalogo";
-import { BotaoFeedbackFlutuante, LinkFeedback } from "@/components/central/BotaoFeedback";
+import { BotaoFeedbackFlutuante } from "@/components/central/BotaoFeedback";
+import { LinkSuporte } from "@/components/central/SuporteDialog";
 import { FundoAnimado } from "@/components/central/FundoAnimado";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { BorderBeam } from "@/components/magicui/border-beam";
@@ -256,7 +257,7 @@ export default function Central() {
   const { produtos, loading } = useProdutos();
   const [selecionado, setSelecionado] = useState<Produto | null>(null);
   const [avaliando, setAvaliando] = useState<Produto | null>(null);
-  const [feedbackGeral, setFeedbackGeral] = useState(false);
+  
   const [params, setParams] = useSearchParams();
 
   useEffect(() => { registrarEvento("visita_catalogo"); }, []);
@@ -352,21 +353,6 @@ export default function Central() {
           </div>
         </div>
 
-        {/* Convite direto ao feedback para quem só navega e não converte. */}
-        <div className="mx-auto mt-10 flex max-w-3xl flex-col items-start gap-4 rounded-2xl border border-primary/30 bg-card/60 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <Pill tom="primario">Semana de validação</Pill>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Essa semana estamos testando o Hub Central — sua opinião ajuda a decidir o que vem por aí.
-            </p>
-          </div>
-          <Button
-            onClick={() => setFeedbackGeral(true)}
-            className="shrink-0 gap-1.5 rounded-full"
-          >
-            Deixar minha opinião <ArrowRight className="h-3.5 w-3.5" />
-          </Button>
-        </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
@@ -402,12 +388,7 @@ export default function Central() {
             </a>
           </p>
           <div className="flex items-center gap-4">
-            <LinkFeedback />
-            <Button variant="ghost" size="sm" asChild className="focus-label h-7 rounded-full px-3">
-              <a href="https://focusinteligente.com.br" target="_blank" rel="noopener noreferrer" className="gap-1.5">
-                Conhecer a Focus <ArrowRight className="w-3 h-3" />
-              </a>
-            </Button>
+            <LinkSuporte />
           </div>
         </div>
       </footer>
@@ -421,12 +402,6 @@ export default function Central() {
         onOpenChange={(v) => !v && setAvaliando(null)}
         pagina={avaliando?.slug}
         placeholder={avaliando ? `Como foi usar o ${avaliando.nome}? Conta pra gente.` : undefined}
-      />
-
-      <FeedbackDialog
-        open={feedbackGeral}
-        onOpenChange={setFeedbackGeral}
-        placeholder="O que achou do Hub Central? O que faltou pra você?"
       />
     </div>
   );

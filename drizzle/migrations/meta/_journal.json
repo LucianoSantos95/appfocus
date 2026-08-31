@@ -36,6 +36,13 @@
       "when": 1788192707388,
       "tag": "0004_advisor_interesse_set_email_rpc",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788195432355,
+      "tag": "0005_create_suporte_publico",
+      "breakpoints": true
     }
   ]
 }
