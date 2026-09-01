@@ -159,14 +159,20 @@ Deno.serve(async (req) => {
       text = "Valeu pelo feedback! Sua opinião ajuda a decidir o que vem no Hub essa semana.";
     }
 
-    // Linha de log criada ANTES do envio para termos o id do pixel de abertura.
+    // Linha de log criada ANTES do envio para termos o id do pixel de abertura
+    // e — no follow-up de uso — a referência segura dos links de estrela.
+    const templateName = kind === "followup_uso" ? "followup_uso" : `thanks_${kind}`;
     const { data: logRow } = await admin
       .from("email_send_log")
       .insert({
         recipient_email: email,
         status: "pending",
-        template_name: `thanks_${kind}`,
-        metadata: { produto: produtoNome || null, origem: kind },
+        template_name: templateName,
+        metadata: {
+          produto: produtoNome || null,
+          produto_slug: produtoSlug || null,
+          origem: kind,
+        },
       })
       .select("id")
       .single();
@@ -174,6 +180,12 @@ Deno.serve(async (req) => {
     const pixelHtml = logRow?.id
       ? `<img src="${SUPABASE_URL}/functions/v1/track-email-open?m=${logRow.id}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;opacity:0" />`
       : "";
+
+    if (kind === "followup_uso") {
+      if (!logRow?.id) return json(500, { error: "log row not created" });
+      blocksHtml = estrelasHtml(logRow.id);
+      ctaUrl = `${SITE_URL}/`;
+    }
 
     const html = renderTemplate({
       displayName: nome,
