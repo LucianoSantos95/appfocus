@@ -19,6 +19,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Central = lazy(() => import("./pages/Central"));
 const TemplatesNotionGratuitos = lazy(() => import("./pages/TemplatesNotionGratuitos"));
 const Admin = lazy(() => import("./pages/Admin"));
+const AvaliacaoRecebida = lazy(() => import("./pages/AvaliacaoRecebida"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 
 const queryClient = new QueryClient({
@@ -60,6 +61,7 @@ const App = () => (
                     <Route path="/admin" element={<ProtectedRoute><ErrorBoundary><Admin /></ErrorBoundary></ProtectedRoute>} />
 
                     {/* Legais — o catálogo coleta nome e e-mail (LGPD) */}
+                    <Route path="/avaliacao-recebida" element={<AvaliacaoRecebida />} />
                     <Route path="/termos" element={<Termos />} />
                     <Route path="/privacidade" element={<Privacidade />} />
 

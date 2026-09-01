@@ -57,3 +57,7 @@ project_id = "hnextembswhejumvxbzd"
     verify_jwt = false
 
 
+  [functions.rate-produto]
+    verify_jwt = false
+  [functions.cron-followup-uso]
+    verify_jwt = false
