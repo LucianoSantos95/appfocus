@@ -518,31 +518,49 @@ export function MetricasPanel() {
             ) : (
               <Card>
                 <CardContent className="p-5 space-y-4">
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {porProduto.map((p) => {
                       const n = notas[p.slug];
+                      const ativo = slugFiltro === p.slug;
                       return (
-                        <Badge key={p.slug} variant="outline" className="gap-1.5 text-muted-foreground">
-                          <span className="text-foreground">{p.produto}</span>
-                          {n ? (
-                            <span className="inline-flex items-center gap-0.5 text-yellow-400">
-                              <Star className="w-3 h-3 fill-yellow-400" />
-                              {n.media.toFixed(1)}
-                              <span className="text-muted-foreground">({n.qtd})</span>
-                            </span>
-                          ) : (
-                            <span>sem nota</span>
-                          )}
-                        </Badge>
+                        <button
+                          key={p.slug}
+                          type="button"
+                          onClick={() => setSlugFiltro(ativo ? null : p.slug)}
+                          aria-pressed={ativo}
+                          className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
+                        >
+                          <Badge
+                            variant={ativo ? "default" : "outline"}
+                            className={`gap-1.5 cursor-pointer transition-colors ${ativo ? "" : "text-muted-foreground hover:border-primary/50"}`}
+                          >
+                            <span className={ativo ? "" : "text-foreground"}>{p.produto}</span>
+                            {n ? (
+                              <span className={`inline-flex items-center gap-0.5 ${ativo ? "" : "text-yellow-400"}`}>
+                                <Star className={`w-3 h-3 ${ativo ? "fill-current" : "fill-yellow-400"}`} />
+                                {n.media.toFixed(1)}
+                                <span className={ativo ? "opacity-80" : "text-muted-foreground"}>({n.qtd})</span>
+                              </span>
+                            ) : (
+                              <span>sem nota</span>
+                            )}
+                          </Badge>
+                        </button>
                       );
                     })}
+                    {slugFiltro && (
+                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSlugFiltro(null)}>
+                        Ver todos
+                      </Button>
+                    )}
                   </div>
                   <ChartContainer
                     config={grafico}
                     className="w-full"
-                    style={{ height: Math.max(160, porProduto.length * 56) }}
+                    style={{ height: Math.max(160, produtoGrafico.length * 56) }}
                   >
-                    <BarChart data={porProduto} layout="vertical" margin={{ left: 8, right: 56 }} barGap={4}>
+                    <BarChart data={produtoGrafico} layout="vertical" margin={{ left: 8, right: 56 }} barGap={4}>
+
                       <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} />
                       <YAxis
