@@ -90,7 +90,23 @@ function card(titulo: string, texto: string) {
   return `<div style="background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:18px;margin-bottom:10px"><strong style="color:#3b82f6;font-size:14px">${escapeHtml(titulo)}</strong><p style="margin:6px 0 0;color:#cbd5e1;font-size:14px;line-height:1.5">${escapeHtml(texto)}</p></div>`;
 }
 
-type Kind = "produto" | "advisor" | "feedback";
+type Kind = "produto" | "advisor" | "feedback" | "followup_uso";
+
+// Estrelas clicáveis: cada uma é um link para a function pública rate-produto,
+// que registra a nota e redireciona para a página de agradecimento.
+function estrelasHtml(logId: string) {
+  const links = [1, 2, 3, 4, 5]
+    .map((n) => {
+      const url = `${SUPABASE_URL}/functions/v1/rate-produto?log=${logId}&nota=${n}`;
+      return `<a href="${url}" title="${n} estrela${n > 1 ? "s" : ""}" style="display:inline-block;text-decoration:none;font-size:34px;line-height:1;color:#fbbf24;padding:0 6px">★</a>`;
+    })
+    .join("");
+  return `<div style="background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:22px;text-align:center">
+    <strong style="color:#3b82f6;font-size:14px">Sua nota</strong>
+    <div style="margin:12px 0 4px">${links}</div>
+    <p style="margin:6px 0 0;color:#94a3b8;font-size:12px">1 = fraco · 5 = excelente</p>
+  </div>`;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -104,7 +120,7 @@ Deno.serve(async (req) => {
     }
 
     const rawKind = String(body?.kind || "");
-    if (!["produto", "advisor", "feedback"].includes(rawKind)) {
+    if (!["produto", "advisor", "feedback", "followup_uso"].includes(rawKind)) {
       return json(400, { error: "invalid kind" });
     }
     const kind = rawKind as Kind;
