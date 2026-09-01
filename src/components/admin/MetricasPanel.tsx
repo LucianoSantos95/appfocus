@@ -238,7 +238,11 @@ export function MetricasPanel() {
     // taxa vai como rótulo de texto, não como barra: a escala é outra
     .map((p) => ({ ...p, taxa: pct(p.leads, p.cliques) }));
 
+  // filtro client-side: badge selecionado isola o produto no gráfico
+  const produtoGrafico = slugFiltro ? porProduto.filter((p) => p.slug === slugFiltro) : porProduto;
+
   const periodoRotulo = dias === "0" ? "tudo" : `${dias}d`;
+
   const hoje = new Date().toISOString().slice(0, 10);
 
   const exportarEventos = () =>
