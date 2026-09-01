@@ -23,7 +23,6 @@ export default function AvaliacaoRecebida() {
         title="Avaliação recebida"
         suffix="Hub Central"
         description="Obrigado por avaliar o material do Hub Central."
-        noindex
       />
 
       <main className="mx-auto flex max-w-xl flex-col gap-6 px-6 py-16">
