@@ -232,8 +232,8 @@ Deno.serve(async (req) => {
     } else {
       await admin.from("email_send_log").insert({
         recipient_email: email,
-        template_name: `thanks_${kind}`,
-        metadata: { produto: produtoNome || null, origem: kind },
+        template_name: templateName,
+        metadata: { produto: produtoNome || null, produto_slug: produtoSlug || null, origem: kind },
         ...registro,
       });
     }
