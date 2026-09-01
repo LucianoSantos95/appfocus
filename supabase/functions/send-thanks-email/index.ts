@@ -151,6 +151,12 @@ Deno.serve(async (req) => {
         secondaryHtml = `Como foi usar ${produtoNome ? `o <strong>${escapeHtml(produtoNome)}</strong>` : "o material"}? <a href="${escapeHtml(avaliarUrl)}" style="color:#3b82f6;text-decoration:underline">Deixe sua nota</a> — leva 10 segundos.`;
         text += `\n\nComo foi usar? Deixe sua nota: ${avaliarUrl}`;
       }
+    } else if (kind === "followup_uso") {
+      subject = produtoNome ? `E aí, já usou o ${produtoNome}?` : "E aí, já deu uma olhada?";
+      introHtml = `<p>E aí, já deu uma olhada ${produtoNome ? `no <strong>${escapeHtml(produtoNome)}</strong>` : "no material que pegou"}? O que achou?</p><p style="margin:10px 0 0">É só clicar numa estrela — leva 2 segundos e não precisa digitar nada.</p>`;
+      ctaLabel = "Voltar ao Hub Central";
+      ctaUrl = `${SITE_URL}/`;
+      text = `E aí, já deu uma olhada${produtoNome ? ` no ${produtoNome}` : ""}? Responda clicando numa estrela no e-mail.`;
     } else {
       subject = "Valeu pelo feedback";
       introHtml = `<p>Obrigado por escrever. Lemos todos os feedbacks um por um — a sua opinião ajuda a decidir o que entra no Hub ainda essa semana.</p>`;
