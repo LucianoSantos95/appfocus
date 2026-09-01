@@ -250,13 +250,6 @@ function SecaoCatalogo({
         </div>
       )}
 
-      {s.tipo === "notion" && (
-        <p className="mt-5 text-sm text-muted-foreground">
-          <Link to="/templates-notion-gratuitos" className="text-primary underline underline-offset-4">
-            Ver todos os templates de Notion gratuitos
-          </Link>
-        </p>
-      )}
     </section>
   );
 }
