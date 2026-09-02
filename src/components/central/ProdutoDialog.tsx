@@ -13,6 +13,8 @@ import { Loader2, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import type { Produto } from "@/hooks/useProdutos";
 import { FeedbackForm } from "@/components/user/FeedbackForm";
 import { registrarEvento } from "@/lib/eventos";
+import logoNotion from "@/assets/notion.png.asset.json";
+import logoLovable from "@/assets/lovable-color.png.asset.json";
 
 // Detalhe do produto no Hub Central: galeria + descrição longa + captura de
 // nome/e-mail. Mesmo modelo para Notion, Lovable e Advisor — o que muda é a copy.
@@ -67,10 +69,8 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   const [tocado, setTocado] = useState({ nome: false, email: false });
   const [slide, setSlide] = useState(0);
   const [feedbackEnviado, setFeedbackEnviado] = useState(false);
-  // Enquete do Advisor: ainda não é contato, é validação de demanda.
-  const [voto, setVoto] = useState<boolean | null>(null);
-  const [votoId, setVotoId] = useState<string | null>(null);
-  const [avisado, setAvisado] = useState(false);
+  // Consultoria: a pessoa escolhe a plataforma antes de deixar o contato.
+  const [plataforma, setPlataforma] = useState<"Notion" | "Lovable" | null>(null);
 
 
   useEffect(() => {
@@ -105,6 +105,7 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
         tipo: produto.tipo,
         produto: produto.slug,
         status: "novo",
+        ...(advisor && plataforma ? { customizacao: `Prefere: ${plataforma}` } : {}),
       });
       if (error) throw error;
 
@@ -139,47 +140,12 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   };
 
 
-  const votar = async (resposta: boolean) => {
-    setSending(true);
-    setErro(null);
-    try {
-      // id gerado no cliente: a enquete é anônima e não pode ler de volta (RLS).
-      const id = crypto.randomUUID();
-      const { error } = await sb.from("advisor_interesse").insert({ id, resposta });
-      if (error) throw error;
-      setVotoId(id);
-      setVoto(resposta);
-    } catch (e: any) {
-      setErro(e?.message || "Não foi possível registrar. Tente de novo.");
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const salvarAviso = async () => {
-    if (!emailOk) return;
-    setSending(true);
-    setErro(null);
-    try {
-      const valor = email.trim().toLowerCase();
-      const { error } = votoId
-        ? await sb.rpc("advisor_interesse_set_email", { p_id: votoId, p_email: valor })
-        : await sb.from("advisor_interesse").insert({ resposta: true, email: valor });
-      if (error) throw error;
-      setAvisado(true);
-    } catch (e: any) {
-      setErro(e?.message || "Não foi possível salvar seu e-mail.");
-    } finally {
-      setSending(false);
-    }
-  };
-
   const fechar = () => {
     onOpenChange(false);
     setTimeout(() => {
       setNome(""); setEmail(""); setEntregue(false); setFeedbackEnviado(false); setErro(null);
       setTocado({ nome: false, email: false });
-      setVoto(null); setVotoId(null); setAvisado(false);
+      setPlataforma(null);
     }, 250);
   };
 
@@ -300,61 +266,39 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
               </div>
             )}
 
-            {advisor ? (
+            {advisor && (
               <div className="rounded-xl border border-border p-4 space-y-3">
-                {voto === null ? (
-                  <>
-                    <p className="text-sm font-medium text-foreground">
-                      Se esse programa estivesse ativo hoje, você agendaria esse bate-papo?
-                    </p>
-                    {erro && <p className="text-sm text-destructive">{erro}</p>}
-                    <div className="flex gap-2">
-                      <Button onClick={() => votar(true)} disabled={sending} className="flex-1 rounded-full">
-                        {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sim"}
-                      </Button>
-                      <Button variant="outline" onClick={() => votar(false)} disabled={sending} className="flex-1 rounded-full">
-                        Não
-                      </Button>
-                    </div>
-                  </>
-                ) : voto === false ? (
-                  <div className="text-center space-y-2 py-2">
-                    <p className="text-sm font-medium text-foreground">Valeu pela resposta</p>
-                    <p className="text-xs text-muted-foreground">Isso já me ajuda a decidir o que construir.</p>
-                    <Button variant="outline" onClick={fechar} className="rounded-full">Fechar</Button>
-                  </div>
-                ) : avisado ? (
-                  <div className="text-center space-y-2 py-2">
-                    <p className="text-sm font-medium text-foreground">Anotado</p>
-                    <p className="text-xs text-muted-foreground">Te aviso assim que abrir.</p>
-                    <Button variant="outline" onClick={fechar} className="rounded-full">Fechar</Button>
-                  </div>
-                ) : (
-                  <>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Quer que eu te avise assim que abrir?</p>
-                      <p className="text-xs text-muted-foreground">Opcional — só o e-mail, sem spam.</p>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="pd-adv-email">E-mail</Label>
-                      <Input
-                        id="pd-adv-email" type="email" value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && emailOk && salvarAviso()}
-                        placeholder="voce@empresa.com.br"
-                      />
-                    </div>
-                    {erro && <p className="text-sm text-destructive">{erro}</p>}
-                    <div className="flex gap-2">
-                      <Button onClick={salvarAviso} disabled={!emailOk || sending} className="flex-1 rounded-full gap-2">
-                        {sending ? <><Loader2 className="w-4 h-4 animate-spin" /> Enviando…</> : "Quero ser avisado"}
-                      </Button>
-                      <Button variant="ghost" onClick={fechar}>Pular</Button>
-                    </div>
-                  </>
-                )}
+                <p className="text-sm font-medium text-foreground">
+                  Prefere construir isso em Notion ou como um sistema Lovable?
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { id: "Notion" as const, logo: logoNotion.url, sub: "Organizado no Notion" },
+                    { id: "Lovable" as const, logo: logoLovable.url, sub: "Sistema sob medida" },
+                  ]).map((op) => (
+                    <button
+                      key={op.id}
+                      type="button"
+                      aria-pressed={plataforma === op.id}
+                      onClick={() => setPlataforma(op.id)}
+                      className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-colors ${
+                        plataforma === op.id
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:bg-muted"
+                      }`}
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-background">
+                        <img src={op.logo} alt={op.id} className="h-6 w-6 object-contain" loading="lazy" />
+                      </span>
+                      <span className="text-sm font-medium text-foreground">{op.id}</span>
+                      <span className="text-[11px] text-muted-foreground">{op.sub}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            ) : (
+            )}
+
+            {(!advisor || plataforma) && (
             <div className="rounded-xl border border-border p-4 space-y-3">
               <div>
                 <p className="text-sm font-medium text-foreground">{t.formTitulo}</p>
