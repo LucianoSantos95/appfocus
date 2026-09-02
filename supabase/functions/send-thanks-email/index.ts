@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
         status: "pending",
         template_name: templateName,
         metadata: {
-          produto: produtoNome || null,
+          produto: produtoNomeFinal || null,
           produto_slug: produtoSlug || null,
           origem: kind,
         },
@@ -260,7 +260,7 @@ Deno.serve(async (req) => {
       await admin.from("email_send_log").insert({
         recipient_email: email,
         template_name: templateName,
-        metadata: { produto: produtoNome || null, produto_slug: produtoSlug || null, origem: kind },
+        metadata: { produto: produtoNomeFinal || null, produto_slug: produtoSlug || null, origem: kind },
         ...registro,
       });
     }
