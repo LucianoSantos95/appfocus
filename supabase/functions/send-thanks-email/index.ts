@@ -90,7 +90,7 @@ function card(titulo: string, texto: string) {
   return `<div style="background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:18px;margin-bottom:10px"><strong style="color:#3b82f6;font-size:14px">${escapeHtml(titulo)}</strong><p style="margin:6px 0 0;color:#cbd5e1;font-size:14px;line-height:1.5">${escapeHtml(texto)}</p></div>`;
 }
 
-type Kind = "produto" | "advisor" | "feedback" | "followup_uso";
+type Kind = "produto" | "advisor" | "feedback" | "followup_uso" | "crosssell_produto";
 
 // Estrelas clicáveis: cada uma é um link para a function pública rate-produto,
 // que registra a nota e redireciona para a página de agradecimento.
@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
     }
 
     const rawKind = String(body?.kind || "");
-    if (!["produto", "advisor", "feedback", "followup_uso"].includes(rawKind)) {
+    if (!["produto", "advisor", "feedback", "followup_uso", "crosssell_produto"].includes(rawKind)) {
       return json(400, { error: "invalid kind" });
     }
     const kind = rawKind as Kind;
@@ -148,6 +148,7 @@ Deno.serve(async (req) => {
     let ctaUrl = link;
     let secondaryHtml: string | undefined;
     let text: string;
+    let produtoNomeFinal = produtoNome;
 
     if (kind === "advisor") {
       subject = "Recebemos seu contato";
@@ -173,6 +174,31 @@ Deno.serve(async (req) => {
       ctaLabel = "Voltar ao Hub Central";
       ctaUrl = `${SITE_URL}/`;
       text = `E aí, já deu uma olhada${produtoNome ? ` no ${produtoNome}` : ""}? Responda clicando numa estrela no e-mail.`;
+    } else if (kind === "crosssell_produto") {
+      // Copy montada com o conteúdo real do produto ofertado (descrição/detalhes),
+      // lidos do banco no servidor — o cliente só manda o slug.
+      const { data: prod } = await admin
+        .from("produtos")
+        .select("nome,descricao,detalhes,link_destino,ativo")
+        .eq("slug", produtoSlug)
+        .maybeSingle();
+      if (!prod || prod.ativo === false) return json(400, { error: "produto inválido" });
+
+      produtoNomeFinal = prod.nome;
+      const resumo = String(prod.descricao || prod.detalhes || "")
+        .replace(/\*\*/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 320);
+
+      subject = `Ainda não conhece o ${prod.nome}?`;
+      introHtml = `<p>Você já pegou material no Hub Central — esse aqui ainda não passou por você: <strong>${escapeHtml(prod.nome)}</strong>.</p>${
+        resumo ? `<p style="margin:10px 0 0">${escapeHtml(resumo)}</p>` : ""
+      }`;
+      blocksHtml = card(prod.nome, resumo || "Disponível agora no Hub Central.");
+      ctaLabel = "Ver no Hub Central";
+      ctaUrl = `${SITE_URL}/?produto=${encodeURIComponent(produtoSlug)}`;
+      text = `Ainda não conhece o ${prod.nome}? ${resumo}\n\n${ctaUrl}`;
     } else {
       subject = "Valeu pelo feedback";
       introHtml = `<p>Obrigado por escrever. Lemos todos os feedbacks um por um — a sua opinião ajuda a decidir o que entra no Hub ainda essa semana.</p>`;
@@ -183,7 +209,8 @@ Deno.serve(async (req) => {
 
     // Linha de log criada ANTES do envio para termos o id do pixel de abertura
     // e — no follow-up de uso — a referência segura dos links de estrela.
-    const templateName = kind === "followup_uso" ? "followup_uso" : `thanks_${kind}`;
+    const templateName =
+      kind === "followup_uso" || kind === "crosssell_produto" ? kind : `thanks_${kind}`;
     const { data: logRow } = await admin
       .from("email_send_log")
       .insert({
@@ -191,7 +218,7 @@ Deno.serve(async (req) => {
         status: "pending",
         template_name: templateName,
         metadata: {
-          produto: produtoNome || null,
+          produto: produtoNomeFinal || null,
           produto_slug: produtoSlug || null,
           origem: kind,
         },
@@ -233,7 +260,7 @@ Deno.serve(async (req) => {
       await admin.from("email_send_log").insert({
         recipient_email: email,
         template_name: templateName,
-        metadata: { produto: produtoNome || null, produto_slug: produtoSlug || null, origem: kind },
+        metadata: { produto: produtoNomeFinal || null, produto_slug: produtoSlug || null, origem: kind },
         ...registro,
       });
     }

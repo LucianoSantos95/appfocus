@@ -61,3 +61,5 @@ project_id = "hnextembswhejumvxbzd"
     verify_jwt = false
   [functions.cron-followup-uso]
     verify_jwt = false
+  [functions.cron-crosssell]
+    verify_jwt = false
