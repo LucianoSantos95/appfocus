@@ -16,15 +16,15 @@ const TEMPLATE = "crosssell_produto";
 const LOTE_MAX = 50; // teto de trabalho por execução
 
 Deno.serve(async (req) => {
-  const token = req.headers.get("x-cron-token") ?? new URL(req.url).searchParams.get("token");
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-  if (token) {
+  const bearer = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+  const token = req.headers.get("x-cron-token") ?? new URL(req.url).searchParams.get("token") ?? bearer;
+  let autorizado = bearer !== "" && bearer === SERVICE_ROLE;
+  if (!autorizado && token) {
     const { data: ok } = await admin.rpc("verify_cron_token", { p_token: token });
-    if (!ok) return new Response("Unauthorized", { status: 401 });
-  } else {
-    const auth = req.headers.get("Authorization") ?? "";
-    if (!auth.includes(SERVICE_ROLE)) return new Response("Unauthorized", { status: 401 });
+    autorizado = !!ok;
   }
+  if (!autorizado) return new Response("Unauthorized", { status: 401 });
 
   const agora = Date.now();
 
