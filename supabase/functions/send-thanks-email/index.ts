@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
     }
 
     const rawKind = String(body?.kind || "");
-    if (!["produto", "advisor", "feedback", "followup_uso"].includes(rawKind)) {
+    if (!["produto", "advisor", "feedback", "followup_uso", "crosssell_produto"].includes(rawKind)) {
       return json(400, { error: "invalid kind" });
     }
     const kind = rawKind as Kind;
