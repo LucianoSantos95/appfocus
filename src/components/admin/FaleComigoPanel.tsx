@@ -1,24 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Mail, Target, ExternalLink } from "lucide-react";
+import { Loader2, Mail, Target, ExternalLink } from "lucide-react";
 
-// Aba "Fale comigo": conteúdo da Consultoria + leads reais desse produto.
+// Aba "Fale comigo": leads reais da Consultoria (produto tipo='advisor').
 const sb = supabase as any;
-
-interface Conteudo {
-  id: string | null;
-  slug: string | null;
-  nome: string;
-  descricao: string;
-  detalhes: string;
-}
 
 interface Lead {
   id: string;
@@ -29,25 +17,15 @@ interface Lead {
 }
 
 export function FaleComigoPanel() {
-  const { toast } = useToast();
-  const [conteudo, setConteudo] = useState<Conteudo>({ id: null, slug: null, nome: "", descricao: "", detalhes: "" });
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [salvando, setSalvando] = useState(false);
 
   const carregar = useCallback(async () => {
     setLoading(true);
     const { data: prod } = await sb
-      .from("produtos").select("*").eq("tipo", "advisor")
+      .from("produtos").select("slug").eq("tipo", "advisor")
       .order("ordem", { ascending: true }).limit(1).maybeSingle();
-    if (prod) {
-      setConteudo({
-        id: prod.id,
-        slug: prod.slug,
-        nome: prod.nome ?? "",
-        descricao: prod.descricao ?? "",
-        detalhes: prod.detalhes ?? "",
-      });
+    if (prod?.slug) {
       const { data: ls } = await sb
         .from("leads").select("id,nome,email,customizacao,created_at")
         .eq("produto", prod.slug)
@@ -59,62 +37,13 @@ export function FaleComigoPanel() {
 
   useEffect(() => { carregar(); }, [carregar]);
 
-
-  const salvar = async () => {
-    if (!conteudo.id) {
-      return toast({ title: "Nenhum produto Advisor cadastrado", variant: "destructive" });
-    }
-    if (!conteudo.nome.trim()) return toast({ title: "Dê um nome", variant: "destructive" });
-    setSalvando(true);
-    const { error } = await sb.from("produtos").update({
-      nome: conteudo.nome.trim(),
-      descricao: conteudo.descricao.trim() || null,
-      detalhes: conteudo.detalhes.trim() || null,
-    }).eq("id", conteudo.id);
-    setSalvando(false);
-    if (error) return toast({ title: "Não salvou", description: error.message, variant: "destructive" });
-    toast({ title: "Conteúdo atualizado" });
-  };
-
-
-
-
   if (loading) {
     return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   }
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardContent className="p-4 space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Conteúdo do Advisor</h3>
-            <p className="text-xs text-muted-foreground">É o que aparece na seção "Fale comigo" do catálogo.</p>
-          </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="fc-nome">Nome</Label>
-            <Input id="fc-nome" value={conteudo.nome}
-              onChange={(e) => setConteudo({ ...conteudo, nome: e.target.value })} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="fc-desc">Descrição curta (card)</Label>
-            <Textarea id="fc-desc" rows={2} value={conteudo.descricao}
-              onChange={(e) => setConteudo({ ...conteudo, descricao: e.target.value })} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="fc-det">Detalhes (texto longo do dialog)</Label>
-            <Textarea id="fc-det" rows={10} value={conteudo.detalhes}
-              onChange={(e) => setConteudo({ ...conteudo, detalhes: e.target.value })} />
-          </div>
-
-          <Button onClick={salvar} disabled={salvando} className="gap-2">
-            {salvando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
-          </Button>
-        </CardContent>
-      </Card>
 
       <div className="space-y-3">
         <div className="flex items-center gap-2">
