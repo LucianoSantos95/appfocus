@@ -148,6 +148,7 @@ Deno.serve(async (req) => {
     let ctaUrl = link;
     let secondaryHtml: string | undefined;
     let text: string;
+    let produtoNomeFinal = produtoNome;
 
     if (kind === "advisor") {
       subject = "Recebemos seu contato";
