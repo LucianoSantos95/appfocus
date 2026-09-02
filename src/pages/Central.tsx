@@ -111,7 +111,9 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
         <div className="flex items-start justify-between gap-3">
           <h3 className="min-w-0 font-grotesk text-lg font-extrabold leading-snug tracking-tight text-foreground">{p.nome}</h3>
           <span className="shrink-0">
-            {p.gratuito
+            {advisor
+              ? <Pill tom="sutil">Sob consulta</Pill>
+              : p.gratuito
               ? <Pill tom="sutil">Grátis</Pill>
               : p.preco != null
                 ? <Pill tom="sutil">R$ {Number(p.preco).toLocaleString("pt-BR")}</Pill>
