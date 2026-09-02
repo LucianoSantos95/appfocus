@@ -209,7 +209,8 @@ Deno.serve(async (req) => {
 
     // Linha de log criada ANTES do envio para termos o id do pixel de abertura
     // e — no follow-up de uso — a referência segura dos links de estrela.
-    const templateName = kind === "followup_uso" ? "followup_uso" : `thanks_${kind}`;
+    const templateName =
+      kind === "followup_uso" || kind === "crosssell_produto" ? kind : `thanks_${kind}`;
     const { data: logRow } = await admin
       .from("email_send_log")
       .insert({
