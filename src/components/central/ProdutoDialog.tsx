@@ -13,6 +13,8 @@ import { Loader2, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import type { Produto } from "@/hooks/useProdutos";
 import { FeedbackForm } from "@/components/user/FeedbackForm";
 import { registrarEvento } from "@/lib/eventos";
+import logoNotion from "@/assets/notion.png.asset.json";
+import logoLovable from "@/assets/lovable-color.png.asset.json";
 
 // Detalhe do produto no Hub Central: galeria + descrição longa + captura de
 // nome/e-mail. Mesmo modelo para Notion, Lovable e Advisor — o que muda é a copy.
@@ -67,10 +69,8 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   const [tocado, setTocado] = useState({ nome: false, email: false });
   const [slide, setSlide] = useState(0);
   const [feedbackEnviado, setFeedbackEnviado] = useState(false);
-  // Enquete do Advisor: ainda não é contato, é validação de demanda.
-  const [voto, setVoto] = useState<boolean | null>(null);
-  const [votoId, setVotoId] = useState<string | null>(null);
-  const [avisado, setAvisado] = useState(false);
+  // Consultoria: a pessoa escolhe a plataforma antes de deixar o contato.
+  const [plataforma, setPlataforma] = useState<"Notion" | "Lovable" | null>(null);
 
 
   useEffect(() => {
