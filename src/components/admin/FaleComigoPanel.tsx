@@ -76,9 +76,8 @@ export function FaleComigoPanel() {
     toast({ title: "Conteúdo atualizado" });
   };
 
-  const sim = respostas.filter((r) => r.resposta).length;
-  const nao = respostas.length - sim;
-  const interessados = respostas.filter((r) => r.resposta && r.email);
+
+
 
   if (loading) {
     return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
