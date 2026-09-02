@@ -173,6 +173,31 @@ Deno.serve(async (req) => {
       ctaLabel = "Voltar ao Hub Central";
       ctaUrl = `${SITE_URL}/`;
       text = `E aí, já deu uma olhada${produtoNome ? ` no ${produtoNome}` : ""}? Responda clicando numa estrela no e-mail.`;
+    } else if (kind === "crosssell_produto") {
+      // Copy montada com o conteúdo real do produto ofertado (descrição/detalhes),
+      // lidos do banco no servidor — o cliente só manda o slug.
+      const { data: prod } = await admin
+        .from("produtos")
+        .select("nome,descricao,detalhes,link_destino,ativo")
+        .eq("slug", produtoSlug)
+        .maybeSingle();
+      if (!prod || prod.ativo === false) return json(400, { error: "produto inválido" });
+
+      produtoNomeFinal = prod.nome;
+      const resumo = String(prod.descricao || prod.detalhes || "")
+        .replace(/\*\*/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 320);
+
+      subject = `Ainda não conhece o ${prod.nome}?`;
+      introHtml = `<p>Você já pegou material no Hub Central — esse aqui ainda não passou por você: <strong>${escapeHtml(prod.nome)}</strong>.</p>${
+        resumo ? `<p style="margin:10px 0 0">${escapeHtml(resumo)}</p>` : ""
+      }`;
+      blocksHtml = card(prod.nome, resumo || "Disponível agora no Hub Central.");
+      ctaLabel = "Ver no Hub Central";
+      ctaUrl = `${SITE_URL}/?produto=${encodeURIComponent(produtoSlug)}`;
+      text = `Ainda não conhece o ${prod.nome}? ${resumo}\n\n${ctaUrl}`;
     } else {
       subject = "Valeu pelo feedback";
       introHtml = `<p>Obrigado por escrever. Lemos todos os feedbacks um por um — a sua opinião ajuda a decidir o que entra no Hub ainda essa semana.</p>`;
