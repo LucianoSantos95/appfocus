@@ -7,51 +7,58 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Loader2, Save, Mail, Target, ExternalLink } from "lucide-react";
 
-// Aba "Fale comigo": conteúdo do Advisor + resultado da enquete de demanda.
+// Aba "Fale comigo": conteúdo da Consultoria + leads reais desse produto.
 const sb = supabase as any;
 
 interface Conteudo {
   id: string | null;
+  slug: string | null;
   nome: string;
   descricao: string;
   detalhes: string;
 }
 
-interface Resposta {
+interface Lead {
   id: string;
-  resposta: boolean;
-  email: string | null;
+  nome: string;
+  email: string;
+  customizacao: string | null;
   created_at: string;
 }
 
 export function FaleComigoPanel() {
   const { toast } = useToast();
-  const [conteudo, setConteudo] = useState<Conteudo>({ id: null, nome: "", descricao: "", detalhes: "" });
-  const [respostas, setRespostas] = useState<Resposta[]>([]);
+  const [conteudo, setConteudo] = useState<Conteudo>({ id: null, slug: null, nome: "", descricao: "", detalhes: "" });
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
 
   const carregar = useCallback(async () => {
     setLoading(true);
-    const [{ data: prod }, { data: votos }] = await Promise.all([
-      sb.from("produtos").select("*").eq("tipo", "advisor").order("ordem", { ascending: true }).limit(1).maybeSingle(),
-      sb.from("advisor_interesse").select("*").order("created_at", { ascending: false }),
-    ]);
+    const { data: prod } = await sb
+      .from("produtos").select("*").eq("tipo", "advisor")
+      .order("ordem", { ascending: true }).limit(1).maybeSingle();
     if (prod) {
       setConteudo({
         id: prod.id,
+        slug: prod.slug,
         nome: prod.nome ?? "",
         descricao: prod.descricao ?? "",
         detalhes: prod.detalhes ?? "",
       });
+      const { data: ls } = await sb
+        .from("leads").select("id,nome,email,customizacao,created_at")
+        .eq("produto", prod.slug)
+        .order("created_at", { ascending: false });
+      setLeads((ls as Lead[]) || []);
     }
-    setRespostas((votos as Resposta[]) || []);
     setLoading(false);
   }, []);
 
   useEffect(() => { carregar(); }, [carregar]);
+
 
   const salvar = async () => {
     if (!conteudo.id) {
