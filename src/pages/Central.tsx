@@ -100,7 +100,7 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
         )}
         {comBeam && (
           <span className="absolute bottom-3 left-3 z-10 rounded-full bg-background/85 p-0.5 backdrop-blur-sm">
-            <Pill tom="primario">{advisor ? "Sua opinião conta" : "Recomendado"}</Pill>
+            <Pill tom="primario">Recomendado</Pill>
           </span>
         )}
 
@@ -111,7 +111,11 @@ function CardProduto({ p, onAbrir }: { p: Produto; onAbrir: (p: Produto) => void
         <div className="flex items-start justify-between gap-3">
           <h3 className="min-w-0 font-grotesk text-lg font-extrabold leading-snug tracking-tight text-foreground">{p.nome}</h3>
           <span className="shrink-0">
-            {p.gratuito ? <Pill tom="sutil">Grátis</Pill> : <Pill tom="sutil">R$ {Number(p.preco).toLocaleString("pt-BR")}</Pill>}
+            {p.gratuito
+              ? <Pill tom="sutil">Grátis</Pill>
+              : p.preco != null
+                ? <Pill tom="sutil">R$ {Number(p.preco).toLocaleString("pt-BR")}</Pill>
+                : <Pill tom="sutil">Sob consulta</Pill>}
           </span>
         </div>
 
