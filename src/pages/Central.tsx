@@ -27,9 +27,9 @@ import { registrarEvento } from "@/lib/eventos";
 
 const SECOES: Array<{ tipo: Produto["tipo"]; titulo: string; sub: string; aba: string; logo?: string; fundoClaro?: boolean }> = [
   { tipo: "notion",  aba: "Notion",   titulo: "Templates Notion",  sub: "Gratuitos, prontos pra duplicar e usar hoje", logo: logoNotion.url, fundoClaro: true },
-  { tipo: "playbook", aba: "Playbooks", titulo: "Playbooks", sub: "Metodologia pronta pra organizar sua operação, passo a passo" },
-  { tipo: "lovable", aba: "Lovable",  titulo: "Produtos Lovable",  sub: "Aplicações completas pra operação do seu negócio", logo: logoLovable.url },
   { tipo: "advisor", aba: "Advisor",  titulo: "Fale comigo",       sub: "Quando você precisa de alguém olhando a sua operação" },
+  { tipo: "lovable", aba: "Lovable",  titulo: "Produtos Lovable",  sub: "Aplicações completas pra operação do seu negócio", logo: logoLovable.url },
+  { tipo: "playbook", aba: "Playbooks", titulo: "Playbooks", sub: "Metodologia pronta pra organizar sua operação, passo a passo" },
 ];
 
 /* Pílula mono maiúscula com bolinha — assinatura visual do site da Focus. */
