@@ -90,7 +90,7 @@ function card(titulo: string, texto: string) {
   return `<div style="background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:18px;margin-bottom:10px"><strong style="color:#3b82f6;font-size:14px">${escapeHtml(titulo)}</strong><p style="margin:6px 0 0;color:#cbd5e1;font-size:14px;line-height:1.5">${escapeHtml(texto)}</p></div>`;
 }
 
-type Kind = "produto" | "advisor" | "feedback" | "followup_uso";
+type Kind = "produto" | "advisor" | "feedback" | "followup_uso" | "crosssell_produto";
 
 // Estrelas clicáveis: cada uma é um link para a function pública rate-produto,
 // que registra a nota e redireciona para a página de agradecimento.
