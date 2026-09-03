@@ -282,6 +282,18 @@ export default function Central() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slugAvaliar, produtos]);
 
+  // Link vindo do e-mail de cross-sell: /?produto={slug} abre o produto ofertado.
+  const slugProduto = params.get("produto");
+  useEffect(() => {
+    if (!slugProduto || produtos.length === 0) return;
+    const p = produtos.find((x) => x.slug === slugProduto);
+    if (p) setSelecionado(p);
+    const next = new URLSearchParams(params);
+    next.delete("produto");
+    setParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slugProduto, produtos]);
+
   const porTipo = (t: Produto["tipo"]) => produtos.filter((p) => p.tipo === t);
 
   return (
