@@ -23,7 +23,17 @@ const sb = supabase as any;
 interface Props {
   produto: Produto | null;
   onOpenChange: (v: boolean) => void;
+  catalogo?: Produto[];
+  onAbrirProduto?: (p: Produto) => void;
 }
+
+const ROTULO_TIPO: Record<Produto["tipo"], string> = {
+  notion: "Template Notion",
+  playbook: "Playbook",
+  lovable: "Sistema",
+  advisor: "Consultoria",
+};
+
 
 function copyPor(tipo?: Produto["tipo"]) {
   if (tipo === "advisor") {
