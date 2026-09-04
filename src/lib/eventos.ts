@@ -23,13 +23,46 @@ function sessaoId(): string {
 
 export type TipoEvento = "visita_catalogo" | "clique_produto" | "lead_enviado";
 
+/** De onde a visita veio: domínio do referrer, ou "direto" se não houver. */
+function origemAtual(): string {
+  try {
+    const ref = document.referrer;
+    if (!ref) return "direto";
+    const host = new URL(ref).hostname;
+    if (host === window.location.hostname) return "interno";
+    return host;
+  } catch {
+    return "direto";
+  }
+}
+
+function utmAtual(): { utm_source: string | null; utm_medium: string | null } {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    return {
+      utm_source: p.get("utm_source"),
+      utm_medium: p.get("utm_medium"),
+    };
+  } catch {
+    return { utm_source: null, utm_medium: null };
+  }
+}
+
 /** Registra um evento. Best-effort: nunca quebra nem atrasa a interface. */
 export function registrarEvento(tipo: TipoEvento, produto?: string) {
   try {
+    const { utm_source, utm_medium } = utmAtual();
     // O builder do supabase-js é lazy: só dispara a requisição quando alguém
     // chama .then(). Um `void` aqui criaria o builder e nunca enviaria nada.
     sb.from("eventos")
-      .insert({ tipo, produto: produto ?? null, sessao: sessaoId() })
+      .insert({
+        tipo,
+        produto: produto ?? null,
+        sessao: sessaoId(),
+        origem: origemAtual(),
+        utm_source,
+        utm_medium,
+      })
       .then(
         () => {},
         () => {}, // telemetria nunca deve atrapalhar o usuário
