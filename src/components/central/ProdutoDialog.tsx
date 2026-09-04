@@ -100,6 +100,23 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
   // Sem galeria, a capa é a imagem do template — precisa aparecer no detalhe.
   const imagens = galeria.length > 0 ? galeria : produto?.capa ? [produto.capa] : [];
 
+  // Sugestões: até 2 itens de categorias diferentes da que acabou de ser baixada.
+  const sugestoes = (() => {
+    if (!produto) return [] as Produto[];
+    const outros = catalogo.filter((p) => p.id !== produto.id && p.tipo !== produto.tipo);
+    const ordenados = [...outros].sort((a, b) => Number(b.destaque) - Number(a.destaque));
+    const escolhidos: Produto[] = [];
+    const tipos = new Set<string>();
+    for (const p of ordenados) {
+      if (tipos.has(p.tipo)) continue;
+      tipos.add(p.tipo);
+      escolhidos.push(p);
+      if (escolhidos.length === 2) break;
+    }
+    return escolhidos;
+  })();
+
+
   const entregar = async () => {
     if (!valido || !produto) {
       setTocado({ nome: true, email: true });
