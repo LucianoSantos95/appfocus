@@ -420,7 +420,12 @@ export default function Central() {
 
       <BotaoFeedbackFlutuante />
 
-      <ProdutoDialog produto={selecionado} onOpenChange={(v) => !v && setSelecionado(null)} />
+      <ProdutoDialog
+        produto={selecionado}
+        onOpenChange={(v) => !v && setSelecionado(null)}
+        catalogo={produtos}
+        onAbrirProduto={(p) => setSelecionado(p)}
+      />
 
       <FeedbackDialog
         open={!!avaliando}
