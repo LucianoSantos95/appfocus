@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { FeedbackDialog } from "@/components/user/FeedbackDialog";
 import { PageMeta } from "@/components/seo/PageMeta";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Loader2, PackageOpen, Clock } from "lucide-react";
+import { ArrowRight, Loader2, PackageOpen, Clock, Sparkles } from "lucide-react";
 import logo from "@/assets/logo.png";
 import focusWordmark from "@/assets/logo-email.png";
 import logoNotion from "@/assets/notion.png.asset.json";
@@ -370,7 +370,13 @@ export default function Central() {
               / Pegue o que precisar, sem cadastro e sem custos
             </p>
           </div>
+
+          <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            Aqui também tem <span className="text-foreground">sistema sob medida</span>, playbooks e consultoria.
+          </p>
         </div>
+
 
 
         {loading ? (
@@ -414,7 +420,12 @@ export default function Central() {
 
       <BotaoFeedbackFlutuante />
 
-      <ProdutoDialog produto={selecionado} onOpenChange={(v) => !v && setSelecionado(null)} />
+      <ProdutoDialog
+        produto={selecionado}
+        onOpenChange={(v) => !v && setSelecionado(null)}
+        catalogo={produtos}
+        onAbrirProduto={(p) => setSelecionado(p)}
+      />
 
       <FeedbackDialog
         open={!!avaliando}

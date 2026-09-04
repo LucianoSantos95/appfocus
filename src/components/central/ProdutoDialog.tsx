@@ -23,7 +23,17 @@ const sb = supabase as any;
 interface Props {
   produto: Produto | null;
   onOpenChange: (v: boolean) => void;
+  catalogo?: Produto[];
+  onAbrirProduto?: (p: Produto) => void;
 }
+
+const ROTULO_TIPO: Record<Produto["tipo"], string> = {
+  notion: "Template Notion",
+  playbook: "Playbook",
+  lovable: "Sistema",
+  advisor: "Consultoria",
+};
+
 
 function copyPor(tipo?: Produto["tipo"]) {
   if (tipo === "advisor") {
@@ -59,7 +69,7 @@ function copyPor(tipo?: Produto["tipo"]) {
   };
 }
 
-export function ProdutoDialog({ produto, onOpenChange }: Props) {
+export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirProduto }: Props) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -89,6 +99,23 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
   const galeria = (produto?.imagens ?? []).filter(Boolean);
   // Sem galeria, a capa é a imagem do template — precisa aparecer no detalhe.
   const imagens = galeria.length > 0 ? galeria : produto?.capa ? [produto.capa] : [];
+
+  // Sugestões: até 2 itens de categorias diferentes da que acabou de ser baixada.
+  const sugestoes = (() => {
+    if (!produto) return [] as Produto[];
+    const outros = catalogo.filter((p) => p.id !== produto.id && p.tipo !== produto.tipo);
+    const ordenados = [...outros].sort((a, b) => Number(b.destaque) - Number(a.destaque));
+    const escolhidos: Produto[] = [];
+    const tipos = new Set<string>();
+    for (const p of ordenados) {
+      if (tipos.has(p.tipo)) continue;
+      tipos.add(p.tipo);
+      escolhidos.push(p);
+      if (escolhidos.length === 2) break;
+    }
+    return escolhidos;
+  })();
+
 
   const entregar = async () => {
     if (!valido || !produto) {
@@ -185,6 +212,38 @@ export function ProdutoDialog({ produto, onOpenChange }: Props) {
               </div>
             ) : (
               <p className="mt-5 text-sm text-muted-foreground">Obrigado pelo feedback!</p>
+            )}
+
+            {sugestoes.length > 0 && onAbrirProduto && (
+              <div className="mt-5 w-full text-left">
+                <p className="focus-label text-muted-foreground">/ Você também pode gostar</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {sugestoes.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        const alvo = p;
+                        fechar();
+                        setTimeout(() => onAbrirProduto(alvo), 280);
+                      }}
+                      className="flex items-center gap-3 rounded-xl border border-border p-3 text-left transition-colors hover:border-primary/60 hover:bg-muted/50"
+                    >
+                      {p.capa ? (
+                        <img src={p.capa} alt={p.nome} loading="lazy" className="h-10 w-14 shrink-0 rounded-md object-cover bg-muted" />
+                      ) : (
+                        <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-md bg-muted text-lg">
+                          {p.emoji ?? "✦"}
+                        </span>
+                      )}
+                      <span className="min-w-0">
+                        <span className="block focus-label text-muted-foreground">{ROTULO_TIPO[p.tipo]}</span>
+                        <span className="block truncate text-sm font-medium text-foreground">{p.nome}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
 
 
