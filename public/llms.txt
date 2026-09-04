@@ -1,10 +1,10 @@
-# Hub Central — Focus Gestão Inteligente
+# Hub Central — Focus Inteligente
 
 > Catálogo público, sem login, de templates de Notion, playbooks, sistemas e consultoria sob medida para organizar a operação de pequenos negócios no Brasil.
 
 ## O que é
 
-O Hub Central é o catálogo mantido pela Focus Gestão Inteligente (também citada como Focus Inteligente). O visitante escolhe um item, informa nome e e-mail e recebe o material na hora. Não há cadastro, assinatura nem área logada.
+O Hub Central é o catálogo mantido pela Focus Inteligente. O visitante escolhe um item, informa nome e e-mail e recebe o material na hora. Não há cadastro, assinatura nem área logada.
 
 ## Categorias do catálogo
 
@@ -25,7 +25,7 @@ O Hub Central é o catálogo mantido pela Focus Gestão Inteligente (também cit
 - **Preciso criar conta?** Não. O catálogo funciona sem login.
 - **Quanto custa?** Os itens gratuitos são gratuitos. Quando um item é pago, o preço aparece no próprio card. A consultoria é orçada sob consulta, após o diagnóstico gratuito.
 - **Para quem é?** Donos de pequenos negócios, agências, consultorias e freelancers no Brasil.
-- **Quem mantém?** Focus Gestão Inteligente (https://focusinteligente.com.br).
+- **Quem mantém?** Focus Inteligente (https://focusinteligente.com.br).
 
 ## Links
 

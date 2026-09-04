@@ -16,7 +16,7 @@ interface PageMetaProps {
 }
 
 const SITE_URL = "https://app.focusinteligente.com.br";
-const SITE_NAME = "Focus Gestão Inteligente";
+const SITE_NAME = "Focus Inteligente";
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.png`;
 
 function setTag(seletor: string, criar: () => HTMLElement, atributo: string, valor: string) {
