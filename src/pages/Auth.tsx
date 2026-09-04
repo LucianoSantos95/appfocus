@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 // O Hub Central não tem cadastro — o catálogo é aberto e sem login.
