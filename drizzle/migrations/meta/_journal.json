@@ -43,6 +43,13 @@
       "when": 1788195432355,
       "tag": "0005_create_suporte_publico",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788533244350,
+      "tag": "0006_add_origem_eventos",
+      "breakpoints": true
     }
   ]
 }

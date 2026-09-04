@@ -228,23 +228,32 @@ export type Database = {
         Row: {
           created_at: string
           id: number
+          origem: string | null
           produto: string | null
           sessao: string | null
           tipo: string
+          utm_medium: string | null
+          utm_source: string | null
         }
         Insert: {
           created_at?: string
           id?: number
+          origem?: string | null
           produto?: string | null
           sessao?: string | null
           tipo: string
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Update: {
           created_at?: string
           id?: number
+          origem?: string | null
           produto?: string | null
           sessao?: string | null
           tipo?: string
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Relationships: []
       }
