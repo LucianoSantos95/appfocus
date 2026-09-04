@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 // O Hub Central não tem cadastro — o catálogo é aberto e sem login.
@@ -80,6 +80,17 @@ export default function Auth() {
 
       <main className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
+          <Link
+            to="/"
+            className="mb-8 flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm transition-colors hover:bg-primary/10"
+          >
+            <span className="text-foreground">
+              Procurando um template ou sistema?{" "}
+              <span className="font-medium">O catálogo fica aqui</span>
+            </span>
+            <ArrowRight className="w-4 h-4 shrink-0 text-primary" />
+          </Link>
+
           <h1 className="font-display text-3xl tracking-tight text-foreground">Entrar</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Acesso administrativo. O catálogo é aberto e não precisa de conta.
