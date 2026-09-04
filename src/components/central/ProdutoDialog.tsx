@@ -69,7 +69,7 @@ function copyPor(tipo?: Produto["tipo"]) {
   };
 }
 
-export function ProdutoDialog({ produto, onOpenChange }: Props) {
+export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirProduto }: Props) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
