@@ -16,12 +16,11 @@
   "reactSnap": {
     "source": "dist",
     "include": [
+      "/",
+      "/templates-notion-gratuitos",
       "/auth",
-      "/planos",
       "/termos",
-      "/privacidade",
-      "/glossario",
-      "/comparar"
+      "/privacidade"
     ],
     "inlineCss": false,
     "skipThirdPartyRequests": true,
