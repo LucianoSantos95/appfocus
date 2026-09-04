@@ -370,7 +370,13 @@ export default function Central() {
               / Pegue o que precisar, sem cadastro e sem custos
             </p>
           </div>
+
+          <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            Aqui também tem <span className="text-foreground">sistema sob medida</span>, playbooks e consultoria.
+          </p>
         </div>
+
 
 
         {loading ? (
