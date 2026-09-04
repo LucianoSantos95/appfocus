@@ -214,6 +214,38 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
               <p className="mt-5 text-sm text-muted-foreground">Obrigado pelo feedback!</p>
             )}
 
+            {sugestoes.length > 0 && onAbrirProduto && (
+              <div className="mt-5 w-full text-left">
+                <p className="focus-label text-muted-foreground">/ Você também pode gostar</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {sugestoes.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        const alvo = p;
+                        fechar();
+                        setTimeout(() => onAbrirProduto(alvo), 280);
+                      }}
+                      className="flex items-center gap-3 rounded-xl border border-border p-3 text-left transition-colors hover:border-primary/60 hover:bg-muted/50"
+                    >
+                      {p.capa ? (
+                        <img src={p.capa} alt={p.nome} loading="lazy" className="h-10 w-14 shrink-0 rounded-md object-cover bg-muted" />
+                      ) : (
+                        <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-md bg-muted text-lg">
+                          {p.emoji ?? "✦"}
+                        </span>
+                      )}
+                      <span className="min-w-0">
+                        <span className="block focus-label text-muted-foreground">{ROTULO_TIPO[p.tipo]}</span>
+                        <span className="block truncate text-sm font-medium text-foreground">{p.nome}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
 
           </div>
         ) : (
