@@ -148,7 +148,7 @@ export function MetricasPanel() {
   const [filtroOrigem, setFiltroOrigem] = useState<"todas" | Origem>("todas");
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "sent" | "falhou" | "aberto" | "nao_aberto">("todos");
   const [verTodosEmails, setVerTodosEmails] = useState(false);
-  const [verTodosDisparos, setVerTodosDisparos] = useState(false);
+  const [diaDisparoSel, setDiaDisparoSel] = useState<string | null>(null);
   const [verTodosProdutos, setVerTodosProdutos] = useState(false);
   const [slugFiltro, setSlugFiltro] = useState<string | null>(null);
 
@@ -369,7 +369,10 @@ export function MetricasPanel() {
     ),
   ).sort((a, b) => (a.dia === b.dia ? b.enviados - a.enviados : b.dia.localeCompare(a.dia)));
 
-  const disparosVisiveis = verTodosDisparos ? porDisparo : porDisparo.slice(0, 8);
+  // Dias que tiveram disparo — viram marcação no calendário e opção de filtro.
+  const diasComDisparo = Array.from(new Set(porDisparo.map((d) => d.dia))).sort((a, b) => b.localeCompare(a));
+  const diaAtivo = (diaDisparoSel && diasComDisparo.includes(diaDisparoSel) ? diaDisparoSel : diasComDisparo[0]) ?? null;
+  const disparosVisiveis = porDisparo.filter((d) => d.dia === diaAtivo);
 
 
 
