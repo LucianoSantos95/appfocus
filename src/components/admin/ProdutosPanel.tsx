@@ -481,6 +481,24 @@ export function ProdutosPanel() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!excluindo} onOpenChange={(v) => !v && setExcluindo(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir “{excluindo?.nome}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza? O produto sai do catálogo e desta lista na hora. Os leads, eventos e
+              feedbacks já ligados a ele continuam guardados e seguem aparecendo nas Métricas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={excluir} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
