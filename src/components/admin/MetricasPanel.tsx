@@ -714,60 +714,63 @@ export function MetricasPanel() {
                       </span>
                     </div>
 
-                    <div className="mt-4 space-y-2">
-                      {porOrigem.map((t) => (
-                        <div key={t.origem} className="flex items-center justify-between gap-3 text-sm">
-                          <span className="text-foreground">{ORIGEM_ROTULO[t.origem]}</span>
-                          <span className="flex items-center gap-2 tabular-nums">
-                            <Badge variant="outline" className="text-muted-foreground">{t.enviados} ok</Badge>
-                            {t.rastreados > 0 && (
-                              <Badge variant="outline" className="border-primary/50 text-primary gap-1">
-                                <MailOpen className="w-3 h-3" />
-                                {t.abertos} aberto{t.abertos === 1 ? "" : "s"} ({pct(t.abertos, t.rastreados)}%)
-                              </Badge>
-                            )}
-                            {t.falhas > 0 && (
-                              <Badge variant="outline" className="border-destructive/50 text-destructive">
-                                {t.falhas} falha{t.falhas === 1 ? "" : "s"}
-                              </Badge>
-                            )}
-                          </span>
-                        </div>
-                      ))}
+                    {/* Ordem cronológica: cada linha é um disparo (dia + origem + produto) */}
+                    <div className="mt-4 border-t border-border/60 pt-4">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                        Disparos, do mais recente ao mais antigo
+                      </p>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                              <th className="py-1.5 pr-3 font-medium">Data</th>
+                              <th className="py-1.5 pr-3 font-medium">Tipo</th>
+                              <th className="py-1.5 pr-3 font-medium">Produto</th>
+                              <th className="py-1.5 pr-3 font-medium text-right">Enviados</th>
+                              <th className="py-1.5 font-medium text-right">Aberturas</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {disparosVisiveis.map((t) => (
+                              <tr key={`${t.dia}|${t.origem}|${t.produto}`} className="border-t border-border/40">
+                                <td className="py-2 pr-3 tabular-nums whitespace-nowrap text-foreground">
+                                  {new Date(`${t.dia}T12:00:00Z`).toLocaleDateString("pt-BR")}
+                                </td>
+                                <td className="py-2 pr-3 text-muted-foreground whitespace-nowrap">{ORIGEM_ROTULO[t.origem]}</td>
+                                <td className="py-2 pr-3 text-muted-foreground max-w-[220px] truncate" title={t.produto || "—"}>
+                                  {t.produto || "—"}
+                                </td>
+                                <td className="py-2 pr-3 text-right tabular-nums text-foreground">
+                                  {t.enviados}
+                                  {t.falhas > 0 && <span className="ml-1.5 text-destructive">+{t.falhas} falha{t.falhas === 1 ? "" : "s"}</span>}
+                                </td>
+                                <td className="py-2 text-right tabular-nums whitespace-nowrap">
+                                  {t.rastreados > 0 ? (
+                                    <span className={t.rastreados >= MIN_AMOSTRA_ABERTURA ? "text-primary" : "text-muted-foreground"}>
+                                      {t.abertos} ({pct(t.abertos, t.rastreados)}%)
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground">sem rastreio</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {porDisparo.length > 8 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-2 h-8 gap-1.5 text-muted-foreground"
+                          onClick={() => setVerTodosDisparos((v) => !v)}
+                        >
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${verTodosDisparos ? "rotate-180" : ""}`} />
+                          {verTodosDisparos ? "Ver menos" : `Ver todos (${porDisparo.length - 8})`}
+                        </Button>
+                      )}
                     </div>
 
-                    {/* Mesma base, agora por produto (metadata.produto); sem produto = Geral */}
-                    <div className="mt-5 border-t border-border/60 pt-4">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Por produto</p>
-                      <div className="space-y-2">
-                        {porProdutoEmail.map((t) => (
-                          <div key={t.produto} className="flex items-center justify-between gap-3 text-sm">
-                            <span className="text-foreground truncate">{t.produto}</span>
-                            <span className="flex items-center gap-2 tabular-nums shrink-0">
-                              <Badge variant="outline" className="text-muted-foreground">{t.enviados} enviado{t.enviados === 1 ? "" : "s"}</Badge>
-                              {t.rastreados > 0 ? (
-                                <Badge
-                                  variant="outline"
-                                  className={t.confiavel ? "border-primary/50 text-primary gap-1" : "border-border text-muted-foreground gap-1"}
-                                  title={t.confiavel ? undefined : "Amostra pequena — percentual pouco confiável"}
-                                >
-                                  <MailOpen className="w-3 h-3" />
-                                  {t.abertos} aberto{t.abertos === 1 ? "" : "s"} ({pct(t.abertos, t.rastreados)}%)
-                                  {!t.confiavel && " ·  amostra pequena"}
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-muted-foreground">sem rastreio</Badge>
-                              )}
-                              {t.falhas > 0 && (
-                                <Badge variant="outline" className="border-destructive/50 text-destructive">
-                                  {t.falhas} falha{t.falhas === 1 ? "" : "s"}
-                                </Badge>
-                              )}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
 
 
                     {/* Últimos envios, um por linha: origem + abertura */}
