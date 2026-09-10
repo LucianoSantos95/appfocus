@@ -337,33 +337,33 @@ export function MetricasPanel() {
     .map(([origem, v]) => ({ origem: origem as Origem, ...v }))
     .sort((a, b) => b.enviados + b.falhas - (a.enviados + a.falhas));
 
-  // Mesma base, quebrada pelo produto associado ao envio (metadata.produto guarda o nome)
-  const porProdutoEmail = Object.entries(
-    emails.reduce((acc: Record<string, { enviados: number; falhas: number; abertos: number; rastreados: number }>, e) => {
-      const p = (e.metadata?.produto || "").trim() || "Geral";
-      acc[p] ??= { enviados: 0, falhas: 0, abertos: 0, rastreados: 0 };
-      if (e.status === "sent") {
-        acc[p].enviados++;
-        if (temRastreio(e)) {
-          acc[p].rastreados++;
-          if (e.opened_at) acc[p].abertos++;
-        }
-      } else acc[p].falhas++;
-      return acc;
-    }, {}),
-  )
-    .map(([produto, v]) => ({
-      produto,
-      ...v,
-      taxa: v.rastreados > 0 ? v.abertos / v.rastreados : -1,
-      confiavel: v.rastreados >= MIN_AMOSTRA_ABERTURA,
-    }))
-    .filter((t) => t.enviados > 0 || t.falhas > 0)
-    .sort((a, b) => {
-      if (a.confiavel !== b.confiavel) return a.confiavel ? -1 : 1;
-      if (a.confiavel) return b.taxa - a.taxa;
-      return b.enviados - a.enviados;
-    });
+  // Cada disparo agrupado por dia + origem + produto: dá pra ler quando cada e-mail saiu.
+  const porDisparo = Object.values(
+    emails.reduce(
+      (
+        acc: Record<string, { dia: string; origem: Origem; produto: string; enviados: number; falhas: number; abertos: number; rastreados: number }>,
+        e,
+      ) => {
+        const dia = chaveDia(e.created_at);
+        const origem = origemDe(e.template_name);
+        const produto = (e.metadata?.produto || "").trim();
+        const k = `${dia}|${origem}|${produto}`;
+        acc[k] ??= { dia, origem, produto, enviados: 0, falhas: 0, abertos: 0, rastreados: 0 };
+        if (e.status === "sent") {
+          acc[k].enviados++;
+          if (temRastreio(e)) {
+            acc[k].rastreados++;
+            if (e.opened_at) acc[k].abertos++;
+          }
+        } else acc[k].falhas++;
+        return acc;
+      },
+      {},
+    ),
+  ).sort((a, b) => (a.dia === b.dia ? b.enviados - a.enviados : b.dia.localeCompare(a.dia)));
+
+  const disparosVisiveis = verTodosDisparos ? porDisparo : porDisparo.slice(0, 8);
+
 
 
   const emailsEnviados = porOrigem.reduce((s, t) => s + t.enviados, 0);
