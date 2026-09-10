@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Send, Users } from "lucide-react";
 
@@ -14,7 +14,8 @@ import { Loader2, Send, Users } from "lucide-react";
 // no modo audience:"custom", passando os e-mails escolhidos aqui.
 const sb = supabase as any;
 
-interface LeadMin { email: string; nome: string; origem: string | null; status: string }
+interface LeadMin { email: string; nome: string; origem: string | null; status: string; produto: string | null }
+interface ProdutoMin { slug: string; nome: string }
 
 const PUBLICOS = [
   { v: "catalogo", label: "Quem pegou algo no catálogo" },
@@ -22,9 +23,13 @@ const PUBLICOS = [
   { v: "todos",    label: "Todo mundo" },
 ];
 
+// Público por produto: o valor vem como "produto:<slug>"
+const PREFIXO_PRODUTO = "produto:";
+
 export function EmailPanel() {
   const { toast } = useToast();
   const [leads, setLeads] = useState<LeadMin[]>([]);
+  const [produtos, setProdutos] = useState<ProdutoMin[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [publico, setPublico] = useState("catalogo");
   const [assunto, setAssunto] = useState("");
@@ -35,8 +40,12 @@ export function EmailPanel() {
   const [resultado, setResultado] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
-    const { data } = await sb.from("leads").select("email,nome,origem,status");
-    setLeads((data as LeadMin[]) || []);
+    const [lds, prods] = await Promise.all([
+      sb.from("leads").select("email,nome,origem,status,produto"),
+      sb.from("produtos").select("slug,nome").eq("arquivado", false).order("ordem", { ascending: true }),
+    ]);
+    setLeads((lds.data as LeadMin[]) || []);
+    setProdutos((prods.data as ProdutoMin[]) || []);
     setCarregando(false);
   }, []);
 
@@ -44,6 +53,7 @@ export function EmailPanel() {
 
   const destinatarios = useMemo(() => {
     const filtrados = leads.filter((l) => {
+      if (publico.startsWith(PREFIXO_PRODUTO)) return l.produto === publico.slice(PREFIXO_PRODUTO.length);
       if (publico === "legado") return l.status === "legado";
       if (publico === "catalogo") return l.status !== "legado";
       return true;
@@ -101,8 +111,24 @@ export function EmailPanel() {
               <Label>Público</Label>
               <Select value={publico} onValueChange={setPublico}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-80">
                   {PUBLICOS.map((p) => <SelectItem key={p.v} value={p.v}>{p.label}</SelectItem>)}
+                  {produtos.length > 0 && (
+                    <>
+                      <SelectSeparator />
+                      <SelectLabel className="text-xs text-muted-foreground">Quem baixou um produto específico</SelectLabel>
+                      {produtos.map((p) => {
+                        const qtd = new Set(
+                          leads.filter((l) => l.produto === p.slug).map((l) => l.email.toLowerCase()),
+                        ).size;
+                        return (
+                          <SelectItem key={p.slug} value={`${PREFIXO_PRODUTO}${p.slug}`}>
+                            {p.nome} ({qtd})
+                          </SelectItem>
+                        );
+                      })}
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>

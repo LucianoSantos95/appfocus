@@ -415,6 +415,7 @@ export type Database = {
       }
       produtos: {
         Row: {
+          arquivado: boolean
           ativo: boolean
           capa: string | null
           captura_lead: boolean
@@ -435,6 +436,7 @@ export type Database = {
           tipo: string
         }
         Insert: {
+          arquivado?: boolean
           ativo?: boolean
           capa?: string | null
           captura_lead?: boolean
@@ -455,6 +457,7 @@ export type Database = {
           tipo: string
         }
         Update: {
+          arquivado?: boolean
           ativo?: boolean
           capa?: string | null
           captura_lead?: boolean

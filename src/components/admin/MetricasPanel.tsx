@@ -148,6 +148,8 @@ export function MetricasPanel() {
   const [filtroOrigem, setFiltroOrigem] = useState<"todas" | Origem>("todas");
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "sent" | "falhou" | "aberto" | "nao_aberto">("todos");
   const [verTodosEmails, setVerTodosEmails] = useState(false);
+  const [verTodosDisparos, setVerTodosDisparos] = useState(false);
+  const [verTodosProdutos, setVerTodosProdutos] = useState(false);
   const [slugFiltro, setSlugFiltro] = useState<string | null>(null);
 
   const [produtoSel, setProdutoSel] = useState("todos");
@@ -238,8 +240,13 @@ export function MetricasPanel() {
     // taxa vai como rótulo de texto, não como barra: a escala é outra
     .map((p) => ({ ...p, taxa: pct(p.leads, p.cliques) }));
 
-  // filtro client-side: badge selecionado isola o produto no gráfico
-  const produtoGrafico = slugFiltro ? porProduto.filter((p) => p.slug === slugFiltro) : porProduto;
+  // filtro client-side: o seletor isola um produto; sem filtro, mostra só os mais clicados
+  const TOP_PRODUTOS = 6;
+  const produtoGrafico = slugFiltro
+    ? porProduto.filter((p) => p.slug === slugFiltro)
+    : verTodosProdutos
+      ? porProduto
+      : porProduto.slice(0, TOP_PRODUTOS);
 
   const periodoRotulo = dias === "0" ? "tudo" : `${dias}d`;
 
@@ -337,33 +344,33 @@ export function MetricasPanel() {
     .map(([origem, v]) => ({ origem: origem as Origem, ...v }))
     .sort((a, b) => b.enviados + b.falhas - (a.enviados + a.falhas));
 
-  // Mesma base, quebrada pelo produto associado ao envio (metadata.produto guarda o nome)
-  const porProdutoEmail = Object.entries(
-    emails.reduce((acc: Record<string, { enviados: number; falhas: number; abertos: number; rastreados: number }>, e) => {
-      const p = (e.metadata?.produto || "").trim() || "Geral";
-      acc[p] ??= { enviados: 0, falhas: 0, abertos: 0, rastreados: 0 };
-      if (e.status === "sent") {
-        acc[p].enviados++;
-        if (temRastreio(e)) {
-          acc[p].rastreados++;
-          if (e.opened_at) acc[p].abertos++;
-        }
-      } else acc[p].falhas++;
-      return acc;
-    }, {}),
-  )
-    .map(([produto, v]) => ({
-      produto,
-      ...v,
-      taxa: v.rastreados > 0 ? v.abertos / v.rastreados : -1,
-      confiavel: v.rastreados >= MIN_AMOSTRA_ABERTURA,
-    }))
-    .filter((t) => t.enviados > 0 || t.falhas > 0)
-    .sort((a, b) => {
-      if (a.confiavel !== b.confiavel) return a.confiavel ? -1 : 1;
-      if (a.confiavel) return b.taxa - a.taxa;
-      return b.enviados - a.enviados;
-    });
+  // Cada disparo agrupado por dia + origem + produto: dá pra ler quando cada e-mail saiu.
+  const porDisparo = Object.values(
+    emails.reduce(
+      (
+        acc: Record<string, { dia: string; origem: Origem; produto: string; enviados: number; falhas: number; abertos: number; rastreados: number }>,
+        e,
+      ) => {
+        const dia = chaveDia(e.created_at);
+        const origem = origemDe(e.template_name);
+        const produto = (e.metadata?.produto || "").trim();
+        const k = `${dia}|${origem}|${produto}`;
+        acc[k] ??= { dia, origem, produto, enviados: 0, falhas: 0, abertos: 0, rastreados: 0 };
+        if (e.status === "sent") {
+          acc[k].enviados++;
+          if (temRastreio(e)) {
+            acc[k].rastreados++;
+            if (e.opened_at) acc[k].abertos++;
+          }
+        } else acc[k].falhas++;
+        return acc;
+      },
+      {},
+    ),
+  ).sort((a, b) => (a.dia === b.dia ? b.enviados - a.enviados : b.dia.localeCompare(a.dia)));
+
+  const disparosVisiveis = verTodosDisparos ? porDisparo : porDisparo.slice(0, 8);
+
 
 
   const emailsEnviados = porOrigem.reduce((s, t) => s + t.enviados, 0);
@@ -525,45 +532,57 @@ export function MetricasPanel() {
               <Card>
                 <CardContent className="p-5 space-y-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    {porProduto.map((p) => {
-                      const n = notas[p.slug];
-                      const ativo = slugFiltro === p.slug;
-                      return (
-                        <button
-                          key={p.slug}
-                          type="button"
-                          onClick={() => setSlugFiltro(ativo ? null : p.slug)}
-                          aria-pressed={ativo}
-                          className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
-                        >
-                          <Badge
-                            variant={ativo ? "default" : "outline"}
-                            className={`gap-1.5 cursor-pointer transition-colors ${ativo ? "" : "text-muted-foreground hover:border-primary/50"}`}
-                          >
-                            <span className={ativo ? "" : "text-foreground"}>{p.produto}</span>
-                            {n ? (
-                              <span className={`inline-flex items-center gap-0.5 ${ativo ? "" : "text-yellow-400"}`}>
-                                <Star className={`w-3 h-3 ${ativo ? "fill-current" : "fill-yellow-400"}`} />
-                                {n.media.toFixed(1)}
-                                <span className={ativo ? "opacity-80" : "text-muted-foreground"}>({n.qtd})</span>
-                              </span>
-                            ) : (
-                              <span>sem nota</span>
-                            )}
+                    <Select
+                      value={slugFiltro ?? "todos"}
+                      onValueChange={(v) => setSlugFiltro(v === "todos" ? null : v)}
+                    >
+                      <SelectTrigger className="h-8 w-64 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent className="max-h-80">
+                        <SelectItem value="todos">Todos os produtos ({porProduto.length})</SelectItem>
+                        {porProduto.map((p) => (
+                          <SelectItem key={p.slug} value={p.slug}>
+                            {p.produto} · {p.cliques} clique{p.cliques === 1 ? "" : "s"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {slugFiltro ? (
+                      <>
+                        {notas[slugFiltro] && (
+                          <Badge variant="outline" className="gap-1 text-yellow-400">
+                            <Star className="w-3 h-3 fill-yellow-400" />
+                            {notas[slugFiltro].media.toFixed(1)}
+                            <span className="text-muted-foreground">({notas[slugFiltro].qtd})</span>
                           </Badge>
-                        </button>
-                      );
-                    })}
-                    {slugFiltro && (
-                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSlugFiltro(null)}>
-                        Ver todos
+                        )}
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSlugFiltro(null)}>
+                          Limpar filtro
+                        </Button>
+                      </>
+                    ) : porProduto.length > TOP_PRODUTOS ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1.5 text-xs text-muted-foreground"
+                        onClick={() => setVerTodosProdutos((v) => !v)}
+                      >
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${verTodosProdutos ? "rotate-180" : ""}`} />
+                        {verTodosProdutos
+                          ? `Ver só os ${TOP_PRODUTOS} mais clicados`
+                          : `Ver todos (${porProduto.length - TOP_PRODUTOS} a mais)`}
                       </Button>
-                    )}
+                    ) : null}
                   </div>
+                  {!slugFiltro && !verTodosProdutos && porProduto.length > TOP_PRODUTOS && (
+                    <p className="text-xs text-muted-foreground">
+                      Mostrando os {TOP_PRODUTOS} produtos mais clicados do período.
+                    </p>
+                  )}
                   <ChartContainer
                     config={grafico}
                     className="w-full"
-                    style={{ height: Math.max(160, produtoGrafico.length * 56) }}
+                    style={{ height: Math.max(160, produtoGrafico.length * 48) }}
                   >
                     <BarChart data={produtoGrafico} layout="vertical" margin={{ left: 8, right: 56 }} barGap={4}>
 
@@ -572,11 +591,13 @@ export function MetricasPanel() {
                       <YAxis
                         type="category"
                         dataKey="produto"
-                        width={130}
+                        width={140}
                         tickLine={false}
                         axisLine={false}
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(v: string) => (v.length > 22 ? `${v.slice(0, 21)}…` : v)}
                       />
+
                       <ChartTooltip
                         content={
                           <ChartTooltipContent
@@ -712,60 +733,63 @@ export function MetricasPanel() {
                       </span>
                     </div>
 
-                    <div className="mt-4 space-y-2">
-                      {porOrigem.map((t) => (
-                        <div key={t.origem} className="flex items-center justify-between gap-3 text-sm">
-                          <span className="text-foreground">{ORIGEM_ROTULO[t.origem]}</span>
-                          <span className="flex items-center gap-2 tabular-nums">
-                            <Badge variant="outline" className="text-muted-foreground">{t.enviados} ok</Badge>
-                            {t.rastreados > 0 && (
-                              <Badge variant="outline" className="border-primary/50 text-primary gap-1">
-                                <MailOpen className="w-3 h-3" />
-                                {t.abertos} aberto{t.abertos === 1 ? "" : "s"} ({pct(t.abertos, t.rastreados)}%)
-                              </Badge>
-                            )}
-                            {t.falhas > 0 && (
-                              <Badge variant="outline" className="border-destructive/50 text-destructive">
-                                {t.falhas} falha{t.falhas === 1 ? "" : "s"}
-                              </Badge>
-                            )}
-                          </span>
-                        </div>
-                      ))}
+                    {/* Ordem cronológica: cada linha é um disparo (dia + origem + produto) */}
+                    <div className="mt-4 border-t border-border/60 pt-4">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                        Disparos, do mais recente ao mais antigo
+                      </p>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                              <th className="py-1.5 pr-3 font-medium">Data</th>
+                              <th className="py-1.5 pr-3 font-medium">Tipo</th>
+                              <th className="py-1.5 pr-3 font-medium">Produto</th>
+                              <th className="py-1.5 pr-3 font-medium text-right">Enviados</th>
+                              <th className="py-1.5 font-medium text-right">Aberturas</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {disparosVisiveis.map((t) => (
+                              <tr key={`${t.dia}|${t.origem}|${t.produto}`} className="border-t border-border/40">
+                                <td className="py-2 pr-3 tabular-nums whitespace-nowrap text-foreground">
+                                  {new Date(`${t.dia}T12:00:00Z`).toLocaleDateString("pt-BR")}
+                                </td>
+                                <td className="py-2 pr-3 text-muted-foreground whitespace-nowrap">{ORIGEM_ROTULO[t.origem]}</td>
+                                <td className="py-2 pr-3 text-muted-foreground max-w-[220px] truncate" title={t.produto || "—"}>
+                                  {t.produto || "—"}
+                                </td>
+                                <td className="py-2 pr-3 text-right tabular-nums text-foreground">
+                                  {t.enviados}
+                                  {t.falhas > 0 && <span className="ml-1.5 text-destructive">+{t.falhas} falha{t.falhas === 1 ? "" : "s"}</span>}
+                                </td>
+                                <td className="py-2 text-right tabular-nums whitespace-nowrap">
+                                  {t.rastreados > 0 ? (
+                                    <span className={t.rastreados >= MIN_AMOSTRA_ABERTURA ? "text-primary" : "text-muted-foreground"}>
+                                      {t.abertos} ({pct(t.abertos, t.rastreados)}%)
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground">sem rastreio</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {porDisparo.length > 8 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-2 h-8 gap-1.5 text-muted-foreground"
+                          onClick={() => setVerTodosDisparos((v) => !v)}
+                        >
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${verTodosDisparos ? "rotate-180" : ""}`} />
+                          {verTodosDisparos ? "Ver menos" : `Ver todos (${porDisparo.length - 8})`}
+                        </Button>
+                      )}
                     </div>
 
-                    {/* Mesma base, agora por produto (metadata.produto); sem produto = Geral */}
-                    <div className="mt-5 border-t border-border/60 pt-4">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Por produto</p>
-                      <div className="space-y-2">
-                        {porProdutoEmail.map((t) => (
-                          <div key={t.produto} className="flex items-center justify-between gap-3 text-sm">
-                            <span className="text-foreground truncate">{t.produto}</span>
-                            <span className="flex items-center gap-2 tabular-nums shrink-0">
-                              <Badge variant="outline" className="text-muted-foreground">{t.enviados} enviado{t.enviados === 1 ? "" : "s"}</Badge>
-                              {t.rastreados > 0 ? (
-                                <Badge
-                                  variant="outline"
-                                  className={t.confiavel ? "border-primary/50 text-primary gap-1" : "border-border text-muted-foreground gap-1"}
-                                  title={t.confiavel ? undefined : "Amostra pequena — percentual pouco confiável"}
-                                >
-                                  <MailOpen className="w-3 h-3" />
-                                  {t.abertos} aberto{t.abertos === 1 ? "" : "s"} ({pct(t.abertos, t.rastreados)}%)
-                                  {!t.confiavel && " ·  amostra pequena"}
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-muted-foreground">sem rastreio</Badge>
-                              )}
-                              {t.falhas > 0 && (
-                                <Badge variant="outline" className="border-destructive/50 text-destructive">
-                                  {t.falhas} falha{t.falhas === 1 ? "" : "s"}
-                                </Badge>
-                              )}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
 
 
                     {/* Últimos envios, um por linha: origem + abertura */}

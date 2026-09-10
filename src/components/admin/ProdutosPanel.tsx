@@ -10,7 +10,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Loader2, ExternalLink, GripVertical, Upload, X, ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { Plus, Pencil, Loader2, ExternalLink, GripVertical, Upload, X, ArrowLeft, ArrowRight, Sparkles, Trash2 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // CRUD do catálogo. É o que permite publicar produto novo sem depender de código.
 const sb = supabase as any;
@@ -79,6 +83,7 @@ export function ProdutosPanel() {
   const [subindo, setSubindo] = useState(false);
   const [linkIA, setLinkIA] = useState("");
   const [extraindo, setExtraindo] = useState(false);
+  const [excluindo, setExcluindo] = useState<Produto | null>(null);
 
   const preencherComIA = async () => {
     const url = linkIA.trim();
@@ -127,7 +132,7 @@ export function ProdutosPanel() {
 
   const carregar = useCallback(async () => {
     setLoading(true);
-    const { data } = await sb.from("produtos").select("*").order("ordem", { ascending: true });
+    const { data } = await sb.from("produtos").select("*").eq("arquivado", false).order("ordem", { ascending: true });
     setProdutos(((data as Produto[]) || []).map((p) => ({ ...p, imagens: p.imagens ?? [] })));
     setLoading(false);
   }, []);
@@ -194,6 +199,18 @@ export function ProdutosPanel() {
   const alternarAtivo = async (p: Produto) => {
     setProdutos((prev) => prev.map((x) => (x.id === p.id ? { ...x, ativo: !x.ativo } : x)));
     await sb.from("produtos").update({ ativo: !p.ativo }).eq("id", p.id);
+  };
+
+  // Exclusão é soft-delete: marca arquivado + inativo. O registro continua no banco,
+  // então leads, eventos e feedbacks ligados ao slug seguem intactos nas Métricas.
+  const excluir = async () => {
+    const p = excluindo;
+    if (!p) return;
+    setExcluindo(null);
+    const { error } = await sb.from("produtos").update({ arquivado: true, ativo: false }).eq("id", p.id);
+    if (error) return toast({ title: "Não excluiu", description: error.message, variant: "destructive" });
+    setProdutos((prev) => prev.filter((x) => x.id !== p.id));
+    toast({ title: "Produto excluído", description: "Saiu do catálogo e da lista. O histórico de métricas foi preservado." });
   };
 
   return (
@@ -277,6 +294,15 @@ export function ProdutosPanel() {
                       <Switch checked={p.ativo} onCheckedChange={() => alternarAtivo(p)} />
                       <Button variant="outline" size="sm" onClick={() => setEditando(p)} className="gap-1.5">
                         <Pencil className="w-3.5 h-3.5" /> Editar
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setExcluindo(p)}
+                        className="gap-1.5 text-muted-foreground hover:text-destructive"
+                        title="Excluir produto"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Excluir
                       </Button>
                     </CardContent>
                   </Card>
@@ -455,6 +481,24 @@ export function ProdutosPanel() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!excluindo} onOpenChange={(v) => !v && setExcluindo(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir “{excluindo?.nome}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza? O produto sai do catálogo e desta lista na hora. Os leads, eventos e
+              feedbacks já ligados a ele continuam guardados e seguem aparecendo nas Métricas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={excluir} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
