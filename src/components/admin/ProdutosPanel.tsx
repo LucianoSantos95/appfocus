@@ -132,7 +132,7 @@ export function ProdutosPanel() {
 
   const carregar = useCallback(async () => {
     setLoading(true);
-    const { data } = await sb.from("produtos").select("*").order("ordem", { ascending: true });
+    const { data } = await sb.from("produtos").select("*").eq("arquivado", false).order("ordem", { ascending: true });
     setProdutos(((data as Produto[]) || []).map((p) => ({ ...p, imagens: p.imagens ?? [] })));
     setLoading(false);
   }, []);
