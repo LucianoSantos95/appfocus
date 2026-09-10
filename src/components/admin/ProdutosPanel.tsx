@@ -15,6 +15,15 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DndContext, closestCenter, PointerSensor, KeyboardSensor,
+  useSensor, useSensors, type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, arrayMove, sortableKeyboardCoordinates,
+  useSortable, verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 // CRUD do catálogo. É o que permite publicar produto novo sem depender de código.
 const sb = supabase as any;
@@ -74,6 +83,75 @@ function slugify(s: string) {
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+// Linha arrastável da lista. O grip é o handle: só ele inicia o arraste,
+// pra não atrapalhar clique nos botões.
+function LinhaProduto({
+  p, onAtivo, onEditar, onExcluir,
+}: {
+  p: Produto;
+  onAtivo: () => void;
+  onEditar: () => void;
+  onExcluir: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: p.id! });
+
+  return (
+    <Card
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`${p.ativo ? "" : "opacity-60"} ${isDragging ? "z-10 shadow-lg" : ""}`}
+    >
+      <CardContent className="p-4 flex items-center gap-4 flex-wrap">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          title="Arraste para reordenar"
+          aria-label={`Reordenar ${p.nome}`}
+          className="shrink-0 cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground touch-none"
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+        <span className="text-2xl leading-none">{p.emoji || "📦"}</span>
+
+        <div className="flex-1 min-w-[200px]">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-foreground">{p.nome}</span>
+            <Badge variant="outline" className="text-[10px]">{TIPO_LABEL[p.tipo] || p.tipo}</Badge>
+            {p.destaque && <Badge variant="secondary" className="text-[10px]">Destaque</Badge>}
+            {!p.ativo && <Badge variant="outline" className="text-[10px] text-muted-foreground">Fora do ar</Badge>}
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+            /{p.slug} · {p.gratuito ? "grátis" : `R$ ${Number(p.preco).toLocaleString("pt-BR")}`}
+            {p.captura_lead ? " · captura e-mail" : " · vai direto"}
+          </p>
+        </div>
+
+        {p.link_destino && (
+          <a href={p.link_destino} target="_blank" rel="noopener noreferrer"
+             className="text-muted-foreground hover:text-primary transition-colors" title="Abrir destino">
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        )}
+        <Switch checked={p.ativo} onCheckedChange={onAtivo} />
+        <Button variant="outline" size="sm" onClick={onEditar} className="gap-1.5">
+          <Pencil className="w-3.5 h-3.5" /> Editar
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onExcluir}
+          className="gap-1.5 text-muted-foreground hover:text-destructive"
+          title="Excluir produto"
+        >
+          <Trash2 className="w-3.5 h-3.5" /> Excluir
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ProdutosPanel() {
   const { toast } = useToast();
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -129,6 +207,39 @@ export function ProdutosPanel() {
     }
   };
 
+
+  const sensores = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  // Ao soltar, reordena o grupo daquele tipo e grava o novo `ordem` (1..n)
+  // de todos os produtos afetados. O catálogo público lê esse mesmo campo.
+  const aoSoltar = async (tipo: Produto["tipo"], e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const grupo = produtos.filter((x) => x.tipo === tipo);
+    const de = grupo.findIndex((x) => x.id === active.id);
+    const para = grupo.findIndex((x) => x.id === over.id);
+    if (de < 0 || para < 0) return;
+
+    const novo = arrayMove(grupo, de, para).map((x, i) => ({ ...x, ordem: i + 1 }));
+    setProdutos((prev) => {
+      const mapa = new Map(novo.map((x) => [x.id, x]));
+      return prev
+        .map((x) => mapa.get(x.id!) ?? x)
+        .sort((a, b) => (a.tipo === b.tipo ? a.ordem - b.ordem : 0));
+    });
+
+    const alterados = novo.filter((x, i) => grupo[i]?.id !== x.id || grupo[i]?.ordem !== x.ordem);
+    const results = await Promise.all(
+      alterados.map((x) => sb.from("produtos").update({ ordem: x.ordem }).eq("id", x.id)),
+    );
+    if (results.some((r: any) => r.error)) {
+      toast({ title: "Não salvou a nova ordem", variant: "destructive" });
+      carregar();
+    }
+  };
 
   const carregar = useCallback(async () => {
     setLoading(true);
@@ -266,47 +377,27 @@ export function ProdutosPanel() {
                 </div>
                 {grupo.length === 0 ? (
                   <p className="text-xs text-muted-foreground">Nenhum produto nessa categoria.</p>
-                ) : grupo.map((p) => (
-                  <Card key={p.id} className={p.ativo ? "" : "opacity-60"}>
-                    <CardContent className="p-4 flex items-center gap-4 flex-wrap">
-                      <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-                      <span className="text-2xl leading-none">{p.emoji || "📦"}</span>
-
-                      <div className="flex-1 min-w-[200px]">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-foreground">{p.nome}</span>
-                          <Badge variant="outline" className="text-[10px]">{TIPO_LABEL[p.tipo] || p.tipo}</Badge>
-                          {p.destaque && <Badge variant="secondary" className="text-[10px]">Destaque</Badge>}
-                          {!p.ativo && <Badge variant="outline" className="text-[10px] text-muted-foreground">Fora do ar</Badge>}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                          /{p.slug} · {p.gratuito ? "grátis" : `R$ ${Number(p.preco).toLocaleString("pt-BR")}`}
-                          {p.captura_lead ? " · captura e-mail" : " · vai direto"}
-                        </p>
+                ) : (
+                  <DndContext
+                    sensors={sensores}
+                    collisionDetection={closestCenter}
+                    onDragEnd={(e) => aoSoltar(tipo, e)}
+                  >
+                    <SortableContext items={grupo.map((p) => p.id!)} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-2">
+                        {grupo.map((p) => (
+                          <LinhaProduto
+                            key={p.id}
+                            p={p}
+                            onAtivo={() => alternarAtivo(p)}
+                            onEditar={() => setEditando(p)}
+                            onExcluir={() => setExcluindo(p)}
+                          />
+                        ))}
                       </div>
-
-                      {p.link_destino && (
-                        <a href={p.link_destino} target="_blank" rel="noopener noreferrer"
-                           className="text-muted-foreground hover:text-primary transition-colors" title="Abrir destino">
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      )}
-                      <Switch checked={p.ativo} onCheckedChange={() => alternarAtivo(p)} />
-                      <Button variant="outline" size="sm" onClick={() => setEditando(p)} className="gap-1.5">
-                        <Pencil className="w-3.5 h-3.5" /> Editar
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setExcluindo(p)}
-                        className="gap-1.5 text-muted-foreground hover:text-destructive"
-                        title="Excluir produto"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Excluir
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
+                    </SortableContext>
+                  </DndContext>
+                )}
               </div>
             );
           })}
