@@ -83,6 +83,76 @@ function slugify(s: string) {
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+// Linha arrastável da lista. O grip é o handle: só ele inicia o arraste,
+// pra não atrapalhar clique nos botões.
+function LinhaProduto({
+  p, onAtivo, onEditar, onExcluir,
+}: {
+  p: Produto;
+  onAtivo: () => void;
+  onEditar: () => void;
+  onExcluir: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: p.id! });
+
+  return (
+    <Card
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`${p.ativo ? "" : "opacity-60"} ${isDragging ? "z-10 shadow-lg" : ""}`}
+    >
+      <CardContent className="p-4 flex items-center gap-4 flex-wrap">
+        <button
+          type="button"
+          ref={setNodeRef as never}
+          {...attributes}
+          {...listeners}
+          title="Arraste para reordenar"
+          aria-label={`Reordenar ${p.nome}`}
+          className="shrink-0 cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground touch-none"
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+        <span className="text-2xl leading-none">{p.emoji || "📦"}</span>
+
+        <div className="flex-1 min-w-[200px]">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-foreground">{p.nome}</span>
+            <Badge variant="outline" className="text-[10px]">{TIPO_LABEL[p.tipo] || p.tipo}</Badge>
+            {p.destaque && <Badge variant="secondary" className="text-[10px]">Destaque</Badge>}
+            {!p.ativo && <Badge variant="outline" className="text-[10px] text-muted-foreground">Fora do ar</Badge>}
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+            /{p.slug} · {p.gratuito ? "grátis" : `R$ ${Number(p.preco).toLocaleString("pt-BR")}`}
+            {p.captura_lead ? " · captura e-mail" : " · vai direto"}
+          </p>
+        </div>
+
+        {p.link_destino && (
+          <a href={p.link_destino} target="_blank" rel="noopener noreferrer"
+             className="text-muted-foreground hover:text-primary transition-colors" title="Abrir destino">
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        )}
+        <Switch checked={p.ativo} onCheckedChange={onAtivo} />
+        <Button variant="outline" size="sm" onClick={onEditar} className="gap-1.5">
+          <Pencil className="w-3.5 h-3.5" /> Editar
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onExcluir}
+          className="gap-1.5 text-muted-foreground hover:text-destructive"
+          title="Excluir produto"
+        >
+          <Trash2 className="w-3.5 h-3.5" /> Excluir
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ProdutosPanel() {
   const { toast } = useToast();
   const [produtos, setProdutos] = useState<Produto[]>([]);
