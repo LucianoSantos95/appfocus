@@ -532,45 +532,57 @@ export function MetricasPanel() {
               <Card>
                 <CardContent className="p-5 space-y-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    {porProduto.map((p) => {
-                      const n = notas[p.slug];
-                      const ativo = slugFiltro === p.slug;
-                      return (
-                        <button
-                          key={p.slug}
-                          type="button"
-                          onClick={() => setSlugFiltro(ativo ? null : p.slug)}
-                          aria-pressed={ativo}
-                          className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full"
-                        >
-                          <Badge
-                            variant={ativo ? "default" : "outline"}
-                            className={`gap-1.5 cursor-pointer transition-colors ${ativo ? "" : "text-muted-foreground hover:border-primary/50"}`}
-                          >
-                            <span className={ativo ? "" : "text-foreground"}>{p.produto}</span>
-                            {n ? (
-                              <span className={`inline-flex items-center gap-0.5 ${ativo ? "" : "text-yellow-400"}`}>
-                                <Star className={`w-3 h-3 ${ativo ? "fill-current" : "fill-yellow-400"}`} />
-                                {n.media.toFixed(1)}
-                                <span className={ativo ? "opacity-80" : "text-muted-foreground"}>({n.qtd})</span>
-                              </span>
-                            ) : (
-                              <span>sem nota</span>
-                            )}
+                    <Select
+                      value={slugFiltro ?? "todos"}
+                      onValueChange={(v) => setSlugFiltro(v === "todos" ? null : v)}
+                    >
+                      <SelectTrigger className="h-8 w-64 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent className="max-h-80">
+                        <SelectItem value="todos">Todos os produtos ({porProduto.length})</SelectItem>
+                        {porProduto.map((p) => (
+                          <SelectItem key={p.slug} value={p.slug}>
+                            {p.produto} · {p.cliques} clique{p.cliques === 1 ? "" : "s"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {slugFiltro ? (
+                      <>
+                        {notas[slugFiltro] && (
+                          <Badge variant="outline" className="gap-1 text-yellow-400">
+                            <Star className="w-3 h-3 fill-yellow-400" />
+                            {notas[slugFiltro].media.toFixed(1)}
+                            <span className="text-muted-foreground">({notas[slugFiltro].qtd})</span>
                           </Badge>
-                        </button>
-                      );
-                    })}
-                    {slugFiltro && (
-                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSlugFiltro(null)}>
-                        Ver todos
+                        )}
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSlugFiltro(null)}>
+                          Limpar filtro
+                        </Button>
+                      </>
+                    ) : porProduto.length > TOP_PRODUTOS ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1.5 text-xs text-muted-foreground"
+                        onClick={() => setVerTodosProdutos((v) => !v)}
+                      >
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${verTodosProdutos ? "rotate-180" : ""}`} />
+                        {verTodosProdutos
+                          ? `Ver só os ${TOP_PRODUTOS} mais clicados`
+                          : `Ver todos (${porProduto.length - TOP_PRODUTOS} a mais)`}
                       </Button>
-                    )}
+                    ) : null}
                   </div>
+                  {!slugFiltro && !verTodosProdutos && porProduto.length > TOP_PRODUTOS && (
+                    <p className="text-xs text-muted-foreground">
+                      Mostrando os {TOP_PRODUTOS} produtos mais clicados do período.
+                    </p>
+                  )}
                   <ChartContainer
                     config={grafico}
                     className="w-full"
-                    style={{ height: Math.max(160, produtoGrafico.length * 56) }}
+                    style={{ height: Math.max(160, produtoGrafico.length * 48) }}
                   >
                     <BarChart data={produtoGrafico} layout="vertical" margin={{ left: 8, right: 56 }} barGap={4}>
 
@@ -579,11 +591,13 @@ export function MetricasPanel() {
                       <YAxis
                         type="category"
                         dataKey="produto"
-                        width={130}
+                        width={140}
                         tickLine={false}
                         axisLine={false}
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(v: string) => (v.length > 22 ? `${v.slice(0, 21)}…` : v)}
                       />
+
                       <ChartTooltip
                         content={
                           <ChartTooltipContent
