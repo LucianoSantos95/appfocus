@@ -57,6 +57,13 @@
       "when": 1789069245650,
       "tag": "0007_add_arquivado_produtos",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789072373060,
+      "tag": "0008_allow_anon_read_produtos_bucket",
+      "breakpoints": true
     }
   ]
 }
