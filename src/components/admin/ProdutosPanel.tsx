@@ -295,6 +295,15 @@ export function ProdutosPanel() {
                       <Button variant="outline" size="sm" onClick={() => setEditando(p)} className="gap-1.5">
                         <Pencil className="w-3.5 h-3.5" /> Editar
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setExcluindo(p)}
+                        className="gap-1.5 text-muted-foreground hover:text-destructive"
+                        title="Excluir produto"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Excluir
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
