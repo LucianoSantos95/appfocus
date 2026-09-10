@@ -36,6 +36,7 @@ export function useProdutos() {
         .from("produtos")
         .select("*")
         .eq("ativo", true)
+        .eq("arquivado", false)
         .order("ordem", { ascending: true });
       if (!vivo) return;
       if (error) setErro(true);
