@@ -83,6 +83,7 @@ export function ProdutosPanel() {
   const [subindo, setSubindo] = useState(false);
   const [linkIA, setLinkIA] = useState("");
   const [extraindo, setExtraindo] = useState(false);
+  const [excluindo, setExcluindo] = useState<Produto | null>(null);
 
   const preencherComIA = async () => {
     const url = linkIA.trim();
