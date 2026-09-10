@@ -14,13 +14,17 @@ import { Loader2, Send, Users } from "lucide-react";
 // no modo audience:"custom", passando os e-mails escolhidos aqui.
 const sb = supabase as any;
 
-interface LeadMin { email: string; nome: string; origem: string | null; status: string }
+interface LeadMin { email: string; nome: string; origem: string | null; status: string; produto: string | null }
+interface ProdutoMin { slug: string; nome: string }
 
 const PUBLICOS = [
   { v: "catalogo", label: "Quem pegou algo no catálogo" },
   { v: "legado",   label: "Base antiga do Hub Empresarial" },
   { v: "todos",    label: "Todo mundo" },
 ];
+
+// Público por produto: o valor vem como "produto:<slug>"
+const PREFIXO_PRODUTO = "produto:";
 
 export function EmailPanel() {
   const { toast } = useToast();
