@@ -275,47 +275,27 @@ export function ProdutosPanel() {
                 </div>
                 {grupo.length === 0 ? (
                   <p className="text-xs text-muted-foreground">Nenhum produto nessa categoria.</p>
-                ) : grupo.map((p) => (
-                  <Card key={p.id} className={p.ativo ? "" : "opacity-60"}>
-                    <CardContent className="p-4 flex items-center gap-4 flex-wrap">
-                      <GripVertical className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-                      <span className="text-2xl leading-none">{p.emoji || "📦"}</span>
-
-                      <div className="flex-1 min-w-[200px]">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-foreground">{p.nome}</span>
-                          <Badge variant="outline" className="text-[10px]">{TIPO_LABEL[p.tipo] || p.tipo}</Badge>
-                          {p.destaque && <Badge variant="secondary" className="text-[10px]">Destaque</Badge>}
-                          {!p.ativo && <Badge variant="outline" className="text-[10px] text-muted-foreground">Fora do ar</Badge>}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                          /{p.slug} · {p.gratuito ? "grátis" : `R$ ${Number(p.preco).toLocaleString("pt-BR")}`}
-                          {p.captura_lead ? " · captura e-mail" : " · vai direto"}
-                        </p>
+                ) : (
+                  <DndContext
+                    sensors={sensores}
+                    collisionDetection={closestCenter}
+                    onDragEnd={(e) => aoSoltar(tipo, e)}
+                  >
+                    <SortableContext items={grupo.map((p) => p.id!)} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-2">
+                        {grupo.map((p) => (
+                          <LinhaProduto
+                            key={p.id}
+                            p={p}
+                            onAtivo={() => alternarAtivo(p)}
+                            onEditar={() => setEditando(p)}
+                            onExcluir={() => setExcluindo(p)}
+                          />
+                        ))}
                       </div>
-
-                      {p.link_destino && (
-                        <a href={p.link_destino} target="_blank" rel="noopener noreferrer"
-                           className="text-muted-foreground hover:text-primary transition-colors" title="Abrir destino">
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      )}
-                      <Switch checked={p.ativo} onCheckedChange={() => alternarAtivo(p)} />
-                      <Button variant="outline" size="sm" onClick={() => setEditando(p)} className="gap-1.5">
-                        <Pencil className="w-3.5 h-3.5" /> Editar
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setExcluindo(p)}
-                        className="gap-1.5 text-muted-foreground hover:text-destructive"
-                        title="Excluir produto"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Excluir
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
+                    </SortableContext>
+                  </DndContext>
+                )}
               </div>
             );
           })}
