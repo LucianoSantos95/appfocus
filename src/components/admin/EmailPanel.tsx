@@ -40,8 +40,12 @@ export function EmailPanel() {
   const [resultado, setResultado] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
-    const { data } = await sb.from("leads").select("email,nome,origem,status");
-    setLeads((data as LeadMin[]) || []);
+    const [lds, prods] = await Promise.all([
+      sb.from("leads").select("email,nome,origem,status,produto"),
+      sb.from("produtos").select("slug,nome").eq("arquivado", false).order("ordem", { ascending: true }),
+    ]);
+    setLeads((lds.data as LeadMin[]) || []);
+    setProdutos((prods.data as ProdutoMin[]) || []);
     setCarregando(false);
   }, []);
 
@@ -49,6 +53,7 @@ export function EmailPanel() {
 
   const destinatarios = useMemo(() => {
     const filtrados = leads.filter((l) => {
+      if (publico.startsWith(PREFIXO_PRODUTO)) return l.produto === publico.slice(PREFIXO_PRODUTO.length);
       if (publico === "legado") return l.status === "legado";
       if (publico === "catalogo") return l.status !== "legado";
       return true;
