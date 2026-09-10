@@ -240,8 +240,13 @@ export function MetricasPanel() {
     // taxa vai como rótulo de texto, não como barra: a escala é outra
     .map((p) => ({ ...p, taxa: pct(p.leads, p.cliques) }));
 
-  // filtro client-side: badge selecionado isola o produto no gráfico
-  const produtoGrafico = slugFiltro ? porProduto.filter((p) => p.slug === slugFiltro) : porProduto;
+  // filtro client-side: o seletor isola um produto; sem filtro, mostra só os mais clicados
+  const TOP_PRODUTOS = 6;
+  const produtoGrafico = slugFiltro
+    ? porProduto.filter((p) => p.slug === slugFiltro)
+    : verTodosProdutos
+      ? porProduto
+      : porProduto.slice(0, TOP_PRODUTOS);
 
   const periodoRotulo = dias === "0" ? "tudo" : `${dias}d`;
 
