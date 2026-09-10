@@ -29,6 +29,7 @@ const PREFIXO_PRODUTO = "produto:";
 export function EmailPanel() {
   const { toast } = useToast();
   const [leads, setLeads] = useState<LeadMin[]>([]);
+  const [produtos, setProdutos] = useState<ProdutoMin[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [publico, setPublico] = useState("catalogo");
   const [assunto, setAssunto] = useState("");
