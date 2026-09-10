@@ -105,7 +105,6 @@ function LinhaProduto({
       <CardContent className="p-4 flex items-center gap-4 flex-wrap">
         <button
           type="button"
-          ref={setNodeRef as never}
           {...attributes}
           {...listeners}
           title="Arraste para reordenar"
@@ -208,6 +207,39 @@ export function ProdutosPanel() {
     }
   };
 
+
+  const sensores = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  // Ao soltar, reordena o grupo daquele tipo e grava o novo `ordem` (1..n)
+  // de todos os produtos afetados. O catálogo público lê esse mesmo campo.
+  const aoSoltar = async (tipo: Produto["tipo"], e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const grupo = produtos.filter((x) => x.tipo === tipo);
+    const de = grupo.findIndex((x) => x.id === active.id);
+    const para = grupo.findIndex((x) => x.id === over.id);
+    if (de < 0 || para < 0) return;
+
+    const novo = arrayMove(grupo, de, para).map((x, i) => ({ ...x, ordem: i + 1 }));
+    setProdutos((prev) => {
+      const mapa = new Map(novo.map((x) => [x.id, x]));
+      return prev
+        .map((x) => mapa.get(x.id!) ?? x)
+        .sort((a, b) => (a.tipo === b.tipo ? a.ordem - b.ordem : 0));
+    });
+
+    const alterados = novo.filter((x, i) => grupo[i]?.id !== x.id || grupo[i]?.ordem !== x.ordem);
+    const results = await Promise.all(
+      alterados.map((x) => sb.from("produtos").update({ ordem: x.ordem }).eq("id", x.id)),
+    );
+    if (results.some((r: any) => r.error)) {
+      toast({ title: "Não salvou a nova ordem", variant: "destructive" });
+      carregar();
+    }
+  };
 
   const carregar = useCallback(async () => {
     setLoading(true);
