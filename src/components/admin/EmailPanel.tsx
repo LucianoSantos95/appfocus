@@ -111,8 +111,24 @@ export function EmailPanel() {
               <Label>Público</Label>
               <Select value={publico} onValueChange={setPublico}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-80">
                   {PUBLICOS.map((p) => <SelectItem key={p.v} value={p.v}>{p.label}</SelectItem>)}
+                  {produtos.length > 0 && (
+                    <>
+                      <SelectSeparator />
+                      <SelectLabel className="text-xs text-muted-foreground">Quem baixou um produto específico</SelectLabel>
+                      {produtos.map((p) => {
+                        const qtd = new Set(
+                          leads.filter((l) => l.produto === p.slug).map((l) => l.email.toLowerCase()),
+                        ).size;
+                        return (
+                          <SelectItem key={p.slug} value={`${PREFIXO_PRODUTO}${p.slug}`}>
+                            {p.nome} ({qtd})
+                          </SelectItem>
+                        );
+                      })}
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
