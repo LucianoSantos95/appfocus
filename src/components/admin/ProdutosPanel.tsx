@@ -201,6 +201,18 @@ export function ProdutosPanel() {
     await sb.from("produtos").update({ ativo: !p.ativo }).eq("id", p.id);
   };
 
+  // Exclusão é soft-delete: marca arquivado + inativo. O registro continua no banco,
+  // então leads, eventos e feedbacks ligados ao slug seguem intactos nas Métricas.
+  const excluir = async () => {
+    const p = excluindo;
+    if (!p) return;
+    setExcluindo(null);
+    const { error } = await sb.from("produtos").update({ arquivado: true, ativo: false }).eq("id", p.id);
+    if (error) return toast({ title: "Não excluiu", description: error.message, variant: "destructive" });
+    setProdutos((prev) => prev.filter((x) => x.id !== p.id));
+    toast({ title: "Produto excluído", description: "Saiu do catálogo e da lista. O histórico de métricas foi preservado." });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
