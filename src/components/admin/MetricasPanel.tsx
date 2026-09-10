@@ -3,8 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown, Download, ArrowUpRight } from "lucide-react";
+import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown, Download, ArrowUpRight, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Link } from "react-router-dom";
 import {
   DropdownMenu,
@@ -148,7 +150,7 @@ export function MetricasPanel() {
   const [filtroOrigem, setFiltroOrigem] = useState<"todas" | Origem>("todas");
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "sent" | "falhou" | "aberto" | "nao_aberto">("todos");
   const [verTodosEmails, setVerTodosEmails] = useState(false);
-  const [verTodosDisparos, setVerTodosDisparos] = useState(false);
+  const [diaDisparoSel, setDiaDisparoSel] = useState<string | null>(null);
   const [verTodosProdutos, setVerTodosProdutos] = useState(false);
   const [slugFiltro, setSlugFiltro] = useState<string | null>(null);
 
@@ -369,7 +371,10 @@ export function MetricasPanel() {
     ),
   ).sort((a, b) => (a.dia === b.dia ? b.enviados - a.enviados : b.dia.localeCompare(a.dia)));
 
-  const disparosVisiveis = verTodosDisparos ? porDisparo : porDisparo.slice(0, 8);
+  // Dias que tiveram disparo — viram marcação no calendário e opção de filtro.
+  const diasComDisparo = Array.from(new Set(porDisparo.map((d) => d.dia))).sort((a, b) => b.localeCompare(a));
+  const diaAtivo = (diaDisparoSel && diasComDisparo.includes(diaDisparoSel) ? diaDisparoSel : diasComDisparo[0]) ?? null;
+  const disparosVisiveis = porDisparo.filter((d) => d.dia === diaAtivo);
 
 
 
@@ -733,60 +738,77 @@ export function MetricasPanel() {
                       </span>
                     </div>
 
-                    {/* Ordem cronológica: cada linha é um disparo (dia + origem + produto) */}
+                    {/* Data como filtro: calendário marca os dias que tiveram disparo */}
                     <div className="mt-4 border-t border-border/60 pt-4">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                        Disparos, do mais recente ao mais antigo
-                      </p>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-                              <th className="py-1.5 pr-3 font-medium">Data</th>
-                              <th className="py-1.5 pr-3 font-medium">Tipo</th>
-                              <th className="py-1.5 pr-3 font-medium">Produto</th>
-                              <th className="py-1.5 pr-3 font-medium text-right">Enviados</th>
-                              <th className="py-1.5 font-medium text-right">Aberturas</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {disparosVisiveis.map((t) => (
-                              <tr key={`${t.dia}|${t.origem}|${t.produto}`} className="border-t border-border/40">
-                                <td className="py-2 pr-3 tabular-nums whitespace-nowrap text-foreground">
-                                  {new Date(`${t.dia}T12:00:00Z`).toLocaleDateString("pt-BR")}
-                                </td>
-                                <td className="py-2 pr-3 text-muted-foreground whitespace-nowrap">{ORIGEM_ROTULO[t.origem]}</td>
-                                <td className="py-2 pr-3 text-muted-foreground max-w-[220px] truncate" title={t.produto || "—"}>
-                                  {t.produto || "—"}
-                                </td>
-                                <td className="py-2 pr-3 text-right tabular-nums text-foreground">
-                                  {t.enviados}
-                                  {t.falhas > 0 && <span className="ml-1.5 text-destructive">+{t.falhas} falha{t.falhas === 1 ? "" : "s"}</span>}
-                                </td>
-                                <td className="py-2 text-right tabular-nums whitespace-nowrap">
-                                  {t.rastreados > 0 ? (
-                                    <span className={t.rastreados >= MIN_AMOSTRA_ABERTURA ? "text-primary" : "text-muted-foreground"}>
-                                      {t.abertos} ({pct(t.abertos, t.rastreados)}%)
-                                    </span>
-                                  ) : (
-                                    <span className="text-muted-foreground">sem rastreio</span>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground">Disparos por dia</p>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 gap-1.5" disabled={diasComDisparo.length === 0}>
+                              <CalendarIcon className="w-3.5 h-3.5" />
+                              {diaAtivo ? new Date(`${diaAtivo}T12:00:00Z`).toLocaleDateString("pt-BR") : "Escolher data"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="end">
+                            <Calendar
+                              mode="single"
+                              selected={diaAtivo ? new Date(`${diaAtivo}T12:00:00`) : undefined}
+                              defaultMonth={diaAtivo ? new Date(`${diaAtivo}T12:00:00`) : undefined}
+                              onSelect={(d) => {
+                                if (!d) return;
+                                const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                                if (diasComDisparo.includes(iso)) setDiaDisparoSel(iso);
+                              }}
+                              modifiers={{ disparo: diasComDisparo.map((d) => new Date(`${d}T12:00:00`)) }}
+                              modifiersClassNames={{ disparo: "font-semibold text-primary underline underline-offset-4" }}
+                              disabled={(d) => {
+                                const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                                return !diasComDisparo.includes(iso);
+                              }}
+                              className="p-3 pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
-                      {porDisparo.length > 8 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="mt-2 h-8 gap-1.5 text-muted-foreground"
-                          onClick={() => setVerTodosDisparos((v) => !v)}
-                        >
-                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${verTodosDisparos ? "rotate-180" : ""}`} />
-                          {verTodosDisparos ? "Ver menos" : `Ver todos (${porDisparo.length - 8})`}
-                        </Button>
+
+                      {disparosVisiveis.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nenhum disparo nesse dia.</p>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                                <th className="py-1.5 pr-3 font-medium">Tipo</th>
+                                <th className="py-1.5 pr-3 font-medium">Produto</th>
+                                <th className="py-1.5 pr-3 font-medium text-right">Enviados</th>
+                                <th className="py-1.5 font-medium text-right">Aberturas</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {disparosVisiveis.map((t) => (
+                                <tr key={`${t.dia}|${t.origem}|${t.produto}`} className="border-t border-border/40">
+                                  <td className="py-2 pr-3 text-muted-foreground whitespace-nowrap">{ORIGEM_ROTULO[t.origem]}</td>
+                                  <td className="py-2 pr-3 text-muted-foreground max-w-[220px] truncate" title={t.produto || "—"}>
+                                    {t.produto || "—"}
+                                  </td>
+                                  <td className="py-2 pr-3 text-right tabular-nums text-foreground">
+                                    {t.enviados}
+                                    {t.falhas > 0 && <span className="ml-1.5 text-destructive">+{t.falhas} falha{t.falhas === 1 ? "" : "s"}</span>}
+                                  </td>
+                                  <td className="py-2 text-right tabular-nums whitespace-nowrap">
+                                    {t.rastreados > 0 ? (
+                                      <span className={t.rastreados >= MIN_AMOSTRA_ABERTURA ? "text-primary" : "text-muted-foreground"}>
+                                        {t.abertos} ({pct(t.abertos, t.rastreados)}%)
+                                      </span>
+                                    ) : (
+                                      <span className="text-muted-foreground">sem rastreio</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       )}
                     </div>
 

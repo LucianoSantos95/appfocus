@@ -1,4 +1,4 @@
-import { createRoot, hydrateRoot } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -16,11 +16,9 @@ const tree = (
   </HelmetProvider>
 );
 
-// When react-snap pre-renders the page, #root already has children.
-// In that case we hydrate; otherwise we mount normally.
-if (rootEl.hasChildNodes()) {
-  hydrateRoot(rootEl, tree);
-} else {
-  createRoot(rootEl).render(tree);
-}
+// O HTML do react-snap é gerado em build-time com o catálogo JÁ carregado do
+// banco. No navegador, o primeiro render sempre começa vazio (o fetch é async),
+// então hidratar era garantia de divergência — daí os erros #418/#423.
+// O snapshot continua servindo pro Google/SEO; no cliente a gente monta do zero.
+createRoot(rootEl).render(tree);
 
