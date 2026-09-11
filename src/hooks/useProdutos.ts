@@ -22,6 +22,7 @@ export interface Produto {
   capa?: string | null;
   imagens?: string[] | null;
   detalhes?: string | null;
+  destaque_temporario_ate?: string | null;
 }
 
 export function useProdutos() {
