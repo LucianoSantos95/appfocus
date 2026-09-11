@@ -75,21 +75,44 @@ const PERIODOS = [
 ];
 
 // Origem do e-mail: de onde ele saiu, não qual template foi usado.
-type Origem = "produto" | "feedback" | "manual" | "advisor";
+type Origem =
+  | "produto"
+  | "feedback"
+  | "advisor"
+  | "crosssell"
+  | "followup"
+  | "promo"
+  | "manual"
+  | "outro";
 
 const ORIGEM_ROTULO: Record<Origem, string> = {
-  produto: "Produto baixado",
-  feedback: "Feedback",
+  produto: "Agradecimento produto",
+  feedback: "Agradecimento feedback",
+  advisor: "Agradecimento consultoria",
+  crosssell: "Cross-sell",
+  followup: "Follow-up de uso",
+  promo: "Campanha promocional",
   manual: "Envio manual",
-  advisor: "Contato Advisor",
+  outro: "Não classificado",
+};
+
+// Mapa explícito: cada template conhecido tem sua categoria.
+// Nada cai em "Envio manual" por descarte — só o broadcast do painel de E-mail.
+const ORIGEM_POR_TEMPLATE: Record<string, Origem> = {
+  thanks_produto: "produto",
+  thanks_feedback: "feedback",
+  thanks_advisor: "advisor",
+  crosssell_produto: "crosssell",
+  followup_uso: "followup",
+  promo_inactive_reactivation: "promo",
+  promo_engaged_20off: "promo",
+  subscriber_broadcast: "manual",
 };
 
 function origemDe(template: string): Origem {
-  if (template === "thanks_produto") return "produto";
-  if (template === "thanks_feedback") return "feedback";
-  if (template === "thanks_advisor") return "advisor";
-  return "manual"; // subscriber_broadcast, promo_*, campanhas antigas
+  return ORIGEM_POR_TEMPLATE[template] ?? "outro";
 }
+
 
 // Rastreio de abertura só existe a partir da instrumentação do pixel.
 // Antes disso não dá para dizer "não abriu" — dizemos "sem rastreio".
