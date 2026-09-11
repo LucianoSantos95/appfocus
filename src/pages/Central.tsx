@@ -10,7 +10,6 @@ import logoNotion from "@/assets/notion.png.asset.json";
 import logoLovable from "@/assets/lovable-color.png.asset.json";
 import { useProdutos, type Produto } from "@/hooks/useProdutos";
 import { ProdutoDialog } from "@/components/central/ProdutoDialog";
-import { AvisoHubAntigo } from "@/components/central/AvisoHubAntigo";
 import { AbasCatalogo } from "@/components/central/AbasCatalogo";
 import { FaqCatalogo } from "@/components/central/FaqCatalogo";
 import { BotaoFeedbackFlutuante } from "@/components/central/BotaoFeedback";
@@ -306,7 +305,6 @@ export default function Central() {
         description="Templates de Notion, sistemas e consultoria para organizar a operação do seu negócio. Comece grátis, sem cadastro."
       />
 
-      <AvisoHubAntigo />
 
       {/* Cabeçalho: só o logo em repouso. No hover, "Hub" surge à esquerda,
           "Central" à direita e o micro-rótulo aparece abaixo. */}
