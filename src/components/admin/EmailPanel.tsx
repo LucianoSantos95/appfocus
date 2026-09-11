@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Send, Users } from "lucide-react";
 
@@ -114,7 +114,7 @@ export function EmailPanel() {
                 <SelectContent className="max-h-80">
                   {PUBLICOS.map((p) => <SelectItem key={p.v} value={p.v}>{p.label}</SelectItem>)}
                   {produtos.length > 0 && (
-                    <>
+                    <SelectGroup>
                       <SelectSeparator />
                       <SelectLabel className="text-xs text-muted-foreground">Quem baixou um produto específico</SelectLabel>
                       {produtos.map((p) => {
@@ -127,7 +127,7 @@ export function EmailPanel() {
                           </SelectItem>
                         );
                       })}
-                    </>
+                    </SelectGroup>
                   )}
                 </SelectContent>
               </Select>
