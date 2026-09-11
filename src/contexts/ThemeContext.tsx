@@ -27,10 +27,10 @@ function applyThemeClass(theme: Theme) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    // Padrão escuro (identidade Focus); a luzinha no topo troca pro claro.
-    if (typeof window === "undefined") return "dark";
+    // Padrão claro; quem já escolheu escuro continua no escuro.
+    if (typeof window === "undefined") return "light";
     const saved = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    return saved === "light" ? "light" : "dark";
+    return saved === "dark" ? "dark" : "light";
   });
 
   useEffect(() => {
