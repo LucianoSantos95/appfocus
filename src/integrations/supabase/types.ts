@@ -422,6 +422,7 @@ export type Database = {
           created_at: string
           descricao: string | null
           destaque: boolean
+          destaque_temporario_ate: string | null
           detalhes: string | null
           downloads: number
           emoji: string | null
@@ -443,6 +444,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           destaque?: boolean
+          destaque_temporario_ate?: string | null
           detalhes?: string | null
           downloads?: number
           emoji?: string | null
@@ -464,6 +466,7 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           destaque?: boolean
+          destaque_temporario_ate?: string | null
           detalhes?: string | null
           downloads?: number
           emoji?: string | null

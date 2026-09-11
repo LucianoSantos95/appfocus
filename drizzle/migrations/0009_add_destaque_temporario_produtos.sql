@@ -1,0 +1,1 @@
+ALTER TABLE public.produtos ADD COLUMN IF NOT EXISTS destaque_temporario_ate timestamptz;
