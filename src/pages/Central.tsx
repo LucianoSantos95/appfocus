@@ -192,9 +192,16 @@ function SecaoCatalogo({
 
   // Só o primeiro marcado como destaque ganha o tratamento visual.
   const idDestaque = itens.find((p) => p.destaque)?.id;
+  // Destaque temporário: some sozinho quando a data passa, sem intervenção.
+  const agora = Date.now();
+  const fixado = (p: Produto) =>
+    p.destaque_temporario_ate && new Date(p.destaque_temporario_ate).getTime() > agora;
   const ordenados = itens
     .map((p) => ({ ...p, destaque: p.id === idDestaque }))
     .sort((a, b) => {
+      const fa = fixado(a) ? 1 : 0;
+      const fb = fixado(b) ? 1 : 0;
+      if (fa !== fb) return fb - fa;
       if (a.destaque !== b.destaque) return a.destaque ? -1 : 1;
       const d = (b.downloads ?? 0) - (a.downloads ?? 0);
       return d !== 0 ? d : a.ordem - b.ordem;
