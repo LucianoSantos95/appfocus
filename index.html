@@ -129,7 +129,7 @@
       // e tira a divergência de tema entre o HTML pré-gerado e o navegador.
       (function () {
         try {
-          var t = localStorage.getItem("hub-theme") === "light" ? "light" : "dark";
+          var t = localStorage.getItem("hub-theme") === "dark" ? "dark" : "light";
           var r = document.documentElement;
           r.classList.remove("light", "dark");
           r.classList.add(t);
