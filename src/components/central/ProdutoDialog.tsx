@@ -171,9 +171,18 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
         const { data, error: errCheckout } = await supabase.functions.invoke("create-produto-checkout", {
           body: { slug: produto.slug, nome: nome.trim(), email: email.trim().toLowerCase() },
         });
-        const url = (data as any)?.url as string | undefined;
-        if (errCheckout || !url) {
-          throw new Error((data as any)?.error || "Não consegui abrir o pagamento. Tente de novo.");
+        let url = (data as any)?.url as string | undefined;
+        let motivo = (data as any)?.error as string | undefined;
+        // Erro HTTP: o corpo da resposta vem no contexto, não em `data`.
+        if (errCheckout && !url) {
+          try {
+            const corpo = await (errCheckout as any)?.context?.json?.();
+            motivo = corpo?.error || motivo;
+            url = corpo?.url || url;
+          } catch { /* resposta sem corpo JSON */ }
+        }
+        if (!url) {
+          throw new Error(motivo || "Não consegui abrir o pagamento. Tente de novo.");
         }
         setCheckoutUrl(url);
         setEntregue(true);
