@@ -71,6 +71,13 @@
       "when": 1789137733677,
       "tag": "0009_add_destaque_temporario_produtos",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789489901453,
+      "tag": "0010_compras_produtos_asaas",
+      "breakpoints": true
     }
   ]
 }
