@@ -96,18 +96,33 @@ Deno.serve(async (req) => {
       externalReference: `produto|${compra.id}`,
     };
 
-    // Mesma configuração que já funciona no checkout de planos: Pix avulso.
+    // Tenta oferecer o máximo de formas de pagamento que a conta aceitar.
+    const tentativas: string[][] = [
+      ["PIX", "BOLETO", "CREDIT_CARD"],
+      ["PIX", "BOLETO"],
+      ["PIX"],
+    ];
+
     let checkout = await asaas("/checkouts", "POST", {
       ...baseBody,
-      billingTypes: ["PIX"],
+      billingTypes: tentativas[0],
       dueDateLimitDays: 3,
     });
+    if (checkout.ok) {
+      console.log("[create-produto-checkout] formas aceitas:", tentativas[0].join(","));
+    }
 
-    // Fallback: se a conta recusar a lista de formas de pagamento, deixa o
-    // próprio checkout hospedado oferecer o que estiver habilitado.
-    if (!checkout.ok && /billingTypes/i.test(JSON.stringify(checkout.data ?? {}))) {
-      console.warn("[create-produto-checkout] billingTypes recusado; repetindo sem restrição.");
-      checkout = await asaas("/checkouts", "POST", baseBody);
+    for (let i = 1; i < tentativas.length && !checkout.ok; i++) {
+      if (!/billingTypes/i.test(JSON.stringify(checkout.data ?? {}))) break;
+      console.warn("[create-produto-checkout] billingTypes recusado; tentando", tentativas[i].join(","));
+      checkout = await asaas("/checkouts", "POST", {
+        ...baseBody,
+        billingTypes: tentativas[i],
+        dueDateLimitDays: 3,
+      });
+      if (checkout.ok) {
+        console.log("[create-produto-checkout] formas aceitas:", tentativas[i].join(","));
+      }
     }
 
     if (!checkout.ok) {
