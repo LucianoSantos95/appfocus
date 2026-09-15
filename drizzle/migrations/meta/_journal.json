@@ -85,6 +85,13 @@
       "when": 1789490025792,
       "tag": "0011_ocultar_link_entrega_do_publico",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789490067466,
+      "tag": "0012_produto_entregas_tabela_restrita",
+      "breakpoints": true
     }
   ]
 }

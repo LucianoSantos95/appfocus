@@ -464,6 +464,24 @@ export type Database = {
         }
         Relationships: []
       }
+      produto_entregas: {
+        Row: {
+          link: string | null
+          produto_slug: string
+          updated_at: string
+        }
+        Insert: {
+          link?: string | null
+          produto_slug: string
+          updated_at?: string
+        }
+        Update: {
+          link?: string | null
+          produto_slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       produtos: {
         Row: {
           arquivado: boolean
