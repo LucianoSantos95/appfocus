@@ -163,6 +163,21 @@ export function ProdutosPanel() {
   const [linkIA, setLinkIA] = useState("");
   const [extraindo, setExtraindo] = useState(false);
   const [excluindo, setExcluindo] = useState<Produto | null>(null);
+  // Link revelado só depois do pagamento. Fica em tabela separada (produto_entregas),
+  // fora do alcance do catálogo público.
+  const [linkEntrega, setLinkEntrega] = useState("");
+
+  useEffect(() => {
+    let vivo = true;
+    (async () => {
+      if (!editando?.slug) { setLinkEntrega(""); return; }
+      const { data } = await sb.from("produto_entregas").select("link").eq("produto_slug", editando.slug).maybeSingle();
+      if (vivo) setLinkEntrega(data?.link ?? "");
+    })();
+    return () => { vivo = false; };
+    // Só recarrega ao trocar de produto no dialog.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editando?.id]);
 
   const preencherComIA = async () => {
     const url = linkIA.trim();
