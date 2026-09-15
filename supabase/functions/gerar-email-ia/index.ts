@@ -72,8 +72,7 @@ ${contexto}
 
 Tom: direto, pessoal, como se escrevesse para uma pessoa só. Sem enrolação, sem jargão de marketing, sem "não perca essa oportunidade", sem emojis em excesso, sem assinatura formal longa. Máximo 6 parágrafos curtos. Termine com um fechamento simples e uma chamada clara para clicar no botão do e-mail (não escreva o botão nem coloque links crus; o botão é adicionado depois).
 
-Responda APENAS JSON válido, sem markdown:
-{"assunto": "assunto curto, máx 60 caracteres, sem clickbait", "mensagem": "corpo do e-mail em texto puro; separe parágrafos com uma linha em branco"}`;
+Devolva o resultado chamando a função montar_email, com assunto curto (máx 60 caracteres, sem clickbait) e mensagem em texto puro.`;
 
     // Structured output: evita JSON inválido (quebras de linha cruas no corpo do e-mail),
     // que era a causa das falhas intermitentes.
