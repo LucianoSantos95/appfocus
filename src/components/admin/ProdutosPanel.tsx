@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -535,8 +536,8 @@ export function ProdutosPanel() {
                 {!editando.gratuito && (
                   <div className="space-y-1.5">
                     <Label htmlFor="pr-preco">Preço (R$)</Label>
-                    <Input id="pr-preco" type="number" step="0.01" value={editando.preco ?? ""}
-                      onChange={(e) => setEditando({ ...editando, preco: Number(e.target.value) })} />
+                    <CurrencyInput id="pr-preco" value={editando.preco}
+                      onValueChange={(v) => setEditando({ ...editando, preco: v })} />
                   </div>
                 )}
 
