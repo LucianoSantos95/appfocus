@@ -535,8 +535,8 @@ export function ProdutosPanel() {
                 {!editando.gratuito && (
                   <div className="space-y-1.5">
                     <Label htmlFor="pr-preco">Preço (R$)</Label>
-                    <Input id="pr-preco" type="number" step="0.01" value={editando.preco ?? ""}
-                      onChange={(e) => setEditando({ ...editando, preco: Number(e.target.value) })} />
+                    <CurrencyInput id="pr-preco" value={editando.preco}
+                      onValueChange={(v) => setEditando({ ...editando, preco: v })} />
                   </div>
                 )}
 
