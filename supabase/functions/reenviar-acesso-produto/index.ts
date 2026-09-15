@@ -40,15 +40,18 @@ Deno.serve(async (req) => {
     if (compra.status !== "pago") return json(400, { error: "A compra ainda não foi paga." });
 
     const { data: prod } = await admin
-      .from("produtos").select("nome, link_entrega, link_destino")
+      .from("produtos").select("nome, link_destino")
       .eq("slug", compra.produto_slug).maybeSingle();
+    const { data: entrega } = await admin
+      .from("produto_entregas").select("link")
+      .eq("produto_slug", compra.produto_slug).maybeSingle();
 
     const r = await enviarEmailEntrega(admin, {
       email: compra.email,
       nome: compra.nome,
       produtoNome: compra.produto_nome ?? prod?.nome ?? "seu produto",
       produtoSlug: compra.produto_slug,
-      linkEntrega: prod?.link_entrega ?? prod?.link_destino ?? null,
+      linkEntrega: entrega?.link ?? prod?.link_destino ?? null,
       tokenAcesso: compra.token_acesso,
     });
     if (!r.ok) return json(502, { error: r.error ?? "Não foi possível enviar." });
