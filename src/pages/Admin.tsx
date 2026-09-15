@@ -60,6 +60,7 @@ export default function Admin() {
 
           <TabsContent value="produtos" className="mt-6"><ProdutosPanel /></TabsContent>
           <TabsContent value="fale-comigo" className="mt-6"><FaleComigoPanel /></TabsContent>
+          <TabsContent value="vendas"   className="mt-6"><VendasPanel /></TabsContent>
           <TabsContent value="leads"    className="mt-6"><LeadsPanel /></TabsContent>
           <TabsContent value="metricas" className="mt-6"><MetricasPanel /></TabsContent>
           <TabsContent value="email"    className="mt-6"><EmailPanel /></TabsContent>
