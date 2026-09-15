@@ -92,6 +92,13 @@
       "when": 1789490067466,
       "tag": "0012_produto_entregas_tabela_restrita",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789496469612,
+      "tag": "0013_email_assets_bucket_scoped_policies",
+      "breakpoints": true
     }
   ]
 }
