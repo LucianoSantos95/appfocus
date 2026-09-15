@@ -94,6 +94,8 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
   const [feedbackEnviado, setFeedbackEnviado] = useState(false);
   // Consultoria: a pessoa escolhe a plataforma antes de deixar o contato.
   const [plataforma, setPlataforma] = useState<"Notion" | "Lovable" | null>(null);
+  // Produto pago: link do checkout Asaas gerado na hora do envio.
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
 
   useEffect(() => {
