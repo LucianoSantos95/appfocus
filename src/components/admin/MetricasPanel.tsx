@@ -94,6 +94,7 @@ const ORIGEM_ROTULO: Record<Origem, string> = {
   followup: "Follow-up de uso",
   promo: "Campanha promocional",
   manual: "Envio manual",
+  entrega: "Entrega de compra",
   outro: "Não classificado",
 };
 
