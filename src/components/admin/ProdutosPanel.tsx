@@ -558,11 +558,23 @@ export function ProdutosPanel() {
                 </label>
 
                 {!editando.gratuito && (
-                  <div className="space-y-1.5">
-                    <Label htmlFor="pr-preco">Preço (R$)</Label>
-                    <CurrencyInput id="pr-preco" value={editando.preco}
-                      onValueChange={(v) => setEditando({ ...editando, preco: v })} />
-                  </div>
+                  <>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="pr-preco">Preço (R$)</Label>
+                      <CurrencyInput id="pr-preco" value={editando.preco}
+                        onValueChange={(v) => setEditando({ ...editando, preco: v })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="pr-entrega">Link de entrega (após o pagamento)</Label>
+                      <Input id="pr-entrega" value={linkEntrega}
+                        onChange={(e) => setLinkEntrega(e.target.value)}
+                        placeholder="Link do Notion, área de membros, arquivo…" />
+                      <p className="text-xs text-muted-foreground">
+                        Fica escondido do catálogo. Só aparece na página de acesso e no e-mail
+                        depois que o pagamento é confirmado.
+                      </p>
+                    </div>
+                  </>
                 )}
 
                 <label className="flex items-center justify-between gap-3 cursor-pointer">
