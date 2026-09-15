@@ -35,7 +35,20 @@ const ROTULO_TIPO: Record<Produto["tipo"], string> = {
 };
 
 
-function copyPor(tipo?: Produto["tipo"]) {
+function copyPor(tipo?: Produto["tipo"], gratuito = true) {
+  // Produto pago com captura de lead: mesmo fluxo do grátis (form → lead → link),
+  // só a copy muda, porque o destino é o checkout e não um template.
+  if (!gratuito && tipo !== "advisor") {
+    return {
+      formTitulo: "Continuar para o pagamento",
+      formSub: "Deixe seu nome e e-mail — é pra lá que mandamos o acesso.",
+      cta: "Ir para o pagamento",
+      enviando: "Abrindo…",
+      rodape: "Sem spam. Só o necessário sobre a sua compra.",
+      okTitulo: "Tudo certo",
+      okTexto: "Abrimos a página de pagamento numa nova aba. Se não abriu, use o botão abaixo.",
+    };
+  }
   if (tipo === "advisor") {
     return {
       formTitulo: "Conte um pouco sobre sua operação",
