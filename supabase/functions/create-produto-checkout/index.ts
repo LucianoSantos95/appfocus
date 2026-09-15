@@ -96,34 +96,13 @@ Deno.serve(async (req) => {
       externalReference: `produto|${compra.id}`,
     };
 
-    // Tenta oferecer o máximo de formas de pagamento que a conta aceitar.
-    const tentativas: string[][] = [
-      ["PIX", "BOLETO", "CREDIT_CARD"],
-      ["PIX", "BOLETO"],
-      ["PIX"],
-    ];
-
-    let checkout = await asaas("/checkouts", "POST", {
+    // Somente Pix: é a única forma habilitada na conta Asaas hoje
+    // (boleto/cartão fazem o Asaas recusar com "billingTypes é inválido").
+    const checkout = await asaas("/checkouts", "POST", {
       ...baseBody,
-      billingTypes: tentativas[0],
+      billingTypes: ["PIX"],
       dueDateLimitDays: 3,
     });
-    if (checkout.ok) {
-      console.log("[create-produto-checkout] formas aceitas:", tentativas[0].join(","));
-    }
-
-    for (let i = 1; i < tentativas.length && !checkout.ok; i++) {
-      if (!/billingTypes/i.test(JSON.stringify(checkout.data ?? {}))) break;
-      console.warn("[create-produto-checkout] billingTypes recusado; tentando", tentativas[i].join(","));
-      checkout = await asaas("/checkouts", "POST", {
-        ...baseBody,
-        billingTypes: tentativas[i],
-        dueDateLimitDays: 3,
-      });
-      if (checkout.ok) {
-        console.log("[create-produto-checkout] formas aceitas:", tentativas[i].join(","));
-      }
-    }
 
     if (!checkout.ok) {
       await admin.from("compras").update({ status: "erro" }).eq("id", compra.id);
