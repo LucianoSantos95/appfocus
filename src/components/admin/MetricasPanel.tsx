@@ -83,6 +83,7 @@ type Origem =
   | "followup"
   | "promo"
   | "manual"
+  | "entrega"
   | "outro";
 
 const ORIGEM_ROTULO: Record<Origem, string> = {
