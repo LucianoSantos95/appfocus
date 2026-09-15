@@ -51,6 +51,7 @@ export default function Admin() {
           <TabsList>
             <TabsTrigger value="produtos">Produtos</TabsTrigger>
             <TabsTrigger value="fale-comigo">Fale comigo</TabsTrigger>
+            <TabsTrigger value="vendas">Vendas</TabsTrigger>
             <TabsTrigger value="leads">Leads</TabsTrigger>
             <TabsTrigger value="metricas">Métricas</TabsTrigger>
             <TabsTrigger value="email">E-mail</TabsTrigger>
