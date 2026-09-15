@@ -173,6 +173,7 @@ export function MetricasPanel() {
   const [nomes, setNomes] = useState<Record<string, string>>({});
   const [leadsTotal, setLeadsTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [atualizando, setAtualizando] = useState(false);
   const [filtroOrigem, setFiltroOrigem] = useState<"todas" | Origem>("todas");
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "sent" | "falhou" | "aberto" | "nao_aberto">("todos");
   const [verTodosEmails, setVerTodosEmails] = useState(false);
@@ -184,8 +185,8 @@ export function MetricasPanel() {
 
   const comparavel = dias !== "0";
 
-  const carregar = useCallback(async () => {
-    setLoading(true);
+  const carregar = useCallback(async (silencioso = false) => {
+    if (!silencioso) setLoading(true);
     const janela = Number(dias) * 86400000;
     const inicio = dias === "0" ? new Date(0) : new Date(Date.now() - janela);
     const desde = inicio.toISOString();
