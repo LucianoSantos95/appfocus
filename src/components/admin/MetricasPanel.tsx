@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown, Download, ArrowUpRight, Calendar as CalendarIcon } from "lucide-react";
+import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown, Download, ArrowUpRight, RefreshCw, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -173,6 +173,7 @@ export function MetricasPanel() {
   const [nomes, setNomes] = useState<Record<string, string>>({});
   const [leadsTotal, setLeadsTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [atualizando, setAtualizando] = useState(false);
   const [filtroOrigem, setFiltroOrigem] = useState<"todas" | Origem>("todas");
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "sent" | "falhou" | "aberto" | "nao_aberto">("todos");
   const [verTodosEmails, setVerTodosEmails] = useState(false);
@@ -184,8 +185,8 @@ export function MetricasPanel() {
 
   const comparavel = dias !== "0";
 
-  const carregar = useCallback(async () => {
-    setLoading(true);
+  const carregar = useCallback(async (silencioso = false) => {
+    if (!silencioso) setLoading(true);
     const janela = Number(dias) * 86400000;
     const inicio = dias === "0" ? new Date(0) : new Date(Date.now() - janela);
     const desde = inicio.toISOString();
@@ -235,6 +236,12 @@ export function MetricasPanel() {
   }, [dias]);
 
   useEffect(() => { carregar(); }, [carregar]);
+
+  // Atualizar manual: recarrega tudo sem apagar a tela — só o botão indica o estado.
+  const atualizar = async () => {
+    setAtualizando(true);
+    try { await carregar(true); } finally { setAtualizando(false); }
+  };
 
   // Visitas contam sessões únicas — recarregar a página não infla o número
   const contar = (lista: Linha[]) => ({
@@ -434,6 +441,13 @@ export function MetricasPanel() {
           Visitas e cliques vêm do próprio catálogo. O Google Analytics segue medindo tráfego e origem.
         </p>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline" size="sm" className="gap-1.5"
+            onClick={atualizar} disabled={loading || atualizando}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${atualizando ? "animate-spin" : ""}`} />
+            {atualizando ? "Atualizando…" : "Atualizar"}
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5" disabled={loading}>
