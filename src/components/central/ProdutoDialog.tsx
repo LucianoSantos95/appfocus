@@ -35,7 +35,20 @@ const ROTULO_TIPO: Record<Produto["tipo"], string> = {
 };
 
 
-function copyPor(tipo?: Produto["tipo"]) {
+function copyPor(tipo?: Produto["tipo"], gratuito = true) {
+  // Produto pago com captura de lead: mesmo fluxo do grátis (form → lead → link),
+  // só a copy muda, porque o destino é o checkout e não um template.
+  if (!gratuito && tipo !== "advisor") {
+    return {
+      formTitulo: "Continuar para o pagamento",
+      formSub: "Deixe seu nome e e-mail — é pra lá que mandamos o acesso.",
+      cta: "Ir para o pagamento",
+      enviando: "Abrindo…",
+      rodape: "Sem spam. Só o necessário sobre a sua compra.",
+      okTitulo: "Tudo certo",
+      okTexto: "Abrimos a página de pagamento numa nova aba. Se não abriu, use o botão abaixo.",
+    };
+  }
   if (tipo === "advisor") {
     return {
       formTitulo: "Conte um pouco sobre sua operação",
@@ -95,7 +108,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
   const emailOk = /\S+@\S+\.\S+/.test(email.trim());
   const valido = nomeOk && emailOk;
   const advisor = produto?.tipo === "advisor";
-  const t = copyPor(produto?.tipo);
+  const t = copyPor(produto?.tipo, produto?.gratuito ?? true);
   const galeria = (produto?.imagens ?? []).filter(Boolean);
   // Sem galeria, a capa é a imagem do template — precisa aparecer no detalhe.
   const imagens = galeria.length > 0 ? galeria : produto?.capa ? [produto.capa] : [];
@@ -191,7 +204,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
               {!advisor && produto?.link_destino && (
                 <Button asChild>
                   <a href={produto.link_destino} target="_blank" rel="noopener noreferrer">
-                    Abrir template <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    {produto?.gratuito === false ? "Abrir pagamento" : "Abrir template"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </a>
                 </Button>
               )}
