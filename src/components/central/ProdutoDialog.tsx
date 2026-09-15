@@ -151,9 +151,12 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
       });
       if (error) throw error;
 
-      supabase.functions.invoke("notify-slack", {
-        body: { text: `📥 Novo lead do catálogo\n*${nome.trim()}* (${email.trim()})\nProduto: ${produto.nome}` },
-      }).catch(() => {});
+      // Notificação interna: nunca pode travar o fluxo do cliente (fire-and-forget isolado).
+      try {
+        void supabase.functions.invoke("notify-slack", {
+          body: { text: `📥 Novo lead do catálogo\n*${nome.trim()}* (${email.trim()})\nProduto: ${produto.nome}` },
+        }).then(() => {}, () => {});
+      } catch { /* ignora qualquer falha da notificação */ }
 
       // Agradecimento best-effort — mesma identidade visual dos demais e-mails.
       supabase.functions.invoke("send-thanks-email", {
