@@ -21,6 +21,7 @@ const TemplatesNotionGratuitos = lazy(() => import("./pages/TemplatesNotionGratu
 const Admin = lazy(() => import("./pages/Admin"));
 const AvaliacaoRecebida = lazy(() => import("./pages/AvaliacaoRecebida"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
+const AcessoProduto = lazy(() => import("./pages/AcessoProduto"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
