@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Send, Users } from "lucide-react";
+import { Loader2, Send, Sparkles, Users } from "lucide-react";
 
 // Disparo para a base de leads. Reusa a edge function send-subscriber-broadcast
 // no modo audience:"custom", passando os e-mails escolhidos aqui.
