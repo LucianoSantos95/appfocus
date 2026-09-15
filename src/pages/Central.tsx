@@ -203,8 +203,9 @@ function SecaoCatalogo({
       const fb = fixado(b) ? 1 : 0;
       if (fa !== fb) return fb - fa;
       if (a.destaque !== b.destaque) return a.destaque ? -1 : 1;
-      const d = (b.downloads ?? 0) - (a.downloads ?? 0);
-      return d !== 0 ? d : a.ordem - b.ordem;
+      // Ordem definida no admin (arrastar) manda; downloads só desempatam.
+      const o = a.ordem - b.ordem;
+      return o !== 0 ? o : (b.downloads ?? 0) - (a.downloads ?? 0);
     });
 
   const mostrando = ordenados.slice(0, visiveis);
