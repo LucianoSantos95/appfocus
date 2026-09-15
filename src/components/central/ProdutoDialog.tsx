@@ -169,6 +169,21 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
 
       registrarEvento("lead_enviado", produto.slug);
 
+      // Produto pago: cria a cobrança no Asaas e manda pro checkout.
+      if (!advisor && produto.gratuito === false) {
+        const { data, error: errCheckout } = await supabase.functions.invoke("create-produto-checkout", {
+          body: { slug: produto.slug, nome: nome.trim(), email: email.trim().toLowerCase() },
+        });
+        const url = (data as any)?.url as string | undefined;
+        if (errCheckout || !url) {
+          throw new Error((data as any)?.error || "Não consegui abrir o pagamento. Tente de novo.");
+        }
+        setCheckoutUrl(url);
+        setEntregue(true);
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      }
+
       setEntregue(true);
       // Advisor não entrega nada na hora — é contato.
       if (!advisor && produto.link_destino) {
