@@ -91,7 +91,8 @@ Deno.serve(async (req) => {
         quantity: 1,
         value: valor,
       }],
-      customerData: { name: nome, email },
+      // Sem customerData: o Asaas exige cpfCnpj quando ele é enviado, e não temos
+      // o CPF/CNPJ do comprador. A própria página do Asaas coleta esses dados.
       externalReference: `produto|${compra.id}`,
     };
 
