@@ -99,6 +99,13 @@
       "when": 1789496469612,
       "tag": "0013_email_assets_bucket_scoped_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789510857943,
+      "tag": "0014_produtos_bucket_public_read_scoped",
+      "breakpoints": true
     }
   ]
 }
