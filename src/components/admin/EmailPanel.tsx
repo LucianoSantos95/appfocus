@@ -174,6 +174,51 @@ export function EmailPanel() {
             </div>
           </div>
 
+          <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <p className="text-sm font-medium text-foreground">Gerar rascunho com IA</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="em-tema">Assunto/tema do e-mail</Label>
+              <Input id="em-tema" value={tema} onChange={(e) => setTema(e.target.value)}
+                placeholder="Ex: Lançamos um novo playbook" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Produtos para mencionar</Label>
+              {produtos.length === 0 ? (
+                <p className="text-xs text-muted-foreground">{carregando ? "carregando…" : "Nenhum produto disponível."}</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {produtos.map((p) => {
+                    const on = selecionados.includes(p.slug);
+                    return (
+                      <button key={p.slug} type="button" onClick={() => alternarProduto(p.slug)}
+                        className={`text-xs rounded-full border px-2.5 py-1 transition-colors ${
+                          on ? "bg-primary text-primary-foreground border-primary"
+                             : "bg-background text-muted-foreground border-border hover:text-foreground"}`}>
+                        {p.nome}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              <Button type="button" variant="secondary" onClick={gerarComIA} disabled={gerando} className="gap-2">
+                {gerando
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Gerando…</>
+                  : <><Sparkles className="w-4 h-4" /> Gerar com IA</>}
+              </Button>
+              <p className="text-xs text-muted-foreground">Preenche assunto e mensagem abaixo. Nada é enviado.</p>
+            </div>
+
+            {erroIa && <p className="text-xs text-destructive">{erroIa}</p>}
+          </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="em-assunto">Assunto</Label>
             <Input id="em-assunto" value={assunto} onChange={(e) => setAssunto(e.target.value)}
