@@ -185,6 +185,25 @@ export function MetricasPanel() {
 
   const comparavel = dias !== "0";
 
+  // Eventos vêm paginados: o backend devolve no máximo 1000 linhas por requisição,
+  // então buscamos página a página até acabar — sem teto fixo que quebre de novo.
+  const buscarEventos = async (desde: string, ate?: string): Promise<Linha[]> => {
+    const PAGINA = 1000;
+    const todos: Linha[] = [];
+    for (let i = 0; ; i++) {
+      let q = sb.from("eventos").select("tipo,produto,sessao,created_at")
+        .gte("created_at", desde)
+        .order("created_at", { ascending: true })
+        .range(i * PAGINA, i * PAGINA + PAGINA - 1);
+      if (ate) q = q.lt("created_at", ate);
+      const { data, error } = await q;
+      if (error || !data?.length) break;
+      todos.push(...(data as Linha[]));
+      if (data.length < PAGINA) break;
+    }
+    return todos;
+  };
+
   const carregar = useCallback(async (silencioso = false) => {
     if (!silencioso) setLoading(true);
     const janela = Number(dias) * 86400000;
@@ -209,8 +228,8 @@ export function MetricasPanel() {
       sb.from("produtos").select("slug,nome"),
     ]);
 
-    setEventos((ev.data as Linha[]) || []);
-    setAnteriores((evAnt.data as Linha[]) || []);
+    setEventos(ev);
+    setAnteriores(evAnt);
     setLeadsTotal(ld.count ?? 0);
     setEmails((em.data as EmailLinha[]) || []);
 
