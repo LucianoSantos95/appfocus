@@ -9,6 +9,7 @@ import { LeadsPanel } from "@/components/admin/LeadsPanel";
 import { MetricasPanel } from "@/components/admin/MetricasPanel";
 import { EmailPanel } from "@/components/admin/EmailPanel";
 import { FeedbacksPanel } from "@/components/admin/FeedbacksPanel";
+import { VendasPanel } from "@/components/admin/VendasPanel";
 import { ArrowUpRight, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
