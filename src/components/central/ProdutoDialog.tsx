@@ -108,7 +108,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
   const emailOk = /\S+@\S+\.\S+/.test(email.trim());
   const valido = nomeOk && emailOk;
   const advisor = produto?.tipo === "advisor";
-  const t = copyPor(produto?.tipo);
+  const t = copyPor(produto?.tipo, produto?.gratuito ?? true);
   const galeria = (produto?.imagens ?? []).filter(Boolean);
   // Sem galeria, a capa é a imagem do template — precisa aparecer no detalhe.
   const imagens = galeria.length > 0 ? galeria : produto?.capa ? [produto.capa] : [];
