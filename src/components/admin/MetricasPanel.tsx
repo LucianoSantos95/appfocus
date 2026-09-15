@@ -109,6 +109,7 @@ const ORIGEM_POR_TEMPLATE: Record<string, Origem> = {
   promo_inactive_reactivation: "promo",
   promo_engaged_20off: "promo",
   subscriber_broadcast: "manual",
+  entrega_produto: "entrega",
 };
 
 function origemDe(template: string): Origem {
