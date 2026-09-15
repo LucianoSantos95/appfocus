@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { asaas } from "../_shared/asaas.ts";
+import { enviarEmailEntrega } from "../_shared/entrega-email.ts";
 
 const log = (step: string, d?: unknown) => console.log(`[ASAAS-WEBHOOK] ${step}${d ? ` - ${JSON.stringify(d)}` : ""}`);
 
