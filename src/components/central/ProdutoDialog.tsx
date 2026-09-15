@@ -219,9 +219,9 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
             <p className="text-sm text-muted-foreground max-w-xs">{t.okTexto}</p>
             <div className="flex gap-2 mt-1">
               <Button variant={advisor ? "default" : "outline"} onClick={fechar}>Fechar</Button>
-              {!advisor && produto?.link_destino && (
+              {!advisor && (checkoutUrl || produto?.link_destino) && (
                 <Button asChild>
-                  <a href={produto.link_destino} target="_blank" rel="noopener noreferrer">
+                  <a href={checkoutUrl ?? produto!.link_destino!} target="_blank" rel="noopener noreferrer">
                     {produto?.gratuito === false ? "Abrir pagamento" : "Abrir template"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </a>
                 </Button>
