@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Send, Users } from "lucide-react";
+import { Loader2, Send, Sparkles, Users } from "lucide-react";
 
 // Disparo para a base de leads. Reusa a edge function send-subscriber-broadcast
 // no modo audience:"custom", passando os e-mails escolhidos aqui.
@@ -38,6 +38,40 @@ export function EmailPanel() {
   const [ctaUrl, setCtaUrl] = useState("https://app.focusinteligente.com.br/");
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<string | null>(null);
+  const [tema, setTema] = useState("");
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [gerando, setGerando] = useState(false);
+  const [erroIa, setErroIa] = useState<string | null>(null);
+
+  const alternarProduto = (slug: string) =>
+    setSelecionados((atual) => atual.includes(slug) ? atual.filter((s) => s !== slug) : [...atual, slug]);
+
+  const gerarComIA = async () => {
+    if (!tema.trim()) {
+      setErroIa("Escreva o assunto/tema do e-mail antes de gerar.");
+      return;
+    }
+    setGerando(true);
+    setErroIa(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("gerar-email-ia", {
+        body: { tema: tema.trim(), produtos: selecionados },
+      });
+      if (error) {
+        let detalhe = "";
+        try { detalhe = (await (error as any).context?.json?.())?.error ?? ""; } catch { /* sem detalhe */ }
+        throw new Error(detalhe || error.message);
+      }
+      const r = data as { assunto?: string; mensagem?: string };
+      if (r?.assunto) setAssunto(r.assunto);
+      if (r?.mensagem) setMensagem(r.mensagem);
+      toast({ title: "Rascunho pronto", description: "Revise e edite antes de enviar." });
+    } catch (e) {
+      setErroIa((e as Error).message || "Não consegui gerar o rascunho. Tente de novo.");
+    } finally {
+      setGerando(false);
+    }
+  };
 
   const carregar = useCallback(async () => {
     const [lds, prods] = await Promise.all([
@@ -138,6 +172,51 @@ export function EmailPanel() {
                 {carregando ? "carregando…" : `${destinatarios.length} destinatário${destinatarios.length === 1 ? "" : "s"}`}
               </Badge>
             </div>
+          </div>
+
+          <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <p className="text-sm font-medium text-foreground">Gerar rascunho com IA</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="em-tema">Assunto/tema do e-mail</Label>
+              <Input id="em-tema" value={tema} onChange={(e) => setTema(e.target.value)}
+                placeholder="Ex: Lançamos um novo playbook" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Produtos para mencionar</Label>
+              {produtos.length === 0 ? (
+                <p className="text-xs text-muted-foreground">{carregando ? "carregando…" : "Nenhum produto disponível."}</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {produtos.map((p) => {
+                    const on = selecionados.includes(p.slug);
+                    return (
+                      <button key={p.slug} type="button" onClick={() => alternarProduto(p.slug)}
+                        className={`text-xs rounded-full border px-2.5 py-1 transition-colors ${
+                          on ? "bg-primary text-primary-foreground border-primary"
+                             : "bg-background text-muted-foreground border-border hover:text-foreground"}`}>
+                        {p.nome}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              <Button type="button" variant="secondary" onClick={gerarComIA} disabled={gerando} className="gap-2">
+                {gerando
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Gerando…</>
+                  : <><Sparkles className="w-4 h-4" /> Gerar com IA</>}
+              </Button>
+              <p className="text-xs text-muted-foreground">Preenche assunto e mensagem abaixo. Nada é enviado.</p>
+            </div>
+
+            {erroIa && <p className="text-xs text-destructive">{erroIa}</p>}
           </div>
 
           <div className="space-y-1.5">
