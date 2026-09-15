@@ -204,7 +204,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
               {!advisor && produto?.link_destino && (
                 <Button asChild>
                   <a href={produto.link_destino} target="_blank" rel="noopener noreferrer">
-                    Abrir template <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    {produto?.gratuito === false ? "Abrir pagamento" : "Abrir template"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </a>
                 </Button>
               )}
