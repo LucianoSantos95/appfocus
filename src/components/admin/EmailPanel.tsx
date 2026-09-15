@@ -38,6 +38,40 @@ export function EmailPanel() {
   const [ctaUrl, setCtaUrl] = useState("https://app.focusinteligente.com.br/");
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<string | null>(null);
+  const [tema, setTema] = useState("");
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [gerando, setGerando] = useState(false);
+  const [erroIa, setErroIa] = useState<string | null>(null);
+
+  const alternarProduto = (slug: string) =>
+    setSelecionados((atual) => atual.includes(slug) ? atual.filter((s) => s !== slug) : [...atual, slug]);
+
+  const gerarComIA = async () => {
+    if (!tema.trim()) {
+      setErroIa("Escreva o assunto/tema do e-mail antes de gerar.");
+      return;
+    }
+    setGerando(true);
+    setErroIa(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("gerar-email-ia", {
+        body: { tema: tema.trim(), produtos: selecionados },
+      });
+      if (error) {
+        let detalhe = "";
+        try { detalhe = (await (error as any).context?.json?.())?.error ?? ""; } catch { /* sem detalhe */ }
+        throw new Error(detalhe || error.message);
+      }
+      const r = data as { assunto?: string; mensagem?: string };
+      if (r?.assunto) setAssunto(r.assunto);
+      if (r?.mensagem) setMensagem(r.mensagem);
+      toast({ title: "Rascunho pronto", description: "Revise e edite antes de enviar." });
+    } catch (e) {
+      setErroIa((e as Error).message || "Não consegui gerar o rascunho. Tente de novo.");
+    } finally {
+      setGerando(false);
+    }
+  };
 
   const carregar = useCallback(async () => {
     const [lds, prods] = await Promise.all([
