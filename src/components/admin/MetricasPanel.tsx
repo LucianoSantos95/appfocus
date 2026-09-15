@@ -193,11 +193,8 @@ export function MetricasPanel() {
     const desdeAnterior = new Date(inicio.getTime() - janela).toISOString();
 
     const [ev, evAnt, ld, em, fb, prod] = await Promise.all([
-      sb.from("eventos").select("tipo,produto,sessao,created_at").gte("created_at", desde),
-      dias === "0"
-        ? Promise.resolve({ data: [] })
-        : sb.from("eventos").select("tipo,produto,sessao,created_at")
-            .gte("created_at", desdeAnterior).lt("created_at", desde),
+      buscarEventos(desde),
+      dias === "0" ? Promise.resolve([] as Linha[]) : buscarEventos(desdeAnterior, desde),
       sb.from("leads").select("id", { count: "exact", head: true })
         .neq("status", "legado").gte("created_at", desde),
       sb.from("email_send_log")
