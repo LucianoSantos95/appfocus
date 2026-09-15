@@ -95,6 +95,57 @@ export type Database = {
         }
         Relationships: []
       }
+      compras: {
+        Row: {
+          asaas_checkout_id: string | null
+          asaas_payment_id: string | null
+          billing_type: string | null
+          created_at: string
+          email: string
+          id: string
+          liberado_em: string | null
+          nome: string
+          produto_nome: string | null
+          produto_slug: string
+          status: string
+          token_acesso: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          asaas_checkout_id?: string | null
+          asaas_payment_id?: string | null
+          billing_type?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          liberado_em?: string | null
+          nome: string
+          produto_nome?: string | null
+          produto_slug: string
+          status?: string
+          token_acesso?: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          asaas_checkout_id?: string | null
+          asaas_payment_id?: string | null
+          billing_type?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          liberado_em?: string | null
+          nome?: string
+          produto_nome?: string | null
+          produto_slug?: string
+          status?: string
+          token_acesso?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       consent_records: {
         Row: {
           accepted: boolean
@@ -413,6 +464,24 @@ export type Database = {
         }
         Relationships: []
       }
+      produto_entregas: {
+        Row: {
+          link: string | null
+          produto_slug: string
+          updated_at: string
+        }
+        Insert: {
+          link?: string | null
+          produto_slug: string
+          updated_at?: string
+        }
+        Update: {
+          link?: string | null
+          produto_slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       produtos: {
         Row: {
           arquivado: boolean
@@ -430,6 +499,7 @@ export type Database = {
           id: string
           imagens: string[]
           link_destino: string | null
+          link_entrega: string | null
           nome: string
           ordem: number
           preco: number | null
@@ -452,6 +522,7 @@ export type Database = {
           id?: string
           imagens?: string[]
           link_destino?: string | null
+          link_entrega?: string | null
           nome: string
           ordem?: number
           preco?: number | null
@@ -474,6 +545,7 @@ export type Database = {
           id?: string
           imagens?: string[]
           link_destino?: string | null
+          link_entrega?: string | null
           nome?: string
           ordem?: number
           preco?: number | null
@@ -745,6 +817,17 @@ export type Database = {
       check_login_rate_limit: { Args: { p_email: string }; Returns: Json }
       cleanup_old_client_errors: { Args: never; Returns: undefined }
       cleanup_rate_limits: { Args: never; Returns: undefined }
+      compra_por_token: {
+        Args: { p_token: string }
+        Returns: {
+          created_at: string
+          link_entrega: string
+          nome: string
+          produto_nome: string
+          produto_slug: string
+          status: string
+        }[]
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

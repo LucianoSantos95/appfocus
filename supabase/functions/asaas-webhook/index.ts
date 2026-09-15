@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { asaas } from "../_shared/asaas.ts";
+import { enviarEmailEntrega } from "../_shared/entrega-email.ts";
 
 const log = (step: string, d?: unknown) => console.log(`[ASAAS-WEBHOOK] ${step}${d ? ` - ${JSON.stringify(d)}` : ""}`);
 
@@ -67,6 +68,50 @@ Deno.serve(async (req) => {
       ext = sub.ok ? (sub.data?.externalReference ?? null) : null;
     }
     if (!ext || !ext.includes("|")) return finish("error", "externalReference ausente/inválido");
+
+    // Compra avulsa de produto do catálogo: produto|<id da compra>
+    if (ext.startsWith("produto|")) {
+      const compraId = ext.split("|")[1];
+      const { data: compra } = await admin
+        .from("compras").select("id, status, email, nome, produto_slug, produto_nome, token_acesso")
+        .eq("id", compraId).maybeSingle();
+      if (!compra) return finish("error", "compra não encontrada");
+
+      if (isLost) {
+        await admin.from("compras").update({ status: "estornado", liberado_em: null }).eq("id", compra.id);
+        log("Compra estornada", { compraId });
+        return finish("processed");
+      }
+      if (!isPaid) return finish("ignored");
+      if (compra.status === "pago") return finish("ignored");
+
+      await admin.from("compras").update({
+        status: "pago",
+        liberado_em: new Date().toISOString(),
+        asaas_payment_id: payment.id ?? null,
+        billing_type: payment.billingType ?? null,
+      }).eq("id", compra.id);
+
+      const { data: prod } = await admin
+        .from("produtos").select("nome, link_destino")
+        .eq("slug", compra.produto_slug).maybeSingle();
+      const { data: entrega } = await admin
+        .from("produto_entregas").select("link")
+        .eq("produto_slug", compra.produto_slug).maybeSingle();
+
+      await enviarEmailEntrega(admin, {
+        email: compra.email,
+        nome: compra.nome,
+        produtoNome: compra.produto_nome ?? prod?.nome ?? "seu produto",
+        produtoSlug: compra.produto_slug,
+        linkEntrega: entrega?.link ?? prod?.link_destino ?? null,
+        tokenAcesso: compra.token_acesso,
+      }).catch((e) => log("Falha no e-mail de entrega", { msg: String(e) }));
+
+      log("Compra liberada", { compraId, produto: compra.produto_slug });
+      return finish("processed");
+    }
+
     const parts = ext.split("|");
     const [userId, plan, cycle = "monthly", mode = "recurring"] = parts;
     if (!userId || !plan) return finish("error", "userId/plan não resolvidos");

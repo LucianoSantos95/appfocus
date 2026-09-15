@@ -63,3 +63,7 @@ project_id = "hnextembswhejumvxbzd"
     verify_jwt = false
   [functions.cron-crosssell]
     verify_jwt = false
+  [functions.create-produto-checkout]
+    verify_jwt = false
+  [functions.reenviar-acesso-produto]
+    verify_jwt = false

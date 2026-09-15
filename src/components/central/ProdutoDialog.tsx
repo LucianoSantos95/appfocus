@@ -94,6 +94,8 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
   const [feedbackEnviado, setFeedbackEnviado] = useState(false);
   // Consultoria: a pessoa escolhe a plataforma antes de deixar o contato.
   const [plataforma, setPlataforma] = useState<"Notion" | "Lovable" | null>(null);
+  // Produto pago: link do checkout Asaas gerado na hora do envio.
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -167,6 +169,21 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
 
       registrarEvento("lead_enviado", produto.slug);
 
+      // Produto pago: cria a cobrança no Asaas e manda pro checkout.
+      if (!advisor && produto.gratuito === false) {
+        const { data, error: errCheckout } = await supabase.functions.invoke("create-produto-checkout", {
+          body: { slug: produto.slug, nome: nome.trim(), email: email.trim().toLowerCase() },
+        });
+        const url = (data as any)?.url as string | undefined;
+        if (errCheckout || !url) {
+          throw new Error((data as any)?.error || "Não consegui abrir o pagamento. Tente de novo.");
+        }
+        setCheckoutUrl(url);
+        setEntregue(true);
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      }
+
       setEntregue(true);
       // Advisor não entrega nada na hora — é contato.
       if (!advisor && produto.link_destino) {
@@ -186,6 +203,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
       setNome(""); setEmail(""); setEntregue(false); setFeedbackEnviado(false); setErro(null);
       setTocado({ nome: false, email: false });
       setPlataforma(null);
+      setCheckoutUrl(null);
     }, 250);
   };
 
@@ -201,9 +219,9 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
             <p className="text-sm text-muted-foreground max-w-xs">{t.okTexto}</p>
             <div className="flex gap-2 mt-1">
               <Button variant={advisor ? "default" : "outline"} onClick={fechar}>Fechar</Button>
-              {!advisor && produto?.link_destino && (
+              {!advisor && (checkoutUrl || produto?.link_destino) && (
                 <Button asChild>
-                  <a href={produto.link_destino} target="_blank" rel="noopener noreferrer">
+                  <a href={checkoutUrl ?? produto!.link_destino!} target="_blank" rel="noopener noreferrer">
                     {produto?.gratuito === false ? "Abrir pagamento" : "Abrir template"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </a>
                 </Button>

@@ -163,6 +163,21 @@ export function ProdutosPanel() {
   const [linkIA, setLinkIA] = useState("");
   const [extraindo, setExtraindo] = useState(false);
   const [excluindo, setExcluindo] = useState<Produto | null>(null);
+  // Link revelado só depois do pagamento. Fica em tabela separada (produto_entregas),
+  // fora do alcance do catálogo público.
+  const [linkEntrega, setLinkEntrega] = useState("");
+
+  useEffect(() => {
+    let vivo = true;
+    (async () => {
+      if (!editando?.slug) { setLinkEntrega(""); return; }
+      const { data } = await sb.from("produto_entregas").select("link").eq("produto_slug", editando.slug).maybeSingle();
+      if (vivo) setLinkEntrega(data?.link ?? "");
+    })();
+    return () => { vivo = false; };
+    // Só recarrega ao trocar de produto no dialog.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editando?.id]);
 
   const preencherComIA = async () => {
     const url = linkIA.trim();
@@ -300,6 +315,15 @@ export function ProdutosPanel() {
     const { error } = p.id
       ? await sb.from("produtos").update(payload).eq("id", p.id)
       : await sb.from("produtos").insert(payload);
+
+    if (!error) {
+      const link = linkEntrega.trim();
+      if (link) {
+        await sb.from("produto_entregas").upsert({ produto_slug: p.slug, link }, { onConflict: "produto_slug" });
+      } else {
+        await sb.from("produto_entregas").delete().eq("produto_slug", p.slug);
+      }
+    }
 
     setSalvando(false);
     if (error) return toast({ title: "Não salvou", description: error.message, variant: "destructive" });
@@ -534,11 +558,23 @@ export function ProdutosPanel() {
                 </label>
 
                 {!editando.gratuito && (
-                  <div className="space-y-1.5">
-                    <Label htmlFor="pr-preco">Preço (R$)</Label>
-                    <CurrencyInput id="pr-preco" value={editando.preco}
-                      onValueChange={(v) => setEditando({ ...editando, preco: v })} />
-                  </div>
+                  <>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="pr-preco">Preço (R$)</Label>
+                      <CurrencyInput id="pr-preco" value={editando.preco}
+                        onValueChange={(v) => setEditando({ ...editando, preco: v })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="pr-entrega">Link de entrega (após o pagamento)</Label>
+                      <Input id="pr-entrega" value={linkEntrega}
+                        onChange={(e) => setLinkEntrega(e.target.value)}
+                        placeholder="Link do Notion, área de membros, arquivo…" />
+                      <p className="text-xs text-muted-foreground">
+                        Fica escondido do catálogo. Só aparece na página de acesso e no e-mail
+                        depois que o pagamento é confirmado.
+                      </p>
+                    </div>
+                  </>
                 )}
 
                 <label className="flex items-center justify-between gap-3 cursor-pointer">

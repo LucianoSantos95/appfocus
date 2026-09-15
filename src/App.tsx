@@ -21,6 +21,7 @@ const TemplatesNotionGratuitos = lazy(() => import("./pages/TemplatesNotionGratu
 const Admin = lazy(() => import("./pages/Admin"));
 const AvaliacaoRecebida = lazy(() => import("./pages/AvaliacaoRecebida"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
+const AcessoProduto = lazy(() => import("./pages/AcessoProduto"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +56,9 @@ const App = () => (
                     <Route path="/" element={<Central />} />
                     <Route path="/central" element={<Navigate to="/" replace />} />
                     <Route path="/templates-notion-gratuitos" element={<TemplatesNotionGratuitos />} />
+
+                    {/* Acesso pós-compra: o token vem do checkout e do e-mail */}
+                    <Route path="/acesso/:token" element={<AcessoProduto />} />
 
                     {/* Acesso do dono — necessário pro painel admin */}
                     <Route path="/auth" element={<Auth />} />
