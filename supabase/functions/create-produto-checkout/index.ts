@@ -77,9 +77,8 @@ Deno.serve(async (req) => {
     const origin = isPublic ? rawOrigin : "https://app.focusinteligente.com.br";
     const acessoUrl = `${origin}/acesso/${compra.token_acesso}`;
 
-    const checkout = await asaas("/checkouts", "POST", {
+    const baseBody = {
       minutesToExpire: 60,
-      billingTypes: ["PIX", "BOLETO", "CREDIT_CARD"],
       chargeTypes: ["DETACHED"],
       callback: {
         successUrl: acessoUrl,
@@ -94,11 +93,25 @@ Deno.serve(async (req) => {
       }],
       customerData: { name: nome, email },
       externalReference: `produto|${compra.id}`,
+    };
+
+    // Mesma configuração que já funciona no checkout de planos: Pix avulso.
+    let checkout = await asaas("/checkouts", "POST", {
+      ...baseBody,
+      billingTypes: ["PIX"],
+      dueDateLimitDays: 3,
     });
+
+    // Fallback: se a conta recusar a lista de formas de pagamento, deixa o
+    // próprio checkout hospedado oferecer o que estiver habilitado.
+    if (!checkout.ok && /billingTypes/i.test(JSON.stringify(checkout.data ?? {}))) {
+      console.warn("[create-produto-checkout] billingTypes recusado; repetindo sem restrição.");
+      checkout = await asaas("/checkouts", "POST", baseBody);
+    }
 
     if (!checkout.ok) {
       await admin.from("compras").update({ status: "erro" }).eq("id", compra.id);
-      const detalhe = checkout.data?.errors?.[0]?.description;
+      const detalhe = checkout.data?.errors?.[0]?.description || checkout.data?.message;
       console.error("[create-produto-checkout] Asaas falhou", checkout.status, JSON.stringify(checkout.data).slice(0, 400));
       return json(502, { error: detalhe || "Não foi possível abrir o pagamento. Tente de novo." });
     }
