@@ -237,6 +237,12 @@ export function MetricasPanel() {
 
   useEffect(() => { carregar(); }, [carregar]);
 
+  // Atualizar manual: recarrega tudo sem apagar a tela — só o botão indica o estado.
+  const atualizar = async () => {
+    setAtualizando(true);
+    try { await carregar(true); } finally { setAtualizando(false); }
+  };
+
   // Visitas contam sessões únicas — recarregar a página não infla o número
   const contar = (lista: Linha[]) => ({
     visitas: new Set(
