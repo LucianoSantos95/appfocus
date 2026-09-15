@@ -316,6 +316,15 @@ export function ProdutosPanel() {
       ? await sb.from("produtos").update(payload).eq("id", p.id)
       : await sb.from("produtos").insert(payload);
 
+    if (!error) {
+      const link = linkEntrega.trim();
+      if (link) {
+        await sb.from("produto_entregas").upsert({ produto_slug: p.slug, link }, { onConflict: "produto_slug" });
+      } else {
+        await sb.from("produto_entregas").delete().eq("produto_slug", p.slug);
+      }
+    }
+
     setSalvando(false);
     if (error) return toast({ title: "Não salvou", description: error.message, variant: "destructive" });
     toast({ title: p.id ? "Produto atualizado" : "Produto criado" });
