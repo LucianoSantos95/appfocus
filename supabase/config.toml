@@ -1,8 +1,6 @@
 project_id = "hnextembswhejumvxbzd"
 
 [functions]
-  [functions.notify-slack]
-    verify_jwt = false
   [functions.cron-daily-brief]
     verify_jwt = false
   [functions.analyze-client]
