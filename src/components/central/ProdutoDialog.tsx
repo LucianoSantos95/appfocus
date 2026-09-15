@@ -203,6 +203,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
       setNome(""); setEmail(""); setEntregue(false); setFeedbackEnviado(false); setErro(null);
       setTocado({ nome: false, email: false });
       setPlataforma(null);
+      setCheckoutUrl(null);
     }, 250);
   };
 
