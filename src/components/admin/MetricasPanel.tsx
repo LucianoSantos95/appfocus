@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown, Download, ArrowUpRight, Calendar as CalendarIcon } from "lucide-react";
+import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown, Download, ArrowUpRight, RefreshCw, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -441,6 +441,13 @@ export function MetricasPanel() {
           Visitas e cliques vêm do próprio catálogo. O Google Analytics segue medindo tráfego e origem.
         </p>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline" size="sm" className="gap-1.5"
+            onClick={atualizar} disabled={loading || atualizando}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${atualizando ? "animate-spin" : ""}`} />
+            {atualizando ? "Atualizando…" : "Atualizar"}
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5" disabled={loading}>
