@@ -45,7 +45,7 @@ export default function AcessoProduto() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6 py-16">
-      <PageMeta path="/acesso" title="Seu acesso" suffix="Hub Central" description="Acesso ao produto comprado no Hub Central." noindex />
+      <PageMeta path="/acesso" title="Seu acesso" suffix="Hub Central" description="Acesso ao produto comprado no Hub Central." />
 
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-center">
         {carregando ? (
