@@ -89,7 +89,8 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
   const [erro, setErro] = useState<string | null>(null);
   const [entregue, setEntregue] = useState(false);
   const [api, setApi] = useState<CarouselApi>();
-  const [tocado, setTocado] = useState({ nome: false, email: false });
+  const [whatsapp, setWhatsapp] = useState("");
+  const [tocado, setTocado] = useState({ nome: false, email: false, whatsapp: false });
   const [slide, setSlide] = useState(0);
   const [feedbackEnviado, setFeedbackEnviado] = useState(false);
   // Consultoria: a pessoa escolhe a plataforma antes de deixar o contato.
@@ -108,8 +109,11 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
 
   const nomeOk = nome.trim().length >= 2;
   const emailOk = /\S+@\S+\.\S+/.test(email.trim());
-  const valido = nomeOk && emailOk;
   const advisor = produto?.tipo === "advisor";
+  // Consultoria pede WhatsApp com DDD (10 ou 11 dígitos).
+  const whatsDigitos = whatsapp.replace(/\D/g, "");
+  const whatsOk = whatsDigitos.length >= 10 && whatsDigitos.length <= 13;
+  const valido = nomeOk && emailOk && (!advisor || whatsOk);
   const t = copyPor(produto?.tipo, produto?.gratuito ?? true);
   const galeria = (produto?.imagens ?? []).filter(Boolean);
   // Sem galeria, a capa é a imagem do template — precisa aparecer no detalhe.
@@ -134,7 +138,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
 
   const entregar = async () => {
     if (!valido || !produto) {
-      setTocado({ nome: true, email: true });
+      setTocado({ nome: true, email: true, whatsapp: true });
       return;
     }
     setSending(true);
@@ -148,6 +152,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
         produto: produto.slug,
         status: "novo",
         ...(advisor && plataforma ? { customizacao: `Prefere: ${plataforma}` } : {}),
+        ...(advisor ? { whatsapp: whatsapp.trim() } : {}),
       });
       if (error) throw error;
 
@@ -206,8 +211,8 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
   const fechar = () => {
     onOpenChange(false);
     setTimeout(() => {
-      setNome(""); setEmail(""); setEntregue(false); setFeedbackEnviado(false); setErro(null);
-      setTocado({ nome: false, email: false });
+      setNome(""); setEmail(""); setWhatsapp(""); setEntregue(false); setFeedbackEnviado(false); setErro(null);
+      setTocado({ nome: false, email: false, whatsapp: false });
       setPlataforma(null);
       setCheckoutUrl(null);
     }, 250);
@@ -426,6 +431,20 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
                   />
                   {tocado.email && !emailOk && <p className="text-xs text-destructive">Informe um e-mail válido.</p>}
                 </div>
+                {advisor && (
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="pd-whatsapp">WhatsApp (com DDD) <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="pd-whatsapp" type="tel" inputMode="tel" value={whatsapp} required
+                      aria-invalid={tocado.whatsapp && !whatsOk}
+                      onChange={(e) => setWhatsapp(e.target.value)}
+                      onBlur={() => setTocado((s) => ({ ...s, whatsapp: true }))}
+                      onKeyDown={(e) => e.key === "Enter" && entregar()}
+                      placeholder="(11) 99999-9999"
+                    />
+                    {tocado.whatsapp && !whatsOk && <p className="text-xs text-destructive">Informe um WhatsApp com DDD.</p>}
+                  </div>
+                )}
               </div>
 
 

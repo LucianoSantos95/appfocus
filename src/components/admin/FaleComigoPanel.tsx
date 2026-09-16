@@ -3,7 +3,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Mail, Target, ExternalLink } from "lucide-react";
+import { Loader2, Mail, Target, MessageCircle, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// Abre links em nova aba de forma confiável (o preview em iframe bloqueia
+// navegação direta por <a href="mailto:">).
+function abrirLink(url: string) {
+  const w = window.open(url, "_blank", "noopener,noreferrer");
+  if (!w) window.location.href = url;
+}
+
+// Normaliza o número pro formato do wa.me: só dígitos, com DDI 55 por padrão.
+function linkWhatsapp(numero: string) {
+  let n = numero.replace(/\D/g, "");
+  if (n.length <= 11) n = `55${n}`;
+  return `https://wa.me/${n}`;
+}
 
 // Aba "Fale comigo": leads reais da Consultoria (produto tipo='advisor').
 const sb = supabase as any;
@@ -13,6 +30,7 @@ interface Lead {
   nome: string;
   email: string;
   customizacao: string | null;
+  whatsapp: string | null;
   created_at: string;
 }
 
@@ -27,7 +45,7 @@ export function FaleComigoPanel() {
       .order("ordem", { ascending: true }).limit(1).maybeSingle();
     if (prod?.slug) {
       const { data: ls } = await sb
-        .from("leads").select("id,nome,email,customizacao,created_at")
+        .from("leads").select("id,nome,email,customizacao,whatsapp,created_at")
         .eq("produto", prod.slug)
         .order("created_at", { ascending: false });
       setLeads((ls as Lead[]) || []);
@@ -72,14 +90,35 @@ export function FaleComigoPanel() {
                   </div>
                   <div className="mt-1.5 flex items-center gap-4 flex-wrap text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" />{l.email}</span>
+                    {l.whatsapp && (
+                      <span className="inline-flex items-center gap-1.5"><MessageCircle className="w-3.5 h-3.5" />{l.whatsapp}</span>
+                    )}
                     <span className="font-mono">
                       {new Date(l.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" })}
                     </span>
                   </div>
                 </div>
-                <Button size="sm" asChild className="shrink-0">
-                  <a href={`mailto:${l.email}`}>Responder <ExternalLink className="w-3.5 h-3.5 ml-1" /></a>
-                </Button>
+                {l.whatsapp ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" className="shrink-0">
+                        Responder <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => abrirLink(`mailto:${l.email}`)}>
+                        <Mail className="w-4 h-4 mr-2" /> Responder por e-mail
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => abrirLink(linkWhatsapp(l.whatsapp!))}>
+                        <MessageCircle className="w-4 h-4 mr-2" /> Responder por WhatsApp
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button size="sm" className="shrink-0" onClick={() => abrirLink(`mailto:${l.email}`)}>
+                    <Mail className="w-3.5 h-3.5 mr-1.5" /> Responder por e-mail
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))
