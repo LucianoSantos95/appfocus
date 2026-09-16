@@ -158,16 +158,21 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
 
 
       // Agradecimento best-effort — mesma identidade visual dos demais e-mails.
-      supabase.functions.invoke("send-thanks-email", {
-        body: {
-          kind: advisor ? "advisor" : "produto",
-          email: email.trim().toLowerCase(),
-          nome: nome.trim(),
-          produto_nome: produto.nome,
-          produto_slug: produto.slug,
-          link: produto.link_destino ?? undefined,
-        },
-      }).catch(() => {});
+      // Produto pago não recebe: o e-mail de entrega sai só depois do pagamento
+      // confirmado (asaas-webhook), senão o comprador receberia o acesso antes de pagar.
+      const pago = !advisor && produto.gratuito === false;
+      if (!pago) {
+        supabase.functions.invoke("send-thanks-email", {
+          body: {
+            kind: advisor ? "advisor" : "produto",
+            email: email.trim().toLowerCase(),
+            nome: nome.trim(),
+            produto_nome: produto.nome,
+            produto_slug: produto.slug,
+            link: produto.link_destino ?? undefined,
+          },
+        }).catch(() => {});
+      }
 
       registrarEvento("lead_enviado", produto.slug);
 
