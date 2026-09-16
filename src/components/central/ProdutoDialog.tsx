@@ -138,7 +138,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
 
   const entregar = async () => {
     if (!valido || !produto) {
-      setTocado({ nome: true, email: true });
+      setTocado({ nome: true, email: true, whatsapp: true });
       return;
     }
     setSending(true);
@@ -152,6 +152,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
         produto: produto.slug,
         status: "novo",
         ...(advisor && plataforma ? { customizacao: `Prefere: ${plataforma}` } : {}),
+        ...(advisor ? { whatsapp: whatsapp.trim() } : {}),
       });
       if (error) throw error;
 
@@ -210,8 +211,8 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
   const fechar = () => {
     onOpenChange(false);
     setTimeout(() => {
-      setNome(""); setEmail(""); setEntregue(false); setFeedbackEnviado(false); setErro(null);
-      setTocado({ nome: false, email: false });
+      setNome(""); setEmail(""); setWhatsapp(""); setEntregue(false); setFeedbackEnviado(false); setErro(null);
+      setTocado({ nome: false, email: false, whatsapp: false });
       setPlataforma(null);
       setCheckoutUrl(null);
     }, 250);
