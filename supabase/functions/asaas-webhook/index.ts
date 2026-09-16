@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       }).eq("id", compra.id);
 
       const { data: prod } = await admin
-        .from("produtos").select("nome, link_destino")
+        .from("produtos").select("nome")
         .eq("slug", compra.produto_slug).maybeSingle();
       const { data: entrega } = await admin
         .from("produto_entregas").select("link")
@@ -104,7 +104,9 @@ Deno.serve(async (req) => {
         nome: compra.nome,
         produtoNome: compra.produto_nome ?? prod?.nome ?? "seu produto",
         produtoSlug: compra.produto_slug,
-        linkEntrega: entrega?.link ?? prod?.link_destino ?? null,
+        // Só o link de entrega configurado: link_destino de produto pago pode
+        // guardar o link antigo de pagamento e mandaria o cliente pagar de novo.
+        linkEntrega: entrega?.link ?? null,
         tokenAcesso: compra.token_acesso,
       }).catch((e) => log("Falha no e-mail de entrega", { msg: String(e) }));
 

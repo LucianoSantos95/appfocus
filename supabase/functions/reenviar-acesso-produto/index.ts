@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     if (compra.status !== "pago") return json(400, { error: "A compra ainda não foi paga." });
 
     const { data: prod } = await admin
-      .from("produtos").select("nome, link_destino")
+      .from("produtos").select("nome")
       .eq("slug", compra.produto_slug).maybeSingle();
     const { data: entrega } = await admin
       .from("produto_entregas").select("link")
@@ -51,7 +51,8 @@ Deno.serve(async (req) => {
       nome: compra.nome,
       produtoNome: compra.produto_nome ?? prod?.nome ?? "seu produto",
       produtoSlug: compra.produto_slug,
-      linkEntrega: entrega?.link ?? prod?.link_destino ?? null,
+      // Sem fallback para link_destino (pode ser o link de pagamento antigo).
+      linkEntrega: entrega?.link ?? null,
       tokenAcesso: compra.token_acesso,
     });
     if (!r.ok) return json(502, { error: r.error ?? "Não foi possível enviar." });
