@@ -90,14 +90,35 @@ export function FaleComigoPanel() {
                   </div>
                   <div className="mt-1.5 flex items-center gap-4 flex-wrap text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" />{l.email}</span>
+                    {l.whatsapp && (
+                      <span className="inline-flex items-center gap-1.5"><MessageCircle className="w-3.5 h-3.5" />{l.whatsapp}</span>
+                    )}
                     <span className="font-mono">
                       {new Date(l.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" })}
                     </span>
                   </div>
                 </div>
-                <Button size="sm" asChild className="shrink-0">
-                  <a href={`mailto:${l.email}`}>Responder <ExternalLink className="w-3.5 h-3.5 ml-1" /></a>
-                </Button>
+                {l.whatsapp ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" className="shrink-0">
+                        Responder <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => abrirLink(`mailto:${l.email}`)}>
+                        <Mail className="w-4 h-4 mr-2" /> Responder por e-mail
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => abrirLink(linkWhatsapp(l.whatsapp!))}>
+                        <MessageCircle className="w-4 h-4 mr-2" /> Responder por WhatsApp
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button size="sm" className="shrink-0" onClick={() => abrirLink(`mailto:${l.email}`)}>
+                    <Mail className="w-3.5 h-3.5 mr-1.5" /> Responder por e-mail
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))
