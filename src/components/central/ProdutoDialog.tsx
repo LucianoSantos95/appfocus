@@ -89,7 +89,8 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
   const [erro, setErro] = useState<string | null>(null);
   const [entregue, setEntregue] = useState(false);
   const [api, setApi] = useState<CarouselApi>();
-  const [tocado, setTocado] = useState({ nome: false, email: false });
+  const [whatsapp, setWhatsapp] = useState("");
+  const [tocado, setTocado] = useState({ nome: false, email: false, whatsapp: false });
   const [slide, setSlide] = useState(0);
   const [feedbackEnviado, setFeedbackEnviado] = useState(false);
   // Consultoria: a pessoa escolhe a plataforma antes de deixar o contato.
@@ -108,8 +109,11 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
 
   const nomeOk = nome.trim().length >= 2;
   const emailOk = /\S+@\S+\.\S+/.test(email.trim());
-  const valido = nomeOk && emailOk;
   const advisor = produto?.tipo === "advisor";
+  // Consultoria pede WhatsApp com DDD (10 ou 11 dígitos).
+  const whatsDigitos = whatsapp.replace(/\D/g, "");
+  const whatsOk = whatsDigitos.length >= 10 && whatsDigitos.length <= 13;
+  const valido = nomeOk && emailOk && (!advisor || whatsOk);
   const t = copyPor(produto?.tipo, produto?.gratuito ?? true);
   const galeria = (produto?.imagens ?? []).filter(Boolean);
   // Sem galeria, a capa é a imagem do template — precisa aparecer no detalhe.
