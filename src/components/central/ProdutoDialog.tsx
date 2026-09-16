@@ -431,6 +431,20 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
                   />
                   {tocado.email && !emailOk && <p className="text-xs text-destructive">Informe um e-mail válido.</p>}
                 </div>
+                {advisor && (
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="pd-whatsapp">WhatsApp (com DDD) <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="pd-whatsapp" type="tel" inputMode="tel" value={whatsapp} required
+                      aria-invalid={tocado.whatsapp && !whatsOk}
+                      onChange={(e) => setWhatsapp(e.target.value)}
+                      onBlur={() => setTocado((s) => ({ ...s, whatsapp: true }))}
+                      onKeyDown={(e) => e.key === "Enter" && entregar()}
+                      placeholder="(11) 99999-9999"
+                    />
+                    {tocado.whatsapp && !whatsOk && <p className="text-xs text-destructive">Informe um WhatsApp com DDD.</p>}
+                  </div>
+                )}
               </div>
 
 
