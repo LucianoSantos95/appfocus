@@ -197,14 +197,21 @@ Deno.serve(async (req) => {
     const tpl = TEMPLATES[body.segment];
 
     // Segment from vw_user_engagement (without email — view can't expose auth.users to service_role)
-    let query = supabase.from("vw_user_engagement" as any).select("user_id, display_name, plan, classificacao");
-    if (body.segment === "engaged") {
-      query = query.eq("classificacao", "casual").eq("plan", "gratuito");
-    } else {
-      query = query.eq("classificacao", "inativo").eq("plan", "gratuito");
+    // Paginado: o backend devolve no máximo 1000 linhas por consulta.
+    const targets: any[] = [];
+    for (let i = 0; ; i++) {
+      let query = supabase.from("vw_user_engagement" as any)
+        .select("user_id, display_name, plan, classificacao")
+        .eq("classificacao", body.segment === "engaged" ? "casual" : "inativo")
+        .eq("plan", "gratuito")
+        .order("user_id")
+        .range(i * 1000, i * 1000 + 999);
+      const { data, error: tErr } = await query;
+      if (tErr) throw tErr;
+      if (!data?.length) break;
+      targets.push(...data);
+      if (data.length < 1000) break;
     }
-    const { data: targets, error: tErr } = await query;
-    if (tErr) throw tErr;
 
     // Resolve emails via auth admin API
     const targetIds = new Set(((targets as any[]) || []).map((t) => t.user_id));
@@ -218,7 +225,6 @@ Deno.serve(async (req) => {
       }
       if (list.users.length < 1000) break;
       page++;
-      if (page > 20) break; // safety
     }
 
     const recipients = ((targets as any[]) || [])
@@ -240,13 +246,16 @@ Deno.serve(async (req) => {
 
     // Idempotency: skip only recipients with a successful prior send for this template
     const emails = recipients.map((r) => r.email);
-    const { data: prior } = await supabase
-      .from("email_send_log")
-      .select("recipient_email, status")
-      .eq("template_name", tpl.template_name)
-      .eq("status", "sent")
-      .in("recipient_email", emails);
-    const alreadySent = new Set((prior || []).map((p: any) => p.recipient_email));
+    const alreadySent = new Set<string>();
+    for (let i = 0; i < emails.length; i += 200) {
+      const { data: prior } = await supabase
+        .from("email_send_log")
+        .select("recipient_email")
+        .eq("template_name", tpl.template_name)
+        .eq("status", "sent")
+        .in("recipient_email", emails.slice(i, i + 200));
+      for (const p of prior || []) alreadySent.add((p as any).recipient_email);
+    }
     const toSend = recipients.filter((r) => !alreadySent.has(r.email));
 
     const results = { sent: 0, failed: 0, skipped: alreadySent.size, errors: [] as any[] };
