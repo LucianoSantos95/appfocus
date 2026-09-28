@@ -120,6 +120,13 @@
       "when": 1789570533826,
       "tag": "0016_compra_por_token_sem_fallback_link_destino",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790620308154,
+      "tag": "0017_seguranca_rate_limit_downloads_eventos",
+      "breakpoints": true
     }
   ]
 }
