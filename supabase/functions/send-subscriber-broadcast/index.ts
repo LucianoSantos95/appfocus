@@ -370,6 +370,7 @@ Responda APENAS JSON válido (sem markdown), no formato:
           const { sendResendEmail } = await import("../_shared/resend.ts");
           const result = await sendResendEmail({
             from: FROM_EMAIL,
+            reply_to: "comercial@focusinteligente.com.br",
             to: r.email,
             subject,
             html,
