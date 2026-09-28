@@ -1,7 +1,8 @@
 // E-mail de agradecimento (best-effort, disparado pelo Hub Central).
 // Público de propósito: o visitante do catálogo não tem login.
-// Segurança: o corpo do e-mail é montado 100% no servidor — o cliente só
-// escolhe um "kind" de uma lista fechada e envia dados curtos e escapados.
+// Segurança: o cliente só manda uma referência (lead_id / feedback_id) de um
+// registro recém-criado; destinatário, nome e link do produto vêm do banco.
+// Kinds automáticos (followup_uso, crosssell_produto) exigem chave do servidor.
 // Não usa send-subscriber-broadcast (admin-only + resolução de audiência em
 // massa + histórico de campanha), que é caro demais para 1 envio por lead.
 import { createClient } from "npm:@supabase/supabase-js@2.49.4";
@@ -283,6 +284,7 @@ Deno.serve(async (req) => {
           produto: produtoNomeFinal || null,
           produto_slug: produtoSlug || null,
           origem: kind,
+          ref,
         },
       })
       .select("id")
@@ -322,7 +324,7 @@ Deno.serve(async (req) => {
       await admin.from("email_send_log").insert({
         recipient_email: email,
         template_name: templateName,
-        metadata: { produto: produtoNomeFinal || null, produto_slug: produtoSlug || null, origem: kind },
+        metadata: { produto: produtoNomeFinal || null, produto_slug: produtoSlug || null, origem: kind, ref },
         ...registro,
       });
     }
