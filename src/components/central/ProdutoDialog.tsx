@@ -144,7 +144,11 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
     setSending(true);
     setErro(null);
     try {
+      // Id gerado aqui: o visitante não pode ler a tabela de leads, e o e-mail de
+      // agradecimento só aceita a referência de um lead que existe de verdade.
+      const leadId = crypto.randomUUID();
       const { error } = await sb.from("leads").insert({
+        id: leadId,
         nome: nome.trim(),
         email: email.trim().toLowerCase(),
         origem: "catalogo",
@@ -154,7 +158,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
         ...(advisor && plataforma ? { customizacao: `Prefere: ${plataforma}` } : {}),
         ...(advisor ? { whatsapp: whatsapp.trim() } : {}),
       });
-      if (error) throw error;
+      if (error) throw (String(error.message || "").includes("rate_limited") ? new Error("Muitos envios em pouco tempo. Aguarde um minuto e tente de novo.") : error);
 
 
       // Agradecimento best-effort — mesma identidade visual dos demais e-mails.
@@ -163,14 +167,7 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
       const pago = !advisor && produto.gratuito === false;
       if (!pago) {
         supabase.functions.invoke("send-thanks-email", {
-          body: {
-            kind: advisor ? "advisor" : "produto",
-            email: email.trim().toLowerCase(),
-            nome: nome.trim(),
-            produto_nome: produto.nome,
-            produto_slug: produto.slug,
-            link: produto.link_destino ?? undefined,
-          },
+          body: { kind: advisor ? "advisor" : "produto", lead_id: leadId },
         }).catch(() => {});
       }
 
