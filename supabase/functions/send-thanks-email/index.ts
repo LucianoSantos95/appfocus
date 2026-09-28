@@ -113,11 +113,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-
-    const email = String(body?.email || "").trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 255) {
-      return json(400, { error: "invalid email" });
-    }
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
     const rawKind = String(body?.kind || "");
     if (!["produto", "advisor", "feedback", "followup_uso", "crosssell_produto"].includes(rawKind)) {
@@ -125,13 +121,79 @@ Deno.serve(async (req) => {
     }
     const kind = rawKind as Kind;
 
-    const nome = String(body?.nome || "").trim().slice(0, 100) || null;
-    const produtoNome = String(body?.produto_nome || "").trim().slice(0, 120);
-    // Slug é usado só para montar o link de avaliação — sanitizado no servidor.
-    const produtoSlug = String(body?.produto_slug || "").trim().slice(0, 120).replace(/[^a-zA-Z0-9_-]/g, "");
-    const link = safeHttpUrl(String(body?.link || ""), `${SITE_URL}/`);
+    // Chamada interna (jobs automáticos) só com a chave do servidor.
+    const bearer = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+    let interno = bearer === SERVICE_ROLE;
+    if (!interno && bearer && (kind === "followup_uso" || kind === "crosssell_produto")) {
+      const { data: ok } = await admin.rpc("verify_cron_token", { p_token: bearer });
+      interno = ok === true;
+    }
 
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    // Nada de nome/link vindos do cliente: tudo sai do banco a partir de uma referência real.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const RECENTE_MS = 15 * 60 * 1000;
+    let email = "";
+    let nome: string | null = null;
+    let produtoNome = "";
+    let produtoSlug = "";
+    let link = `${SITE_URL}/`;
+    let ref: string | null = null;
+
+    if (kind === "produto" || kind === "advisor") {
+      const leadId = String(body?.lead_id || "");
+      if (!UUID_RE.test(leadId)) return json(400, { error: "referência inválida" });
+      const { data: lead } = await admin
+        .from("leads").select("id,email,nome,produto,created_at").eq("id", leadId).maybeSingle();
+      if (!lead || !lead.produto) return json(404, { error: "referência não encontrada" });
+      if (Date.now() - new Date(lead.created_at).getTime() > RECENTE_MS) {
+        return json(409, { error: "referência expirada" });
+      }
+      const { data: prod } = await admin
+        .from("produtos").select("slug,nome,tipo,gratuito,ativo,link_destino").eq("slug", lead.produto).maybeSingle();
+      if (!prod || !prod.ativo) return json(400, { error: "produto inválido" });
+      const ehAdvisor = prod.tipo === "advisor";
+      if ((kind === "advisor") !== ehAdvisor) return json(400, { error: "tipo não confere" });
+      // Produto pago nunca recebe este e-mail — o acesso sai só após o pagamento.
+      if (!ehAdvisor && prod.gratuito === false) return json(400, { error: "produto pago" });
+      email = String(lead.email).trim().toLowerCase();
+      nome = lead.nome ? String(lead.nome).slice(0, 100) : null;
+      produtoNome = prod.nome;
+      produtoSlug = prod.slug;
+      link = safeHttpUrl(String(prod.link_destino || ""), `${SITE_URL}/`);
+      ref = `lead:${lead.id}`;
+    } else if (kind === "feedback") {
+      const fbId = String(body?.feedback_id || "");
+      if (!UUID_RE.test(fbId)) return json(400, { error: "referência inválida" });
+      const { data: fb } = await admin
+        .from("feedbacks").select("id,email,nome,created_at").eq("id", fbId).maybeSingle();
+      if (!fb || !fb.email) return json(404, { error: "referência não encontrada" });
+      if (Date.now() - new Date(fb.created_at).getTime() > RECENTE_MS) {
+        return json(409, { error: "referência expirada" });
+      }
+      email = String(fb.email).trim().toLowerCase();
+      nome = fb.nome ? String(fb.nome).slice(0, 100) : null;
+      ref = `feedback:${fb.id}`;
+    } else {
+      if (!interno) return json(401, { error: "Unauthorized" });
+      email = String(body?.email || "").trim().toLowerCase();
+      nome = String(body?.nome || "").trim().slice(0, 100) || null;
+      produtoSlug = String(body?.produto_slug || "").trim().slice(0, 120).replace(/[^a-zA-Z0-9_-]/g, "");
+      const { data: prod } = await admin.from("produtos").select("nome").eq("slug", produtoSlug).maybeSingle();
+      if (!prod) return json(400, { error: "produto inválido" });
+      produtoNome = prod.nome;
+    }
+
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 255) {
+      return json(400, { error: "invalid email" });
+    }
+
+    // Uma referência = no máximo um e-mail (impede reenvio em loop).
+    if (ref) {
+      const { count } = await admin
+        .from("email_send_log").select("id", { count: "exact", head: true })
+        .eq("metadata->>ref", ref);
+      if ((count ?? 0) > 0) return json(200, { ok: true, skipped: "already_sent" });
+    }
 
     // Respeita a lista de supressão como os demais envios.
     const { data: suppressed } = await admin
