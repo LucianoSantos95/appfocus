@@ -1,0 +1,4 @@
+- Listas do admin buscam dados com `buscarTodas` (src/lib/buscarTodas.ts), página a página — o backend corta em 1000 linhas.
+- `produtos.downloads` é recalculado por trigger a partir das linhas reais de `leads`; nunca incrementar na mão.
+- `send-thanks-email` só aceita uma referência (lead_id/feedback_id) e lê destinatário/produto/link do banco; os tipos automáticos exigem a chave do servidor.
+- O limite de login fica no servidor (`login-guard`, por e-mail+IP); as funções do banco não podem ser chamadas pelo navegador.
