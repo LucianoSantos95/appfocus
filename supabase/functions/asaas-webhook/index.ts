@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     if (ext.startsWith("produto|")) {
       const compraId = ext.split("|")[1];
       const { data: compra } = await admin
-        .from("compras").select("id, status, email, nome, produto_slug, produto_nome, token_acesso")
+        .from("compras").select("id, status, email, nome, produto_slug, produto_nome, token_acesso, valor")
         .eq("id", compraId).maybeSingle();
       if (!compra) return finish("error", "compra não encontrada");
 
@@ -84,6 +84,15 @@ Deno.serve(async (req) => {
       }
       if (!isPaid) return finish("ignored");
       if (compra.status === "pago") return finish("ignored");
+
+      // O valor pago tem que bater com o valor salvo na compra (em centavos, sem arredondamento solto).
+      const esperado = Math.round(Number(compra.valor) * 100);
+      const recebido = Math.round(Number(payment.value) * 100);
+      if (!Number.isFinite(recebido) || recebido !== esperado) {
+        log("VALOR DIVERGENTE — pagamento não confirmado", { compraId, esperado: compra.valor, recebido: payment.value, paymentId: payment.id });
+        await admin.from("compras").update({ status: "divergente" }).eq("id", compra.id);
+        return finish("error", `valor divergente: esperado ${compra.valor}, recebido ${payment.value}`);
+      }
 
       await admin.from("compras").update({
         status: "pago",
