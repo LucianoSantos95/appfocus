@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { buscarTodas } from "@/lib/buscarTodas";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -75,10 +76,10 @@ export function EmailPanel() {
 
   const carregar = useCallback(async () => {
     const [lds, prods] = await Promise.all([
-      sb.from("leads").select("email,nome,origem,status,produto"),
+      buscarTodas<LeadMin>(() => sb.from("leads").select("email,nome,origem,status,produto").order("created_at").order("id")).catch(() => [] as LeadMin[]),
       sb.from("produtos").select("slug,nome").eq("arquivado", false).order("ordem", { ascending: true }),
     ]);
-    setLeads((lds.data as LeadMin[]) || []);
+    setLeads(lds);
     setProdutos((prods.data as ProdutoMin[]) || []);
     setCarregando(false);
   }, []);

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { buscarTodas } from "@/lib/buscarTodas";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,8 +51,9 @@ export function VendasPanel() {
 
   const carregar = useCallback(async () => {
     setLoading(true);
-    const { data } = await sb.from("compras").select("*").order("created_at", { ascending: false }).limit(300);
-    setCompras((data as Compra[]) ?? []);
+    const data = await buscarTodas<Compra>(() =>
+      sb.from("compras").select("*").order("created_at", { ascending: false }).order("id")).catch(() => [] as Compra[]);
+    setCompras(data);
     setLoading(false);
   }, []);
 
