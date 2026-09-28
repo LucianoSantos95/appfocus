@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { buscarTodas } from "@/lib/buscarTodas";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -56,8 +57,8 @@ export function LeadsPanel() {
 
   const carregar = useCallback(async () => {
     setLoading(true);
-    const [{ data }, { data: prods }] = await Promise.all([
-      sb.from("leads").select("*").order("created_at", { ascending: false }),
+    const [data, { data: prods }] = await Promise.all([
+      buscarTodas<Lead>(() => sb.from("leads").select("*").order("created_at", { ascending: false }).order("id")).catch(() => [] as Lead[]),
       sb.from("produtos").select("slug,nome").order("ordem", { ascending: true }),
     ]);
     setLeads((data as Lead[]) || []);

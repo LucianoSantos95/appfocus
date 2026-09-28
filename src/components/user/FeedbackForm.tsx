@@ -50,7 +50,9 @@ export function FeedbackForm({
 
     setLoading(true);
     try {
+      const feedbackId = crypto.randomUUID();
       const { error } = await supabase.from("feedbacks").insert({
+        id: feedbackId,
         nome: nome.trim() || null,
         email: email.trim() || null,
         mensagem: stripHtml(mensagem.trim()),
@@ -63,7 +65,7 @@ export function FeedbackForm({
       const emailLimpo = email.trim().toLowerCase();
       if (emailLimpo) {
         supabase.functions.invoke("send-thanks-email", {
-          body: { kind: "feedback", email: emailLimpo, nome: nome.trim() || null },
+          body: { kind: "feedback", feedback_id: feedbackId },
         }).catch(() => {});
       }
 

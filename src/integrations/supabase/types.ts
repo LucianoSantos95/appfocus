@@ -35,6 +35,24 @@ export type Database = {
         }
         Relationships: []
       }
+      anon_rate_limits: {
+        Row: {
+          chave: string
+          janela: string
+          total: number
+        }
+        Insert: {
+          chave: string
+          janela: string
+          total?: number
+        }
+        Update: {
+          chave?: string
+          janela?: string
+          total?: number
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -817,7 +835,10 @@ export type Database = {
         Args: { p_email: string; p_id: string }
         Returns: undefined
       }
-      check_login_rate_limit: { Args: { p_email: string }; Returns: Json }
+      anon_rate_hit: {
+        Args: { p_chave: string; p_limite: number }
+        Returns: boolean
+      }
       cleanup_old_client_errors: { Args: never; Returns: undefined }
       cleanup_rate_limits: { Args: never; Returns: undefined }
       compra_por_token: {
@@ -856,6 +877,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      login_guard_check_and_record: {
+        Args: { p_email: string; p_ip: string }
+        Returns: Json
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -873,7 +898,11 @@ export type Database = {
           read_ct: number
         }[]
       }
-      record_login_attempt: { Args: { p_email: string }; Returns: undefined }
+      recalcular_downloads_produto: {
+        Args: { p_slug: string }
+        Returns: undefined
+      }
+      request_ip: { Args: never; Returns: string }
       update_integration_access_token: {
         Args: {
           p_access_token: string

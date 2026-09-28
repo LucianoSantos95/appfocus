@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { buscarTodas } from "@/lib/buscarTodas";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,8 +44,8 @@ export function FeedbacksPanel() {
 
   useEffect(() => {
     (async () => {
-      const [{ data: fb }, { data: prod }] = await Promise.all([
-        sb.from("feedbacks").select("*").order("created_at", { ascending: false }),
+      const [fb, { data: prod }] = await Promise.all([
+        buscarTodas<Feedback>(() => sb.from("feedbacks").select("*").order("created_at", { ascending: false }).order("id")).catch(() => [] as Feedback[]),
         sb.from("produtos").select("slug,nome"),
       ]);
       setFeedbacks((fb as Feedback[]) || []);

@@ -98,6 +98,37 @@ ${opts.pixelHtml ?? ""}
 }
 
 
+// O backend devolve no máximo 1000 linhas por consulta: busca página a página.
+async function todasAsLinhas(montar: () => any): Promise<any[]> {
+  const out: any[] = [];
+  for (let i = 0; ; i++) {
+    const { data, error } = await montar().range(i * 1000, i * 1000 + 999);
+    if (error) throw error;
+    if (!data?.length) break;
+    out.push(...data);
+    if (data.length < 1000) break;
+  }
+  return out;
+}
+
+function emLotes<T>(lista: T[], tamanho = 200): T[][] {
+  const lotes: T[][] = [];
+  for (let i = 0; i < lista.length; i += tamanho) lotes.push(lista.slice(i, i + tamanho));
+  return lotes;
+}
+
+async function todosOsUsuarios(admin: any): Promise<any[]> {
+  const out: any[] = [];
+  for (let page = 1; ; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) throw error;
+    const users = data?.users ?? [];
+    out.push(...users);
+    if (users.length < 1000) break;
+  }
+  return out;
+}
+
 async function listRecipients(admin: any, audience: Audience, limit = 70, extraEmails: string[] = []) {
   let userIds: string[] = [];
   const nameMap = new Map<string, string | null>();
@@ -131,25 +162,26 @@ async function listRecipients(admin: any, audience: Audience, limit = 70, extraE
       nameMap.set(p.user_id, p.display_name);
     }
   } else {
-    let q = admin.from("subscriptions").select("user_id, plan");
-    if (audience === "free") q = q.eq("plan", "gratuito");
-    const { data: subs, error } = await q;
-    if (error) throw error;
-    userIds = (subs ?? []).map((s: any) => s.user_id);
-    if (userIds.length > 0) {
+    const subs = await todasAsLinhas(() => {
+      let q = admin.from("subscriptions").select("user_id, plan").order("user_id");
+      if (audience === "free") q = q.eq("plan", "gratuito");
+      return q;
+    });
+    userIds = subs.map((s: any) => s.user_id);
+    for (const lote of emLotes(userIds)) {
       const { data: profs } = await admin
         .from("profiles")
         .select("user_id, display_name")
-        .in("user_id", userIds);
+        .in("user_id", lote);
       for (const p of profs ?? []) nameMap.set(p.user_id, p.display_name);
     }
   }
 
   const recipients: Array<{ user_id: string; email: string; display_name: string | null }> = [];
-  const { data: usersPage } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const usuarios = await todosOsUsuarios(admin);
   const emailMap = new Map<string, string>();
   const byEmail = new Map<string, string>();
-  for (const u of usersPage?.users ?? []) {
+  for (const u of usuarios) {
     if (u.email) {
       emailMap.set(u.id, u.email);
       byEmail.set(u.email.toLowerCase(), u.id);
@@ -184,11 +216,11 @@ async function listRecipients(admin: any, audience: Audience, limit = 70, extraE
 
   const emails = recipients.map((r) => r.email);
   if (emails.length === 0) return [];
-  const { data: suppressed } = await admin
-    .from("suppressed_emails")
-    .select("email")
-    .in("email", emails);
-  const suppressedSet = new Set((suppressed ?? []).map((s: any) => s.email));
+  const suppressedSet = new Set<string>();
+  for (const lote of emLotes(emails)) {
+    const { data: suppressed } = await admin.from("suppressed_emails").select("email").in("email", lote);
+    for (const s of suppressed ?? []) suppressedSet.add(s.email);
+  }
   return recipients.filter((r) => !suppressedSet.has(r.email));
 }
 

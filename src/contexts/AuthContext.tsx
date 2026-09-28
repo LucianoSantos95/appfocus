@@ -80,14 +80,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [demo]);
 
   const signIn = async (email: string, password: string) => {
-    // Rate limit check + record attempt em paralelo (record é fire-and-forget)
+    // Trava de tentativas no servidor (por e-mail + IP). Se a checagem falhar, o login segue.
     try {
-      const rateCheckPromise = supabase.rpc("check_login_rate_limit", { p_email: email } as never);
-      // fire-and-forget: não bloqueia o login
-      supabase.rpc("record_login_attempt", { p_email: email } as never).then(() => {}, () => {});
-
-      const { data: rateCheck, error: rateError } = await rateCheckPromise;
-      if (!rateError && rateCheck && !(rateCheck as any).allowed) {
+      const { data: rateCheck, error: rateError } = await supabase.functions.invoke("login-guard", { body: { email } });
+      if (!rateError && rateCheck && (rateCheck as any).allowed === false) {
         const waitSec = (rateCheck as any).wait_seconds || 60;
         return { error: new Error(`Muitas tentativas de login. Aguarde ${Math.ceil(waitSec / 60)} minuto(s) e tente novamente.`) };
       }

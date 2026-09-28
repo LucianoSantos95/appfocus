@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { buscarTodas } from "@/lib/buscarTodas";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -216,25 +217,26 @@ export function MetricasPanel() {
       dias === "0" ? Promise.resolve([] as Linha[]) : buscarEventos(desdeAnterior, desde),
       sb.from("leads").select("id", { count: "exact", head: true })
         .neq("status", "legado").gte("created_at", desde),
-      sb.from("email_send_log")
+      buscarTodas<EmailLinha>(() => sb.from("email_send_log")
         .select("id,template_name,status,recipient_email,opened_at,created_at,metadata")
         .neq("status", "pending")
         // Só e-mails a partir do início do Hub Central (exclui toda a era Hub Empresarial)
         .gte("created_at", desde > HUB_CENTRAL_INICIO ? desde : HUB_CENTRAL_INICIO)
         .order("created_at", { ascending: false })
-        .limit(2000),
+        .order("id")).catch(() => [] as EmailLinha[]),
 
-      sb.from("feedbacks").select("avaliacao,pagina"),
+      buscarTodas<{ avaliacao: number | null; pagina: string | null }>(() =>
+        sb.from("feedbacks").select("avaliacao,pagina").order("created_at").order("id")).catch(() => []),
       sb.from("produtos").select("slug,nome"),
     ]);
 
     setEventos(ev);
     setAnteriores(evAnt);
     setLeadsTotal(ld.count ?? 0);
-    setEmails((em.data as EmailLinha[]) || []);
+    setEmails(em);
 
     const acc: Record<string, number[]> = {};
-    for (const f of ((fb.data as { avaliacao: number | null; pagina: string | null }[]) || [])) {
+    for (const f of fb) {
       if (!f.pagina || !f.avaliacao) continue;
       (acc[f.pagina] ??= []).push(f.avaliacao);
     }
