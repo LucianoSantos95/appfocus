@@ -21,7 +21,9 @@ function sessaoId(): string {
   }
 }
 
-export type TipoEvento = "visita_catalogo" | "clique_produto" | "lead_enviado";
+// clique_sugestao: registrado junto com clique_produto quando o clique vem do
+// bloco "Você também pode gostar" — mede o bloco sem tirar o clique da contagem geral.
+export type TipoEvento = "visita_catalogo" | "clique_produto" | "lead_enviado" | "clique_sugestao";
 
 /** De onde a visita veio: domínio do referrer, ou "direto" se não houver. */
 function origemAtual(): string {
