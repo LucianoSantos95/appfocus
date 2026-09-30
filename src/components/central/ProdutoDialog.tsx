@@ -268,6 +268,8 @@ export function ProdutoDialog({ produto, onOpenChange, catalogo = [], onAbrirPro
                       type="button"
                       onClick={() => {
                         const alvo = p;
+                        registrarEvento("clique_produto", alvo.slug);
+                        registrarEvento("clique_sugestao", alvo.slug);
                         fechar();
                         setTimeout(() => onAbrirProduto(alvo), 280);
                       }}

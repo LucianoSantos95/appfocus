@@ -127,6 +127,13 @@
       "when": 1790620308154,
       "tag": "0017_seguranca_rate_limit_downloads_eventos",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790778544071,
+      "tag": "0018_eventos_permitir_clique_sugestao",
+      "breakpoints": true
     }
   ]
 }
