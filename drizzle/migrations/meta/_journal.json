@@ -134,6 +134,13 @@
       "when": 1790778544071,
       "tag": "0018_eventos_permitir_clique_sugestao",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790897503621,
+      "tag": "0019_eventos_realtime",
+      "breakpoints": true
     }
   ]
 }
