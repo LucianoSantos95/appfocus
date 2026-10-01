@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { buscarTodas } from "@/lib/buscarTodas";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
+import { TrafegoOrigem } from "@/components/admin/TrafegoOrigem";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown, Download, ArrowUpRight, RefreshCw, Calendar as CalendarIcon } from "lucide-react";
@@ -55,7 +56,7 @@ const graficoProduto = {
 //   clique alto e lead baixo = o formulário está travando
 const sb = supabase as any;
 
-interface Linha { tipo: string; produto: string | null; sessao: string | null; created_at: string }
+interface Linha { tipo: string; produto: string | null; sessao: string | null; origem?: string | null; created_at: string }
 interface EmailLinha {
   id: string;
   template_name: string;
@@ -192,7 +193,7 @@ export function MetricasPanel() {
     const PAGINA = 1000;
     const todos: Linha[] = [];
     for (let i = 0; ; i++) {
-      let q = sb.from("eventos").select("tipo,produto,sessao,created_at")
+      let q = sb.from("eventos").select("tipo,produto,sessao,origem,created_at")
         .gte("created_at", desde)
         .order("created_at", { ascending: true })
         .range(i * PAGINA, i * PAGINA + PAGINA - 1);
@@ -555,6 +556,8 @@ export function MetricasPanel() {
               </CardContent>
             </Card>
           )}
+
+          <TrafegoOrigem eventos={eventos} />
 
           {/* Tendência ao longo do tempo */}
           <div>
