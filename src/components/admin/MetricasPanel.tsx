@@ -242,6 +242,7 @@ export function MetricasPanel() {
         .neq("status", "pending")
         // Só e-mails a partir do início do Hub Central (exclui toda a era Hub Empresarial)
         .gte("created_at", desde > HUB_CENTRAL_INICIO ? desde : HUB_CENTRAL_INICIO)
+        .lt("created_at", ate ?? "9999-12-31")
         .order("created_at", { ascending: false })
         .order("id")).catch(() => [] as EmailLinha[]),
 
