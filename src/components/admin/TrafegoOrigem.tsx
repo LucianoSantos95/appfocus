@@ -10,7 +10,7 @@ const TIPOS_FUNIL = ["visita_catalogo", "clique_produto", "lead_enviado"];
 // Rejeição = sessão com visita_catalogo e nenhum clique_produto no período.
 // A origem da sessão é a da primeira visita; cliques e leads seguem a sessão.
 // Eventos novos chegam pelo Realtime e somam aos carregados, sem recarregar.
-export function TrafegoOrigem({ eventos }: { eventos: Ev[] }) {
+export function TrafegoOrigem({ eventos, aoVivo = true }: { eventos: Ev[]; aoVivo?: boolean }) {
   const [novos, setNovos] = useState<Ev[]>([]);
   const [agora, setAgora] = useState(Date.now());
   const [conectado, setConectado] = useState(false);
@@ -31,7 +31,8 @@ export function TrafegoOrigem({ eventos }: { eventos: Ev[] }) {
     return () => { supabase.removeChannel(canal); clearInterval(relogio); };
   }, []);
 
-  const todos = novos.length ? [...eventos, ...novos] : eventos;
+  // Período fechado (Ontem) não recebe eventos de agora.
+  const todos = aoVivo && novos.length ? [...eventos, ...novos] : eventos;
 
   const sessoes = new Map<string, { origem: string; cliques: number; leads: number }>();
   for (const e of [...todos].sort((a, b) => a.created_at.localeCompare(b.created_at))) {
@@ -70,7 +71,7 @@ export function TrafegoOrigem({ eventos }: { eventos: Ev[] }) {
       ) : (
         <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
           <div className="grid gap-4 content-start">
-            <Card>
+            {aoVivo && (<Card>
               <CardContent className="p-5">
                 <div className="flex items-center gap-2">
                   <span className={`h-2 w-2 rounded-full ${conectado ? "bg-success animate-pulse" : "bg-muted-foreground/40"}`} />
@@ -87,7 +88,7 @@ export function TrafegoOrigem({ eventos }: { eventos: Ev[] }) {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card>)}
             <Card>
               <CardContent className="p-5">
                 <p className="text-xs text-muted-foreground">Taxa de rejeição</p>
