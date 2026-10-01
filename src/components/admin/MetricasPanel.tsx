@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrafegoOrigem } from "@/components/admin/TrafegoOrigem";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown, Download, ArrowUpRight, RefreshCw, Calendar as CalendarIcon } from "lucide-react";
+import { Loader2, Percent, Eye, MousePointerClick, UserPlus, TrendingDown, TrendingUp, Mail, MailOpen, Star, Minus, SlidersHorizontal, ChevronDown, Download, ArrowUpRight, RefreshCw, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -471,7 +471,16 @@ export function MetricasPanel() {
     { rot: "Visitas",  val: visitas,  ant: anterior.visitas, icone: Eye,               sub: "sessões únicas" },
     { rot: "Cliques",  val: cliques,  ant: anterior.cliques, icone: MousePointerClick, sub: `${pct(cliques, visitas)}% de quem entrou` },
     { rot: "Leads",    val: leadsEv,  ant: anterior.leads,   icone: UserPlus,          sub: `${pct(leadsEv, cliques)}% de quem clicou` },
-  ];
+  ] as { rot: string; val: number; ant: number; icone: typeof Eye; sub: string; exib?: string; pp?: number | null }[];
+  // Conversão de ponta a ponta (leads ÷ visitas); variação em pontos percentuais
+  const conv = visitas > 0 ? (leadsEv / visitas) * 100 : 0;
+  const convAnt = anterior.visitas > 0 ? (anterior.leads / anterior.visitas) * 100 : null;
+  etapas.push({
+    rot: "Taxa de conversão", val: conv, ant: 0, icone: Percent,
+    sub: `${leadsEv} leads de ${visitas} visitas`,
+    exib: `${conv.toFixed(1).replace(".", ",")}%`,
+    pp: convAnt === null ? null : Math.round((conv - convAnt) * 10) / 10,
+  });
 
   return (
     <div className="space-y-5">
@@ -520,10 +529,10 @@ export function MetricasPanel() {
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {etapas.map((e) => {
               const Icone = e.icone;
-              const v = comparavel ? variacao(e.val, e.ant) : null;
+              const v = !comparavel ? null : e.exib !== undefined ? (e.pp ?? null) : variacao(e.val, e.ant);
               return (
                 <Card key={e.rot}>
                   <CardContent className="p-5">
@@ -531,7 +540,7 @@ export function MetricasPanel() {
                       <Icone className="w-4 h-4" />
                       <span className="text-xs uppercase tracking-wider font-medium">{e.rot}</span>
                     </div>
-                    <p className="mt-2 font-display text-4xl leading-none text-foreground tabular-nums">{e.val}</p>
+                    <p className="mt-2 font-display text-4xl leading-none text-foreground tabular-nums">{e.exib ?? e.val}</p>
                     <p className="mt-1.5 text-xs text-muted-foreground">{e.sub}</p>
                     {comparavel && (
                       <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
@@ -543,7 +552,7 @@ export function MetricasPanel() {
                               ? <TrendingUp className="w-3 h-3 text-primary" />
                               : <TrendingDown className="w-3 h-3 text-destructive" />}
                             <span className={v >= 0 ? "text-primary" : "text-destructive"}>
-                              {v > 0 ? "+" : ""}{v}%
+                              {v > 0 ? "+" : ""}{e.exib !== undefined ? `${String(v).replace(".", ",")} p.p.` : `${v}%`}
                             </span>
                             <span>vs. {dias === "hoje" ? "ontem no mesmo horário" : dias === "ontem" ? "anteontem" : `${dias} dias anteriores`}</span>
                           </>
