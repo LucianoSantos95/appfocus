@@ -88,7 +88,7 @@ export function TrafegoOrigem({ eventos, aoVivo = true }: { eventos: Ev[]; aoViv
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card>)}
             <Card>
               <CardContent className="p-5">
                 <p className="text-xs text-muted-foreground">Taxa de rejeição</p>
