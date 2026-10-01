@@ -71,6 +71,8 @@ interface EmailLinha {
 const MIN_AMOSTRA_ABERTURA = 5;
 
 const PERIODOS = [
+  { v: "hoje",  label: "Hoje" },
+  { v: "ontem", label: "Ontem" },
   { v: "7",   label: "Últimos 7 dias" },
   { v: "30",  label: "Últimos 30 dias" },
   { v: "0",   label: "Desde o início" },
@@ -208,16 +210,33 @@ export function MetricasPanel() {
 
   const carregar = useCallback(async (silencioso = false) => {
     if (!silencioso) setLoading(true);
-    const janela = Number(dias) * 86400000;
-    const inicio = dias === "0" ? new Date(0) : new Date(Date.now() - janela);
+    // Hoje/Ontem usam o dia do navegador (meia-noite local). Hoje compara com
+    // ontem até o mesmo horário; Ontem compara com anteontem inteiro.
+    const DIA = 86400000;
+    const meiaNoite = new Date(); meiaNoite.setHours(0, 0, 0, 0);
+    let inicio: Date, fim: Date | null = null, antInicio: Date, antFim: Date;
+    if (dias === "hoje") {
+      inicio = meiaNoite;
+      antInicio = new Date(meiaNoite.getTime() - DIA); antFim = new Date(Date.now() - DIA);
+    } else if (dias === "ontem") {
+      inicio = new Date(meiaNoite.getTime() - DIA); fim = meiaNoite;
+      antInicio = new Date(meiaNoite.getTime() - 2 * DIA); antFim = inicio;
+    } else {
+      const janela = Number(dias) * DIA;
+      inicio = dias === "0" ? new Date(0) : new Date(Date.now() - janela);
+      antInicio = new Date(inicio.getTime() - janela); antFim = inicio;
+    }
     const desde = inicio.toISOString();
-    const desdeAnterior = new Date(inicio.getTime() - janela).toISOString();
+    const ate = fim?.toISOString();
+
+    let qLeads = sb.from("leads").select("id", { count: "exact", head: true })
+      .neq("status", "legado").gte("created_at", desde);
+    if (ate) qLeads = qLeads.lt("created_at", ate);
 
     const [ev, evAnt, ld, em, fb, prod] = await Promise.all([
-      buscarEventos(desde),
-      dias === "0" ? Promise.resolve([] as Linha[]) : buscarEventos(desdeAnterior, desde),
-      sb.from("leads").select("id", { count: "exact", head: true })
-        .neq("status", "legado").gte("created_at", desde),
+      buscarEventos(desde, ate),
+      dias === "0" ? Promise.resolve([] as Linha[]) : buscarEventos(antInicio.toISOString(), antFim.toISOString()),
+      qLeads,
       buscarTodas<EmailLinha>(() => sb.from("email_send_log")
         .select("id,template_name,status,recipient_email,opened_at,created_at,metadata")
         .neq("status", "pending")
@@ -302,7 +321,7 @@ export function MetricasPanel() {
       ? porProduto
       : porProduto.slice(0, TOP_PRODUTOS);
 
-  const periodoRotulo = dias === "0" ? "tudo" : `${dias}d`;
+  const periodoRotulo = dias === "0" ? "tudo" : dias === "hoje" || dias === "ontem" ? dias : `${dias}d`;
 
   const hoje = new Date().toISOString().slice(0, 10);
 
@@ -525,7 +544,7 @@ export function MetricasPanel() {
                             <span className={v >= 0 ? "text-primary" : "text-destructive"}>
                               {v > 0 ? "+" : ""}{v}%
                             </span>
-                            <span>vs. {dias} dias anteriores</span>
+                            <span>vs. {dias === "hoje" ? "ontem no mesmo horário" : dias === "ontem" ? "anteontem" : `${dias} dias anteriores`}</span>
                           </>
                         )}
                       </p>
@@ -536,28 +555,7 @@ export function MetricasPanel() {
             })}
           </div>
 
-          {/* Diagnóstico — o objetivo de ter esses números */}
-          {visitas > 0 && (
-            <Card className="border-primary/25 bg-primary/[0.04]">
-              <CardContent className="p-5 flex items-start gap-3">
-                <TrendingDown className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-foreground">Onde está o gargalo</p>
-                  <p className="mt-1 text-muted-foreground leading-relaxed">
-                    {cliques === 0
-                      ? "Gente entrou mas ninguém clicou em nenhum produto. O catálogo não está despertando interesse — mexa na oferta ou na descrição antes de mexer no formulário."
-                      : pct(cliques, visitas) < 20
-                        ? `Só ${pct(cliques, visitas)}% de quem entra clica em algo. O problema está na vitrine: título, descrição ou a promessa não conectam.`
-                        : pct(leadsEv, cliques) < 50
-                          ? `${pct(cliques, visitas)}% clicam, mas só ${pct(leadsEv, cliques)}% completam. O interesse existe — quem está travando é o formulário.`
-                          : `Funil saudável: ${pct(cliques, visitas)}% clicam e ${pct(leadsEv, cliques)}% completam. O gargalo agora é volume de tráfego, não conversão.`}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <TrafegoOrigem eventos={eventos} />
+          <TrafegoOrigem eventos={eventos} aoVivo={dias !== "ontem"} />
 
           {/* Tendência ao longo do tempo */}
           <div>
