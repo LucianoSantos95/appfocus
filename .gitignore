@@ -28,3 +28,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Supabase CLI e ferramentas locais
+supabase/.temp/
+.claude/
+
+# Segredos de servidor nunca vão para o repositório (ver .env.example)
+.env.secret
+.env.*.secret
